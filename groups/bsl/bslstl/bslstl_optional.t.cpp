@@ -145,12 +145,15 @@ void bslstl_optional_test1()
     //   Note that the destructor is exercised on each configuration as the
     //   object being tested leaves scope.
     //
+    //   Invoke all const methods on a const object.
+    //
     // Testing:
     //   typedef TYPE value_type;
     //   Optional();
     //   Optional(nullopt_t);
     //   ~Optional();
     //   bool has_value() const;
+    //   allocator_type get_allocator() const;
     // --------------------------------------------------------------------
 
     if (verbose) printf(
@@ -173,7 +176,8 @@ void bslstl_optional_test1()
 
             bslma::DefaultAllocatorGuard dag(&da);
 
-            Obj mX;  const Obj& X = mX;
+            Obj mX;
+            const Obj& X = mX;
             ASSERT(!X.has_value());
             ASSERT(0 == da.numBlocksTotal());
         }
@@ -212,10 +216,11 @@ void bslstl_optional_test1()
 
             bslma::TestAllocatorMonitor dam(&da);
 
-            Obj mX;  const Obj& X = mX;
-
-            ASSERT(dam.isTotalSame());
+            Obj mX;
+            const Obj& X = mX;
             ASSERT(!X.has_value());
+            ASSERT(X.get_allocator().mechanism() == &da);
+            ASSERT(dam.isTotalSame());
 
         }
         if (veryVerbose) printf( "\tTesting nullopt_t constructor with default allocator.\n");
@@ -224,11 +229,11 @@ void bslstl_optional_test1()
 
             bslma::TestAllocatorMonitor dam(&da);
 
-            Obj mX = Obj(nullopt);  const Obj& X = mX;
-
-            ASSERT(dam.isTotalSame());
+            Obj mX = Obj(nullopt);
+            const Obj& X = mX;
             ASSERT(!X.has_value());
-
+            ASSERT(X.get_allocator().mechanism() == &da);
+            ASSERT(dam.isTotalSame());
         }
     }
 }
@@ -263,9 +268,11 @@ void bslstl_optional_test2()
     //   Note that the destructor is exercised on each configuration as the
     //   object being tested leaves scope.
     //
+    //   Invoke const methods on a const object.
+    //
     // Testing:
-    //   operator bool();
-    //   bool has_value();
+    //   operator bool() const;
+    //   bool has_value() const;
     //
     //   void reset();
     //   optional(const T &);
@@ -284,12 +291,22 @@ void bslstl_optional_test2()
 
         {
             Obj mX;
-            ASSERT(false == mX);
-            ASSERT(false == mX.has_value());
+            const Obj& X = mX;
+            ASSERT(false == X);
+            ASSERT(false == X.has_value());
 
             if (veryVerbose) printf( "\templacing a value.\n");
+            mX.emplace(1);
+            ASSERT(true == mX);
+            ASSERT(true == mX.has_value());
 
-            //todo
+            mX.emplace(3);
+            ASSERT(true == mX);
+            ASSERT(true == mX.has_value());
+
+            mX.reset();
+            ASSERT(false == mX);
+            ASSERT(false == mX.has_value());
         }
         {
             Obj mX = Obj(2);
@@ -305,7 +322,6 @@ void bslstl_optional_test2()
     if (verbose) printf( "\nUsing 'bsl::optional<bsl::string>'.\n");
     {
         bslma::TestAllocator da("default", veryVeryVeryVerbose);
-
         bslma::DefaultAllocatorGuard dag(&da);
 
         typedef bsl::string                    ValueType;
@@ -313,12 +329,23 @@ void bslstl_optional_test2()
 
         {
             Obj mX;
-            ASSERT(false == mX);
-            ASSERT(false == mX.has_value());
+            const Obj& X = mX;
+            ASSERT(false == X);
+            ASSERT(false == X.has_value());
 
             if (veryVerbose) printf( "\templacing a value.\n");
 
-            //todo
+            mX.emplace("tralala");
+            ASSERT(true == mX);
+            ASSERT(true == mX.has_value());
+
+            mX.emplace("");
+            ASSERT(true == mX);
+            ASSERT(true == mX.has_value());
+
+            mX.reset();
+            ASSERT(false == mX);
+            ASSERT(false == mX.has_value());
         }
         {
             Obj mX = Obj(ValueType("tralala"));
@@ -330,6 +357,114 @@ void bslstl_optional_test2()
             ASSERT(false == mX.has_value());
         }
 
+    }
+}
+void bslstl_optional_test3()
+{
+    // --------------------------------------------------------------------
+    // TESTING RESET FUNCTIONALITY
+    //   This test will verify that the reset function works as expected.
+    //   The test relies on constructors, has_value and emplace member functions.
+    //
+    // Concerns:
+    //   * A disengaged optional can be reset.
+    //   * An engaged optional after reset is disengaged.
+    //   * Calling reset does not modify the allocator
+    //
+    // Plan:
+    //   Conduct the test using 'int' (does not use allocator) and
+    //   'bsl::string' (uses allocator) for 'TYPE'.
+    //
+    //   Create disengaged optional of each type. Call reset on an disengaged
+    //   optional. Check that the optional is disengaged by calling has_value.
+    //
+    //   Emplace a value in each optional. Call reset on an disengaged
+    //   optional. Check that the optional is disengaged by calling has_value.
+    //
+    //   Create a optional<bsl::string> with an allocator. Call reset. Check
+    //   that the allocator has not changed.
+    //
+    // Testing:
+    //   void reset();
+    //
+    //   bool has_value() const;
+    //   optional(const T &);
+    //   optional(bsl::allocator_arg_t, allocator_type basicAllocator, const optional& original;
+    //   emplace(const T &);
+    //   allocator_type get_allocator() const;
+    //
+    // --------------------------------------------------------------------
+
+    if (verbose) printf(
+                       "\nTESTING RESET MEMBER FUNCTION "
+                       "\n================================================\n");
+
+    if (verbose) printf( "\nUsing 'bsl::optional<int>'.\n");
+    {
+        typedef int                            ValueType;
+        typedef bsl::optional<ValueType> Obj;
+
+        {
+            Obj mX;
+
+            mX.reset();
+            ASSERT(false == mX);
+            ASSERT(false == mX.has_value());
+
+            mX.reset();
+            ASSERT(false == mX);
+            ASSERT(false == mX.has_value());
+
+            if (veryVerbose) printf( "\templacing a value.\n");
+            mX.emplace(1);
+            ASSERT(true == mX);
+            ASSERT(true == mX.has_value());
+
+            mX.reset();
+            ASSERT(false == mX);
+            ASSERT(false == mX.has_value());
+        }
+    }
+
+    if (verbose) printf( "\nUsing 'bsl::optional<bsl::string>'.\n");
+    {
+        bslma::TestAllocator da("default", veryVeryVeryVerbose);
+        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+
+        bslma::DefaultAllocatorGuard dag(&da);
+
+        typedef bsl::string                    ValueType;
+        typedef bsl::optional<ValueType> Obj;
+
+        {
+            Obj mX;
+
+            mX.reset();
+            ASSERT(false == mX);
+            ASSERT(false == mX.has_value());
+
+            mX.reset();
+            ASSERT(false == mX);
+            ASSERT(false == mX.has_value());
+
+            if (veryVerbose) printf( "\templacing a value.\n");
+            mX.emplace("tralala");
+            ASSERT(true == mX);
+            ASSERT(true == mX.has_value());
+
+            mX.reset();
+            ASSERT(false == mX);
+            ASSERT(false == mX.has_value());
+
+
+            Obj nX = Obj(bsl::allocator_arg, bsl::allocator<char>(&oa), mX);
+            ASSERT(mX.get_allocator().mechanism() == &da);
+            ASSERT(nX.get_allocator().mechanism() == &oa);
+            nX.reset();
+            ASSERT(false == nX);
+            ASSERT(false == nX.has_value());
+            ASSERT(nX.get_allocator().mechanism() == &oa);
+        }
     }
 }
 int main(int argc, char **argv)
@@ -360,6 +495,9 @@ int main(int argc, char **argv)
         break;
       case 2:
         bslstl_optional_test2();
+        break;
+      case 3:
+        bslstl_optional_test3();
         break;
       default: {
         printf( "WARNING: CASE `%d' NOT FOUND.\n", test);

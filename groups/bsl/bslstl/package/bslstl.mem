@@ -3,6 +3,7 @@ bslstl_allocator
 bslstl_allocatortraits
 bslstl_array
 bslstl_badweakptr
+bslstl_badoptionalaccess
 bslstl_bidirectionaliterator
 bslstl_bidirectionalnodepool
 bslstl_bitset
