@@ -437,6 +437,10 @@ class optional
     template<class ANY_TYPE>
     TYPE value_or(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE)) const;
 
+    //todo add Type&& overload
+    template<class ANY_TYPE>
+    TYPE value_or(bsl::allocator_arg_t, allocator_type, BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE)) const;
+
   private :
 
 };
@@ -621,7 +625,6 @@ class optional<TYPE, false>
   // Return 'true' if this object is disengaged, and 'false' otherwise.
 
   //todo add Type&& overload
-  //todo what allocator should be used here ?
   template<class ANY_TYPE>
   TYPE value_or(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE)) const;
 
@@ -961,16 +964,7 @@ const TYPE* optional<TYPE, UsesBslmaAllocator>::operator->() const
 
     return BSLS_UTIL_ADDRESSOF(d_buffer.object());
 }
-template <class TYPE, bool UsesBslmaAllocator>
-template<class ANY_TYPE>
-TYPE optional<TYPE, UsesBslmaAllocator>::value_or(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) other) const
-{
-    if (d_hasValue)
-    {
-      return this->value();
-    }
-    return static_cast<TYPE>(BSLS_COMPILERFEATURES_FORWARD(ANY_TYPE, other));
-}
+
 template <class TYPE, bool UsesBslmaAllocator>
 inline
 bool optional<TYPE, UsesBslmaAllocator>::has_value() const BSLS_KEYWORD_NOEXCEPT
@@ -1294,16 +1288,7 @@ const TYPE* optional<TYPE, false>::operator->() const
 
     return BSLS_UTIL_ADDRESSOF(d_buffer.object());
 }
-template <class TYPE>
-template<class ANY_TYPE>
-TYPE optional<TYPE, false>::value_or(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) other) const
-{
-    if (d_hasValue)
-    {
-      return this->value();
-    }
-    return static_cast<TYPE>(BSLS_COMPILERFEATURES_FORWARD(ANY_TYPE, other));
-}
+
 template <class TYPE>
 inline
 bool optional<TYPE, false>::has_value() const BSLS_KEYWORD_NOEXCEPT

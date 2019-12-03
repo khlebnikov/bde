@@ -112,7 +112,6 @@ namespace std
 }
 
 
-
 //=============================================================================
 //                              MAIN PROGRAM
 //-----------------------------------------------------------------------------
@@ -378,7 +377,7 @@ void bslstl_optional_test3()
     //   Create disengaged optional of each type. Call reset on an disengaged
     //   optional. Check that the optional is disengaged by calling has_value.
     //
-    //   Emplace a value in each optional. Call reset on an disengaged
+    //   Emplace a value in each optional. Call reset on an engaged
     //   optional. Check that the optional is disengaged by calling has_value.
     //
     //   Create a optional<bsl::string> with an allocator. Call reset. Check
@@ -467,6 +466,182 @@ void bslstl_optional_test3()
         }
     }
 }
+void bslstl_optional_test4()
+{
+    // --------------------------------------------------------------------
+    // TESTING VALUE FUNCTIONALITY
+    //   This test will verify that the value function works as expected.
+    //   The test relies on constructors and emplace member functions.
+    //
+    // Concerns:
+    //   * Calling value() on a engaged optional returns the value.
+    //   * Calling value() on a disengaged optional throws bad_optional_access exception.
+    //   * It is possible to call value() on a constant optional object
+    //   * It is possible to call value() on a temporary optional object
+    //   * It is possible to modify non constant optional through call of value()
+    //   * It is not possible to modify non constant optional through call of value().
+    //     Note that this requires tests which check for compilation errors.
+    //   * It is possible to call value() on a temporary optional object
+    //
+    // Plan:
+    //   Conduct the test using 'int' (does not use allocator) and
+    //   'bsl::string' (uses allocator) for 'TYPE'.
+    //
+    //   Create disengaged optional of each type. Call value on a disengaged
+    //   optional. Check that the bad_optional_access exception is thrown.
+    //
+    //   Emplace a value in each optional. Call value on an engaged
+    //   optional. Check that the value is correct.
+    //
+    //   Bind const optional reference to optional object. Call value and check
+    //   that the value is correct.
+    //
+    //   Modify the retrieved value through the returned reference. Call value
+    //   on the optional object and check that the value is correct.
+    //
+    //   Call reset on the optional object. Call value() and check that the
+    //   the correct exception is thrown.
+    //
+    //   Call value on a disengaged temporary optional object. Check that the
+    //   correct exception is thrown.
+    //
+    //   Call value on an engaged temporary optional object. Check that the
+    //   correct value is returned.
+    //
+    //   Make sure no unexpected exception is thrown.
+    //
+    // Testing:
+    //   bool value() const;
+    //
+    //   void reset();
+    //   optional(const T &);
+    //   optional(bsl::allocator_arg_t, allocator_type basicAllocator, const optional& original;
+    //   emplace(const T &);
+    //
+    // --------------------------------------------------------------------
+
+    if (verbose) printf(
+                       "\nTESTING RESET MEMBER FUNCTION "
+                       "\n================================================\n");
+
+    if (verbose) printf( "\nUsing 'bsl::optional<int>'.\n");
+    bool unexpected_exception_thrown = false;
+    try
+    {
+        typedef int                            ValueType;
+        typedef bsl::optional<ValueType> Obj;
+
+        {
+            Obj mX; const Obj& X = mX;
+
+            bool bad_optional_exception_caught = false;
+            try{ mX.value();}
+            catch (bsl::bad_optional_access &)
+            {
+              bad_optional_exception_caught = true;
+            }
+            ASSERT(bad_optional_exception_caught);
+            bad_optional_exception_caught = false;
+
+            mX.emplace(3);
+            ASSERT(mX.value() == 3);
+            ASSERT(X.value() == 3);
+
+            int& ri = mX.value();
+            ri = 7;
+
+            ASSERT(mX.value() == 7);
+
+            mX.reset();
+            try{ mX.value();}
+            catch (bsl::bad_optional_access &)
+            {
+              bad_optional_exception_caught = true;
+            }
+            ASSERT(bad_optional_exception_caught);
+            bad_optional_exception_caught = false;
+
+            try{ Obj().value();}
+            catch (bsl::bad_optional_access &)
+            {
+              bad_optional_exception_caught = true;
+            }
+            ASSERT(bad_optional_exception_caught);
+            bad_optional_exception_caught = false;
+
+            int i = Obj(4).value();
+            ASSERT(i = 4);
+#if defined(BSLSTL_OPTIONAL_TEST_BAD_VALUE1)
+            X.value() = 2; // this should not compile
+#endif
+        }
+    } catch (...)
+    {
+      unexpected_exception_thrown = true;
+    }
+    ASSERT(unexpected_exception_thrown == false);
+
+    unexpected_exception_thrown = false;
+    if (verbose) printf( "\nUsing 'bsl::optional<bsl::string>'.\n");
+    try {
+        bslma::TestAllocator da("default", veryVeryVeryVerbose);
+        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+
+        bslma::DefaultAllocatorGuard dag(&da);
+
+        typedef bsl::string                    ValueType;
+        typedef bsl::optional<ValueType> Obj;
+
+        Obj mX; const Obj& X = mX;
+
+        bool bad_optional_exception_caught = false;
+        try{ mX.value();}
+        catch (bsl::bad_optional_access &)
+        {
+          bad_optional_exception_caught = true;
+        }
+        ASSERT(bad_optional_exception_caught);
+        bad_optional_exception_caught = false;
+
+        mX.emplace("test string 1");
+        ASSERT(mX.value() == "test string 1");
+        ASSERT(X.value() == "test string 1");
+
+        bsl::string& ri = mX.value();
+        ri = "test string 2";
+
+        ASSERT(mX.value() == "test string 2");
+
+        mX.reset();
+        try{ mX.value();}
+        catch (bsl::bad_optional_access &)
+        {
+          bad_optional_exception_caught = true;
+        }
+        ASSERT(bad_optional_exception_caught);
+        bad_optional_exception_caught = false;
+
+        try{ Obj().value();}
+        catch (bsl::bad_optional_access &)
+        {
+          bad_optional_exception_caught = true;
+        }
+        ASSERT(bad_optional_exception_caught);
+        bad_optional_exception_caught = false;
+
+        bsl::string i = Obj("test string 4").value();
+        ASSERT(i == "test string 4");
+
+#if defined(BSLSTL_OPTIONAL_TEST_BAD_VALUE2)
+        X.value() = "test string 5"; // this should not compile
+#endif
+
+    }catch (...)
+    {
+      unexpected_exception_thrown = true;
+    }
+    ASSERT(unexpected_exception_thrown == false);
+}
 int main(int argc, char **argv)
 {
     const int                 test = argc > 1 ? atoi(argv[1]) : 0;
@@ -498,6 +673,9 @@ int main(int argc, char **argv)
         break;
       case 3:
         bslstl_optional_test3();
+        break;
+      case 4:
+        bslstl_optional_test4();
         break;
       default: {
         printf( "WARNING: CASE `%d' NOT FOUND.\n", test);
