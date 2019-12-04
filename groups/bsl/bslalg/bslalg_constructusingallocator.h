@@ -4,6 +4,13 @@
 
 #include <bsls_ident.h>
 BSLS_IDENT("$Id: $")
+// todo open questions :
+// - should this be implemented in terms of bsl::allocator or bslma::allocator ?
+// - which package to put this in ?
+// - what to call it ?
+// - add documentation to implementation
+// - add documentation to tests
+
 
 //@PURPOSE: Provide primitive implementation fo construction using an allocator.
 //
