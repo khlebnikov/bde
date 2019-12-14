@@ -12,7 +12,8 @@ BSLS_IDENT("$Id: $")
 // - add documentation to tests
 
 
-//@PURPOSE: Provide primitive implementation fo construction using an allocator.
+//@PURPOSE: Provide a partial implementation of the C++20 function template,
+// std::make_obj_using_allocator, limited to zero or one arguments.
 //
 //@CLASSES:
 
@@ -61,106 +62,85 @@ namespace bslalg {
 
 template <class TARGET_TYPE, bool = bslma::UsesBslmaAllocator<TARGET_TYPE>::value,
           bool= bslmf::UsesAllocatorArgT<TARGET_TYPE>::value >
-struct AllocatorUtil{
-};
+struct AllocatorUtil;
 
 
 template <class TARGET_TYPE>
-struct AllocatorUtil<TARGET_TYPE, true, false>{
+struct AllocatorUtil<TARGET_TYPE, true, false> {
 
-  static TARGET_TYPE construct(bslma::Allocator   *allocator)
-  {
-    return TARGET_TYPE(allocator);
-  }
+    static TARGET_TYPE construct(bslma::Allocator   *allocator)
+    {
+        return TARGET_TYPE(allocator);
+    }
 
-  static TARGET_TYPE construct (bslmf::MovableRef<TARGET_TYPE> original,
-                  bslma::Allocator                                  *allocator)
-  {
-    return TARGET_TYPE(bslmf::MovableRefUtil::move(original), allocator);
-  }
+    static TARGET_TYPE construct (bslma::Allocator *allocator,
+        bslmf::MovableRef<TARGET_TYPE> original)
+    {
+        return TARGET_TYPE(bslmf::MovableRefUtil::move(original), allocator);
+    }
 
-  template <class ANY_TYPE>
-  static TARGET_TYPE construct (BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) original,
-                  bslma::Allocator                                  *allocator)
-  {
-    return TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ANY_TYPE,original), allocator);
-  }
-
-  template <class ANY_TYPE>
-  static TARGET_TYPE construct (bslmf::MovableRef<ANY_TYPE> original,
-                                bslma::Allocator  *allocator)
-  {
-    return TARGET_TYPE(bslmf::MovableRefUtil::move(original), allocator);
-  }
+    template <class ANY_TYPE>
+    static TARGET_TYPE construct (bslma::Allocator *allocator,
+        BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) original)
+    {
+        return TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ANY_TYPE,original), allocator);
+    }
 };
 
 template <class TARGET_TYPE, bool USES_BSLMA>
-struct AllocatorUtil<TARGET_TYPE, USES_BSLMA, true>{
+struct AllocatorUtil<TARGET_TYPE, USES_BSLMA, true> {
 
-  static TARGET_TYPE construct(bslma::Allocator   *allocator)
-  {
-    return TARGET_TYPE(bsl::allocator_arg, allocator);
-  }
-  static TARGET_TYPE construct (const TARGET_TYPE&                                 original,
-                  bslma::Allocator                                  *allocator)
-  {
-    return TARGET_TYPE(bsl::allocator_arg, allocator, original);
-  }
-  static TARGET_TYPE construct (bslmf::MovableRef<TARGET_TYPE> original,
-                    bslma::Allocator                                  *allocator)
+    static TARGET_TYPE construct(bslma::Allocator *allocator)
     {
-      return TARGET_TYPE(bsl::allocator_arg, allocator, bslmf::MovableRefUtil::move(original));
+        return TARGET_TYPE(bsl::allocator_arg, allocator);
+    }
+    static TARGET_TYPE construct (bslma::Allocator *allocator,
+        const TARGET_TYPE&  original)
+    {
+        return TARGET_TYPE(bsl::allocator_arg, allocator, original);
+    }
+    static TARGET_TYPE construct (bslma::Allocator *allocator,
+        bslmf::MovableRef<TARGET_TYPE> original)
+    {
+        return TARGET_TYPE(bsl::allocator_arg, allocator, bslmf::MovableRefUtil::move(original));
     }
 
-  template <class ANY_TYPE>
-  static TARGET_TYPE construct (BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) original,
-                  bslma::Allocator                                  *allocator)
-  {
-    return TARGET_TYPE(bsl::allocator_arg, allocator,
-        BSLS_COMPILERFEATURES_FORWARD(ANY_TYPE,original));
-  }
+    template <class ANY_TYPE>
+    static TARGET_TYPE construct (bslma::Allocator *allocator,
+        BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) original)
+    {
+        return TARGET_TYPE(bsl::allocator_arg, allocator,
+          BSLS_COMPILERFEATURES_FORWARD(ANY_TYPE,original));
+    }
 
-  template <class ANY_TYPE>
-  static TARGET_TYPE construct (bslmf::MovableRef<ANY_TYPE> original,
-                                bslma::Allocator  *allocator)
-  {
-    return TARGET_TYPE(bsl::allocator_arg, allocator, bslmf::MovableRefUtil::move(original));
-  }
 };
 
 template <class TARGET_TYPE>
-struct AllocatorUtil<TARGET_TYPE, false, false>{
+struct AllocatorUtil<TARGET_TYPE, false, false> {
 
-  static TARGET_TYPE construct(bslma::Allocator*)
-  {
-    return TARGET_TYPE();
-  }
-  static TARGET_TYPE construct (const TARGET_TYPE&                                 original,
-                  bslma::Allocator*)
-  {
-    return TARGET_TYPE(original);
-  }
+    static TARGET_TYPE construct(bslma::Allocator*)
+    {
+        return TARGET_TYPE();
+    }
+    static TARGET_TYPE construct (bslma::Allocator*,
+          const TARGET_TYPE&  original)
+    {
+        return TARGET_TYPE(original);
+    }
 
-  static TARGET_TYPE construct (bslmf::MovableRef<TARGET_TYPE> original,
-                    bslma::Allocator*)
-  {
-    return TARGET_TYPE(bslmf::MovableRefUtil::move(original));
-  }
+    static TARGET_TYPE construct (bslma::Allocator*,
+        bslmf::MovableRef<TARGET_TYPE> original)
+    {
+        return TARGET_TYPE(bslmf::MovableRefUtil::move(original));
+    }
 
 
-  template <class ANY_TYPE>
-  static TARGET_TYPE construct (BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) original,
-                  bslma::Allocator*)
-  {
-    return TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ANY_TYPE,original));
-  }
-
-  template <class ANY_TYPE>
-  static TARGET_TYPE construct (bslmf::MovableRef<ANY_TYPE> original,
-                                bslma::Allocator*)
-  {
-    return TARGET_TYPE(bslmf::MovableRefUtil::move(original));
-  }
+    template <class ANY_TYPE>
+    static TARGET_TYPE construct (bslma::Allocator*,
+        BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) original)
+    {
+        return TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ANY_TYPE,original));
+    }
 
 };
 }  // close package namespace
@@ -169,7 +149,7 @@ struct AllocatorUtil<TARGET_TYPE, false, false>{
 #endif
 
 // ----------------------------------------------------------------------------
-// Copyright 2013 Bloomberg Finance L.P.
+// Copyright 2019 Bloomberg Finance L.P.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
