@@ -1118,11 +1118,11 @@ inline bool isMovedFrom(const my_Class3& x)
 }
 
 template <typename TYPE>
-TYPE createTemporaryCopy(BSLS_COMPILERFEATURES_FORWARD_REF(TYPE) original,
-    BloombergLP::bslma::Allocator   *allocator)
+TYPE createTemporaryCopy(BloombergLP::bslma::Allocator   *allocator,
+    TYPE original)
 {
   TYPE temp = BloombergLP::bslalg::AllocatorUtil<TYPE>::construct(
-      BSLS_COMPILERFEATURES_FORWARD(TYPE,original), allocator);
+      allocator, original);
   return temp;
 }
 
@@ -1171,22 +1171,22 @@ int main(int argc, char *argv[])
         // my_Class #  Operation                            Val Alloc
         // ==========  ==================================== === =====
         {
-            my_Class1 dest = createTemporaryCopy<my_Class1>(V1, TA);
+            my_Class1 dest = createTemporaryCopy<my_Class1>(TA, V1);
             ASSERTV(dest.d_def.d_value, 1 == dest.d_def.d_value);
             ASSERT(0  == dest.d_def.d_allocator_p);
         }
         {
-            my_Class2 dest = createTemporaryCopy<my_Class2>(V2, TA);
+            my_Class2 dest = createTemporaryCopy<my_Class2>(TA, V2);
             ASSERTV(dest.d_def.d_value, 2 == dest.d_def.d_value);
             ASSERT(TA  == dest.d_def.d_allocator_p);
         }
         {
-            my_Class2a dest = createTemporaryCopy<my_Class2a>(V2A, TA);
+            my_Class2a dest = createTemporaryCopy<my_Class2a>(TA, V2A);
             ASSERTV(dest.d_data.d_def.d_value, 42 == dest.d_data.d_def.d_value);
             ASSERT(TA  == dest.d_data.d_def.d_allocator_p);
         }
         {
-            my_Class3 dest = createTemporaryCopy<my_Class3>(V3, TA);
+            my_Class3 dest = createTemporaryCopy<my_Class3>(TA, V3);
             ASSERTV(dest.d_def.d_value, 3 == dest.d_def.d_value);
             ASSERT(TA  == dest.d_def.d_allocator_p);
         }
@@ -1227,7 +1227,7 @@ int main(int argc, char *argv[])
                        /* no ctor arg list */                            // EXP
                       );
 
-        TEST_CONSTRUCT(construct(VA1, TA),                       // OP
+        TEST_CONSTRUCT(construct(TA, VA1),                       // OP
                        (VA1)                                             // EXP
                       );
 
@@ -1314,7 +1314,7 @@ int main(int argc, char *argv[])
                         /* no ctor arg list */,                        // EXP
                         TA);                                           // ALLOC
 
-        TEST_CONSTRUCTA(construct( VA1, TA),                    // OP
+        TEST_CONSTRUCTA(construct(TA, VA1),                    // OP
                         (VA1),                                         // EXP
                         TA);                                           // ALLOC
 #if false// no VA argument version yet
@@ -1420,18 +1420,19 @@ int main(int argc, char *argv[])
 
         {
             my_Class1 src = BloombergLP::bslalg::AllocatorUtil<my_Class1>::construct(
-                            V1, TA);
+                            TA, V1);
             my_Class1a dest =  BloombergLP::bslalg::AllocatorUtil<my_Class1a>::construct(
-                  bslmf::MovableRefUtil::move(src), src.d_def.d_allocator_p);
+                  src.d_def.d_allocator_p,
+                  bslmf::MovableRefUtil::move(src));
             ASSERTV(src.d_def.d_value, MOVED_FROM_VAL == src.d_def.d_value);
             ASSERTV(dest.d_data.d_def.d_value, 1== dest.d_data.d_def.d_value);
             ASSERT(0 == dest.d_data.d_def.d_allocator_p);
         }
         {
             my_Class1 src = BloombergLP::bslalg::AllocatorUtil<my_Class1>::construct(
-                  V1, TA);
+                  TA, V1);
             my_Class2 dest =  BloombergLP::bslalg::AllocatorUtil<my_Class2>::construct(
-                  bslmf::MovableRefUtil::move(src), OA);
+                  OA, bslmf::MovableRefUtil::move(src));
 
             ASSERTV(src.d_def.d_value, MOVED_FROM_VAL == src.d_def.d_value);
             ASSERTV(dest.d_def.d_value, 1 == dest.d_def.d_value);
@@ -1439,18 +1440,18 @@ int main(int argc, char *argv[])
         }
         {
             my_Class2 src = BloombergLP::bslalg::AllocatorUtil<my_Class2>::construct(
-                  V2, TA);
+                TA, V2);
             my_Class2a dest =  BloombergLP::bslalg::AllocatorUtil<my_Class2a>::construct(
-                  bslmf::MovableRefUtil::move(src), OA);
+                OA, bslmf::MovableRefUtil::move(src));
             ASSERTV(src.d_def.d_value, MOVED_FROM_VAL == src.d_def.d_value);
             ASSERTV(dest.d_data.d_def.d_value, 2 == dest.d_data.d_def.d_value);
             ASSERT(OA == dest.d_data.d_def.d_allocator_p);
         }
         {
             my_Class2 src = BloombergLP::bslalg::AllocatorUtil<my_Class2>::construct(
-                  V2, TA);
+                  TA, V2);
             my_Class3 dest =  BloombergLP::bslalg::AllocatorUtil<my_Class3>::construct(
-                  bslmf::MovableRefUtil::move(src), OA);
+                  OA, bslmf::MovableRefUtil::move(src));
             ASSERTV(dest.d_def.d_value, 2== dest.d_def.d_value);
             ASSERT(OA == dest.d_def.d_allocator_p);
         }
@@ -1482,18 +1483,18 @@ int main(int argc, char *argv[])
 
           {
               my_Class1 src = BloombergLP::bslalg::AllocatorUtil<my_Class1>::construct(
-                              V1, TA);
+                              TA, V1);
               my_Class1 dest =  BloombergLP::bslalg::AllocatorUtil<my_Class1>::construct(
-                    bslmf::MovableRefUtil::move(src), src.d_def.d_allocator_p);
+                  src.d_def.d_allocator_p, bslmf::MovableRefUtil::move(src));
               ASSERTV(src.d_def.d_value, MOVED_FROM_VAL == src.d_def.d_value);
               ASSERTV(dest.d_def.d_value, 1== dest.d_def.d_value);
               ASSERT(0 == dest.d_def.d_allocator_p);
           }
           {
               my_Class2 src = BloombergLP::bslalg::AllocatorUtil<my_Class2>::construct(
-                    V2, TA);
+                    TA, V2);
               my_Class2 dest =  BloombergLP::bslalg::AllocatorUtil<my_Class2>::construct(
-                    bslmf::MovableRefUtil::move(src), src.d_def.d_allocator_p);
+                  src.d_def.d_allocator_p, bslmf::MovableRefUtil::move(src));
 
               ASSERTV(src.d_def.d_value, MOVED_FROM_VAL == src.d_def.d_value);
               ASSERTV(dest.d_def.d_value, 2 == dest.d_def.d_value);
@@ -1501,52 +1502,52 @@ int main(int argc, char *argv[])
           }
           {
               my_Class2a src = BloombergLP::bslalg::AllocatorUtil<my_Class2a>::construct(
-                    V2A, TA);
+                    TA, V2A);
               my_Class2a dest =  BloombergLP::bslalg::AllocatorUtil<my_Class2a>::construct(
-                    bslmf::MovableRefUtil::move(src), src.d_data.d_def.d_allocator_p);
+                  src.d_data.d_def.d_allocator_p, bslmf::MovableRefUtil::move(src));
               ASSERTV(src.d_data.d_def.d_value, MOVED_FROM_VAL == src.d_data.d_def.d_value);
               ASSERTV(dest.d_data.d_def.d_value, 42 == dest.d_data.d_def.d_value);
               ASSERT(TA == dest.d_data.d_def.d_allocator_p);
           }
           {
               my_Class3 src = BloombergLP::bslalg::AllocatorUtil<my_Class3>::construct(
-                    V3, TA);
+                    TA, V3);
               my_Class3 dest =  BloombergLP::bslalg::AllocatorUtil<my_Class3>::construct(
-                    bslmf::MovableRefUtil::move(src), src.d_def.d_allocator_p);
+                  src.d_def.d_allocator_p, bslmf::MovableRefUtil::move(src));
               ASSERTV(dest.d_def.d_value, 3== dest.d_def.d_value);
               ASSERT(TA == dest.d_def.d_allocator_p);
           }
           {
               my_Class1 src = BloombergLP::bslalg::AllocatorUtil<my_Class1>::construct(
-                  V1, TA);
+                  TA, V1);
               my_Class1 dest =  BloombergLP::bslalg::AllocatorUtil<my_Class1>::construct(
-                  bslmf::MovableRefUtil::move(src), OA);
+                  OA, bslmf::MovableRefUtil::move(src));
               ASSERTV(src.d_def.d_value, MOVED_FROM_VAL == src.d_def.d_value);
               ASSERTV(dest.d_def.d_value, 1 == dest.d_def.d_value);
           }
           {
               my_Class2 src = BloombergLP::bslalg::AllocatorUtil<my_Class2>::construct(
-                  V2, TA);
+                  TA, V2);
               my_Class2 dest =  BloombergLP::bslalg::AllocatorUtil<my_Class2>::construct(
-                  bslmf::MovableRefUtil::move(src), OA);
+                  OA, bslmf::MovableRefUtil::move(src));
               ASSERTV(src.d_def.d_value, MOVED_FROM_VAL == src.d_def.d_value);
               ASSERTV(dest.d_def.d_value, 2== dest.d_def.d_value);
               ASSERT(OA == dest.d_def.d_allocator_p);
           }
           {
               my_Class2a src = BloombergLP::bslalg::AllocatorUtil<my_Class2a>::construct(
-                    V2A, TA);
+                    TA, V2A);
               my_Class2a dest =  BloombergLP::bslalg::AllocatorUtil<my_Class2a>::construct(
-                    bslmf::MovableRefUtil::move(src), OA);
+                    OA, bslmf::MovableRefUtil::move(src));
               ASSERTV(src.d_data.d_def.d_value, MOVED_FROM_VAL == src.d_data.d_def.d_value);
               ASSERTV(dest.d_data.d_def.d_value, 42== dest.d_data.d_def.d_value);
               ASSERT(OA == dest.d_data.d_def.d_allocator_p);
           }
           {
               my_Class3 src = BloombergLP::bslalg::AllocatorUtil<my_Class3>::construct(
-                    V3, TA);
+                    TA, V3);
               my_Class3 dest =  BloombergLP::bslalg::AllocatorUtil<my_Class3>::construct(
-                    bslmf::MovableRefUtil::move(src), OA);
+                    OA, bslmf::MovableRefUtil::move(src));
               ASSERTV(src.d_def.d_value, 3 == src.d_def.d_value);
               ASSERTV(dest.d_def.d_value, 3== dest.d_def.d_value);
               ASSERT(OA == dest.d_def.d_allocator_p);
@@ -1580,27 +1581,27 @@ int main(int argc, char *argv[])
 
          {
              my_Class1a dest =  BloombergLP::bslalg::AllocatorUtil<my_Class1a>::construct(
-                 createTemporaryCopy<my_Class1>(V1, TA), OA);
+                 OA, createTemporaryCopy<my_Class1>(TA, V1));
 
              ASSERTV(dest.d_data.d_def.d_value, 1== dest.d_data.d_def.d_value);
          }
          {
               my_Class2 dest =  BloombergLP::bslalg::AllocatorUtil<my_Class2>::construct(
-                 createTemporaryCopy<my_Class1>(V1, TA), OA);
+                 OA, createTemporaryCopy<my_Class1>(TA, V1));
 
              ASSERTV(dest.d_def.d_value, 1== dest.d_def.d_value);
              ASSERT(OA == dest.d_def.d_allocator_p);
          }
          {
              my_Class2a dest =  BloombergLP::bslalg::AllocatorUtil<my_Class2a>::construct(
-                 createTemporaryCopy<my_Class2>(V2, TA), OA);
+                 OA, createTemporaryCopy<my_Class2>(TA, V2));
 
              ASSERTV(dest.d_data.d_def.d_value, 2== dest.d_data.d_def.d_value);
              ASSERT(OA == dest.d_data.d_def.d_allocator_p);
          }
          {
              my_Class3 dest =  BloombergLP::bslalg::AllocatorUtil<my_Class3>::construct(
-                 createTemporaryCopy<my_Class2>(V2, TA), OA);
+                 OA, createTemporaryCopy<my_Class2>(TA, V2));
 
              ASSERTV(dest.d_def.d_value, 2== dest.d_def.d_value);
              ASSERT(OA == dest.d_def.d_allocator_p);
@@ -1618,10 +1619,8 @@ int main(int argc, char *argv[])
          // Plan: ...
          //
          // Testing:
-         //   construct (const TARGET_TYPE&                                 original,
-         //              bslma::Allocator   *allocator) // in C++03
-         //   construct (bslmf::MovableRef<TARGET_TYPE> original,
-         //                 bslma::Allocator  *allocator) // In C++11 onwards
+         //   construct (BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) original
+        //                 bslma::Allocator  *allocator)
          // --------------------------------------------------------------------
 
          if (verbose) printf("\nTESTING 'move construct'"
@@ -1635,27 +1634,27 @@ int main(int argc, char *argv[])
 
          {
              my_Class1 dest =  BloombergLP::bslalg::AllocatorUtil<my_Class1>::construct(
-                 createTemporaryCopy<my_Class1>(V1, TA), OA);
+                 OA, createTemporaryCopy<my_Class1>(TA, V1));
 
              ASSERTV(dest.d_def.d_value, 1== dest.d_def.d_value);
          }
          {
               my_Class2 dest =  BloombergLP::bslalg::AllocatorUtil<my_Class2>::construct(
-                 createTemporaryCopy<my_Class2>(V2, TA), OA);
+                 OA, createTemporaryCopy<my_Class2>(TA, V2));
 
              ASSERTV(dest.d_def.d_value, 2== dest.d_def.d_value);
              ASSERT(OA == dest.d_def.d_allocator_p);
          }
          {
              my_Class2a dest =  BloombergLP::bslalg::AllocatorUtil<my_Class2a>::construct(
-                 createTemporaryCopy<my_Class2a>(V2A, TA), OA);
+                 OA, createTemporaryCopy<my_Class2a>(TA, V2A));
 
              ASSERTV(dest.d_data.d_def.d_value, 42== dest.d_data.d_def.d_value);
              ASSERT(OA == dest.d_data.d_def.d_allocator_p);
          }
          {
              my_Class3 dest =  BloombergLP::bslalg::AllocatorUtil<my_Class3>::construct(
-                 createTemporaryCopy<my_Class3>(V3, TA), OA);
+                 OA, createTemporaryCopy<my_Class3>(TA, V3));
 
              ASSERTV(dest.d_def.d_value, 3== dest.d_def.d_value);
              ASSERT(OA == dest.d_def.d_allocator_p);
@@ -1690,9 +1689,9 @@ int main(int argc, char *argv[])
            bslma::TestAllocator *const OA = &otherAllocator;
            {
                my_Class1 src = BloombergLP::bslalg::AllocatorUtil<my_Class1>::construct(
-                               V1, TA);
+                               TA, V1);
                my_Class1a dest = BloombergLP::bslalg::AllocatorUtil<my_Class1a>::construct(
-                               src, OA);
+                               OA, src);
 
                ASSERTV(src.d_def.d_value, 1 == src.d_def.d_value);
                ASSERTV(dest.d_data.d_def.d_value, 1 == dest.d_data.d_def.d_value);
@@ -1700,9 +1699,9 @@ int main(int argc, char *argv[])
            }
            {
                my_Class1 src = BloombergLP::bslalg::AllocatorUtil<my_Class1>::construct(
-                       V1, 0);
+                       0, V1);
                my_Class2 dest = BloombergLP::bslalg::AllocatorUtil<my_Class2>::construct(
-                       src, TA);
+                       TA, src);
 
                ASSERTV(src.d_def.d_value, 1 == src.d_def.d_value);
                ASSERT(0 == src.d_def.d_allocator_p);
@@ -1711,9 +1710,9 @@ int main(int argc, char *argv[])
            }
            {
                 my_Class2 src = BloombergLP::bslalg::AllocatorUtil<my_Class2>::construct(
-                        V2, TA);
+                        TA, V2);
                 my_Class2a dest = BloombergLP::bslalg::AllocatorUtil<my_Class2a>::construct(
-                        src, OA);
+                        OA, src);
 
                 ASSERTV(src.d_def.d_value, 2 == src.d_def.d_value);
                 ASSERT(TA == src.d_def.d_allocator_p);
@@ -1722,9 +1721,9 @@ int main(int argc, char *argv[])
             }
            {
                my_Class2 src = BloombergLP::bslalg::AllocatorUtil<my_Class2>::construct(
-                       V2, TA);
+                       TA, V2);
                my_Class3 dest = BloombergLP::bslalg::AllocatorUtil<my_Class3>::construct(
-                       src, OA);
+                       OA, src);
 
                ASSERTV(src.d_def.d_value, 2 == src.d_def.d_value);
                ASSERT(TA == src.d_def.d_allocator_p);
@@ -1764,9 +1763,9 @@ int main(int argc, char *argv[])
            bslma::TestAllocator *const OA = &otherAllocator;
            {
                my_Class1 src = BloombergLP::bslalg::AllocatorUtil<my_Class1>::construct(
-                               V1, TA);
+                               TA, V1);
                my_Class1 dest = BloombergLP::bslalg::AllocatorUtil<my_Class1>::construct(
-                               src, src.d_def.d_allocator_p);
+                               src.d_def.d_allocator_p, src);
 
                ASSERTV(src.d_def.d_value, 1 == src.d_def.d_value);
                ASSERTV(dest.d_def.d_value, 1 == dest.d_def.d_value);
@@ -1774,9 +1773,9 @@ int main(int argc, char *argv[])
            }
            {
                my_Class2 src = BloombergLP::bslalg::AllocatorUtil<my_Class2>::construct(
-                       V2, TA);
+                       TA, V2);
                my_Class2 dest = BloombergLP::bslalg::AllocatorUtil<my_Class2>::construct(
-                       src, src.d_def.d_allocator_p);
+                       src.d_def.d_allocator_p, src);
 
                ASSERTV(src.d_def.d_value, 2 == src.d_def.d_value);
                ASSERT(TA == src.d_def.d_allocator_p);
@@ -1785,9 +1784,9 @@ int main(int argc, char *argv[])
            }
            {
                my_Class2a src = BloombergLP::bslalg::AllocatorUtil<my_Class2a>::construct(
-                       V2A, TA);
+                       TA, V2A);
                my_Class2a dest = BloombergLP::bslalg::AllocatorUtil<my_Class2a>::construct(
-                       src, src.d_data.d_def.d_allocator_p);
+                       src.d_data.d_def.d_allocator_p, src);
 
                ASSERTV(src.d_data.d_def.d_value, 42 == src.d_data.d_def.d_value);
                ASSERT(TA == src.d_data.d_def.d_allocator_p);
@@ -1796,9 +1795,9 @@ int main(int argc, char *argv[])
            }
            {
                 my_Class1 src = BloombergLP::bslalg::AllocatorUtil<my_Class1>::construct(
-                                V1, TA);
+                                TA, V1);
                 my_Class1 dest = BloombergLP::bslalg::AllocatorUtil<my_Class1>::construct(
-                                src, OA);
+                                OA, src);
 
                 ASSERTV(src.d_def.d_value, 1 == src.d_def.d_value);
                 ASSERTV(dest.d_def.d_value, 1 == dest.d_def.d_value);
@@ -1806,9 +1805,9 @@ int main(int argc, char *argv[])
             }
             {
                 my_Class2 src = BloombergLP::bslalg::AllocatorUtil<my_Class2>::construct(
-                                V2, TA);
+                                TA, V2);
                 my_Class2 dest = BloombergLP::bslalg::AllocatorUtil<my_Class2>::construct(
-                                src, OA);
+                                OA, src);
 
                 ASSERTV(src.d_def.d_value, 2 == src.d_def.d_value);
                 ASSERT(TA == src.d_def.d_allocator_p);
@@ -1817,9 +1816,9 @@ int main(int argc, char *argv[])
             }
             {
                 my_Class2a src = BloombergLP::bslalg::AllocatorUtil<my_Class2a>::construct(
-                              V2A, TA);
+                              TA, V2A);
                 my_Class2a dest = BloombergLP::bslalg::AllocatorUtil<my_Class2a>::construct(
-                              src, OA);
+                              OA, src);
 
                 ASSERTV(src.d_data.d_def.d_value, 42 == src.d_data.d_def.d_value);
                 ASSERT(TA == src.d_data.d_def.d_allocator_p);
@@ -1912,14 +1911,14 @@ int main(int argc, char *argv[])
         // 'copyConstruct' invokes copy constructor, even if type does not take
         // an allocator.
 
-        my_Class1 v1copy = bslalg::AllocatorUtil<my_Class1>::construct(v1, theAlloc);
+        my_Class1 v1copy = bslalg::AllocatorUtil<my_Class1>::construct(theAlloc, v1);
         ASSERT(0 == v1copy.d_def.d_allocator_p);
         ASSERT(1 == v1copy.d_def.d_value);
 
         // 'copyConstruct' invokes copy constructor, passing the allocator if
         // type takes an allocator.
 
-        my_Class2 v2copy = bslalg::AllocatorUtil<my_Class2>::construct(v2, theAlloc);
+        my_Class2 v2copy = bslalg::AllocatorUtil<my_Class2>::construct(theAlloc, v2);
 
         ASSERT(theAlloc == v2copy.d_def.d_allocator_p);
         ASSERT(2 == v2copy.d_def.d_value);
@@ -1927,7 +1926,7 @@ int main(int argc, char *argv[])
         // 'construct' invokes constructor, even if type does not take an
         // allocator.
 
-        my_Class1 v13 = bslalg::AllocatorUtil<my_Class1>::construct(3, theAlloc);
+        my_Class1 v13 = bslalg::AllocatorUtil<my_Class1>::construct(theAlloc, 3);
 
         ASSERT(0 == v13.d_def.d_allocator_p);
         ASSERT(3 == v13.d_def.d_value);
@@ -1936,7 +1935,7 @@ int main(int argc, char *argv[])
         // 'construct' invokes constructor, passing the allocator if type takes
         // an allocator.
 
-        my_Class2 v24 = bslalg::AllocatorUtil<my_Class2>::construct(4, theAlloc);
+        my_Class2 v24 = bslalg::AllocatorUtil<my_Class2>::construct(theAlloc, 4);
         ASSERT(theAlloc == v24.d_def.d_allocator_p);
         ASSERT(4 == v24.d_def.d_value);
 
@@ -1957,7 +1956,7 @@ int main(int argc, char *argv[])
 }
 
 // ----------------------------------------------------------------------------
-// Copyright 2013 Bloomberg Finance L.P.
+// Copyright 2019 Bloomberg Finance L.P.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
