@@ -7,6 +7,9 @@
 // should not be used as an example for new development.
 // ----------------------------------------------------------------------------
 
+// Todo: - improve tests by checking for equality, as opposed to value and allocator separately
+//
+
 #include "bslstl_optional.h"
 #include <bsls_bsltestutil.h>
 #include <bslstl_string.h>
@@ -184,7 +187,25 @@ class my_Class1 {
         otherRef.d_def.d_value = MOVED_FROM_VAL;
         d_def.d_allocator_p = 0;
     }
-
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
+    my_Class1(std::initializer_list<int> il)
+    {
+        d_def.d_value = 0;
+        for (int i : il){
+          d_def.d_value+=i;
+        }
+        d_def.d_allocator_p = 0;
+    }
+    my_Class1(std::initializer_list<int> il, int j)
+    {
+        d_def.d_value = 0;
+        for (int i : il){
+          d_def.d_value +=i;
+        }
+        d_def.d_value +=j;
+        d_def.d_allocator_p = 0;
+    }
+#endif //(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
     ~my_Class1() {
         ASSERT(d_def.d_value != 91);
         d_def.d_value = 91;
@@ -194,6 +215,18 @@ class my_Class1 {
 
     my_Class1& operator=(const my_Class1& rhs) {
         d_def.d_value = rhs.d_def.d_value;
+        return *this;
+    }
+
+    my_Class1& operator=(bslmf::MovableRef<my_Class1> rhs) {
+        my_Class1& otherRef = MovUtl::access(rhs);
+        d_def.d_value = otherRef.d_def.d_value;
+        otherRef.d_def.d_value = MOVED_FROM_VAL;
+        return *this;
+    }
+
+    my_Class1& operator=(int rhs) {
+        d_def.d_value = rhs;
         return *this;
     }
 
@@ -305,6 +338,25 @@ class my_Class2 {
         otherRef.d_def.d_value = MOVED_FROM_VAL;
         d_def.d_allocator_p = a;
     }
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
+    my_Class2(std::initializer_list<int> il, bslma::Allocator *a = 0)
+    {
+        d_def.d_value = 0;
+        for (int i : il){
+          d_def.d_value+=i;
+        }
+        d_def.d_allocator_p = a;
+    }
+    my_Class2(std::initializer_list<int> il, int j, bslma::Allocator *a = 0)
+    {
+        d_def.d_value = 0;
+        for (int i : il){
+          d_def.d_value +=i;
+        }
+        d_def.d_value +=j;
+        d_def.d_allocator_p = a;
+    }
+#endif //(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
 
     ~my_Class2() {
         ASSERT(d_def.d_value != 92);
@@ -326,6 +378,14 @@ class my_Class2 {
         my_Class2& otherRef = MovUtl::access(rhs);
         d_def.d_value = otherRef.d_def.d_value;
         otherRef.d_def.d_value = MOVED_FROM_VAL;
+
+        // do not touch allocator!
+
+        return *this;
+    }
+
+    my_Class2& operator=(int rhs) {
+        d_def.d_value = rhs;
 
         // do not touch allocator!
 
@@ -391,6 +451,19 @@ class my_Class2a {
                bslma::Allocator              *a,
                bslmf::MovableRef<my_Class2a>  rhs)
         : d_data(MovUtl::move(MovUtl::access(rhs).d_data), a) {}
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
+    my_Class2a(bsl::allocator_arg_t  ,
+        bslma::Allocator     *a,
+        std::initializer_list<int> il)
+    : d_data(il, a)
+    {}
+
+    my_Class2a(bsl::allocator_arg_t  ,
+        bslma::Allocator     *a,
+        std::initializer_list<int> il, int j)
+    : d_data(il, j, a)
+    {}
+#endif //(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
 
     // MANIPULATORS
     my_Class2a& operator=(const my_Class2a& rhs) {
@@ -403,6 +476,10 @@ class my_Class2a {
         return *this;
     }
 
+    my_Class2a& operator=(int rhs) {
+        d_data.operator=(rhs);
+        return *this;
+    }
     // ACCESSORS
     int value() const { return d_data.value(); }
 };
@@ -606,11 +683,11 @@ public:
         d_def.d_value = otherRef.d_def.d_value + 10;
         otherRef.d_def.d_value = MOVED_FROM_VAL;
     }
-    #if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
     my_Class5(const my_Class5&& other) {
         d_def.d_value = other.d_def.d_value + 20;
     }
-    #endif
+#endif //BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS
     ~my_Class5() {
         ASSERT(d_def.d_value != 93);
         d_def.d_value = 93;
@@ -627,8 +704,671 @@ public:
     // ACCESSORS
     int value() const { return d_def.d_value; }
 };
+
+// ======================
+// class ConstructTestArg
+// ======================
+
+template <int ID>
+class ConstructTestArg {
+// This very simple 'struct' is used purely to disambiguate types in
+// passing parameters to 'construct' due to the fact that
+// 'ConstructTestArg<ID1>' is a different type than 'ConstructTestArg<ID2>'
+// if 'ID1 != ID2'.  This class does not take an allocator.
+
+public:
+// PUBLIC DATA FOR TEST DRIVER ONLY
+const int d_value;
+
+// CREATORS
+ConstructTestArg(int value = -1);                               // IMPLICIT
+// Create an object having the specified 'value'.
+};
+
+// CREATORS
+template <int ID>
+ConstructTestArg<ID>::ConstructTestArg(int value)
+: d_value(value)
+{
+}
+
+// ==============================
+// class ConstructTestTypeNoAlloc
+// ==============================
+
+class ConstructTestTypeNoAlloc {
+// This 'struct' provides a test class capable of holding up to 14
+// parameters of types 'ConstructTestArg[1--14]'.  By default, a
+// 'ConstructTestTypeNoAlloc' is constructed with nil ('N1') values, but
+// instances can be constructed with actual values (e.g., for creating
+// expected values).  A 'ConstructTestTypeNoAlloc' can be invoked with up
+// to 14 parameters, via member functions 'testFunc[1--14]'.  These
+// functions are also called by the overloaded member 'operator()' of the
+// same signatures, and similar global functions 'testFunc[1--14]'.  All
+// invocations support the above 'ConstructTestSlotsNoAlloc' mechanism.
+//
+// This 'struct' intentionally does *not* take an allocator.
+
+// PRIVATE TYPES
+typedef ConstructTestArg<1>  Arg1;
+typedef ConstructTestArg<2>  Arg2;
+typedef ConstructTestArg<3>  Arg3;
+typedef ConstructTestArg<4>  Arg4;
+typedef ConstructTestArg<5>  Arg5;
+typedef ConstructTestArg<6>  Arg6;
+typedef ConstructTestArg<7>  Arg7;
+typedef ConstructTestArg<8>  Arg8;
+typedef ConstructTestArg<9>  Arg9;
+typedef ConstructTestArg<10> Arg10;
+typedef ConstructTestArg<11> Arg11;
+typedef ConstructTestArg<12> Arg12;
+typedef ConstructTestArg<13> Arg13;
+typedef ConstructTestArg<14> Arg14;
+// Argument types for shortcut.
+
+enum {
+N1 = -1   // default value for all private data
+};
+
+  public:
+    // DATA (exceptionally public, only within a test driver)
+    int d_ilsum;
+    Arg1  d_a1;
+    Arg2  d_a2;
+    Arg3  d_a3;
+    Arg4  d_a4;
+    Arg5  d_a5;
+    Arg6  d_a6;
+    Arg7  d_a7;
+    Arg8  d_a8;
+    Arg9  d_a9;
+    Arg10 d_a10;
+    Arg11 d_a11;
+    Arg12 d_a12;
+    Arg13 d_a13;
+    Arg14 d_a14;
+
+  // CREATORS (exceptionally in-line, only within a test driver)
+  explicit
+  ConstructTestTypeNoAlloc(
+  Arg1  a1  = N1, Arg2  a2  = N1, Arg3  a3  = N1,
+  Arg4  a4  = N1, Arg5  a5  = N1, Arg6  a6  = N1, Arg7  a7  = N1,
+  Arg8  a8  = N1, Arg9  a9  = N1, Arg10 a10 = N1, Arg11 a11 = N1,
+  Arg12 a12 = N1, Arg13 a13 = N1, Arg14 a14 = N1)
+  : d_ilsum(0)
+  , d_a1(a1), d_a2(a2), d_a3(a3), d_a4(a4), d_a5(a5), d_a6(a6), d_a7(a7)
+  , d_a8(a8), d_a9(a9), d_a10(a10), d_a11(a11), d_a12(a12), d_a13(a13)
+  , d_a14(a14) {}
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
+  explicit
+  ConstructTestTypeNoAlloc( std::initializer_list<int> il,
+  Arg1  a1  = N1, Arg2  a2  = N1, Arg3  a3  = N1,
+  Arg4  a4  = N1, Arg5  a5  = N1, Arg6  a6  = N1, Arg7  a7  = N1,
+  Arg8  a8  = N1, Arg9  a9  = N1, Arg10 a10 = N1, Arg11 a11 = N1,
+  Arg12 a12 = N1, Arg13 a13 = N1, Arg14 a14 = N1)
+  : d_ilsum(0)
+  , d_a1(a1), d_a2(a2), d_a3(a3), d_a4(a4), d_a5(a5), d_a6(a6), d_a7(a7)
+  , d_a8(a8), d_a9(a9), d_a10(a10), d_a11(a11), d_a12(a12), d_a13(a13)
+  , d_a14(a14)
+  {
+    for (int i : il) d_ilsum+=i;
+  }
+#endif // BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
+};
+
+// FREE OPERATORS
+bool operator==(const ConstructTestTypeNoAlloc& lhs,
+const ConstructTestTypeNoAlloc& rhs)
+{
+return lhs.d_a1.d_value  == rhs.d_a1.d_value &&
+lhs.d_a2.d_value  == rhs.d_a2.d_value &&
+lhs.d_a3.d_value  == rhs.d_a3.d_value &&
+lhs.d_a4.d_value  == rhs.d_a4.d_value &&
+lhs.d_a5.d_value  == rhs.d_a5.d_value &&
+lhs.d_a6.d_value  == rhs.d_a6.d_value &&
+lhs.d_a7.d_value  == rhs.d_a7.d_value &&
+lhs.d_a8.d_value  == rhs.d_a8.d_value &&
+lhs.d_a9.d_value  == rhs.d_a9.d_value &&
+lhs.d_a10.d_value == rhs.d_a10.d_value &&
+lhs.d_a11.d_value == rhs.d_a11.d_value &&
+lhs.d_a12.d_value == rhs.d_a12.d_value &&
+lhs.d_a13.d_value == rhs.d_a13.d_value &&
+lhs.d_a14.d_value == rhs.d_a14.d_value;
+}
+
+// =============================
+// class ConstructTestTypeAlloc
+// =============================
+
+class ConstructTestTypeAlloc {
+    // This class provides a test class capable of holding up to 14 parameters
+    // of types 'ConstructTestArg[1--14]'.  By default, a
+    // 'ConstructTestTypeAlloc' is constructed with nil ('N1') values, but
+    // instances can be constructed with actual values (e.g., for creating
+    // expected values).  This class intentionally *does* take an allocator.
+
+    // PRIVATE TYPES
+    typedef ConstructTestArg<1>  Arg1;
+    typedef ConstructTestArg<2>  Arg2;
+    typedef ConstructTestArg<3>  Arg3;
+    typedef ConstructTestArg<4>  Arg4;
+    typedef ConstructTestArg<5>  Arg5;
+    typedef ConstructTestArg<6>  Arg6;
+    typedef ConstructTestArg<7>  Arg7;
+    typedef ConstructTestArg<8>  Arg8;
+    typedef ConstructTestArg<9>  Arg9;
+    typedef ConstructTestArg<10> Arg10;
+    typedef ConstructTestArg<11> Arg11;
+    typedef ConstructTestArg<12> Arg12;
+    typedef ConstructTestArg<13> Arg13;
+    typedef ConstructTestArg<14> Arg14;
+    // Argument types for shortcut.
+
+    enum {
+    N1 = -1   // default value for all private data
+    };
+
+    public:
+    // DATA (exceptionally public, only within a test driver)
+    int d_ilsum;
+
+    bslma::Allocator *d_allocator_p;;
+    Arg1  d_a1;
+    Arg2  d_a2;
+    Arg3  d_a3;
+    Arg4  d_a4;
+    Arg5  d_a5;
+    Arg6  d_a6;
+    Arg7  d_a7;
+    Arg8  d_a8;
+    Arg9  d_a9;
+    Arg10 d_a10;
+    Arg11 d_a11;
+    Arg12 d_a12;
+    Arg13 d_a13;
+    Arg14 d_a14;
+
+    // CREATORS (exceptionally in-line, only within a test driver)
+    explicit
+    ConstructTestTypeAlloc(bslma::Allocator *allocator = 0)
+    : d_ilsum(0), d_allocator_p(allocator) {}
+    ConstructTestTypeAlloc(const ConstructTestTypeAlloc&  other,
+        bslma::Allocator              *allocator = 0)
+    : d_ilsum(0), d_allocator_p(allocator)
+    , d_a1 (other.d_a1),  d_a2 (other.d_a2),  d_a3 (other.d_a3)
+    , d_a4 (other.d_a4),  d_a5 (other.d_a5),  d_a6 (other.d_a6)
+    , d_a7 (other.d_a7),  d_a8 (other.d_a8),  d_a9 (other.d_a9)
+    , d_a10(other.d_a10), d_a11(other.d_a11), d_a12(other.d_a12)
+    , d_a13(other.d_a13), d_a14(other.d_a14){}
+    explicit
+    ConstructTestTypeAlloc(Arg1  a1, bslma::Allocator *allocator = 0)
+    : d_ilsum(0), d_allocator_p(allocator)
+    , d_a1(a1) {}
+    ConstructTestTypeAlloc(Arg1  a1, Arg2  a2, bslma::Allocator *allocator = 0)
+    : d_ilsum(0), d_allocator_p(allocator)
+    , d_a1(a1), d_a2(a2) {}
+    ConstructTestTypeAlloc(Arg1  a1, Arg2  a2, Arg3  a3,
+        bslma::Allocator *allocator = 0)
+    : d_ilsum(0), d_allocator_p(allocator)
+    , d_a1(a1), d_a2(a2), d_a3(a3) {}
+    ConstructTestTypeAlloc(Arg1  a1, Arg2  a2, Arg3  a3, Arg4  a4,
+        bslma::Allocator *allocator = 0)
+    : d_ilsum(0), d_allocator_p(allocator)
+    , d_a1(a1), d_a2(a2), d_a3(a3), d_a4(a4) {}
+    ConstructTestTypeAlloc(Arg1  a1, Arg2  a2, Arg3  a3, Arg4  a4, Arg5  a5,
+        bslma::Allocator *allocator = 0)
+    : d_ilsum(0), d_allocator_p(allocator)
+    , d_a1(a1), d_a2(a2), d_a3(a3), d_a4(a4), d_a5(a5) {}
+    ConstructTestTypeAlloc(Arg1  a1, Arg2  a2, Arg3  a3, Arg4  a4, Arg5  a5,
+        Arg6  a6, bslma::Allocator *allocator = 0)
+    : d_ilsum(0), d_allocator_p(allocator)
+    , d_a1(a1), d_a2(a2), d_a3(a3), d_a4(a4), d_a5(a5), d_a6(a6) {}
+    ConstructTestTypeAlloc(Arg1  a1, Arg2  a2, Arg3  a3, Arg4  a4, Arg5  a5,
+        Arg6  a6, Arg7  a7, bslma::Allocator *allocator = 0)
+    : d_ilsum(0), d_allocator_p(allocator)
+    , d_a1(a1), d_a2(a2), d_a3(a3), d_a4(a4), d_a5(a5), d_a6(a6)
+    , d_a7(a7) {}
+    ConstructTestTypeAlloc(Arg1  a1, Arg2  a2, Arg3  a3, Arg4  a4, Arg5  a5,
+        Arg6  a6, Arg7  a7, Arg8  a8,
+        bslma::Allocator *allocator = 0)
+    : d_ilsum(0), d_allocator_p(allocator)
+    , d_a1(a1), d_a2(a2), d_a3(a3), d_a4(a4), d_a5(a5), d_a6(a6)
+    , d_a7(a7), d_a8(a8) {}
+    ConstructTestTypeAlloc(Arg1  a1, Arg2  a2, Arg3  a3, Arg4  a4, Arg5  a5,
+        Arg6  a6, Arg7  a7, Arg8  a8, Arg9  a9,
+        bslma::Allocator *allocator = 0)
+    : d_ilsum(0), d_allocator_p(allocator)
+    , d_a1(a1), d_a2(a2), d_a3(a3), d_a4(a4), d_a5(a5), d_a6(a6)
+    , d_a7(a7), d_a8(a8), d_a9(a9) {}
+    ConstructTestTypeAlloc(Arg1  a1, Arg2  a2, Arg3  a3, Arg4  a4, Arg5  a5,
+        Arg6  a6, Arg7  a7, Arg8  a8, Arg9  a9, Arg10 a10,
+        bslma::Allocator *allocator = 0)
+    : d_ilsum(0), d_allocator_p(allocator)
+    , d_a1 (a1), d_a2 (a2), d_a3 (a3), d_a4 (a4), d_a5 (a5), d_a6 (a6)
+    , d_a7 (a7), d_a8 (a8), d_a9 (a9)
+    , d_a10(a10) {}
+    ConstructTestTypeAlloc(Arg1  a1, Arg2  a2, Arg3  a3, Arg4  a4, Arg5  a5,
+        Arg6  a6, Arg7  a7, Arg8  a8, Arg9  a9, Arg10 a10,
+        Arg11 a11, bslma::Allocator *allocator = 0)
+    : d_ilsum(0), d_allocator_p(allocator)
+    , d_a1 (a1), d_a2 (a2), d_a3 (a3), d_a4 (a4), d_a5 (a5), d_a6 (a6)
+    , d_a7 (a7), d_a8 (a8), d_a9 (a9)
+    , d_a10(a10), d_a11(a11) {}
+    ConstructTestTypeAlloc(Arg1  a1, Arg2  a2, Arg3  a3, Arg4  a4, Arg5  a5,
+        Arg6  a6, Arg7  a7, Arg8  a8, Arg9  a9, Arg10 a10,
+        Arg11 a11, Arg12 a12,
+        bslma::Allocator *allocator = 0)
+    : d_ilsum(0), d_allocator_p(allocator)
+    , d_a1 (a1), d_a2 (a2), d_a3 (a3), d_a4 (a4 ), d_a5 (a5 ), d_a6 (a6 )
+    , d_a7 (a7), d_a8 (a8), d_a9 (a9), d_a10(a10), d_a11(a11), d_a12(a12)
+    {}
+    ConstructTestTypeAlloc(Arg1  a1,  Arg2  a2,  Arg3  a3, Arg4  a4, Arg5  a5,
+        Arg6  a6,  Arg7  a7,  Arg8  a8, Arg9  a9, Arg10 a10,
+        Arg11 a11, Arg12 a12, Arg13 a13,
+        bslma::Allocator *allocator = 0)
+    : d_ilsum(0), d_allocator_p(allocator)
+    , d_a1 (a1), d_a2 (a2), d_a3 (a3), d_a4 (a4 ), d_a5 (a5 ), d_a6 (a6 )
+    , d_a7 (a7), d_a8 (a8), d_a9 (a9), d_a10(a10), d_a11(a11), d_a12(a12)
+    , d_a13(a13) {}
+    ConstructTestTypeAlloc(Arg1  a1,  Arg2  a2,  Arg3  a3, Arg4  a4, Arg5  a5,
+        Arg6  a6,  Arg7  a7,  Arg8  a8, Arg9  a9, Arg10 a10,
+        Arg11 a11, Arg12 a12, Arg13 a13, Arg14 a14,
+        bslma::Allocator *allocator = 0)
+    : d_ilsum(0), d_allocator_p(allocator)
+    , d_a1 (a1), d_a2 (a2), d_a3 (a3), d_a4 (a4 ), d_a5 (a5 ), d_a6 (a6 )
+    , d_a7 (a7), d_a8 (a8), d_a9 (a9), d_a10(a10), d_a11(a11), d_a12(a12)
+    , d_a13(a13), d_a14(a14) {}
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
+    ConstructTestTypeAlloc(std::initializer_list<int> il,
+        bslma::Allocator *allocator = 0)
+    : d_ilsum(0), d_allocator_p(allocator)
+    {
+          for (int i : il) d_ilsum+=i;
+    }
+
+    ConstructTestTypeAlloc(std::initializer_list<int> il,
+        Arg1  a1, bslma::Allocator *allocator = 0)
+    : d_ilsum(0), d_allocator_p(allocator)
+    , d_a1(a1)
+    {
+          for (int i : il) d_ilsum+=i;
+    }
+
+    ConstructTestTypeAlloc(std::initializer_list<int> il,
+        Arg1  a1, Arg2  a2, bslma::Allocator *allocator = 0)
+    : d_ilsum(0), d_allocator_p(allocator)
+    , d_a1(a1), d_a2(a2)
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+    ConstructTestTypeAlloc(std::initializer_list<int> il,
+        Arg1  a1, Arg2  a2, Arg3  a3,
+        bslma::Allocator *allocator = 0)
+    : d_ilsum(0), d_allocator_p(allocator)
+    , d_a1(a1), d_a2(a2), d_a3(a3)
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+    ConstructTestTypeAlloc(std::initializer_list<int> il,
+        Arg1  a1, Arg2  a2, Arg3  a3, Arg4  a4,
+        bslma::Allocator *allocator = 0)
+    : d_ilsum(0), d_allocator_p(allocator)
+    , d_a1(a1), d_a2(a2), d_a3(a3), d_a4(a4)
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+    ConstructTestTypeAlloc(std::initializer_list<int> il,
+        Arg1  a1, Arg2  a2, Arg3  a3, Arg4  a4, Arg5  a5,
+        bslma::Allocator *allocator = 0)
+    : d_ilsum(0), d_allocator_p(allocator)
+    , d_a1(a1), d_a2(a2), d_a3(a3), d_a4(a4), d_a5(a5)
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+    ConstructTestTypeAlloc(std::initializer_list<int> il,
+        Arg1  a1, Arg2  a2, Arg3  a3, Arg4  a4, Arg5  a5,
+        Arg6  a6, bslma::Allocator *allocator = 0)
+    : d_ilsum(0), d_allocator_p(allocator)
+    , d_a1(a1), d_a2(a2), d_a3(a3), d_a4(a4), d_a5(a5), d_a6(a6)
+    {
+      d_ilsum = 0;
+      for (int i : il) d_ilsum+=i;
+    }
+    ConstructTestTypeAlloc(std::initializer_list<int> il,
+        Arg1  a1, Arg2  a2, Arg3  a3, Arg4  a4, Arg5  a5,
+        Arg6  a6, Arg7  a7, bslma::Allocator *allocator = 0)
+    : d_ilsum(0), d_allocator_p(allocator)
+    , d_a1(a1), d_a2(a2), d_a3(a3), d_a4(a4), d_a5(a5), d_a6(a6)
+    , d_a7(a7)
+    {
+     for (int i : il) d_ilsum+=i;
+    }
+    ConstructTestTypeAlloc(std::initializer_list<int> il,
+        Arg1  a1, Arg2  a2, Arg3  a3, Arg4  a4, Arg5  a5,
+        Arg6  a6, Arg7  a7, Arg8  a8,
+        bslma::Allocator *allocator = 0)
+    : d_ilsum(0), d_allocator_p(allocator)
+    , d_a1(a1), d_a2(a2), d_a3(a3), d_a4(a4), d_a5(a5), d_a6(a6)
+    , d_a7(a7), d_a8(a8)
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+    ConstructTestTypeAlloc(std::initializer_list<int> il,
+        Arg1  a1, Arg2  a2, Arg3  a3, Arg4  a4, Arg5  a5,
+        Arg6  a6, Arg7  a7, Arg8  a8, Arg9  a9,
+        bslma::Allocator *allocator = 0)
+    : d_ilsum(0), d_allocator_p(allocator)
+    , d_a1(a1), d_a2(a2), d_a3(a3), d_a4(a4), d_a5(a5), d_a6(a6)
+    , d_a7(a7), d_a8(a8), d_a9(a9)
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+    ConstructTestTypeAlloc(std::initializer_list<int> il,
+        Arg1  a1, Arg2  a2, Arg3  a3, Arg4  a4, Arg5  a5,
+        Arg6  a6, Arg7  a7, Arg8  a8, Arg9  a9, Arg10 a10,
+        bslma::Allocator *allocator = 0)
+    : d_ilsum(0), d_allocator_p(allocator)
+    , d_a1 (a1), d_a2 (a2), d_a3 (a3), d_a4 (a4), d_a5 (a5), d_a6 (a6)
+    , d_a7 (a7), d_a8 (a8), d_a9 (a9)
+    , d_a10(a10)
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+    ConstructTestTypeAlloc(std::initializer_list<int> il,
+        Arg1  a1, Arg2  a2, Arg3  a3, Arg4  a4, Arg5  a5,
+        Arg6  a6, Arg7  a7, Arg8  a8, Arg9  a9, Arg10 a10,
+        Arg11 a11, bslma::Allocator *allocator = 0)
+    : d_ilsum(0), d_allocator_p(allocator)
+    , d_a1 (a1), d_a2 (a2), d_a3 (a3), d_a4 (a4), d_a5 (a5), d_a6 (a6)
+    , d_a7 (a7), d_a8 (a8), d_a9 (a9)
+    , d_a10(a10), d_a11(a11)
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+    ConstructTestTypeAlloc(std::initializer_list<int> il,
+        Arg1  a1, Arg2  a2, Arg3  a3, Arg4  a4, Arg5  a5,
+        Arg6  a6, Arg7  a7, Arg8  a8, Arg9  a9, Arg10 a10,
+        Arg11 a11, Arg12 a12,
+        bslma::Allocator *allocator = 0)
+    : d_ilsum(0), d_allocator_p(allocator)
+    , d_a1 (a1), d_a2 (a2), d_a3 (a3), d_a4 (a4 ), d_a5 (a5 ), d_a6 (a6 )
+    , d_a7 (a7), d_a8 (a8), d_a9 (a9), d_a10(a10), d_a11(a11), d_a12(a12)
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+    ConstructTestTypeAlloc(std::initializer_list<int> il,
+        Arg1  a1,  Arg2  a2,  Arg3  a3, Arg4  a4, Arg5  a5,
+        Arg6  a6,  Arg7  a7,  Arg8  a8, Arg9  a9, Arg10 a10,
+        Arg11 a11, Arg12 a12, Arg13 a13,
+        bslma::Allocator *allocator = 0)
+    : d_ilsum(0), d_allocator_p(allocator)
+    , d_a1 (a1), d_a2 (a2), d_a3 (a3), d_a4 (a4 ), d_a5 (a5 ), d_a6 (a6 )
+    , d_a7 (a7), d_a8 (a8), d_a9 (a9), d_a10(a10), d_a11(a11), d_a12(a12)
+    , d_a13(a13)
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+    ConstructTestTypeAlloc(std::initializer_list<int> il,
+        Arg1  a1,  Arg2  a2,  Arg3  a3, Arg4  a4, Arg5  a5,
+        Arg6  a6,  Arg7  a7,  Arg8  a8, Arg9  a9, Arg10 a10,
+        Arg11 a11, Arg12 a12, Arg13 a13, Arg14 a14,
+        bslma::Allocator *allocator = 0)
+    : d_ilsum(0), d_allocator_p(allocator)
+    , d_a1 (a1), d_a2 (a2), d_a3 (a3), d_a4 (a4 ), d_a5 (a5 ), d_a6 (a6 )
+    , d_a7 (a7), d_a8 (a8), d_a9 (a9), d_a10(a10), d_a11(a11), d_a12(a12)
+    , d_a13(a13), d_a14(a14)
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+#endif
+};
+
+// TRAITS
+namespace BloombergLP {
+namespace bslma {
+
+template <>
+struct UsesBslmaAllocator<ConstructTestTypeAlloc> : bsl::true_type { };
+
+}  // close namespace bslma
+}  // close enterprise namespace
+
+// FREE OPERATORS
+bool operator==(const ConstructTestTypeAlloc& lhs,
+const ConstructTestTypeAlloc& rhs)
+{
+    return lhs.d_a1.d_value  == rhs.d_a1.d_value &&
+    lhs.d_a2.d_value  == rhs.d_a2.d_value &&
+    lhs.d_a3.d_value  == rhs.d_a3.d_value &&
+    lhs.d_a4.d_value  == rhs.d_a4.d_value &&
+    lhs.d_a5.d_value  == rhs.d_a5.d_value &&
+    lhs.d_a6.d_value  == rhs.d_a6.d_value &&
+    lhs.d_a7.d_value  == rhs.d_a7.d_value &&
+    lhs.d_a8.d_value  == rhs.d_a8.d_value &&
+    lhs.d_a9.d_value  == rhs.d_a9.d_value &&
+    lhs.d_a10.d_value == rhs.d_a10.d_value &&
+    lhs.d_a11.d_value == rhs.d_a11.d_value &&
+    lhs.d_a12.d_value == rhs.d_a12.d_value &&
+    lhs.d_a13.d_value == rhs.d_a13.d_value &&
+    lhs.d_a14.d_value == rhs.d_a14.d_value;
+}
+
+// ================================
+// class ConstructTestTypeAllocArgT
+// ================================
+
+class ConstructTestTypeAllocArgT {
+// This class provides a test class capable of holding up to 14 parameters
+// of types 'ConstructTestArg[1--14]'.  By default, a
+// 'ConstructTestTypeAllocArgT' is constructed with nil ('N1') values, but
+// instances can be constructed with actual values (e.g., for creating
+// expected values).  This class takes an allocator using the
+// 'allocator_arg_t' protocol.
+
+    // PRIVATE TYPES
+    typedef ConstructTestArg<1>  Arg1;
+    typedef ConstructTestArg<2>  Arg2;
+    typedef ConstructTestArg<3>  Arg3;
+    typedef ConstructTestArg<4>  Arg4;
+    typedef ConstructTestArg<5>  Arg5;
+    typedef ConstructTestArg<6>  Arg6;
+    typedef ConstructTestArg<7>  Arg7;
+    typedef ConstructTestArg<8>  Arg8;
+    typedef ConstructTestArg<9>  Arg9;
+    typedef ConstructTestArg<10> Arg10;
+    typedef ConstructTestArg<11> Arg11;
+    typedef ConstructTestArg<12> Arg12;
+    typedef ConstructTestArg<13> Arg13;
+    typedef ConstructTestArg<14> Arg14;
+    // Argument types for shortcut.
+
+    enum {
+    N1 = -1   // default value for all private data
+    };
+
+  public:
+    // DATA (exceptionally public, only within a test driver)
+    int d_ilsum;
+
+    bslma::Allocator *d_allocator_p;;
+    Arg1  d_a1;
+    Arg2  d_a2;
+    Arg3  d_a3;
+    Arg4  d_a4;
+    Arg5  d_a5;
+    Arg6  d_a6;
+    Arg7  d_a7;
+    Arg8  d_a8;
+    Arg9  d_a9;
+    Arg10 d_a10;
+    Arg11 d_a11;
+    Arg12 d_a12;
+    Arg13 d_a13;
+    Arg14 d_a14;
+
+    // CREATORS (exceptionally in-line, only within a test driver)
+    explicit
+    ConstructTestTypeAllocArgT(Arg1  a1  = N1, Arg2  a2 = N1,  Arg3  a3  = N1,
+            Arg4  a4  = N1, Arg5  a5 = N1,  Arg6  a6  = N1,
+            Arg7  a7  = N1, Arg8  a8 = N1,  Arg9  a9  = N1,
+            Arg10 a10 = N1, Arg11 a11 = N1, Arg12 a12 = N1,
+            Arg13 a13 = N1, Arg14 a14 = N1)
+    : d_ilsum(0), d_allocator_p(0)
+    , d_a1 (a1 ), d_a2 (a2 ), d_a3 (a3), d_a4 (a4 ), d_a5 (a5 ), d_a6 (a6 )
+    , d_a7 (a7 ), d_a8 (a8 ), d_a9 (a9), d_a10(a10), d_a11(a11), d_a12(a12)
+    , d_a13(a13), d_a14(a14) {}
+
+    ConstructTestTypeAllocArgT(bsl::allocator_arg_t       ,
+            bslma::Allocator     *alloc,
+            Arg1  a1  = N1, Arg2  a2 = N1,  Arg3  a3  = N1,
+            Arg4  a4  = N1, Arg5  a5 = N1,  Arg6  a6  = N1,
+            Arg7  a7  = N1, Arg8  a8 = N1,  Arg9  a9  = N1,
+            Arg10 a10 = N1, Arg11 a11 = N1, Arg12 a12 = N1,
+            Arg13 a13 = N1, Arg14 a14 = N1)
+    : d_ilsum(0), d_allocator_p(alloc)
+    , d_a1 (a1 ), d_a2 (a2 ), d_a3 (a3), d_a4 (a4 ), d_a5 (a5 ), d_a6 (a6 )
+    , d_a7 (a7 ), d_a8 (a8 ), d_a9 (a9), d_a10(a10), d_a11(a11), d_a12(a12)
+    , d_a13(a13), d_a14(a14) {}
+
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
+    ConstructTestTypeAllocArgT(std::initializer_list<int> il,
+        Arg1  a1  = N1, Arg2  a2 = N1,  Arg3  a3  = N1,
+            Arg4  a4  = N1, Arg5  a5 = N1,  Arg6  a6  = N1,
+            Arg7  a7  = N1, Arg8  a8 = N1,  Arg9  a9  = N1,
+            Arg10 a10 = N1, Arg11 a11 = N1, Arg12 a12 = N1,
+            Arg13 a13 = N1, Arg14 a14 = N1)
+    : d_ilsum(0), d_allocator_p(0)
+    , d_a1 (a1 ), d_a2 (a2 ), d_a3 (a3), d_a4 (a4 ), d_a5 (a5 ), d_a6 (a6 )
+    , d_a7 (a7 ), d_a8 (a8 ), d_a9 (a9), d_a10(a10), d_a11(a11), d_a12(a12)
+    , d_a13(a13), d_a14(a14)
+    {
+         for (int i : il) d_ilsum+=i;
+    }
+    ConstructTestTypeAllocArgT(bsl::allocator_arg_t       ,
+            bslma::Allocator     *alloc,
+            std::initializer_list<int> il,
+            Arg1  a1  = N1, Arg2  a2 = N1,  Arg3  a3  = N1,
+            Arg4  a4  = N1, Arg5  a5 = N1,  Arg6  a6  = N1,
+            Arg7  a7  = N1, Arg8  a8 = N1,  Arg9  a9  = N1,
+            Arg10 a10 = N1, Arg11 a11 = N1, Arg12 a12 = N1,
+            Arg13 a13 = N1, Arg14 a14 = N1)
+    : d_ilsum(0), d_allocator_p(alloc)
+    , d_a1 (a1 ), d_a2 (a2 ), d_a3 (a3), d_a4 (a4 ), d_a5 (a5 ), d_a6 (a6 )
+    , d_a7 (a7 ), d_a8 (a8 ), d_a9 (a9), d_a10(a10), d_a11(a11), d_a12(a12)
+    , d_a13(a13), d_a14(a14)
+    {
+        for (int i : il) d_ilsum+=i;
+    }
+#endif
+};
+
+// TRAITS
+namespace BloombergLP {
+namespace bslma {
+
+template <>
+struct UsesBslmaAllocator<ConstructTestTypeAllocArgT> : bsl::true_type { };
+
+}  // close namespace bslma
+
+namespace bslmf {
+
+template <>
+struct UsesAllocatorArgT<ConstructTestTypeAllocArgT> : bsl::true_type { };
+
+}  // close namespace bslmf
+}  // close enterprise namespace
+
+// FREE OPERATORS
+bool operator==(const ConstructTestTypeAllocArgT& lhs,
+const ConstructTestTypeAllocArgT& rhs)
+{
+    return lhs.d_a1.d_value  == rhs.d_a1.d_value &&
+          lhs.d_a2.d_value  == rhs.d_a2.d_value &&
+          lhs.d_a3.d_value  == rhs.d_a3.d_value &&
+          lhs.d_a4.d_value  == rhs.d_a4.d_value &&
+          lhs.d_a5.d_value  == rhs.d_a5.d_value &&
+          lhs.d_a6.d_value  == rhs.d_a6.d_value &&
+          lhs.d_a7.d_value  == rhs.d_a7.d_value &&
+          lhs.d_a8.d_value  == rhs.d_a8.d_value &&
+          lhs.d_a9.d_value  == rhs.d_a9.d_value &&
+          lhs.d_a10.d_value == rhs.d_a10.d_value &&
+          lhs.d_a11.d_value == rhs.d_a11.d_value &&
+          lhs.d_a12.d_value == rhs.d_a12.d_value &&
+          lhs.d_a13.d_value == rhs.d_a13.d_value &&
+          lhs.d_a14.d_value == rhs.d_a14.d_value;
+}
+
+const my_Class1     V1(1);
+const my_Class2     V2(2);
 const my_Class4     V4(4);
 const my_Class5     V5(5);
+ConstructTestArg<1>    VA1(1);
+ConstructTestArg<2>    VA2(2);
+ConstructTestArg<3>    VA3(3);
+ConstructTestArg<4>    VA4(4);
+ConstructTestArg<5>    VA5(5);
+ConstructTestArg<6>    VA6(6);
+ConstructTestArg<7>    VA7(7);
+ConstructTestArg<8>    VA8(8);
+ConstructTestArg<9>    VA9(9);
+ConstructTestArg<10>   VA10(10);
+ConstructTestArg<11>   VA11(11);
+ConstructTestArg<12>   VA12(12);
+ConstructTestArg<13>   VA13(13);
+ConstructTestArg<14>   VA14(14);
+
+// ======================
+// macros TEST_EMPLACE*
+// ======================
+
+#define TEST_EMPLACE(obj, emplace, expArgs)                                 \
+{                                                                           \
+  ConstructTestTypeNoAlloc EXP expArgs ;                                    \
+  obj . emplace ;                                                           \
+  ASSERT(EXP == obj .value());                                              \
+}
+#define TEST_EMPLACEIL(obj, emplace, expArgs, ilsum)                        \
+{                                                                           \
+  ConstructTestTypeNoAlloc EXP expArgs ;                                    \
+  obj . emplace ;                                                           \
+  ASSERT(EXP == obj .value());                                              \
+  ASSERT(ilsum == obj .value().d_ilsum);                                    \
+}
+#define TEST_EMPLACEA1(obj, emplace, expArgs, alloc)                         \
+{                                                                           \
+  /* Expects allocator at end of argument list */                           \
+  ConstructTestTypeAlloc EXP expArgs ;                                      \
+  obj . emplace ;                                                           \
+  ASSERT(EXP == obj .value());                                              \
+  ASSERT(alloc == obj.value().d_allocator_p);                                 \
+}
+#define TEST_EMPLACEILA1(obj, emplace, expArgs, ilsum, alloc)               \
+{                                                                           \
+  /* Expects allocator at end of argument list */                           \
+  ConstructTestTypeAlloc EXP expArgs ;                                      \
+  obj . emplace ;                                                           \
+  ASSERT(EXP == obj .value());                                              \
+  ASSERT(alloc == obj.value().d_allocator_p);                               \
+  ASSERT(ilsum == obj .value().d_ilsum);                                    \
+}
+#define TEST_EMPLACEA2(obj, emplace, expArgs, alloc)                         \
+{                                                                           \
+  /* Expects allocator after 'allocator_arg_t' tag */                       \
+  ConstructTestTypeAllocArgT EXP expArgs ;                                    \
+  obj . emplace ;                                                           \
+  ASSERT(EXP == obj .value());                                              \
+  ASSERT(alloc == obj.value().d_allocator_p);                                 \
+}
+#define TEST_EMPLACEILA2(obj, emplace, expArgs, ilsum, alloc)               \
+{                                                                           \
+  /* Expects allocator after 'allocator_arg_t' tag */                       \
+  ConstructTestTypeAllocArgT EXP expArgs ;                                  \
+  obj . emplace ;                                                           \
+  ASSERT(EXP == obj .value());                                              \
+  ASSERT(alloc == obj.value().d_allocator_p);                               \
+  ASSERT(ilsum == obj .value().d_ilsum);                                    \
+}
 //=============================================================================
 //                              MAIN PROGRAM
 //-----------------------------------------------------------------------------
@@ -682,8 +1422,6 @@ void bslstl_optional_test1()
         typedef int                            ValueType;
         typedef bsl::optional<ValueType> Obj;
 
-        ValueType *addr;
-
         ASSERT(sizeof(ValueType) == sizeof(Obj::value_type));
 
         if (veryVerbose) printf("\tTesting default constructor.\n" );
@@ -722,7 +1460,6 @@ void bslstl_optional_test1()
         typedef bsl::string                    ValueType;
         typedef bsl::optional<ValueType> Obj;
 
-        ValueType *addr;
 
         ASSERT(sizeof(ValueType) == sizeof(Obj::value_type));
 
@@ -1752,8 +2489,7 @@ void bslstl_optional_test6()
 {
     // --------------------------------------------------------------------
     // TESTING operator-> FUNCTIONALITY
-    //   This test will verify that the opeartor-> works as expected.
-    //   The test relies on constructors and emplace member functions.
+    //   This test will verify that the operator-> works as expected.
     //
     // Concerns:
     //   * Calling operator-> on an engaged optional returns a pointer to the
@@ -1769,7 +2505,7 @@ void bslstl_optional_test6()
     //   'my_class1' and 'const my_class1' (uses allocator) for 'TYPE'.
     //
     //   Create engaged optional of each type. Call operator-> and check that
-    //   the value of the object is correct.
+    //   the value and allocator, if any, of the object is correct.
     //
     //   Modify the optional through the return pointer. Check the value
     //   of the optional is correct.
@@ -1822,13 +2558,101 @@ void bslstl_optional_test6()
             CObjC(5)->d_def.d_value = 7; // this should not compile 6/6
 #endif
             mX->d_def.d_value = 6;
-            ASSERT(mX->d_def.d_value == 6);
+            ASSERT(mX.value().d_def.d_value == 6);
        }
     }
     if (verbose) printf( "\nUsing 'my_Class2'.\n");
     {
+        bslma::TestAllocator da("default", veryVeryVeryVerbose);
+        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+        bslma::TestAllocator ta("third", veryVeryVeryVerbose);
+
+        bslma::DefaultAllocatorGuard dag(&da);
         typedef my_Class2                            ValueType;
         typedef const my_Class2                      ConstValueType;
+        typedef bsl::optional<ValueType> Obj;
+        typedef const Obj CObj;
+        typedef bsl::optional<ConstValueType> ObjC;
+        typedef const CObj CObjC;
+
+        {
+            Obj mX(bsl::allocator_arg, &oa, V2);
+            CObj cobjX(bsl::allocator_arg, &ta, V2);
+            ObjC objcX(9);
+            CObjC cobjcX(10);
+
+            ASSERT(mX->d_def.d_value == 2);
+            ASSERT(mX->d_def.d_allocator_p == &oa);
+            ASSERT(cobjX->d_def.d_value == 2);
+            ASSERT(cobjX->d_def.d_allocator_p == &ta);
+            ASSERT(objcX->d_def.d_value == 9);
+            ASSERT(objcX->d_def.d_allocator_p == &da);
+            ASSERT(cobjcX->d_def.d_value == 10);
+#if defined(BSLSTL_OPTIONAL_TEST_BAD_OPERATOR_ARROW2)
+            cobjX->d_def.d_value = 6; // this should not compile 1/6
+            objcX->d_def.d_value = 6; // this should not compile 2/6
+            cobjcX->d_def.d_value = 6; // this should not compile 3/6
+            CObj(5)->d_def.d_value = 7; // this should not compile 4/6
+            ObjC(5)->d_def.d_value = 7; // this should not compile 5/6
+            CObjC(5)->d_def.d_value = 7; // this should not compile 6/6
+#endif
+            mX->d_def.d_value = 6;
+            ASSERT(mX.value().d_def.d_value == 6);
+       }
+    }
+}
+void bslstl_optional_test7()
+{
+    // --------------------------------------------------------------------
+    // TESTING operator* FUNCTIONALITY
+    //   This test will verify that the operator* works as expected.
+    //
+    // Concerns:
+    //   * Calling operator* on an engaged optional returns a reference to the
+    //      contained value.
+    //   * It is possible to modify the value through to the
+    //     acquired pointer for non-const optional objects containing non-const
+    //     type object. Similarly, it is not possible to modify the contained
+    //     value through the returned reference in any other case
+    //
+    //   * in C++11, Calling operator* on an engaged const optional returns an
+    //     if the optional object was an lvalue, and an rvalue reference if the optional
+    //     object was an rvalue.
+    //
+    // Plan:
+    //   Conduct the test using 'my_class1', 'const my_class1' (does not use allocator) and
+    //   'my_class1' and 'const my_class1' (uses allocator) for 'TYPE'.
+    //
+    //   Create engaged optional of each type. Call operator* and check that
+    //   the value and allocator, if any, of the object are correct.
+    //
+    //   Modify the non const optional of a non const type through the return reference.
+    //   Check the value of the optional is correct.
+    //
+    //   Bind const optional reference to optional object. Call operator-> and
+    //   check that the value of the object and the allocator is correct.
+    //
+    //   Check the value of the optional object can not be modified through
+    //   operator-> const and through operator-> for const types. This requires
+    //   compilation failures.
+    //
+    //
+    // Testing:
+    //   const T* operator->() const;
+    //   T* operator->();
+    //
+    //   void value();
+    //
+    // --------------------------------------------------------------------
+
+    if (verbose) printf(
+                       "\nTESTING operator* MEMBER FUNCTION "
+                       "\n==================================\n");
+
+    if (verbose) printf( "\nUsing 'my_Class1'.\n");
+    {
+        typedef my_Class1                            ValueType;
+        typedef const my_Class1                      ConstValueType;
         typedef bsl::optional<ValueType> Obj;
         typedef const Obj CObj;
         typedef bsl::optional<ConstValueType> ObjC;
@@ -1840,22 +2664,1076 @@ void bslstl_optional_test6()
             ObjC objcX(9);
             CObjC cobjcX(10);
 
-            ASSERT(mX->d_def.d_value == 4);
-            ASSERT(cobjX->d_def.d_value == 8);
-            ASSERT(objcX->d_def.d_value == 9);
-            ASSERT(cobjcX->d_def.d_value == 10);
-#if defined(BSLSTL_OPTIONAL_TEST_BAD_OPERATOR_ARROW2)
-            cobjX->d_def.d_value = 6; // this should not compile 1/6
-            objcX->d_def.d_value = 6; // this should not compile 2/6
-            cobjcX->d_def.d_value = 6; // this should not compile 3/6
-            CObj(5)->d_def.d_value = 7; // this should not compile 4/6
-            ObjC(5)->d_def.d_value = 7; // this should not compile 5/6
-            CObjC(5)->d_def.d_value = 7; // this should not compile 6/6
+            ASSERT((*mX).d_def.d_value == 4);
+            ASSERT((*cobjX).d_def.d_value == 8);
+            ASSERT((*objcX).d_def.d_value == 9);
+            ASSERT((*cobjcX).d_def.d_value == 10);
+#if defined(BSLSTL_OPTIONAL_TEST_BAD_OPERATOR_STAR1)
+            (*cobjX).d_def.d_value = 6; // this should not compile 1/6
+            (*objcX).d_def.d_value = 6; // this should not compile 2/6
+            (*cobjcX).d_def.d_value = 6; // this should not compile 3/6
+            (*CObj(5)).d_def.d_value = 7; // this should not compile 4/6
+            (*ObjC(5)).d_def.d_value = 7; // this should not compile 5/6
+            (*CObjC(5)).d_def.d_value = 7; // this should not compile 6/6
 #endif
-            mX->d_def.d_value = 6;
-            ASSERT(mX->d_def.d_value == 6);
+            (*mX).d_def.d_value = 6;
+            ASSERT(mX.value().d_def.d_value == 6);
        }
     }
+    if (verbose) printf( "\nUsing 'my_Class2'.\n");
+    {
+      bslma::TestAllocator da("default", veryVeryVeryVerbose);
+       bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+       bslma::TestAllocator ta("third", veryVeryVeryVerbose);
+
+       bslma::DefaultAllocatorGuard dag(&da);
+       typedef my_Class2                            ValueType;
+       typedef const my_Class2                      ConstValueType;
+       typedef bsl::optional<ValueType> Obj;
+       typedef const Obj CObj;
+       typedef bsl::optional<ConstValueType> ObjC;
+       typedef const CObj CObjC;
+
+       {
+           Obj mX(bsl::allocator_arg, &oa, V2);
+           CObj cobjX(bsl::allocator_arg, &ta, V2);
+           ObjC objcX(9);
+           CObjC cobjcX(10);
+
+           ASSERT((*mX).d_def.d_value == 2);
+           ASSERT((*mX).d_def.d_allocator_p == &oa);
+           ASSERT((*cobjX).d_def.d_value == 2);
+           ASSERT((*cobjX).d_def.d_allocator_p == &ta);
+           ASSERT((*objcX).d_def.d_value == 9);
+           ASSERT((*objcX).d_def.d_allocator_p == &da);
+           ASSERT((*cobjcX).d_def.d_value == 10);
+#if defined(BSLSTL_OPTIONAL_TEST_BAD_OPERATOR_STAR2)
+           (*cobjX).d_def.d_value = 6; // this should not compile 1/6
+           (*objcX).d_def.d_value = 6; // this should not compile 2/6
+           (*cobjcX).d_def.d_value = 6; // this should not compile 3/6
+           (*CObj(5)).d_def.d_value = 7; // this should not compile 4/6
+           (*ObjC(5)).d_def.d_value = 7; // this should not compile 5/6
+           (*CObjC(5)).d_def.d_value = 7; // this should not compile 6/6
+#endif
+           (*mX).d_def.d_value = 6;
+           ASSERT(mX.value().d_def.d_value == 6);
+       }
+   }
+}
+
+void bslstl_optional_test8()
+{
+  // --------------------------------------------------------------------
+  // TESTING emplace FUNCTIONALITY
+  //   This test will verify that the intiializer list emplace function works
+  //   as expected.
+  //
+  // Concerns:
+  //   * Calling emplace on a non-engaged optional creates a value type object
+  //     using the optional's allocator and emplace arguments
+  //   * Calling emplace on an engaged optional replaces the value type object
+  //     with a new one created using the optional's allocator and emplace arguments
+  //   * Calling emplace with no arguments creates a default constructed value
+  //     type object
+  //   * Calling emplace does not modify the allocator, even when called with an
+  //     rvalue value type argument
+  //   * emplace can not be used on a const qualified optional.
+  //
+  //
+  // Plan:
+  //
+  //
+  // Testing:
+  //
+  //   void emplace();
+  //   void emplace(Args&&...);
+  //
+  //   void value();
+  //
+  // --------------------------------------------------------------------
+
+    if (verbose) printf(
+                       "\nTESTING emplace MEMBER FUNCTION "
+                       "\n==================================\n");
+
+    if (verbose) printf( "\nUsing 'my_Class1'.\n");
+    {
+        typedef my_Class1                  ValueType;
+        typedef bsl::optional<ValueType> Obj;
+
+        {
+          Obj mX;
+          mX.emplace();
+          ASSERT(mX.has_value());
+          ASSERT(mX->d_def.d_value == 0 );
+
+          ValueType other(3);
+          mX.emplace(other);
+          ASSERT(mX.has_value());
+          ASSERT(mX->d_def.d_value == 3 );
+
+          ValueType third(4);
+          mX.emplace(MovUtl::move(third));
+          ASSERT(mX.has_value());
+          ASSERT(mX->d_def.d_value == 4 );
+          ASSERT(third.d_def.d_value == MOVED_FROM_VAL );
+
+          mX.emplace(6);
+          ASSERT(mX.has_value());
+          ASSERT(mX->d_def.d_value == 6 );
+
+          mX.emplace({3,4,5,6});
+          ASSERT(mX.has_value());
+          ASSERT(mX->d_def.d_value == 18 );
+
+        }
+    }
+    if (verbose) printf( "\nUsing 'my_Class2'.\n");
+    {
+        bslma::TestAllocator da("default", veryVeryVeryVerbose);
+        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+        bslma::TestAllocator ta("third", veryVeryVeryVerbose);
+
+        bslma::DefaultAllocatorGuard dag(&da);
+
+       typedef my_Class2                 ValueType;
+       typedef bsl::optional<ValueType> Obj;
+
+       {
+         Obj mX(bsl::allocator_arg, &oa);
+         mX.emplace();
+         ASSERT(mX.has_value());
+         ASSERT(mX->d_def.d_value == 0 );
+         ASSERT(mX.get_allocator().mechanism() == &oa );
+
+         ValueType other(3, &da);
+         ASSERT(other.d_def.d_allocator_p == &da );
+         mX.emplace(other);
+         ASSERT(mX.has_value());
+         ASSERT(mX->d_def.d_value == 3 );
+         ASSERT(mX.get_allocator().mechanism() == &oa );
+         ASSERT(mX->d_def.d_allocator_p == &oa );
+
+         ValueType third(4, &da);
+         mX.emplace(MovUtl::move(third));
+         ASSERT(third.d_def.d_allocator_p == &da );
+         ASSERT(mX.has_value());
+         ASSERT(mX->d_def.d_value == 4 );
+         ASSERT(third.d_def.d_value == MOVED_FROM_VAL );
+         ASSERT(mX.get_allocator().mechanism() == &oa );
+         ASSERT(mX->d_def.d_allocator_p == &oa );
+
+         mX.emplace(6);
+         ASSERT(mX.has_value());
+         ASSERT(mX->d_def.d_value == 6 );
+         ASSERT(mX.get_allocator().mechanism() == &oa );
+         ASSERT(mX->d_def.d_allocator_p == &oa );
+
+         mX.emplace({3,4,5,6});
+         ASSERT(mX.has_value());
+         ASSERT(mX->d_def.d_value == 18 );
+         ASSERT(mX.get_allocator().mechanism() == &oa );
+         ASSERT(mX->d_def.d_allocator_p == &oa );
+       }
+    }
+    if (verbose) printf( "\nUsing 'my_Class2a'.\n");
+    {
+        bslma::TestAllocator da("default", veryVeryVeryVerbose);
+        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+        bslma::TestAllocator ta("third", veryVeryVeryVerbose);
+
+        bslma::DefaultAllocatorGuard dag(&da);
+
+       typedef my_Class2a                 ValueType;
+       typedef bsl::optional<ValueType> Obj;
+
+       {
+         Obj mX(bsl::allocator_arg, &oa);
+         mX.emplace();
+         ASSERT(mX.has_value());
+         ASSERT(mX->d_data.d_def.d_value == 0 );
+         ASSERT(mX.get_allocator().mechanism() == &oa );
+
+         ValueType other(bsl::allocator_arg, &da, 3);
+         ASSERT(other.d_data.d_def.d_allocator_p == &da );
+         mX.emplace(other);
+         ASSERT(mX.has_value());
+         ASSERT(mX->d_data.d_def.d_value == 3 );
+         ASSERT(mX.get_allocator().mechanism() == &oa );
+         ASSERT(mX->d_data.d_def.d_allocator_p == &oa );
+
+         ValueType third(bsl::allocator_arg, &da, 4);
+         mX.emplace(MovUtl::move(third));
+         ASSERT(third.d_data.d_def.d_allocator_p == &da );
+         ASSERT(mX.has_value());
+         ASSERT(mX->d_data.d_def.d_value == 4 );
+         ASSERT(third.d_data.d_def.d_value == MOVED_FROM_VAL );
+         ASSERT(mX.get_allocator().mechanism() == &oa );
+         ASSERT(mX->d_data.d_def.d_allocator_p == &oa );
+
+         mX.emplace(6);
+         ASSERT(mX.has_value());
+         ASSERT(mX->d_data.d_def.d_value == 6 );
+         ASSERT(mX.get_allocator().mechanism() == &oa );
+         ASSERT(mX->d_data.d_def.d_allocator_p == &oa );
+
+         mX.emplace({3,4,5,6});
+         ASSERT(mX.has_value());
+         ASSERT(mX->d_data.d_def.d_value == 18 );
+         ASSERT(mX.get_allocator().mechanism() == &oa );
+         ASSERT(mX->d_data.d_def.d_allocator_p == &oa );
+       }
+    }
+}
+void bslstl_optional_test9()
+{
+    // --------------------------------------------------------------------
+    // TESTING emplace FUNCTIONALITY
+    //   This test will verify that the intiializer list emplace function works
+    //   as expected.
+    //
+    // Concerns:
+    //   * Calling emplace on a non-engaged optional creates a value type object
+    //     using the optional's allocator and emplace arguments
+    //   * Calling emplace on an engaged optional replaces the value type object
+    //     with a new one created using the optional's allocator and emplace arguments
+    //   * Whe using initializer_list, the correct value type constructros is selected
+    //   * Multiple arguments are correctly forwarded.
+    //   * emplace can not be used on a const qualified optional.
+    //
+    //
+    // Plan:
+    //
+    //
+    // Testing:
+    //
+    //   void emplace(std::initializer_list<U>, Args&&...);
+    //
+    //   void value();
+    //
+    // --------------------------------------------------------------------
+
+    if (verbose) printf(
+                       "\nTESTING emplace MEMBER FUNCTION "
+                       "\n==================================\n");
+
+    if (verbose) printf( "\nUsing 'ConstructTestTypeNoAlloc'.\n");
+    {
+        typedef ConstructTestTypeNoAlloc                  ValueType;
+        typedef const ConstructTestTypeNoAlloc            ConstValueType;
+        typedef bsl::optional<ValueType> Obj;
+        typedef bsl::optional<ConstValueType> ObjC;
+
+        {
+          Obj mX;
+          // OP  = construct(&ConstructTestArg, VA[1--N])
+          // EXP = ConstructTestArg(VA[1--N])
+          // ---   -------------------------------------------------
+          TEST_EMPLACEIL( mX, emplace({1,2,3}),                            // OP
+                         /* no ctor arg list */                            // EXP
+                        , 6);
+
+          TEST_EMPLACEIL( mX, emplace({1,2,3},VA1),                       // OP
+                         (VA1)                                             // EXP
+                        , 6);
+
+          TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2),                  // OP
+                         (VA1, VA2)                                        // EXP
+                        , 6);
+
+          TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3),             // OP
+                         (VA1, VA2, VA3)                                   // EXP
+                        , 6);
+
+          TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4),        // OP
+                         (VA1, VA2, VA3, VA4)                              // EXP
+                        , 6);
+
+          TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4, VA5),                            // OP
+                         (VA1, VA2, VA3, VA4, VA5)                         // EXP
+                        , 6);
+
+          TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
+                                           VA6),                       // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6)                    // EXP
+                        , 6);
+
+          TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
+                                           VA6, VA7),                  // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7)               // EXP
+                        , 6);
+
+          TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
+                                           VA6, VA7, VA8),             // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8)          // EXP
+                        , 6);
+
+          TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
+                                           VA6, VA7, VA8, VA9),        // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                          VA9)                                             // EXP
+                        , 6);
+
+          TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
+                                           VA6, VA7, VA8, VA9, VA10),                            // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7,
+                          VA8, VA9, VA10)                                  // EXP
+                        , 6);
+
+          TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
+                                           VA6, VA7, VA8, VA9, VA10,
+                                           VA11),                      // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                          VA9, VA10, VA11)                                 // EXP
+                        , 6);
+
+          TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
+                                           VA6, VA7, VA8, VA9, VA10,
+                                           VA11, VA12),                // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                          VA9, VA10, VA11, VA12)                           // EXP
+                        , 6);
+
+          TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
+                                           VA6, VA7, VA8, VA9, VA10,
+                                           VA11, VA12, VA13),          // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                          VA9, VA10, VA11, VA12, VA13)                     // EXP
+                        , 6);
+
+        }
+        {
+          ObjC mX;
+          // OP  = construct(&ConstructTestArg, VA[1--N])
+          // EXP = ConstructTestArg(VA[1--N])
+          // ---   -------------------------------------------------
+          TEST_EMPLACEIL( mX, emplace({1,2,3}),                            // OP
+                                   /* no ctor arg list */                            // EXP
+                                  , 6);
+
+            TEST_EMPLACEIL( mX, emplace({1,2,3},VA1),                       // OP
+                           (VA1)                                             // EXP
+                          , 6);
+
+            TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2),                  // OP
+                           (VA1, VA2)                                        // EXP
+                          , 6);
+
+            TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3),             // OP
+                           (VA1, VA2, VA3)                                   // EXP
+                          , 6);
+
+            TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4),        // OP
+                           (VA1, VA2, VA3, VA4)                              // EXP
+                          , 6);
+
+            TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4, VA5),                            // OP
+                           (VA1, VA2, VA3, VA4, VA5)                         // EXP
+                          , 6);
+
+            TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
+                                             VA6),                       // OP
+                           (VA1, VA2, VA3, VA4, VA5, VA6)                    // EXP
+                          , 6);
+
+            TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
+                                             VA6, VA7),                  // OP
+                           (VA1, VA2, VA3, VA4, VA5, VA6, VA7)               // EXP
+                          , 6);
+
+            TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
+                                             VA6, VA7, VA8),             // OP
+                           (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8)          // EXP
+                          , 6);
+
+            TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
+                                             VA6, VA7, VA8, VA9),        // OP
+                           (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                            VA9)                                             // EXP
+                          , 6);
+
+            TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
+                                             VA6, VA7, VA8, VA9, VA10),                            // OP
+                           (VA1, VA2, VA3, VA4, VA5, VA6, VA7,
+                            VA8, VA9, VA10)                                  // EXP
+                          , 6);
+
+            TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
+                                             VA6, VA7, VA8, VA9, VA10,
+                                             VA11),                      // OP
+                           (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                            VA9, VA10, VA11)                                 // EXP
+                          , 6);
+
+            TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
+                                             VA6, VA7, VA8, VA9, VA10,
+                                             VA11, VA12),                // OP
+                           (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                            VA9, VA10, VA11, VA12)                           // EXP
+                          , 6);
+
+            TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
+                                             VA6, VA7, VA8, VA9, VA10,
+                                             VA11, VA12, VA13),          // OP
+                           (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                            VA9, VA10, VA11, VA12, VA13)                     // EXP
+                          , 6);
+        }
+#if defined(BSLSTL_OPTIONAL_TEST_BAD_IL_EMPLACE1)
+        {
+            CObj bad1;
+            bad1.emplace({1,2,3});  // this should not compile 1/10
+            bad1.emplace({1,2,3}, VA1); // this should not compile 2/10
+            bad1.emplace({1,2,3}, VA1, VA2); // this should not compile 3/10
+            bad1.emplace({1,2,3}, VA1, VA2, VA3); // this should not compile 4/10
+            bad1.emplace({1,2,3}, VA1, VA2, VA3, VA4); // this should not compile 5/10
+
+            CObjC bad2;
+            bad2.emplace({1,2,3});  // this should not compile 6/10
+            bad2.emplace({1,2,3}, VA1); // this should not compile 7/10
+            bad2.emplace({1,2,3}, VA1, VA2); // this should not compile 8/10
+            bad2.emplace({1,2,3}, VA1, VA2, VA3); // this should not compile 9/10
+            bad2.emplace({1,2,3}, VA1, VA2, VA3, VA4); // this should not compile 10/10
+
+        }
+#endif
+    }
+    if (verbose) printf( "\nUsing 'ConstructTestTypeAlloc'.\n");
+    {
+        bslma::TestAllocator da("default", veryVeryVeryVerbose);
+        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+        bslma::TestAllocator ta("third", veryVeryVeryVerbose);
+
+        bslma::DefaultAllocatorGuard dag(&da);
+
+        typedef ConstructTestTypeAlloc                  ValueType;
+        typedef const ConstructTestTypeAlloc            ConstValueType;
+        typedef bsl::optional<ValueType> Obj;
+        typedef bsl::optional<ConstValueType> ObjC;
+
+        {
+          Obj mX(bsl::allocator_arg, &oa);
+          // OP  = construct(&ConstructTestArg, VA[1--N])
+          // EXP = ConstructTestArg(VA[1--N])
+          // ---   -------------------------------------------------
+          TEST_EMPLACEILA1( mX, emplace({1,2,3}),                            // OP
+                         /* no ctor arg list */ ,                           // EXP
+                        6,
+                        &oa);
+
+          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1),                       // OP
+                         (VA1),                                             // EXP
+                         6,
+                        &oa);
+
+          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2),                  // OP
+                         (VA1, VA2) ,                                       // EXP
+                         6,
+                        &oa);
+
+          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3),             // OP
+                         (VA1, VA2, VA3),                                   // EXP
+                         6,
+                        &oa);
+
+          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4),        // OP
+                         (VA1, VA2, VA3, VA4),                              // EXP
+                         6,
+                        &oa);
+
+          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5),                            // OP
+                         (VA1, VA2, VA3, VA4, VA5),                         // EXP
+                         6,
+                        &oa);
+
+          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                           VA6),                       // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6),                    // EXP
+                         6,
+                        &oa);
+
+          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                           VA6, VA7),                  // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7),                // EXP
+                         6,
+                        &oa);
+
+          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                           VA6, VA7, VA8),             // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8),          // EXP
+                         6,
+                        &oa);
+
+          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                           VA6, VA7, VA8, VA9),        // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                          VA9)                              ,                // EXP
+                          6,
+                        &oa);
+
+          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                           VA6, VA7, VA8, VA9, VA10),                            // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7,
+                          VA8, VA9, VA10)                   ,                // EXP
+                          6,
+                        &oa);
+
+          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                           VA6, VA7, VA8, VA9, VA10,
+                                           VA11),                      // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                          VA9, VA10, VA11)                  ,                // EXP
+                          6,
+                        &oa);
+
+          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                           VA6, VA7, VA8, VA9, VA10,
+                                           VA11, VA12),                // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                          VA9, VA10, VA11, VA12)            ,                // EXP
+                          6,
+                        &oa);
+
+          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                           VA6, VA7, VA8, VA9, VA10,
+                                           VA11, VA12, VA13),          // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                          VA9, VA10, VA11, VA12, VA13)      ,                // EXP
+                          6,
+                        &oa);
+
+               }
+        {
+          ObjC mX(bsl::allocator_arg, &oa);
+          // OP  = construct(&ConstructTestArg, VA[1--N])
+          // EXP = ConstructTestArg(VA[1--N])
+          // ---   -------------------------------------------------
+          TEST_EMPLACEILA1( mX, emplace({1,2,3}),                            // OP
+                         /* no ctor arg list */             ,                // EXP
+                         6,
+                        &oa);
+
+          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1),                       // OP
+                         (VA1)                              ,                // EXP
+                         6,
+                        &oa);
+
+          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2),                  // OP
+                         (VA1, VA2)                         ,                // EXP
+                         6,
+                        &oa);
+
+          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4),        // OP
+                         (VA1, VA2, VA3, VA4)               ,                // EXP
+                         6,
+                        &oa);
+
+          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5),                            // OP
+                         (VA1, VA2, VA3, VA4, VA5)          ,                // EXP
+                         6,
+                        &oa);
+
+          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                           VA6),                       // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6)     ,                // EXP
+                         6,
+                        &oa);
+
+          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                           VA6, VA7),                  // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7),                // EXP
+                         6,
+                        &oa);
+
+          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                           VA6, VA7, VA8),             // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8),          // EXP
+                         6,
+                        &oa);
+
+          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                           VA6, VA7, VA8, VA9),        // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                          VA9)                              ,                // EXP
+                          6,
+                        &oa);
+
+          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                           VA6, VA7, VA8, VA9, VA10),                            // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7,
+                          VA8, VA9, VA10)                   ,                // EXP
+                          6,
+                        &oa);
+
+          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                           VA6, VA7, VA8, VA9, VA10,
+                                           VA11),                      // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                          VA9, VA10, VA11)                  ,                // EXP
+                          6,
+                        &oa);
+
+          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                           VA6, VA7, VA8, VA9, VA10,
+                                           VA11, VA12),                // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                          VA9, VA10, VA11, VA12)            ,                // EXP
+                          6,
+                        &oa);
+
+          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                           VA6, VA7, VA8, VA9, VA10,
+                                           VA11, VA12, VA13),          // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                          VA9, VA10, VA11, VA12, VA13)      ,                // EXP
+                          6,
+                        &oa);
+        }
+#if defined(BSLSTL_OPTIONAL_TEST_BAD_IL_EMPLACE2)
+        {
+            CObj bad1;
+            bad1.emplace();  // this should not compile 1/10
+            bad1.emplace(VA1); // this should not compile 2/10
+            bad1.emplace(VA1, VA2); // this should not compile 3/10
+            bad1.emplace(VA1, VA2, VA3); // this should not compile 4/10
+            bad1.emplace(VA1, VA2, VA3, VA4); // this should not compile 5/10
+
+            CObjC bad2;
+            bad2.emplace();  // this should not compile 6/10
+            bad2.emplace(VA1); // this should not compile 7/10
+            bad2.emplace(VA1, VA2); // this should not compile 8/10
+            bad2.emplace(VA1, VA2, VA3); // this should not compile 9/10
+            bad2.emplace(VA1, VA2, VA3, VA4); // this should not compile 10/10
+
+        }
+#endif
+    }
+    if (verbose) printf( "\nUsing 'ConstructTestTypeAllocArgT'.\n");
+    {
+        bslma::TestAllocator da("default", veryVeryVeryVerbose);
+        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+        bslma::TestAllocator ta("third", veryVeryVeryVerbose);
+
+        bslma::DefaultAllocatorGuard dag(&da);
+
+        typedef ConstructTestTypeAllocArgT               ValueType;
+        typedef const ConstructTestTypeAllocArgT         ConstValueType;
+        typedef bsl::optional<ValueType> Obj;
+        typedef bsl::optional<ConstValueType> ObjC;
+
+        {
+          Obj mX(bsl::allocator_arg, &oa);
+          // OP  = construct(&ConstructTestArg, VA[1--N])
+          // EXP = ConstructTestArg(VA[1--N])
+          // ---   -------------------------------------------------
+          TEST_EMPLACEILA2( mX, emplace({1,2,3}),                            // OP
+                         /* no ctor arg list */ ,                           // EXP
+                        6,
+                        &oa);
+
+          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1),                       // OP
+                         (VA1),                                             // EXP
+                         6,
+                        &oa);
+
+          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2),                  // OP
+                         (VA1, VA2) ,                                       // EXP
+                         6,
+                        &oa);
+
+          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3),             // OP
+                         (VA1, VA2, VA3),                                   // EXP
+                         6,
+                        &oa);
+
+          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4),        // OP
+                         (VA1, VA2, VA3, VA4),                              // EXP
+                         6,
+                        &oa);
+
+          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5),                            // OP
+                         (VA1, VA2, VA3, VA4, VA5),                         // EXP
+                         6,
+                        &oa);
+
+          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                           VA6),                       // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6),                    // EXP
+                         6,
+                        &oa);
+
+          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                           VA6, VA7),                  // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7),                // EXP
+                         6,
+                        &oa);
+
+          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                           VA6, VA7, VA8),             // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8),          // EXP
+                         6,
+                        &oa);
+
+          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                           VA6, VA7, VA8, VA9),        // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                          VA9)                              ,                // EXP
+                          6,
+                        &oa);
+
+          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                           VA6, VA7, VA8, VA9, VA10),                            // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7,
+                          VA8, VA9, VA10)                   ,                // EXP
+                          6,
+                        &oa);
+
+          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                           VA6, VA7, VA8, VA9, VA10,
+                                           VA11),                      // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                          VA9, VA10, VA11)                  ,                // EXP
+                          6,
+                        &oa);
+
+          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                           VA6, VA7, VA8, VA9, VA10,
+                                           VA11, VA12),                // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                          VA9, VA10, VA11, VA12)            ,                // EXP
+                          6,
+                        &oa);
+
+          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                           VA6, VA7, VA8, VA9, VA10,
+                                           VA11, VA12, VA13),          // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                          VA9, VA10, VA11, VA12, VA13)      ,                // EXP
+                          6,
+                        &oa);
+
+        }
+        {
+          ObjC mX(bsl::allocator_arg, &oa);
+          // OP  = construct(&ConstructTestArg, VA[1--N])
+          // EXP = ConstructTestArg(VA[1--N])
+          // ---   -------------------------------------------------
+          TEST_EMPLACEILA2( mX, emplace({1,2,3}),                            // OP
+                         /* no ctor arg list */             ,                // EXP
+                         6,
+                        &oa);
+
+          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1),                       // OP
+                         (VA1)                              ,                // EXP
+                         6,
+                        &oa);
+
+          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2),                  // OP
+                         (VA1, VA2)                         ,                // EXP
+                         6,
+                        &oa);
+
+          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4),        // OP
+                         (VA1, VA2, VA3, VA4)               ,                // EXP
+                         6,
+                        &oa);
+
+          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5),                            // OP
+                         (VA1, VA2, VA3, VA4, VA5)          ,                // EXP
+                         6,
+                        &oa);
+
+          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                           VA6),                       // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6)     ,                // EXP
+                         6,
+                        &oa);
+
+          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                           VA6, VA7),                  // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7),                // EXP
+                         6,
+                        &oa);
+
+          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                           VA6, VA7, VA8),             // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8),          // EXP
+                         6,
+                        &oa);
+
+          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                           VA6, VA7, VA8, VA9),        // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                          VA9)                              ,                // EXP
+                          6,
+                        &oa);
+
+          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                           VA6, VA7, VA8, VA9, VA10),                            // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7,
+                          VA8, VA9, VA10)                   ,                // EXP
+                          6,
+                        &oa);
+
+          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                           VA6, VA7, VA8, VA9, VA10,
+                                           VA11),                      // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                          VA9, VA10, VA11)                  ,                // EXP
+                          6,
+                        &oa);
+
+          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                           VA6, VA7, VA8, VA9, VA10,
+                                           VA11, VA12),                // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                          VA9, VA10, VA11, VA12)            ,                // EXP
+                          6,
+                        &oa);
+
+          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                           VA6, VA7, VA8, VA9, VA10,
+                                           VA11, VA12, VA13),          // OP
+                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                          VA9, VA10, VA11, VA12, VA13)      ,                // EXP
+                          6,
+                        &oa);
+        }
+    }
+}
+void bslstl_optional_test10()
+{
+  // --------------------------------------------------------------------
+  // TESTING operator=(nullopt_t) FUNCTIONALITY
+  //   This test will verify that the operator=(nullopt_t) function works
+  //   as expected.
+  //
+  // Concerns:
+  //   * Calling operator=(nullopt_t) on an engaged optional makes the optional
+  //     disengaged. The allocator, if any, doesn't change.
+  //   * Calling operator=(nullopt_t) on a disengaged optional leaves the optional
+  //     disengaged. The allocator, if any, doesn't change.
+  //   * operator=(nullopt_t) can not be called on a const qualified optional.
+  //   * operator=(nullopt_t) can be called on a non const qualified optional
+  //     of a const qualified value type.
+  //
+  //
+  // Plan:
+  //
+  //   Conduct the test using 'int' (does not use allocator) and
+  //   'bsl::string' (uses allocator) for 'TYPE'.
+  //
+  //   Create disengaged optional of each type. Call operator=(nullopt_t) on a
+  //   disengaged optional. Check that optional is still disengaged and that
+  //   the allocator, if any, hasn't changed.
+  //
+  //   Emplace a value in each optional. Call operator=(nullopt_t) on the
+  //   engaged optional. Check that optional is disengaged and that
+  //   the allocator, if any, hasn't changed.
+  //
+  //   Repeat the tests for an optional of const qualified value types.
+  //
+  //   Call operator=(nullopt_t) on a const qualified optional. This requires
+  //   compilation failure tests which are not enabled by default.
+  //
+  // Testing:
+  //
+  //   operator=(nullopt_t)
+  //
+  //
+  //   void emplace();
+  //   void has_value();
+  //   void get_allocator();
+  //
+  // --------------------------------------------------------------------
+
+    if (verbose) printf(
+                       "\nTESTING operator(nullopt_t) MEMBER FUNCTION "
+                       "\n==================================\n");
+
+    if (verbose) printf( "\nUsing 'int'.\n");
+    {
+        typedef int                  ValueType;
+        typedef const int            ConstValueType;
+        typedef bsl::optional<ValueType> Obj;
+        typedef bsl::optional<ConstValueType> ObjC;
+        {
+          Obj mX;
+          mX = bsl::nullopt;
+          ASSERT(!mX.has_value());
+
+          mX.emplace(3);
+          mX = bsl::nullopt;
+          ASSERT(!mX.has_value());
+
+          ObjC mcX;
+          mcX = bsl::nullopt;
+          ASSERT(!mcX.has_value());
+
+          mcX.emplace(3);
+          mcX = bsl::nullopt;
+          ASSERT(!mcX.has_value());
+       }
+    }
+    if (verbose) printf( "\nUsing 'bsl::string'.\n");
+    {
+        typedef bsl::string                  ValueType;
+        typedef const bsl::string            ConstValueType;
+        typedef bsl::optional<ValueType> Obj;
+        typedef bsl::optional<ConstValueType> ObjC;
+        {
+          Obj mX;
+          mX = bsl::nullopt;
+          ASSERT(!mX.has_value());
+
+          mX.emplace("aaa");
+          mX = bsl::nullopt;
+          ASSERT(!mX.has_value());
+
+          ObjC mcX;
+          mcX = bsl::nullopt;
+          ASSERT(!mcX.has_value());
+
+          mcX.emplace("tralala");
+          mcX = bsl::nullopt;
+          ASSERT(!mcX.has_value());
+       }
+    }
+#if defined(BSLSTL_OPTIONAL_TEST_BAD_EQUAL_NULLOPT)
+    {
+      if (verbose) printf( "\nUsing 'int'.\n");
+      {
+          typedef int                  ValueType;
+          typedef bsl::optional<ValueType> Obj;
+          const Obj mX;
+          mX = bsl::nullopt; // this should not compile 1/2
+       }
+      if (verbose) printf( "\nUsing 'bsl::string'.\n");
+      {
+          typedef bsl::string                 ValueType;
+          typedef bsl::optional<ValueType> Obj;
+          const Obj mX;
+          mX = bsl::nullopt; // this should not compile 2/2
+     }
+    }
+#endif
+}
+void bslstl_optional_test11()
+{
+  // --------------------------------------------------------------------
+  // TESTING operator=(non_optional_type) FUNCTIONALITY
+  //   This test will verify that the operator=(non_optional_type) function works
+  //   as expected.
+  //
+  // Concerns:
+  //   * Calling operator=(non_optional_type) assigns the rh value to the
+  //     value of the optional.
+  //   * for allocator aware types, the assignment to a disengaged optional
+  //     uses the stored allocator.
+  //   * for allocator aware types, the assignment to an engaged optional
+  //     uses the stored allocator.
+  //   * assignment of rvalues uses move assignment where available
+  //
+  // Plan:
+  //
+  //   Conduct the test using 'my_class1' (does not use allocator) and
+  //   'my_class2'/'my_class2a (uses allocator) for 'TYPE'.
+  //
+  //   Create disengaged optional of each type. Assign a value type value to
+  //   the optional. Check the value of the optional and allocator, if any,
+  //   are correct.
+  //
+  //   Assign a value of type convertible to value type to the optional.
+  //   Check the value of the optional and allocator, if any, are correct.
+  //
+  //   Repeat the tests for an optional of const qualified value types.
+  //
+  //   Repeat the tests for assignment from rvalues. Check the assigned value
+  //   was   moved from.
+  //
+  //   Call assignment on a const qualified optional. This requires
+  //   compilation failure tests which are not enabled by default.
+  //
+  // Testing:
+  //
+  //   operator=(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) other)
+  //
+  //
+  //   void value();
+  //   void get_allocator();
+  //
+  // --------------------------------------------------------------------
+
+    if (verbose) printf(
+                       "\nTESTING operator(non_optional_type) MEMBER FUNCTION "
+                       "\n===================================================\n");
+
+    if (verbose) printf( "\nUsing 'my_Class1'.\n");
+    {
+        typedef my_Class1                  ValueType;
+        typedef const ValueType            ConstValueType;
+        typedef bsl::optional<ValueType> Obj;
+        typedef bsl::optional<ConstValueType> ObjC;
+        {
+          Obj mX;
+          mX = V1;
+          ASSERT(mX.value().d_def.d_value = 1);
+
+          mX = 3;
+          mX = bsl::nullopt;
+          ASSERT(!mX.has_value());
+
+          ObjC mcX;
+          mcX = bsl::nullopt;
+          ASSERT(!mcX.has_value());
+
+          mcX.emplace(3);
+          mcX = bsl::nullopt;
+          ASSERT(!mcX.has_value());
+       }
+    }
+    if (verbose) printf( "\nUsing 'bsl::string'.\n");
+    {
+        typedef bsl::string                  ValueType;
+        typedef const bsl::string            ConstValueType;
+        typedef bsl::optional<ValueType> Obj;
+        typedef bsl::optional<ConstValueType> ObjC;
+        {
+          Obj mX;
+          mX = bsl::nullopt;
+          ASSERT(!mX.has_value());
+
+          mX.emplace("aaa");
+          mX = bsl::nullopt;
+          ASSERT(!mX.has_value());
+
+          ObjC mcX;
+          mcX = bsl::nullopt;
+          ASSERT(!mcX.has_value());
+
+          mcX.emplace("tralala");
+          mcX = bsl::nullopt;
+          ASSERT(!mcX.has_value());
+       }
+    }
+#if defined(BSLSTL_OPTIONAL_TEST_BAD_EQUAL_NULLOPT)
+    {
+      if (verbose) printf( "\nUsing 'int'.\n");
+      {
+          typedef int                  ValueType;
+          typedef bsl::optional<ValueType> Obj;
+          const Obj mX;
+          mX = bsl::nullopt; // this should not compile 1/2
+       }
+      if (verbose) printf( "\nUsing 'bsl::string'.\n");
+      {
+          typedef bsl::string                 ValueType;
+          typedef bsl::optional<ValueType> Obj;
+          const Obj mX;
+          mX = bsl::nullopt; // this should not compile 2/2
+     }
+    }
+#endif
 }
 int main(int argc, char **argv)
 {
@@ -1880,6 +3758,21 @@ int main(int argc, char **argv)
     bslma::Default::setGlobalAllocator(&globalAllocator);
 
     switch (test) { case 0:
+      case 11:
+        bslstl_optional_test10();
+        break;
+      case 10:
+        bslstl_optional_test10();
+        break;
+      case 9:
+        bslstl_optional_test9();
+        break;
+      case 8:
+        bslstl_optional_test8();
+        break;
+      case 7:
+        bslstl_optional_test7();
+        break;
       case 6:
         bslstl_optional_test6();
         break;
