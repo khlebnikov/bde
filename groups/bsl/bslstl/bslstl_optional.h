@@ -260,7 +260,7 @@ struct optional_data_imp {
     void emplace(bsl::allocator_arg_t, allocator_type , Args&&...);
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
     template<class U, class... Args>
-    void emplace(in_place_t, bsl::allocator_arg_t, allocator_type , std::initializer_list<U>, Args&&...);
+    void emplace(bsl::allocator_arg_t, allocator_type , std::initializer_list<U>, Args&&...);
 #endif//BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
 #elif BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
 #endif // BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
@@ -298,6 +298,7 @@ struct optional_data_imp<TYPE, false> {
     ~optional_data_imp();
 
    //MANIPULATORS
+    void emplace();
 #if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES // $var-args=5
     template<class... Args>
     void emplace(Args&&...);
@@ -336,6 +337,17 @@ void optional_data_imp<TYPE,UsesBslmaAllocator>::reset() BSLS_KEYWORD_NOEXCEPT
     }
     d_hasValue = false;
 }
+template <typename TYPE, bool UsesBslmaAllocator>
+inline
+void optional_data_imp<TYPE, UsesBslmaAllocator>::emplace(
+    bsl::allocator_arg_t, allocator_type allocator)
+{
+    reset();
+    BloombergLP::bslalg::ScalarPrimitives::construct(
+        d_buffer.address(),
+        allocator.mechanism());
+    d_hasValue = true;
+}
 #if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES
 template <typename TYPE, bool UsesBslmaAllocator>
 template <class... ARGS>
@@ -350,6 +362,24 @@ void optional_data_imp<TYPE, UsesBslmaAllocator>::emplace(
         allocator.mechanism());
     d_hasValue = true;
 }
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
+template <typename TYPE, bool UsesBslmaAllocator>
+template<class U, class... ARGS>
+void optional_data_imp<TYPE, UsesBslmaAllocator>::emplace(
+    bsl::allocator_arg_t,
+    allocator_type allocator,
+    std::initializer_list<U> il,
+    ARGS&&... args)
+{
+    reset();
+    BloombergLP::bslalg::ScalarPrimitives::construct(
+        d_buffer.address(),
+        il,
+        BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...,
+        allocator.mechanism());
+    d_hasValue = true;
+}
+#endif//BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
 #elif BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
 // {{{ BEGIN GENERATED CODE
 // The following section is automatically generated.  **DO NOT EDIT**
@@ -417,6 +447,16 @@ void optional_data_imp<TYPE,false>::reset() BSLS_KEYWORD_NOEXCEPT
     }
     d_hasValue = false;
 }
+template <typename TYPE>
+inline
+void optional_data_imp<TYPE, false>::emplace()
+{
+    reset();
+    BloombergLP::bslalg::ScalarPrimitives::construct(
+        d_buffer.address(),
+        (void *) 0);
+    d_hasValue = true;
+}
 #if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES
 template <typename TYPE>
 template <class... ARGS>
@@ -430,6 +470,22 @@ void optional_data_imp<TYPE, false>::emplace(ARGS&&... args)
         (void *) 0);
     d_hasValue = true;
 }
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
+template <typename TYPE>
+template<class U, class... ARGS>
+void optional_data_imp<TYPE, false>::emplace(
+    std::initializer_list<U> il,
+    ARGS&&... args)
+{
+    reset();
+    BloombergLP::bslalg::ScalarPrimitives::construct(
+        d_buffer.address(),
+        il,
+        BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...,
+        (void *) 0);
+    d_hasValue = true;
+}
+#endif//BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
 #elif BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
 // {{{ BEGIN GENERATED CODE
 // The following section is automatically generated.  **DO NOT EDIT**
@@ -695,6 +751,20 @@ class optional {
             // Return a reference providing non-modifiable access to the underlying
             // 'TYPE' object. Throws a bsl::bad_optional_access if the optional
             // object is disengaged.
+
+    optional& operator=(bsl::nullopt_t) BSLS_KEYWORD_NOEXCEPT;
+    optional& operator=(const optional&);
+    optional& operator=( BloombergLP::bslmf::MovableRef<optional>);
+
+    template<class ANY_TYPE>
+    optional& operator=(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE));
+
+    template<class ANY_TYPE>
+    optional& operator=(const optional<ANY_TYPE> &);
+    template<class ANY_TYPE>
+    optional& operator=(BloombergLP::bslmf::MovableRef<optional<ANY_TYPE> >);
+
+
     TYPE* operator->();
             // Return a pointer to the current modifiable underlying
             // 'TYPE' object. The behaviour is undefined if the optional
@@ -864,6 +934,19 @@ class optional<TYPE, false> {
           // Return a reference providing non-modifiable access to the underlying
           // 'TYPE' object. Throws a bsl::bad_optional_access if the optional
           // object is disengaged.
+
+  optional& operator=(bsl::nullopt_t) BSLS_KEYWORD_NOEXCEPT;
+  optional& operator=(const optional&);
+  optional& operator=( BloombergLP::bslmf::MovableRef<optional>);
+
+  template<class ANY_TYPE = TYPE>
+  optional& operator=(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE));
+
+  template<class ANY_TYPE>
+  optional& operator=(const optional<ANY_TYPE> &);
+  template<class ANY_TYPE>
+  optional& operator=(BloombergLP::bslmf::MovableRef<optional<ANY_TYPE> >);
+
 
   TYPE* operator->();
               // Return a pointer to the current modifiable underlying
@@ -1053,6 +1136,16 @@ void optional<TYPE, UsesBslmaAllocator>::emplace(ARGS&&... args)
     d_value.emplace(bsl::allocator_arg, d_allocator,
         BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...);
 }
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
+template <typename TYPE, bool UsesBslmaAllocator>
+template<class U, class... ARGS>
+void optional<TYPE, UsesBslmaAllocator>::emplace(std::initializer_list<U> il,
+                                                 ARGS&&... args)
+{
+    d_value.emplace(bsl::allocator_arg, d_allocator, il,
+            BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...);
+}
+#endif//BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
 #elif BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
 // {{{ BEGIN GENERATED CODE
 // The following section is automatically generated.  **DO NOT EDIT**
@@ -1177,6 +1270,101 @@ optional<TYPE, UsesBslmaAllocator>::value_or(bsl::allocator_arg_t,
 #endif
 template <class TYPE, bool UsesBslmaAllocator>
 inline
+optional<TYPE, UsesBslmaAllocator>&
+optional<TYPE, UsesBslmaAllocator>::operator=(bsl::nullopt_t) BSLS_KEYWORD_NOEXCEPT
+{
+    this->reset();
+    return *this;
+}
+template <class TYPE, bool UsesBslmaAllocator>
+inline
+optional<TYPE, UsesBslmaAllocator>&
+optional<TYPE, UsesBslmaAllocator>::operator=(const optional &other)
+{
+  if (other.has_value())
+  {
+    if (this->has_value())
+      this->value() = other.value();
+    else
+      this->emplace(other.value());
+  }
+  else
+  {
+    this->reset();
+  }
+  return *this;
+}
+
+template <class TYPE, bool UsesBslmaAllocator>
+inline
+optional<TYPE, UsesBslmaAllocator>&
+optional<TYPE, UsesBslmaAllocator>::operator=(BloombergLP::bslmf::MovableRef<optional> other)
+{
+  if (other.has_value())
+  {
+    if (this->has_value())
+      this->value() = MoveUtil::move(other.value());
+    else
+      this->emplace(MoveUtil::move(other.value()));
+  }
+  else
+  {
+    this->reset();
+  }
+  return *this;
+}
+
+template <class TYPE, bool UsesBslmaAllocator>
+template<class ANY_TYPE>
+inline
+optional<TYPE, UsesBslmaAllocator>&
+optional<TYPE, UsesBslmaAllocator>::operator=(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) other)
+{
+    this->emplace(BSLS_COMPILERFEATURES_FORWARD(ANY_TYPE, other));
+    return *this;
+}
+
+template <class TYPE, bool UsesBslmaAllocator>
+template<class ANY_TYPE>
+inline
+optional<TYPE, UsesBslmaAllocator>&
+optional<TYPE, UsesBslmaAllocator>::operator=(const optional<ANY_TYPE> &other)
+{
+    if (other.has_value())
+      {
+        if (this->has_value())
+          this->value() = other.value();
+        else
+          this->emplace(other.value());
+      }
+      else
+      {
+        this->reset();
+      }
+      return *this;
+}
+template <class TYPE, bool UsesBslmaAllocator>
+template<class ANY_TYPE>
+inline
+optional<TYPE, UsesBslmaAllocator>&
+optional<TYPE, UsesBslmaAllocator>::operator=(
+    BloombergLP::bslmf::MovableRef<optional<ANY_TYPE> > other)
+{
+    if (other.has_value())
+    {
+      if (this->has_value())
+        this->value() = MoveUtil::move(other.value());
+      else
+        this->emplace(MoveUtil::move(other.value()));
+    }
+    else
+    {
+      this->reset();
+    }
+    return *this;
+}
+template <class TYPE, bool UsesBslmaAllocator>
+inline
 TYPE& optional<TYPE, UsesBslmaAllocator>::operator*() BSLS_COMPILER_FEATURES_LVREF_QUAL
 {
     BSLS_ASSERT_SAFE(d_hasValue);
@@ -1188,7 +1376,6 @@ inline
 const TYPE& optional<TYPE, UsesBslmaAllocator>::operator*() const BSLS_COMPILER_FEATURES_LVREF_QUAL
 {
     BSLS_ASSERT_SAFE(d_hasValue);
-
     return this->value();
 }
 template <class TYPE, bool UsesBslmaAllocator>
@@ -1325,6 +1512,15 @@ void optional<TYPE, false>::emplace(BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... a
 {
     d_value.emplace(BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...);
 }
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
+template <typename TYPE>
+template<class U, class... ARGS>
+void optional<TYPE, false>::emplace(std::initializer_list<U> il,
+    ARGS&&... args)
+{
+    d_value.emplace(il, BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...);
+}
+#endif//BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
 #elif BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
 #endif
 
@@ -1403,6 +1599,101 @@ optional<TYPE, false>::value_or(ANY_TYPE&& other) BSLS_COMPILER_FEATURES_RVREF_Q
             std::forward<ANY_TYPE>(other));
 }
 #endif
+template <class TYPE>
+inline
+optional<TYPE, false>&
+optional<TYPE, false>::operator=(bsl::nullopt_t) BSLS_KEYWORD_NOEXCEPT
+{
+    this->reset();
+    return *this;
+}
+template <class TYPE>
+inline
+optional<TYPE, false>&
+optional<TYPE, false>::operator=(const optional &other)
+{
+  if (other.has_value())
+  {
+    if (this->has_value())
+      this->value() = other.value();
+    else
+      this->emplace(other.value());
+  }
+  else
+  {
+    this->reset();
+  }
+  return *this;
+}
+
+template <class TYPE>
+inline
+optional<TYPE, false>&
+optional<TYPE, false>::operator=(BloombergLP::bslmf::MovableRef<optional> other)
+{
+  if (other.has_value())
+  {
+    if (this->has_value())
+      this->value() = MoveUtil::move(other.value());
+    else
+      this->emplace(MoveUtil::move(other.value()));
+  }
+  else
+  {
+    this->reset();
+  }
+  return *this;
+}
+
+template <class TYPE>
+template<class ANY_TYPE>
+inline
+optional<TYPE, false>&
+optional<TYPE, false>::operator=(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) other)
+{
+    this->emplace(BSLS_COMPILERFEATURES_FORWARD(ANY_TYPE, other));
+    return *this;
+}
+
+template <class TYPE>
+template<class ANY_TYPE>
+inline
+optional<TYPE, false>&
+optional<TYPE, false>::operator=(const optional<ANY_TYPE> &other)
+{
+    if (other.has_value())
+      {
+        if (this->has_value())
+          this->value() = other.value();
+        else
+          this->emplace(other.value());
+      }
+      else
+      {
+        this->reset();
+      }
+      return *this;
+}
+template <class TYPE>
+template<class ANY_TYPE>
+inline
+optional<TYPE, false>&
+optional<TYPE, false>::operator=(
+    BloombergLP::bslmf::MovableRef<optional<ANY_TYPE> > other)
+{
+    if (other.has_value())
+    {
+      if (this->has_value())
+        this->value() = MoveUtil::move(other.value());
+      else
+        this->emplace(MoveUtil::move(other.value()));
+    }
+    else
+    {
+      this->reset();
+    }
+    return *this;
+}
 template <class TYPE>
 inline
 TYPE& optional<TYPE, false>::operator*() BSLS_COMPILER_FEATURES_LVREF_QUAL
