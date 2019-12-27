@@ -14,13 +14,26 @@
 #include <bsls_bsltestutil.h>
 #include <bslstl_string.h>
 
-
-
 #include <bslma_default.h>
 #include <bslma_defaultallocatorguard.h>
 #include <bslma_testallocator.h>
 #include <bslma_testallocatormonitor.h>
 
+// A list of disabled tests :
+// BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING
+//      Tests in this group rely on perfect forwarding of arguments in
+//      BloombergLP::bslalg::ScalarPrimitives::construct to correctly
+//      support move semantics in bsl:optional.
+//
+//
+//BSLSTL_OPTIONAL_TEST_BAD_EQUAL_NONOPT
+//      Tests in this group check that assignments is not possible if the
+//      value type is not both assignable and constructible from the source
+//      type.
+//
+//BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST
+//      Tests in this group check that assignments is not possible to
+//      an optional of const type or to a const qualified optional
 
 using namespace BloombergLP;
 using namespace bsl;
@@ -233,16 +246,17 @@ class my_Class1 {
     // ACCESSORS
     int value() const { return d_def.d_value; }
 };
-                  // ===============
-                  // class my_Class1
-                  // ===============a
+                             // ===============
+                             // class my_Class1a
+                             // ===============
 
 class my_Class1a {
-  // This 'class' is a simple type that does not take allocators.  Its
-  // implementation owns a 'my_Class1' aggregate, but uses only the
-  // 'd_value' data member, to support the 'value' attribute.  The
-  // 'd_allocator_p' pointer is always initialized to a null pointer.
-public:
+// This 'class' is a simple type that does not take allocators.  Its
+// implementation owns a 'my_Class1' aggregate, but uses only the
+// 'd_value' data member, to support the 'value' attribute.  The
+// 'd_allocator_p' pointer is always initialized to a null pointer.
+// The class is both constructable and asignable from my_Class1.
+  public:
     my_Class1 d_data;
 
     // CREATORS
@@ -252,17 +266,17 @@ public:
     my_Class1a(int v)  : d_data(v) {}
 
     my_Class1a(const my_Class1& v)
-            : d_data(v) {}
+    : d_data(v) {}
 
     my_Class1a(bslmf::MovableRef<my_Class1> v)
-            : d_data(MovUtl::move(v)) {}
+    : d_data(MovUtl::move(v)) {}
 
     my_Class1a(const my_Class1a& rhs) : d_data(rhs.d_data) {}
 
     my_Class1a(bslmf::MovableRef<my_Class1a> rhs)                   // IMPLICIT
-        : d_data(MovUtl::move(MovUtl::access(rhs).d_data)) {}
+    : d_data(MovUtl::move(MovUtl::access(rhs).d_data)) {}
 
-    // MANIPULATORS
+  // MANIPULATORS
     my_Class1a& operator=(const my_Class1a& rhs) {
         d_data.operator=(rhs.d_data);
         return *this;
@@ -271,6 +285,102 @@ public:
     my_Class1a& operator=(bslmf::MovableRef<my_Class1a> rhs) {
         d_data.operator=(MovUtl::move(MovUtl::access(rhs).d_data));
         return *this;
+    }
+
+    // ACCESSORS
+    int value() const { return d_data.value(); }
+};
+                             // ===============
+                             // class my_Class1b
+                             // ===============
+
+class my_Class1b {
+    // This 'class' is a simple type that does not take allocators.  Its
+    // implementation owns a 'my_Class1' aggregate, but uses only the
+    // 'd_value' data member, to support the 'value' attribute.  The
+    // 'd_allocator_p' pointer is always initialized to a null pointer.
+    // The class is assignable from my_Class1, but not constructable from
+    // my_Class1
+  public:
+    my_Class1 d_data;
+
+    // CREATORS
+    my_Class1b() : d_data() { }
+
+    explicit
+    my_Class1b(int v)  : d_data(v) {}
+
+    my_Class1b(const my_Class1b& rhs) : d_data(rhs.d_data) {}
+
+    my_Class1b(bslmf::MovableRef<my_Class1b> rhs)                   // IMPLICIT
+    : d_data(MovUtl::move(MovUtl::access(rhs).d_data)) {}
+
+    // MANIPULATORS
+    my_Class1b& operator=(const my_Class1b& rhs) {
+    d_data.operator=(rhs.d_data);
+        return *this;
+    }
+
+    my_Class1b& operator=(bslmf::MovableRef<my_Class1b> rhs) {
+        d_data.operator=(MovUtl::move(MovUtl::access(rhs).d_data));
+        return *this;
+    }
+
+    my_Class1b& operator=(const my_Class1& rhs) {
+        d_data.operator=(rhs);
+        return *this;
+    }
+
+    my_Class1b& operator=(bslmf::MovableRef<my_Class1> rhs) {
+        d_data.operator=(MovUtl::move(MovUtl::access(rhs)));
+        return *this;
+    }
+
+    // ACCESSORS
+    int value() const { return d_data.value(); }
+};
+                             // ===============
+                             // class my_Class1c
+                             // ===============
+
+class my_Class1c {
+  // This 'class' is a simple type that does not take allocators.  Its
+  // implementation owns a 'my_Class1' aggregate, but uses only the
+  // 'd_value' data member, to support the 'value' attribute.  The
+  // 'd_allocator_p' pointer is always initialized to a null pointer.
+  // The class is constructable from my_Class1, but not assignable from
+  // my_Class1
+  public:
+    my_Class1 d_data;
+
+    // CREATORS
+    my_Class1c() : d_data() { }
+
+    explicit
+    my_Class1c(int v)  : d_data(v) {}
+
+    explicit
+    my_Class1c(const my_Class1& v)
+    : d_data(v) {}
+
+    explicit
+    my_Class1c(bslmf::MovableRef<my_Class1> v)
+    : d_data(MovUtl::move(v)) {}
+
+    my_Class1c(const my_Class1c& rhs) : d_data(rhs.d_data) {}
+
+    my_Class1c(bslmf::MovableRef<my_Class1c> rhs)                   // IMPLICIT
+    : d_data(MovUtl::move(MovUtl::access(rhs).d_data)) {}
+
+    // MANIPULATORS
+    my_Class1c& operator=(const my_Class1c& rhs) {
+    d_data.operator=(rhs.d_data);
+    return *this;
+    }
+
+    my_Class1c& operator=(bslmf::MovableRef<my_Class1c> rhs) {
+    d_data.operator=(MovUtl::move(MovUtl::access(rhs).d_data));
+    return *this;
     }
 
     // ACCESSORS
@@ -414,6 +524,8 @@ class my_Class2a {
     // This 'class' behaves the same as 'my_Class2' (allocator-aware type that
     // never actually allocates memory) except that it uses the
     // 'allocator_arg_t' idiom for passing an allocator to constructors.
+    // This class is constructable and assignable from my_Class2
+
 
   public:
     my_Class2 d_data;
@@ -425,6 +537,11 @@ class my_Class2a {
 
     explicit
     my_Class2a(int v)  : d_data(v) {}
+
+    my_Class2a(const my_Class2& rhs) : d_data(rhs) {}
+
+    my_Class2a(bslmf::MovableRef<my_Class2> rhs)
+      : d_data(MovUtl::move(rhs)) {}
 
     my_Class2a(bsl::allocator_arg_t, bslma::Allocator *a, int v)
         : d_data(v, a) {}
@@ -483,7 +600,6 @@ class my_Class2a {
     // ACCESSORS
     int value() const { return d_data.value(); }
 };
-
 // TRAITS
 namespace BloombergLP {
 
@@ -497,6 +613,170 @@ template <> struct UsesAllocatorArgT<my_Class2a> : bsl::true_type { };
 
 }  // close enterprise namespace
 
+                                 // ==========
+                                 // my_Class2b
+                                 // ==========
+
+class my_Class2b {
+  // This 'class' behaves the same as 'my_Class2' (allocator-aware type that
+  // never actually allocates memory) except that it uses the
+  // 'allocator_arg_t' idiom for passing an allocator to constructors.
+  // This class is assignable from my_Class2, but not constructible from my_Class2
+
+
+  public:
+    my_Class2 d_data;
+
+    // CREATORS
+    my_Class2b() : d_data() { }
+
+    my_Class2b(bsl::allocator_arg_t, bslma::Allocator *a) : d_data(a) {}
+
+    my_Class2b(const my_Class2b& rhs) : d_data(rhs.d_data) {}
+
+    my_Class2b(bsl::allocator_arg_t  ,
+                bslma::Allocator     *a,
+                const my_Class2b&     rhs)
+    : d_data(rhs.d_data, a) {}
+
+    my_Class2b(bslmf::MovableRef<my_Class2b> rhs)                   // IMPLICIT
+    : d_data(MovUtl::move(MovUtl::access(rhs).d_data)) {}
+
+    my_Class2b(bsl::allocator_arg_t,
+                bslma::Allocator              *a,
+                bslmf::MovableRef<my_Class2b>  rhs)
+    : d_data(MovUtl::move(MovUtl::access(rhs).d_data), a) {}
+
+    // MANIPULATORS
+    my_Class2b& operator=(const my_Class2b& rhs) {
+        d_data.operator=(rhs.d_data);
+        return *this;
+    }
+
+    my_Class2b& operator=(bslmf::MovableRef<my_Class2b> rhs) {
+        d_data.operator=(MovUtl::move(MovUtl::access(rhs).d_data));
+        return *this;
+    }
+
+    my_Class2b& operator=(const my_Class2& rhs) {
+       d_data.operator=(rhs);
+       return *this;
+    }
+
+    my_Class2b& operator=(bslmf::MovableRef<my_Class2> rhs) {
+       d_data.operator=(MovUtl::move(MovUtl::access(rhs)));
+       return *this;
+    }
+    // ACCESSORS
+    int value() const { return d_data.value(); }
+};
+
+// TRAITS
+namespace BloombergLP {
+
+namespace bslma {
+template <> struct UsesBslmaAllocator<my_Class2b> : bsl::true_type { };
+}  // close namespace bslma
+
+namespace bslmf {
+template <> struct UsesAllocatorArgT<my_Class2b> : bsl::true_type { };
+}  // close namespace bslmf
+
+}  // close enterprise namespace
+
+
+                                 // ==========
+                                 // my_Class2c
+                                 // ==========
+
+class my_Class2c {
+  // This 'class' behaves the same as 'my_Class2' (allocator-aware type that
+  // never actually allocates memory) except that it uses the
+  // 'allocator_arg_t' idiom for passing an allocator to constructors.
+  // This class is constructable from my_Class2, but not assignable from my_Class2
+
+
+  public:
+    my_Class2 d_data;
+
+    // CREATORS
+    my_Class2c() : d_data() { }
+
+    my_Class2c(bsl::allocator_arg_t, bslma::Allocator *a) : d_data(a) {}
+
+    explicit
+    my_Class2c(int v)  : d_data(v) {}
+
+    my_Class2c(bsl::allocator_arg_t, bslma::Allocator *a, int v)
+    : d_data(v, a) {}
+
+    my_Class2c(bsl::allocator_arg_t, bslma::Allocator *a,const my_Class2& v)
+    : d_data(v, a) {}
+
+    my_Class2c(bsl::allocator_arg_t, bslma::Allocator *a,
+    bslmf::MovableRef<my_Class2> v)
+    : d_data(MovUtl::move(v), a) {}
+
+
+    my_Class2c(const my_Class2c& rhs) : d_data(rhs.d_data) {}
+
+    my_Class2c(bsl::allocator_arg_t  ,
+    bslma::Allocator     *a,
+    const my_Class2c&     rhs)
+    : d_data(rhs.d_data, a) {}
+
+    my_Class2c(bslmf::MovableRef<my_Class2c> rhs)                   // IMPLICIT
+    : d_data(MovUtl::move(MovUtl::access(rhs).d_data)) {}
+
+    my_Class2c(bsl::allocator_arg_t,
+              bslma::Allocator              *a,
+              bslmf::MovableRef<my_Class2c>  rhs)
+    : d_data(MovUtl::move(MovUtl::access(rhs).d_data), a) {}
+
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
+    my_Class2c(bsl::allocator_arg_t  ,
+              bslma::Allocator     *a,
+              std::initializer_list<int> il)
+    : d_data(il, a)
+    {}
+
+    my_Class2c(bsl::allocator_arg_t  ,
+              bslma::Allocator     *a,
+              std::initializer_list<int> il, int j)
+    : d_data(il, j, a)
+    {}
+#endif //(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
+
+    // MANIPULATORS
+    my_Class2c& operator=(const my_Class2c& rhs) {
+        d_data.operator=(rhs.d_data);
+        return *this;
+    }
+
+    my_Class2c& operator=(bslmf::MovableRef<my_Class2c> rhs) {
+        d_data.operator=(MovUtl::move(MovUtl::access(rhs).d_data));
+        return *this;
+    }
+
+    my_Class2c& operator=(int rhs) {
+        d_data.operator=(rhs);
+        return *this;
+    }
+    // ACCESSORS
+    int value() const { return d_data.value(); }
+};
+// TRAITS
+namespace BloombergLP {
+
+namespace bslma {
+template <> struct UsesBslmaAllocator<my_Class2c> : bsl::true_type { };
+}  // close namespace bslma
+
+namespace bslmf {
+template <> struct UsesAllocatorArgT<my_Class2c> : bsl::true_type { };
+}  // close namespace bslmf
+
+}  // close enterprise namespace
                              // ===============
                              // class my_Class3
                              // ===============
@@ -1368,6 +1648,82 @@ ConstructTestArg<14>   VA14(14);
   ASSERT(EXP == obj .value());                                              \
   ASSERT(alloc == obj.value().d_allocator_p);                               \
   ASSERT(ilsum == obj .value().d_ilsum);                                    \
+}
+#define TEST_EQUAL_EMPTY(obj, type)                                         \
+{                                                                           \
+  type sourceObj;                                                           \
+  ASSERT(!sourceObj.has_value());                                           \
+  obj = sourceObj;                                                          \
+  ASSERT(!obj.has_value());                                                 \
+  ASSERT(!sourceObj.has_value());                                           \
+}
+#define TEST_EQUAL_EMPTY_MOVE(obj, type)                                    \
+{                                                                           \
+  type sourceObj;                                                           \
+   ASSERT(!sourceObj.has_value());                                          \
+  obj = MovUtl::move(sourceObj);                                            \
+  ASSERT(!obj.has_value());                                                 \
+  ASSERT(!sourceObj.has_value());                                           \
+}
+#define TEST_EQUAL_ENGAGED(obj, otype, type, val)                           \
+{                                                                           \
+  otype sourceObj(type(val));                                               \
+ ASSERT(sourceObj.has_value());                                             \
+  obj = sourceObj;                                                          \
+  ASSERT(obj.has_value());                                                  \
+  ASSERT(val == obj.value().value());                                       \
+  ASSERT(sourceObj.has_value());                                            \
+  ASSERT(val == sourceObj.value().value());                                 \
+}
+#define TEST_EQUAL_ENGAGED_MOVE(obj, otype, type, val, expVal)              \
+{                                                                           \
+  otype sourceObj(type(val));                                               \
+   ASSERT(sourceObj.has_value());                                           \
+  obj = MovUtl::move(sourceObj);                                            \
+  ASSERT(obj.has_value());                                                  \
+  ASSERT(val == obj.value().value());                                       \
+  ASSERT(sourceObj.has_value());                                            \
+  ASSERT(expVal == sourceObj.value().value());                              \
+}
+#define TEST_EQUAL_EMPTY_A(obj, type)                                       \
+{                                                                           \
+  type sourceObj(bsl::allocator_arg, &ta);                                  \
+  ASSERT(!sourceObj.has_value());                                           \
+  obj = sourceObj;                                                          \
+  ASSERT(!obj.has_value());                                                 \
+  ASSERT(&oa == obj.get_allocator().mechanism());                           \
+  ASSERT(!sourceObj.has_value());                                           \
+}
+#define TEST_EQUAL_EMPTY_MOVE_A(obj, type)                                  \
+{                                                                           \
+  type sourceObj(bsl::allocator_arg, &ta);                                  \
+  ASSERT(!sourceObj.has_value());                                           \
+  obj = MovUtl::move(sourceObj);                                            \
+  ASSERT(!obj.has_value());                                                 \
+  ASSERT(&oa == obj.get_allocator().mechanism());                           \
+  ASSERT(!sourceObj.has_value());                                           \
+}
+#define TEST_EQUAL_ENGAGED_A(obj, otype, type, val)                         \
+{                                                                           \
+  otype sourceObj(bsl::allocator_arg, &ta, type(val));                      \
+  ASSERT(sourceObj.has_value());                                            \
+  obj = sourceObj;                                                          \
+  ASSERT(obj.has_value());                                                  \
+  ASSERT(val == obj.value().value());                                       \
+  ASSERT(&oa == obj.get_allocator().mechanism());                           \
+  ASSERT(sourceObj.has_value());                                            \
+  ASSERT(val == sourceObj.value().value());                                 \
+}
+#define TEST_EQUAL_ENGAGED_MOVE_A(obj, otype, type, val, expVal)            \
+{                                                                           \
+  otype sourceObj(bsl::allocator_arg, &ta, type(val));                      \
+  ASSERT(sourceObj.has_value());                                            \
+  obj = MovUtl::move(sourceObj);                                            \
+  ASSERT(obj.has_value());                                                  \
+  ASSERT(val == obj.value().value());                                       \
+  ASSERT(&oa == obj.get_allocator().mechanism());                           \
+  ASSERT(sourceObj.has_value());                                            \
+  ASSERT(expVal == sourceObj.value().value());                              \
 }
 //=============================================================================
 //                              MAIN PROGRAM
@@ -2540,10 +2896,10 @@ void bslstl_optional_test6()
         typedef const CObj CObjC;
 
         {
-            Obj mX(4);
-            CObj cobjX(8);
-            ObjC objcX(9);
-            CObjC cobjcX(10);
+            Obj mX(ValueType(4));
+            CObj cobjX(ValueType(8));
+            ObjC objcX(ValueType(9));
+            CObjC cobjcX(ValueType(10));
 
             ASSERT(mX->d_def.d_value == 4);
             ASSERT(cobjX->d_def.d_value == 8);
@@ -2578,8 +2934,8 @@ void bslstl_optional_test6()
         {
             Obj mX(bsl::allocator_arg, &oa, V2);
             CObj cobjX(bsl::allocator_arg, &ta, V2);
-            ObjC objcX(9);
-            CObjC cobjcX(10);
+            ObjC objcX(ValueType(9));
+            CObjC cobjcX(ValueType(10));
 
             ASSERT(mX->d_def.d_value == 2);
             ASSERT(mX->d_def.d_allocator_p == &oa);
@@ -2659,10 +3015,10 @@ void bslstl_optional_test7()
         typedef const CObj CObjC;
 
         {
-            Obj mX(4);
-            CObj cobjX(8);
-            ObjC objcX(9);
-            CObjC cobjcX(10);
+            Obj mX(ValueType(4));
+            CObj cobjX(ValueType(8));
+            ObjC objcX(ValueType(9));
+            CObjC cobjcX(ValueType(10));
 
             ASSERT((*mX).d_def.d_value == 4);
             ASSERT((*cobjX).d_def.d_value == 8);
@@ -2697,8 +3053,8 @@ void bslstl_optional_test7()
        {
            Obj mX(bsl::allocator_arg, &oa, V2);
            CObj cobjX(bsl::allocator_arg, &ta, V2);
-           ObjC objcX(9);
-           CObjC cobjcX(10);
+           ObjC objcX(ValueType(9));
+           CObjC cobjcX(ValueType(10));
 
            ASSERT((*mX).d_def.d_value == 2);
            ASSERT((*mX).d_def.d_allocator_p == &oa);
@@ -2776,8 +3132,9 @@ void bslstl_optional_test8()
           mX.emplace(MovUtl::move(third));
           ASSERT(mX.has_value());
           ASSERT(mX->d_def.d_value == 4 );
+#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
           ASSERT(third.d_def.d_value == MOVED_FROM_VAL );
-
+#endif
           mX.emplace(6);
           ASSERT(mX.has_value());
           ASSERT(mX->d_def.d_value == 6 );
@@ -2819,7 +3176,9 @@ void bslstl_optional_test8()
          ASSERT(third.d_def.d_allocator_p == &da );
          ASSERT(mX.has_value());
          ASSERT(mX->d_def.d_value == 4 );
+#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
          ASSERT(third.d_def.d_value == MOVED_FROM_VAL );
+#endif
          ASSERT(mX.get_allocator().mechanism() == &oa );
          ASSERT(mX->d_def.d_allocator_p == &oa );
 
@@ -2867,7 +3226,9 @@ void bslstl_optional_test8()
          ASSERT(third.d_data.d_def.d_allocator_p == &da );
          ASSERT(mX.has_value());
          ASSERT(mX->d_data.d_def.d_value == 4 );
+#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
          ASSERT(third.d_data.d_def.d_value == MOVED_FROM_VAL );
+#endif
          ASSERT(mX.get_allocator().mechanism() == &oa );
          ASSERT(mX->d_data.d_def.d_allocator_p == &oa );
 
@@ -3599,21 +3960,21 @@ void bslstl_optional_test10()
           ASSERT(!mcX.has_value());
        }
     }
-#if defined(BSLSTL_OPTIONAL_TEST_BAD_EQUAL_NULLOPT)
+#if defined(BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST)
     {
       if (verbose) printf( "\nUsing 'int'.\n");
       {
           typedef int                  ValueType;
           typedef bsl::optional<ValueType> Obj;
           const Obj mX;
-          mX = bsl::nullopt; // this should not compile 1/2
+          mX = bsl::nullopt; // this should not compile 1/
        }
       if (verbose) printf( "\nUsing 'bsl::string'.\n");
       {
           typedef bsl::string                 ValueType;
           typedef bsl::optional<ValueType> Obj;
           const Obj mX;
-          mX = bsl::nullopt; // this should not compile 2/2
+          mX = bsl::nullopt; // this should not compile 2/
      }
     }
 #endif
@@ -3639,20 +4000,26 @@ void bslstl_optional_test11()
   //   Conduct the test using 'my_class1' (does not use allocator) and
   //   'my_class2'/'my_class2a (uses allocator) for 'TYPE'.
   //
-  //   Create disengaged optional of each type. Assign a value type value to
+  //   Create an engaged optional of each type. Assign a value type value to
   //   the optional. Check the value of the optional and allocator, if any,
   //   are correct.
   //
-  //   Assign a value of type convertible to value type to the optional.
+  //   Assign an lvalue of type convertible to value type to the optional.
   //   Check the value of the optional and allocator, if any, are correct.
-  //
-  //   Repeat the tests for an optional of const qualified value types.
+  //   Check the value of the assigned object hasn't changed.
   //
   //   Repeat the tests for assignment from rvalues. Check the assigned value
-  //   was   moved from.
+  //   was moved from.
   //
-  //   Call assignment on a const qualified optional. This requires
-  //   compilation failure tests which are not enabled by default.
+  //   Repeat all of the above tests for a const qualified objects as the
+  //   source of assignment.
+  //
+  //   Repeat all of the above tests for a disengaged optional. That is, call
+  //   reset before each assignment.
+  //
+  //   Call assignment on a const qualified optional and optional of const
+  //   qualified type. This requires  compilation failure tests which are
+  //   not enabled by default.
   //
   // Testing:
   //
@@ -3661,77 +4028,1080 @@ void bslstl_optional_test11()
   //
   //   void value();
   //   void get_allocator();
+  //   void reset();
   //
   // --------------------------------------------------------------------
 
     if (verbose) printf(
-                       "\nTESTING operator(non_optional_type) MEMBER FUNCTION "
+                       "\nTESTING operator=(non_optional_type) MEMBER FUNCTION "
                        "\n===================================================\n");
 
     if (verbose) printf( "\nUsing 'my_Class1'.\n");
     {
-        typedef my_Class1                  ValueType;
+        typedef my_Class1a                  ValueType;
         typedef const ValueType            ConstValueType;
         typedef bsl::optional<ValueType> Obj;
         typedef bsl::optional<ConstValueType> ObjC;
         {
-          Obj mX;
-          mX = V1;
-          ASSERT(mX.value().d_def.d_value = 1);
+          Obj mX = ValueType(0);
+          ASSERT(mX.has_value());
+          ValueType vi = ValueType(1);
+          mX = vi;
+          ASSERT(mX.value().value() == 1);
+          ASSERT(vi.value() == 1);
 
-          mX = 3;
-          mX = bsl::nullopt;
-          ASSERT(!mX.has_value());
+          my_Class1 i = my_Class1(3);
+          ASSERT(mX.has_value());
+          mX = i;
+          ASSERT(mX.value().value() == 3);
+          ASSERT( i.value() == 3);
 
-          ObjC mcX;
-          mcX = bsl::nullopt;
-          ASSERT(!mcX.has_value());
+          ConstValueType cvi = ValueType(1);
+          ASSERT(mX.has_value());
+          mX = cvi;
+          ASSERT(mX.value().value() == 1);
 
-          mcX.emplace(3);
-          mcX = bsl::nullopt;
-          ASSERT(!mcX.has_value());
+          const my_Class1 ci = my_Class1(3);
+          ASSERT(mX.has_value());
+          mX = ci;
+          ASSERT(mX.value().value() == 3);
+
+          ASSERT(mX.has_value());
+          mX = MovUtl::move(vi);
+          ASSERT(mX.value().value() == 1);
+          ASSERT(vi.value() == MOVED_FROM_VAL);
+
+          ASSERT(mX.has_value());
+          mX = MovUtl::move(i);
+          ASSERT(mX.value().value() == 3);
+          ASSERT(i.value() == MOVED_FROM_VAL);
+
+          ASSERT(mX.has_value());
+          mX = MovUtl::move(cvi);
+          ASSERT(mX.value().value() == 1);
+          ASSERT(cvi.value() == 1);
+
+          ASSERT(mX.has_value());
+          mX = MovUtl::move(ci);
+          ASSERT(mX.value().value() == 3);
+          ASSERT(ci.value() == 3);
        }
+      {
+          Obj mX;
+          ValueType vi = ValueType(1);
+          ASSERT(!mX.has_value());
+          mX = vi;
+          ASSERT(mX.value().value() == 1);
+          ASSERT(vi.value() == 1);
+
+          mX.reset();
+          ASSERT(!mX.has_value());
+          my_Class1 i = my_Class1(3);
+          mX = i;
+          ASSERT(mX.value().value() == 3);
+          ASSERT( i.value() == 3);
+
+          ConstValueType cvi = ValueType(1);
+          mX.reset();
+          ASSERT(!mX.has_value());
+          mX = cvi;
+          ASSERT(mX.value().value() == 1);
+
+          const my_Class1 ci = my_Class1(3);
+          mX.reset();
+          ASSERT(!mX.has_value());
+          mX = ci;
+          ASSERT(mX.value().value() == 3);
+
+          mX.reset();
+          ASSERT(!mX.has_value());
+          mX = MovUtl::move(vi);
+          ASSERT(mX.value().value() == 1);
+#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
+          ASSERT(vi.value() == MOVED_FROM_VAL);
+#endif
+
+          mX.reset();
+          ASSERT(!mX.has_value());
+          mX = MovUtl::move(i);
+          ASSERT(mX.value().value() == 3);
+#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
+          ASSERT(i.value() == MOVED_FROM_VAL);
+#endif
+
+          mX.reset();
+          ASSERT(!mX.has_value());
+          mX = MovUtl::move(cvi);
+          ASSERT(mX.value().value() == 1);
+          ASSERT(cvi.value() == 1);
+
+          mX.reset();
+          ASSERT(!mX.has_value());
+          mX = MovUtl::move(i);
+          ASSERT(mX.value().value() == 3);
+          ASSERT(ci.value() == 3);
+      }
+      {
+          const Obj mX = ValueType(0);
+          ValueType vi = ValueType(1);
+          my_Class1 i = my_Class1(3);
+          ConstValueType cvi = ValueType(1);
+          const my_Class1 ci = my_Class1(3);
+#if defined(BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST)
+          mX = vi; // this should not compile 3/8
+          mX = i; // this should not compile 4/8
+          mX = cvi; // this should not compile 5/8
+          mX = ci;  // this should not compile 6/8
+          mX = MovUtl::move(vi);  // this should not compile 7/8
+          mX = MovUtl::move(i);  // this should not compile 8/8
+          mX = MovUtl::move(cvi);  // this should not compile 9/8
+          mX = MovUtl::move(ci);  // this should not compile 10/8
+#endif //BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST
+      }
+      {
+          ObjC mX = ValueType(0);
+          ValueType vi = ValueType(1);
+          my_Class1 i = my_Class1(3);
+          ConstValueType cvi = ValueType(1);
+          const my_Class1 ci = my_Class1(3);
+#if defined(BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST)
+          mX = vi; // this should not compile 11/18
+          mX = i; // this should not compile 12/18
+          mX = cvi; // this should not compile 13/18
+          mX = ci;  // this should not compile 14/18
+          mX = MovUtl::move(vi);  // this should not compile 15/18
+          mX = MovUtl::move(i);  // this should not compile 16/8
+          mX = MovUtl::move(cvi);  // this should not compile 17/18
+          mX = MovUtl::move(ci);  // this should not compile 18/18
+#endif //BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST
+      }
     }
-    if (verbose) printf( "\nUsing 'bsl::string'.\n");
+    if (verbose) printf( "\nUsing 'my_Class2a'.\n");
     {
-        typedef bsl::string                  ValueType;
-        typedef const bsl::string            ConstValueType;
+        bslma::TestAllocator da("default", veryVeryVeryVerbose);
+        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+        bslma::TestAllocator ta("third", veryVeryVeryVerbose);
+
+        bslma::DefaultAllocatorGuard dag(&da);
+
+        typedef my_Class2a                  ValueType;
+        typedef const ValueType            ConstValueType;
         typedef bsl::optional<ValueType> Obj;
         typedef bsl::optional<ConstValueType> ObjC;
         {
-          Obj mX;
-          mX = bsl::nullopt;
-          ASSERT(!mX.has_value());
+            Obj mX(bsl::allocator_arg, &oa, ValueType(0));
+            ASSERT(mX.has_value());
+            ASSERT(mX.value().d_data.d_def.d_allocator_p == &oa);
+            ASSERT(mX.get_allocator().mechanism() == &oa);
+            ValueType vi = ValueType(bsl::allocator_arg, &ta, 1);
+            mX = vi;
+            ASSERT(mX.value().value() == 1);
+            ASSERT(mX.value().d_data.d_def.d_allocator_p == &oa);
+            ASSERT(vi.value() == 1);
+            ASSERT(vi.d_data.d_def.d_allocator_p == &ta);
 
-          mX.emplace("aaa");
-          mX = bsl::nullopt;
-          ASSERT(!mX.has_value());
+            my_Class2 i = my_Class2(3, &da);
+            ASSERT(mX.has_value());
+            mX = i;
+            ASSERT(mX.value().value() == 3);
+            ASSERT(mX.value().d_data.d_def.d_allocator_p == &oa);
+            ASSERT(mX.get_allocator().mechanism() == &oa);
+            ASSERT( i.value() == 3);
 
-          ObjC mcX;
-          mcX = bsl::nullopt;
-          ASSERT(!mcX.has_value());
+            ConstValueType cvi = ValueType(bsl::allocator_arg, &ta, 1);
+            ASSERT(mX.has_value());
+            mX = cvi;
+            ASSERT(mX.value().value() == 1);
+            ASSERT(mX.value().d_data.d_def.d_allocator_p == &oa);
+            ASSERT(mX.get_allocator().mechanism() == &oa);
 
-          mcX.emplace("tralala");
-          mcX = bsl::nullopt;
-          ASSERT(!mcX.has_value());
+            const my_Class2 ci = my_Class2(3, &da);
+            ASSERT(mX.has_value());
+            mX = ci;
+            ASSERT(mX.value().value() == 3);
+            ASSERT(mX.value().d_data.d_def.d_allocator_p == &oa);
+            ASSERT(mX.get_allocator().mechanism() == &oa);
+
+            ASSERT(mX.has_value());
+            mX = MovUtl::move(vi);
+            ASSERT(mX.value().value() == 1);
+            ASSERT(mX.value().d_data.d_def.d_allocator_p == &oa);
+            ASSERT(mX.get_allocator().mechanism() == &oa);
+            ASSERT(vi.value() == MOVED_FROM_VAL);
+
+            ASSERT(mX.has_value());
+            mX = MovUtl::move(i);
+            ASSERT(mX.value().value() == 3);
+            ASSERT(mX.value().d_data.d_def.d_allocator_p == &oa);
+            ASSERT(mX.get_allocator().mechanism() == &oa);
+            ASSERT(i.value() == MOVED_FROM_VAL);
+
+            ASSERT(mX.has_value());
+            mX = MovUtl::move(cvi);
+            ASSERT(mX.value().value() == 1);
+            ASSERT(mX.value().d_data.d_def.d_allocator_p == &oa);
+            ASSERT(mX.get_allocator().mechanism() == &oa);
+            ASSERT(cvi.value() == 1);
+
+            ASSERT(mX.has_value());
+            mX = MovUtl::move(ci);
+            ASSERT(mX.value().value() == 3);
+            ASSERT(mX.value().d_data.d_def.d_allocator_p == &oa);
+            ASSERT(mX.get_allocator().mechanism() == &oa);
+            ASSERT(ci.value() == 3);
+        }
+        {
+            Obj mX(bsl::allocator_arg, &oa);
+            ASSERT(mX.get_allocator().mechanism() == &oa);
+            ValueType vi = ValueType(bsl::allocator_arg, &ta, 1);
+            ASSERT(!mX.has_value());
+            mX = vi;
+            ASSERT(mX.value().value() == 1);
+            ASSERT(mX.value().d_data.d_def.d_allocator_p == &oa);
+            ASSERT(mX.get_allocator().mechanism() == &oa);
+            ASSERT(vi.value() == 1);
+            ASSERT(vi.d_data.d_def.d_allocator_p == &ta);
+
+            mX.reset();
+            ASSERT(!mX.has_value());
+            my_Class2 i = my_Class2(3, &da);
+            mX = i;
+            ASSERT(mX.value().value() == 3);
+            ASSERT(mX.value().d_data.d_def.d_allocator_p == &oa);
+            ASSERT(mX.get_allocator().mechanism() == &oa);
+            ASSERT( i.value() == 3);
+
+            ConstValueType cvi = ValueType(bsl::allocator_arg, &ta, 1);
+            mX.reset();
+            ASSERT(!mX.has_value());
+            mX = cvi;
+            ASSERT(mX.value().value() == 1);
+            ASSERT(mX.value().d_data.d_def.d_allocator_p == &oa);
+            ASSERT(mX.get_allocator().mechanism() == &oa);
+
+            const my_Class2 ci = my_Class2(3, &da);
+            mX.reset();
+            ASSERT(!mX.has_value());
+            mX = ci;
+            ASSERT(mX.value().value() == 3);
+            ASSERT(mX.value().d_data.d_def.d_allocator_p == &oa);
+            ASSERT(mX.get_allocator().mechanism() == &oa);
+
+            mX.reset();
+            ASSERT(!mX.has_value());
+            mX = MovUtl::move(vi);
+            ASSERT(mX.value().value() == 1);
+            ASSERT(mX.value().d_data.d_def.d_allocator_p == &oa);
+            ASSERT(mX.get_allocator().mechanism() == &oa);
+#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
+            ASSERT(vi.value() == MOVED_FROM_VAL);
+#endif
+
+            mX.reset();
+            ASSERT(!mX.has_value());
+            mX = MovUtl::move(i);;
+            ASSERT(mX.value().value() == 3);
+            ASSERT(mX.value().d_data.d_def.d_allocator_p == &oa);
+            ASSERT(mX.get_allocator().mechanism() == &oa);
+#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
+            ASSERT(vi.value() == MOVED_FROM_VAL);
+#endif
+
+            mX.reset();
+            ASSERT(!mX.has_value());
+            mX = MovUtl::move(cvi);
+            ASSERT(mX.value().value() == 1);
+            ASSERT(mX.value().d_data.d_def.d_allocator_p == &oa);
+            ASSERT(mX.get_allocator().mechanism() == &oa);
+            ASSERT(cvi.value() == 1);
+
+            mX.reset();
+            ASSERT(!mX.has_value());
+            mX = MovUtl::move(ci);
+            ASSERT(mX.value().value() == 3);
+            ASSERT(mX.value().d_data.d_def.d_allocator_p == &oa);
+            ASSERT(mX.get_allocator().mechanism() == &oa);
+            ASSERT(ci.value() == 3);
+        }
+        {
+            const Obj mX = ValueType(0);
+            ValueType vi = ValueType(1);
+            my_Class1 i = my_Class1(3);
+            ConstValueType cvi = ValueType(1);
+            const my_Class1 ci = my_Class1(3);
+#if defined(BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST)
+            mX = vi; // this should not compile 19
+            mX = i; // this should not compile 20
+            mX = cvi; // this should not compile 21
+            mX = ci;  // this should not compile 22
+            mX = MovUtl::move(vi);  // this should not compile 23
+            mX = MovUtl::move(i);  // this should not compile 24
+            mX = MovUtl::move(cvi);  // this should not compile 25
+            mX = MovUtl::move(ci);  // this should not compile 26
+#endif //BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST
+        }
+        {
+            ObjC mX = ValueType(0);
+            ValueType vi = ValueType(1);
+            my_Class1 i = my_Class1(3);
+            ConstValueType cvi = ValueType(1);
+            const my_Class1 ci = my_Class1(3);
+#if defined(BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST)
+             mX = vi; // this should not compile 27
+            mX = i; // this should not compile 28
+            mX = cvi; // this should not compile 29
+            mX = ci;  // this should not compile 30
+            mX = MovUtl::move(vi);  // this should not compile 31
+            mX = MovUtl::move(i);  // this should not compile 32
+            mX = MovUtl::move(cvi);  // this should not compile 33
+            mX = MovUtl::move(ci);  // this should not compile 34
+#endif //BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST
+        }
+    }
+}
+void bslstl_optional_test12()
+{
+  // --------------------------------------------------------------------
+  // TESTING operator=(non_optional_type) FUNCTIONALITY
+  //   This test will verify that the operator=(non_optional_type) function works
+  //   as expected. These test require compilation failures and will not run by
+  //   default.
+  //
+  // Concerns:
+  //   * operator=(non_optional_type) can not be called for a type which is
+  //     not assignable to value type.
+  //   * operator=(non_optional_type) can not be called for if value type is
+  //     not constructable from non_optional_type
+  //
+  // Plan:
+  //
+  //   Create an optional of type my_Class1b. Verify that lvalue and rvalue
+  //   of type myClass1 can not be assigned to the optional.
+  //
+  //   Create an optional of type my_Class1c. Verify that lvalue and rvalue
+  //   of type myClass1 can not be assigned to the optional.
+  //
+  //   Create an optional of type my_Class2b. Verify that lvalue and rvalue
+  //   of type myClass2 can not be assigned to the optional.
+  //
+  //   Create an optional of type my_Class2c. Verify that lvalue and rvalue
+  //   of type myClass2 can not be assigned to the optional.
+  //
+  //
+  // Testing:
+  //
+  //   operator=(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) other)
+  //
+  // --------------------------------------------------------------------
+
+    if (verbose) printf(
+                       "\nTESTING operator=(non_optional_type) MEMBER FUNCTION "
+                       "\n===================================================\n");
+#if defined(BSLSTL_OPTIONAL_TEST_BAD_EQUAL_NONOPT)
+
+    if (verbose) printf( "\nUsing 'my_Class1b'.\n");
+    {
+        typedef my_Class1b                  ValueType;
+        typedef bsl::optional<ValueType> Obj;
+        {
+          Obj mX = ValueType(0);
+          my_Class1 mc1 = my_Class1(2);
+
+          mX = mc1;             //this should not compile 1/
+          mX = my_Class1(0);    // this should not compile 2/
+        }
+    }
+    if (verbose) printf( "\nUsing 'my_Class1c'.\n");
+    {
+       typedef my_Class1c                  ValueType;
+       typedef bsl::optional<ValueType> Obj;
+       {
+         Obj mX = ValueType(0);
+         my_Class1 mc1 = my_Class1(2);
+
+         mX = mc1;             //this should not compile 3/
+         mX = my_Class1(0);    // this should not compile 4/
        }
     }
-#if defined(BSLSTL_OPTIONAL_TEST_BAD_EQUAL_NULLOPT)
+    if (verbose) printf( "\nUsing 'my_Class2b'.\n");
     {
-      if (verbose) printf( "\nUsing 'int'.\n");
-      {
-          typedef int                  ValueType;
-          typedef bsl::optional<ValueType> Obj;
-          const Obj mX;
-          mX = bsl::nullopt; // this should not compile 1/2
+        typedef my_Class2b                  ValueType;
+        typedef bsl::optional<ValueType> Obj;
+        {
+          Obj mX;
+          my_Class2 mc1 = my_Class2(2);
+
+          mX = mc1;             //this should not compile 1/
+          mX = my_Class2(0);    // this should not compile 2/
+        }
+    }
+    if (verbose) printf( "\nUsing 'my_Class2c'.\n");
+    {
+       typedef my_Class2c                  ValueType;
+       typedef bsl::optional<ValueType> Obj;
+       {
+         Obj mX;
+         my_Class2 mc1 = my_Class2(2);
+
+         mX = mc1;             //this should not compile 3/
+         mX = my_Class2(0);    // this should not compile 4/
        }
-      if (verbose) printf( "\nUsing 'bsl::string'.\n");
-      {
-          typedef bsl::string                 ValueType;
-          typedef bsl::optional<ValueType> Obj;
-          const Obj mX;
-          mX = bsl::nullopt; // this should not compile 2/2
+    }
+#endif
+}
+void bslstl_optional_test13()
+{
+  // --------------------------------------------------------------------
+  // TESTING operator=(optional_type) FUNCTIONALITY
+  //   This test will verify that the operator=(optional) function works
+  //   as expected.
+  //
+  // Concerns:
+  //   * assigning an engaged optional to an optional object assigns the
+  //     value of the rh optional to the value of the destination optional.
+  //   * assigning a disengaged optional to an optional object assigns the
+  //     value of the rh optional to the value of the destination optional.
+  //   * for allocator aware types, the assignment to a disengaged optional
+  //     uses the stored allocator.
+  //   * for allocator aware types, the assignment to an engaged optional
+  //     uses the stored allocator.
+  //   * assignment of rvalues uses move assignment where available
+  //
+  // Plan:
+  //
+  //   Conduct the test using 'my_class1' (does not use allocator) and
+  //   'my_class2'/'my_Class2a' (uses allocator) for 'TYPE'.
+  //
+  //   Create an engaged optional of each type. Assign a disengaged optional
+  //   of the same type to it. Check the value of the optional and allocator,
+  //   if any, are correct.
+  //   Check the value of the assigned object hasn't changed.
+  //
+  //   Emplace a value into the optional. Assign an engaged optional
+  //   of the same type to it. Check the value of the optional and allocator,
+  //   if any, are correct.
+  //   Check the value of the assigned object hasn't changed.
+  //
+  //   Assign a disengaged optional of type convertible to
+  //   value type to the optional.
+  //   Check the value of the optional and allocator, if any, are correct.
+  //   Check the value of the assigned object hasn't changed.
+  //
+  //   Emplace a value into the optional. Assign an engaged optional
+  //   of type convertible to value type to the optional. Check the value
+  //   of the optional and allocator, if any, are correct.
+  //   Check the value of the assigned object hasn't changed.
+  //
+  //   Repeat the tests for an optional of const qualified value types as
+  //   the source type.
+  //
+  //   Repeat the tests for const qualified optional types as
+  //   the source type.
+  //
+  //   Repeat the tests for assignment from rvalues. Check the assigned value
+  //   was moved from.
+  //
+  //   Call assignment on a const qualified optional. This requires
+  //   compilation failure tests which are not enabled by default.
+  //
+  //   Repeat all of the above tests for a disengaged optional as the destination.
+  //   That is, call reset before each assignment.
+  //
+  // Testing:
+  //
+  //   optional& operator=(const optional&);
+  //   optional& operator=( BloombergLP::bslmf::MovableRef<optional>);
+  //
+  //
+  //   void value();
+  //   void get_allocator();
+  //   void reset();
+  //   void emplace();
+  //
+  // --------------------------------------------------------------------
+
+    if (verbose) printf(
+                       "\nTESTING operator=(optional_type) MEMBER FUNCTION "
+                       "\n===================================================\n");
+
+    if (verbose) printf( "\nUsing 'my_Class1a'.\n");
+    {
+        typedef my_Class1a                  ValueType;
+        typedef const ValueType             ConstValueType;
+        typedef bsl::optional<ValueType>    Obj;
+        typedef bsl::optional<ConstValueType> ObjC;
+
+        typedef my_Class1                   OtherType;
+        typedef const OtherType             ConstOtherType;
+        typedef bsl::optional<OtherType>    OtherObj;
+        typedef bsl::optional<ConstOtherType> OtherObjC;
+
+        typedef const Obj CObj;
+        typedef const ObjC CObjC;
+        typedef const OtherObj COtherObj;
+        typedef const OtherObjC COtherObjC;
+
+        {
+            Obj mX(ValueType(3));
+
+            mX.emplace(2);
+            TEST_EQUAL_EMPTY(mX, Obj);
+
+            mX.emplace(2);
+            TEST_EQUAL_EMPTY(mX, OtherObj);
+
+            mX.emplace(2);
+            TEST_EQUAL_EMPTY(mX, CObj);
+
+            mX.emplace(2);
+            TEST_EQUAL_EMPTY(mX, COtherObj);
+
+            mX.emplace(2);
+            TEST_EQUAL_EMPTY(mX, ObjC);
+
+            mX.emplace(2);
+            TEST_EQUAL_EMPTY(mX, OtherObjC);
+
+            mX.emplace(2);
+            TEST_EQUAL_EMPTY(mX, CObjC);
+
+            mX.emplace(2);
+            TEST_EQUAL_EMPTY(mX, COtherObjC);
+
+            mX.emplace(2);
+            TEST_EQUAL_EMPTY_MOVE(mX, Obj);
+
+            mX.emplace(2);
+            TEST_EQUAL_EMPTY_MOVE(mX, OtherObj);
+
+            mX.emplace(2);
+            TEST_EQUAL_EMPTY_MOVE(mX, CObj);
+
+            mX.emplace(2);
+            TEST_EQUAL_EMPTY_MOVE(mX, COtherObj);
+
+            mX.emplace(2);
+            TEST_EQUAL_EMPTY_MOVE(mX, ObjC);
+
+            mX.emplace(2);
+            TEST_EQUAL_EMPTY_MOVE(mX, OtherObjC);
+
+            mX.emplace(2);
+            TEST_EQUAL_EMPTY_MOVE(mX, CObjC);
+
+            mX.emplace(2);
+            TEST_EQUAL_EMPTY_MOVE(mX, COtherObjC);
+
+            mX.emplace(2);
+            TEST_EQUAL_ENGAGED(mX, Obj, ValueType, 7);
+
+            mX.emplace(2);
+            TEST_EQUAL_ENGAGED(mX, CObj, ValueType, 7);
+
+            mX.emplace(2);
+            TEST_EQUAL_ENGAGED(mX, ObjC, ValueType, 7);
+
+            mX.emplace(2);
+            TEST_EQUAL_ENGAGED(mX, CObjC, ValueType, 7);
+
+            mX.emplace(2);
+            TEST_EQUAL_ENGAGED(mX, OtherObj, OtherType, 7);
+
+            mX.emplace(2);
+            TEST_EQUAL_ENGAGED(mX, COtherObj, OtherType, 7);
+
+            mX.emplace(2);
+            TEST_EQUAL_ENGAGED(mX, OtherObjC, OtherType, 7);
+
+            mX.emplace(2);
+            TEST_EQUAL_ENGAGED(mX, COtherObjC, OtherType,  7);
+
+            mX.emplace(2);
+            TEST_EQUAL_ENGAGED_MOVE(mX, Obj, ValueType, 7, MOVED_FROM_VAL);
+
+            mX.emplace(2);
+            TEST_EQUAL_ENGAGED_MOVE(mX, CObj, ValueType, 7, 7);
+
+            mX.emplace(2);
+            TEST_EQUAL_ENGAGED_MOVE(mX, ObjC, ValueType, 7, 7);
+
+            mX.emplace(2);
+            TEST_EQUAL_ENGAGED_MOVE(mX, CObjC, ValueType, 7, 7);
+
+            mX.emplace(2);
+            TEST_EQUAL_ENGAGED_MOVE(mX, OtherObj, OtherType, 7, MOVED_FROM_VAL);
+
+            mX.emplace(2);
+            TEST_EQUAL_ENGAGED_MOVE(mX, COtherObj, OtherType, 7, 7);
+
+            mX.emplace(2);
+            TEST_EQUAL_ENGAGED_MOVE(mX, OtherObjC, OtherType, 7, 7);
+
+            mX.emplace(2);
+            TEST_EQUAL_ENGAGED_MOVE(mX, COtherObjC, OtherType,  7, 7);
+        }
+        {
+            Obj mX(ValueType(3));
+
+            mX.reset();
+            TEST_EQUAL_EMPTY(mX, Obj);
+
+            mX.reset();
+            TEST_EQUAL_EMPTY(mX, OtherObj);
+
+            mX.reset();
+            TEST_EQUAL_EMPTY(mX, CObj);
+
+            mX.reset();
+            TEST_EQUAL_EMPTY(mX, COtherObj);
+
+            mX.reset();
+            TEST_EQUAL_EMPTY(mX, ObjC);
+
+            mX.reset();
+            TEST_EQUAL_EMPTY(mX, OtherObjC);
+
+            mX.reset();
+            TEST_EQUAL_EMPTY(mX, CObjC);
+
+            mX.reset();
+            TEST_EQUAL_EMPTY(mX, COtherObjC);
+
+            mX.reset();
+            TEST_EQUAL_EMPTY_MOVE(mX, Obj);
+
+            mX.reset();
+            TEST_EQUAL_EMPTY_MOVE(mX, OtherObj);
+
+            mX.reset();
+            TEST_EQUAL_EMPTY_MOVE(mX, CObj);
+
+            mX.reset();
+            TEST_EQUAL_EMPTY_MOVE(mX, COtherObj);
+
+            mX.reset();
+            TEST_EQUAL_EMPTY_MOVE(mX, ObjC);
+
+            mX.reset();
+            TEST_EQUAL_EMPTY_MOVE(mX, OtherObjC);
+
+            mX.reset();
+            TEST_EQUAL_EMPTY_MOVE(mX, CObjC);
+
+            mX.reset();
+            TEST_EQUAL_EMPTY_MOVE(mX, COtherObjC);
+
+            mX.reset();
+            TEST_EQUAL_ENGAGED(mX, Obj, ValueType, 7);
+
+            mX.reset();
+            TEST_EQUAL_ENGAGED(mX, CObj, ValueType, 7);
+
+            mX.reset();
+            TEST_EQUAL_ENGAGED(mX, ObjC, ValueType, 7);
+
+            mX.reset();
+            TEST_EQUAL_ENGAGED(mX, CObjC, ValueType, 7);
+
+            mX.reset();
+            TEST_EQUAL_ENGAGED(mX, OtherObj, OtherType, 7);
+
+            mX.reset();
+            TEST_EQUAL_ENGAGED(mX, COtherObj, OtherType, 7);
+
+            mX.reset();
+            TEST_EQUAL_ENGAGED(mX, OtherObjC, OtherType, 7);
+
+            mX.reset();
+            TEST_EQUAL_ENGAGED(mX, COtherObjC, OtherType,  7);
+
+#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
+            mX.reset();
+            TEST_EQUAL_ENGAGED_MOVE(mX, Obj, ValueType, 7, MOVED_FROM_VAL);
+#endif
+            mX.reset();
+            TEST_EQUAL_ENGAGED_MOVE(mX, CObj, ValueType, 7, 7);
+
+            mX.reset();
+            TEST_EQUAL_ENGAGED_MOVE(mX, ObjC, ValueType, 7, 7);
+
+            mX.reset();
+            TEST_EQUAL_ENGAGED_MOVE(mX, CObjC, ValueType, 7, 7);
+
+#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
+            mX.reset();
+            TEST_EQUAL_ENGAGED_MOVE(mX, OtherObj, OtherType, 7, MOVED_FROM_VAL);
+#endif
+
+            mX.reset();
+            TEST_EQUAL_ENGAGED_MOVE(mX, COtherObj, OtherType, 7, 7);
+
+            mX.reset();
+            TEST_EQUAL_ENGAGED_MOVE(mX, OtherObjC, OtherType, 7, 7);
+
+            mX.reset();
+            TEST_EQUAL_ENGAGED_MOVE(mX, COtherObjC, OtherType,  7, 7);
+        }
+    }
+    if (verbose) printf( "\nUsing 'my_Class2a'.\n");
+    {
+        bslma::TestAllocator da("default", veryVeryVeryVerbose);
+        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+        bslma::TestAllocator ta("third", veryVeryVeryVerbose);
+
+        typedef my_Class2a                  ValueType;
+        typedef const ValueType             ConstValueType;
+        typedef bsl::optional<ValueType>    Obj;
+        typedef bsl::optional<ConstValueType> ObjC;
+
+        typedef my_Class2                   OtherType;
+        typedef const OtherType             ConstOtherType;
+        typedef bsl::optional<OtherType>    OtherObj;
+        typedef bsl::optional<ConstOtherType> OtherObjC;
+
+        typedef const Obj CObj;
+        typedef const ObjC CObjC;
+        typedef const OtherObj COtherObj;
+        typedef const OtherObjC COtherObjC;
+
+        {
+            Obj mX(bsl::allocator_arg, &oa, ValueType(3));
+
+            mX.emplace(2);
+            TEST_EQUAL_EMPTY_A(mX, Obj);
+
+            mX.emplace(2);
+            TEST_EQUAL_EMPTY_A(mX, OtherObj);
+
+            mX.emplace(2);
+            TEST_EQUAL_EMPTY_A(mX, CObj);
+
+            mX.emplace(2);
+            TEST_EQUAL_EMPTY_A(mX, COtherObj);
+
+            mX.emplace(2);
+            TEST_EQUAL_EMPTY_A(mX, ObjC);
+
+            mX.emplace(2);
+            TEST_EQUAL_EMPTY_A(mX, OtherObjC);
+
+            mX.emplace(2);
+            TEST_EQUAL_EMPTY_A(mX, CObjC);
+
+            mX.emplace(2);
+            TEST_EQUAL_EMPTY_A(mX, COtherObjC);
+
+            mX.emplace(2);
+            TEST_EQUAL_EMPTY_MOVE_A(mX, Obj);
+
+            mX.emplace(2);
+            TEST_EQUAL_EMPTY_MOVE_A(mX, OtherObj);
+
+            mX.emplace(2);
+            TEST_EQUAL_EMPTY_MOVE_A(mX, CObj);
+
+            mX.emplace(2);
+            TEST_EQUAL_EMPTY_MOVE_A(mX, COtherObj);
+
+            mX.emplace(2);
+            TEST_EQUAL_EMPTY_MOVE_A(mX, ObjC);
+
+            mX.emplace(2);
+            TEST_EQUAL_EMPTY_MOVE_A(mX, OtherObjC);
+
+            mX.emplace(2);
+            TEST_EQUAL_EMPTY_MOVE_A(mX, CObjC);
+
+            mX.emplace(2);
+            TEST_EQUAL_EMPTY_MOVE_A(mX, COtherObjC);
+
+            mX.emplace(2);
+            TEST_EQUAL_ENGAGED_A(mX, Obj, ValueType, 7);
+
+            mX.emplace(2);
+            TEST_EQUAL_ENGAGED_A(mX, CObj, ValueType, 7);
+
+            mX.emplace(2);
+            TEST_EQUAL_ENGAGED_A(mX, ObjC, ValueType, 7);
+
+            mX.emplace(2);
+            TEST_EQUAL_ENGAGED_A(mX, CObjC, ValueType, 7);
+
+            mX.emplace(2);
+            TEST_EQUAL_ENGAGED_A(mX, OtherObj, OtherType, 7);
+
+            mX.emplace(2);
+            TEST_EQUAL_ENGAGED_A(mX, COtherObj, OtherType, 7);
+
+            mX.emplace(2);
+            TEST_EQUAL_ENGAGED_A(mX, OtherObjC, OtherType, 7);
+
+            mX.emplace(2);
+            TEST_EQUAL_ENGAGED_A(mX, COtherObjC, OtherType,  7);
+
+            mX.emplace(2);
+            TEST_EQUAL_ENGAGED_MOVE_A(mX, Obj, ValueType, 7, MOVED_FROM_VAL);
+
+            mX.emplace(2);
+            TEST_EQUAL_ENGAGED_MOVE_A(mX, CObj, ValueType, 7, 7);
+
+            mX.emplace(2);
+            TEST_EQUAL_ENGAGED_MOVE_A(mX, ObjC, ValueType, 7, 7);
+
+            mX.emplace(2);
+            TEST_EQUAL_ENGAGED_MOVE_A(mX, CObjC, ValueType, 7, 7);
+
+            mX.emplace(2);
+            TEST_EQUAL_ENGAGED_MOVE_A(mX, OtherObj, OtherType, 7, MOVED_FROM_VAL);
+
+            mX.emplace(2);
+            TEST_EQUAL_ENGAGED_MOVE_A(mX, COtherObj, OtherType, 7, 7);
+
+            mX.emplace(2);
+            TEST_EQUAL_ENGAGED_MOVE_A(mX, OtherObjC, OtherType, 7, 7);
+
+            mX.emplace(2);
+            TEST_EQUAL_ENGAGED_MOVE_A(mX, COtherObjC, OtherType,  7, 7);
+        }
+        {
+            Obj mX(bsl::allocator_arg, &oa);
+
+            mX.reset();
+            TEST_EQUAL_EMPTY_A(mX, Obj);
+
+            mX.reset();
+            TEST_EQUAL_EMPTY_A(mX, OtherObj);
+
+            mX.reset();
+            TEST_EQUAL_EMPTY_A(mX, CObj);
+
+            mX.reset();
+            TEST_EQUAL_EMPTY_A(mX, COtherObj);
+
+            mX.reset();
+            TEST_EQUAL_EMPTY_A(mX, ObjC);
+
+            mX.reset();
+            TEST_EQUAL_EMPTY_A(mX, OtherObjC);
+
+            mX.reset();
+            TEST_EQUAL_EMPTY_A(mX, CObjC);
+
+            mX.reset();
+            TEST_EQUAL_EMPTY_A(mX, COtherObjC);
+
+            mX.reset();
+            TEST_EQUAL_EMPTY_MOVE_A(mX, Obj);
+
+            mX.reset();
+            TEST_EQUAL_EMPTY_MOVE_A(mX, OtherObj);
+
+            mX.reset();
+            TEST_EQUAL_EMPTY_MOVE_A(mX, CObj);
+
+            mX.reset();
+            TEST_EQUAL_EMPTY_MOVE_A(mX, COtherObj);
+
+            mX.reset();
+            TEST_EQUAL_EMPTY_MOVE_A(mX, ObjC);
+
+            mX.reset();
+            TEST_EQUAL_EMPTY_MOVE_A(mX, OtherObjC);
+
+            mX.reset();
+            TEST_EQUAL_EMPTY_MOVE_A(mX, CObjC);
+
+            mX.reset();
+            TEST_EQUAL_EMPTY_MOVE_A(mX, COtherObjC);
+
+            mX.reset();
+            TEST_EQUAL_ENGAGED_A(mX, Obj, ValueType, 7);
+
+            mX.reset();
+            TEST_EQUAL_ENGAGED_A(mX, CObj, ValueType, 7);
+
+            mX.reset();
+            TEST_EQUAL_ENGAGED_A(mX, ObjC, ValueType, 7);
+
+            mX.reset();
+            TEST_EQUAL_ENGAGED_A(mX, CObjC, ValueType, 7);
+
+            mX.reset();
+            TEST_EQUAL_ENGAGED_A(mX, OtherObj, OtherType, 7);
+
+            mX.reset();
+            TEST_EQUAL_ENGAGED_A(mX, COtherObj, OtherType, 7);
+
+            mX.reset();
+            TEST_EQUAL_ENGAGED_A(mX, OtherObjC, OtherType, 7);
+
+            mX.reset();
+            TEST_EQUAL_ENGAGED_A(mX, COtherObjC, OtherType,  7);
+
+#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
+            mX.reset();
+            TEST_EQUAL_ENGAGED_MOVE_A(mX, Obj, ValueType, 7, MOVED_FROM_VAL);
+#endif
+            mX.reset();
+            TEST_EQUAL_ENGAGED_MOVE_A(mX, CObj, ValueType, 7, 7);
+
+            mX.reset();
+            TEST_EQUAL_ENGAGED_MOVE_A(mX, ObjC, ValueType, 7, 7);
+
+            mX.reset();
+            TEST_EQUAL_ENGAGED_MOVE_A(mX, CObjC, ValueType, 7, 7);
+
+#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
+            mX.reset();
+            TEST_EQUAL_ENGAGED_MOVE_A(mX, OtherObj, OtherType, 7, MOVED_FROM_VAL);
+#endif
+
+            mX.reset();
+            TEST_EQUAL_ENGAGED_MOVE_A(mX, COtherObj, OtherType, 7, 7);
+
+            mX.reset();
+            TEST_EQUAL_ENGAGED_MOVE_A(mX, OtherObjC, OtherType, 7, 7);
+
+            mX.reset();
+            TEST_EQUAL_ENGAGED_MOVE_A(mX, COtherObjC, OtherType,  7, 7);
+        }
+    }
+    {
+        typedef my_Class1a                  ValueType;
+        typedef const ValueType             ConstValueType;
+        typedef bsl::optional<ConstValueType> ObjC;
+
+        typedef my_Class1                   OtherType;
+        typedef const OtherType             ConstOtherType;
+
+        ObjC mX = ValueType(0);
+        ValueType vi = ValueType(1);
+        OtherType i = OtherType(3);
+        ConstValueType cvi = ValueType(1);
+        ConstOtherType ci = my_Class1(3);
+#if defined(BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST)
+        mX = vi; // this should not compile 27
+        mX = i; // this should not compile 29
+        mX = cvi; // this should not compile 29
+        mX = ci;  // this should not compile 30
+        mX = MovUtl::move(vi);  // this should not compile 31
+        mX = MovUtl::move(i);  // this should not compile 32
+        mX = MovUtl::move(cvi);  // this should not compile 33
+        mX = MovUtl::move(ci);  // this should not compile 34
+#endif //BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST
+    }
+    {
+        typedef my_Class2a                  ValueType;
+        typedef const ValueType             ConstValueType;
+        typedef bsl::optional<ConstValueType> ObjC;
+
+        typedef my_Class2                   OtherType;
+        typedef const OtherType             ConstOtherType;
+
+        ObjC mX = ValueType(0);
+        ValueType vi = ValueType(1);
+        OtherType i = OtherType(3);
+        ConstValueType cvi = ValueType(1);
+        ConstOtherType ci = my_Class1(3);
+#if defined(BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST)
+        mX = vi; // this should not compile 35
+        mX = i; // this should not compile 36
+        mX = cvi; // this should not compile 37
+        mX = ci;  // this should not compile 38
+        mX = MovUtl::move(vi);  // this should not compile 39
+        mX = MovUtl::move(i);  // this should not compile 40
+        mX = MovUtl::move(cvi);  // this should not compile 41
+        mX = MovUtl::move(ci);  // this should not compile 42
+#endif //BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST
      }
+}
+void bslstl_optional_test14()
+{
+  // --------------------------------------------------------------------
+  // TESTING operator=(optional_type) FUNCTIONALITY
+  //   This test will verify that the operator=(optional_type) function works
+  //   as expected. These test require compilation failures and will not run by
+  //   default.
+  //
+  // Concerns:
+  //   * operator=(optional_type) can not be called for an optional of type
+  //     which is not assignable to value type.
+  //   * operator=(optional_type) can not be called for if value type is
+  //     not constructable from value type of optional_type
+  //
+  // Plan:
+  //
+  //   Create an optional of type my_Class1b. Verify that lvalue and rvalue
+  //   of type optional<myClass1> can not be assigned to the optional.
+  //
+  //   Create an optional of type my_Class1c. Verify that lvalue and rvalue
+  //   of type optional<myClass1> can not be assigned to the optional.
+  //
+  //   Create an optional of type my_Class2b. Verify that lvalue and rvalue
+  //   of type optional<myClass2> can not be assigned to the optional.
+  //
+  //   Create an optional of type my_Class2c. Verify that lvalue and rvalue
+  //   of type optional<myClass2> can not be assigned to the optional.
+  //
+  //
+  // Testing:
+  //
+  //   operator=(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) other)
+  //
+  // --------------------------------------------------------------------
+
+    if (verbose) printf(
+                       "\nTESTING operator=(optional_type) MEMBER FUNCTION "
+                       "\n===================================================\n");
+#if defined(BSLSTL_OPTIONAL_TEST_BAD_EQUAL_OPT)
+
+    if (verbose) printf( "\nUsing 'my_Class1b'.\n");
+    {
+        typedef my_Class1b                  ValueType;
+        typedef bsl::optional<ValueType> Obj;
+        {
+          Obj mX = ValueType(0);
+          bsl::optional<my_Class1> mc1 = my_Class1(2);
+
+          mX = mc1;             //this should not compile 5/
+          mX = my_Class1(0);    // this should not compile 6/
+        }
+    }
+    if (verbose) printf( "\nUsing 'my_Class1c'.\n");
+    {
+       typedef my_Class1c                  ValueType;
+       typedef bsl::optional<ValueType> Obj;
+       {
+         Obj mX = ValueType(0);
+         bsl::optional<my_Class1> mc1 = my_Class1(2);
+
+        mX = mc1;             //this should not compile 7/
+         mX = my_Class1(0);    // this should not compile 8/
+       }
+    }
+    if (verbose) printf( "\nUsing 'my_Class2b'.\n");
+    {
+        typedef my_Class2b                  ValueType;
+        typedef bsl::optional<ValueType> Obj;
+        {
+          Obj mX;
+          bsl::optional<my_Class2> mc1 = my_Class2(2);
+
+          mX = mc1;             //this should not compile 9/
+          mX = my_Class2(0);    // this should not compile 10/
+        }
+    }
+    if (verbose) printf( "\nUsing 'my_Class2c'.\n");
+    {
+       typedef my_Class2c                  ValueType;
+       typedef bsl::optional<ValueType> Obj;
+       {
+         Obj mX;
+         bsl::optional<my_Class2> mc1 = my_Class2(2);
+
+         mX = mc1;             //this should not compile 11/
+         mX = my_Class2(0);    // this should not compile 12/
+       }
     }
 #endif
 }
@@ -3758,8 +5128,17 @@ int main(int argc, char **argv)
     bslma::Default::setGlobalAllocator(&globalAllocator);
 
     switch (test) { case 0:
+      case 14:
+        bslstl_optional_test14();
+        break;
+      case 13:
+        bslstl_optional_test13();
+        break;
+      case 12:
+        bslstl_optional_test12();
+        break;
       case 11:
-        bslstl_optional_test10();
+        bslstl_optional_test11();
         break;
       case 10:
         bslstl_optional_test10();
