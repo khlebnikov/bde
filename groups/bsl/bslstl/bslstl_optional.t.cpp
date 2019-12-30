@@ -8,6 +8,7 @@
 // ----------------------------------------------------------------------------
 
 // Todo: - improve tests by checking for equality, as opposed to value and allocator separately
+//       - add class that is convertible/assignable from an optional object
 //
 
 #include "bslstl_optional.h"
@@ -246,6 +247,11 @@ class my_Class1 {
     // ACCESSORS
     int value() const { return d_def.d_value; }
 };
+bool operator==(const my_Class1& lhs,
+                const my_Class1& rhs)
+{
+ return (lhs.value()==rhs.value());
+}
                              // ===============
                              // class my_Class1a
                              // ===============
@@ -290,6 +296,11 @@ class my_Class1a {
     // ACCESSORS
     int value() const { return d_data.value(); }
 };
+bool operator==(const my_Class1a& lhs,
+                const my_Class1a& rhs)
+{
+ return (lhs.value()==rhs.value());
+}
                              // ===============
                              // class my_Class1b
                              // ===============
@@ -339,7 +350,12 @@ class my_Class1b {
     // ACCESSORS
     int value() const { return d_data.value(); }
 };
-                             // ===============
+bool operator==(const my_Class1b& lhs,
+                const my_Class1b& rhs)
+{
+    return (lhs.value()==rhs.value());
+}
+                              // ===============
                              // class my_Class1c
                              // ===============
 
@@ -386,7 +402,11 @@ class my_Class1c {
     // ACCESSORS
     int value() const { return d_data.value(); }
 };
-
+bool operator==(const my_Class1c& lhs,
+                const my_Class1c& rhs)
+{
+    return (lhs.value()==rhs.value());
+}
                              // ===============
                              // class my_Class2
                              // ===============
@@ -505,6 +525,11 @@ class my_Class2 {
     // ACCESSORS
     int value() const { return d_def.d_value; }
 };
+bool operator==(const my_Class2& lhs,
+                const my_Class2& rhs)
+{
+    return (lhs.value()==rhs.value());
+}
 
 // TRAITS
 namespace BloombergLP {
@@ -600,6 +625,13 @@ class my_Class2a {
     // ACCESSORS
     int value() const { return d_data.value(); }
 };
+
+bool operator==(const my_Class2a& lhs,
+                const my_Class2a& rhs)
+{
+    return (lhs.value()==rhs.value());
+}
+
 // TRAITS
 namespace BloombergLP {
 
@@ -670,6 +702,11 @@ class my_Class2b {
     // ACCESSORS
     int value() const { return d_data.value(); }
 };
+bool operator==(const my_Class2b& lhs,
+                const my_Class2b& rhs)
+{
+    return (lhs.value()==rhs.value());
+}
 
 // TRAITS
 namespace BloombergLP {
@@ -765,6 +802,11 @@ class my_Class2c {
     // ACCESSORS
     int value() const { return d_data.value(); }
 };
+bool operator==(const my_Class2c& lhs,
+                const my_Class2c& rhs)
+{
+    return (lhs.value()==rhs.value());
+}
 // TRAITS
 namespace BloombergLP {
 
@@ -3081,7 +3123,7 @@ void bslstl_optional_test8()
 {
   // --------------------------------------------------------------------
   // TESTING emplace FUNCTIONALITY
-  //   This test will verify that the intiializer list emplace function works
+  //   This test will verify that the emplace function works
   //   as expected.
   //
   // Concerns:
@@ -5063,8 +5105,8 @@ void bslstl_optional_test14()
           Obj mX = ValueType(0);
           bsl::optional<my_Class1> mc1 = my_Class1(2);
 
-          mX = mc1;             //this should not compile 5/
-          mX = my_Class1(0);    // this should not compile 6/
+          mX = mc1;             //this should not compile
+          mX = my_Class1(0);    // this should not compile
         }
     }
     if (verbose) printf( "\nUsing 'my_Class1c'.\n");
@@ -5075,8 +5117,8 @@ void bslstl_optional_test14()
          Obj mX = ValueType(0);
          bsl::optional<my_Class1> mc1 = my_Class1(2);
 
-        mX = mc1;             //this should not compile 7/
-         mX = my_Class1(0);    // this should not compile 8/
+         mX = mc1;             //this should not compile
+         mX = my_Class1(0);    // this should not compile
        }
     }
     if (verbose) printf( "\nUsing 'my_Class2b'.\n");
@@ -5087,8 +5129,8 @@ void bslstl_optional_test14()
           Obj mX;
           bsl::optional<my_Class2> mc1 = my_Class2(2);
 
-          mX = mc1;             //this should not compile 9/
-          mX = my_Class2(0);    // this should not compile 10/
+          mX = mc1;             //this should not compile
+          mX = my_Class2(0);    // this should not compile
         }
     }
     if (verbose) printf( "\nUsing 'my_Class2c'.\n");
@@ -5099,12 +5141,222 @@ void bslstl_optional_test14()
          Obj mX;
          bsl::optional<my_Class2> mc1 = my_Class2(2);
 
-         mX = mc1;             //this should not compile 11/
-         mX = my_Class2(0);    // this should not compile 12/
+         mX = mc1;             //this should not compile
+         mX = my_Class2(0);    // this should not compile
        }
     }
 #endif
 }
+void bslstl_optional_test15()
+{
+  // --------------------------------------------------------------------
+  // TESTING copy construct FUNCTIONALITY
+  //   This test will verify that the copy construction works as expected.
+  //
+  // Concerns:
+  //   * Constructing an optional from an engaged optional of the same type
+  //     creates an engaged optional. The original is not modified.
+  //   * Constructing an optional from a disengaged optional of the same type
+  //     creates a disengaged optional. The original is not modified.
+  //   * If no allocator is provided and the value type uses allocator, the
+  //     default allocator is used for the newly create doptional.
+  //   * If allocator extended version of copy constructor is used, the allocator
+  //     of the newly created optional is the one passed in.
+  //
+  //
+  // Plan:
+  //   Conduct the test using 'my_class1' (does not use allocator) and
+  //   'my_class2'/'my_Class2a' (uses allocator) for 'TYPE'.
+  //
+  //   Create an engaged optional of my_class1 type. Create another optional
+  //   of my_class1 type using the first object as the initialization object.
+  //   Check the value of the newly created object is as expected.
+  //   Check the source object has not changed.
+  //   Bind a const reference to the original object. Create another optional
+  //   of my_class1 type using the const reference as the initialization object.
+  //   Check the value of the newly created object is as expected.
+  //
+  //   Create a disengaged optional of my_class1 type. Create another optional
+  //   of my_class1 type using the disengaged object as the initialization object.
+  //   Check the newly created object is disengaged.
+  //   Bind a const reference to the original object. Create another optional
+  //   of my_class1 type using the const reference as the initialization object.
+  //   Check the newly created object is disengaged.
+  //
+  //   Create an engaged optional of my_class2 type using a non default
+  //   allocator.
+  //   Create another optional of my_class2 type using the first object as
+  //   the initialization object.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is as the default
+  //   allocator.
+  //   Check the source object has not changed.
+  //
+  //   Create another optional of my_class2 type using the first object as
+  //   the initialization object and a non default allocator as the allocator
+  //   argument.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is as the one used
+  //   as the allocator argument.
+  //   Check the source object has not changed.
+  //
+  //   Bind a const reference to the original object. Create another optional
+  //   of my_class2 type using the const reference as the initialization object
+  //   and a non default allocator as the allocator argument.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is as the one used
+  //   as the allocator argument.
+  //
+  //   Create a disengaged optional of my_class2 type using a non default
+  //   allocator.
+  //   Create another optional of my_class2 type using the disengaged
+  //   object as the initialization object.
+  //   Check the newly created object is disengaged.
+  //   Check the allocator of the newly created object is as the default
+  //   allocator.
+  //
+  //   Create another optional of my_class2 type using the disengaged
+  //   object as the initialization object and non default allocator
+  //   as the allocator argument.
+  //   Check the newly created object is disengaged.
+  //   Check the allocator of the newly created object is as the one
+  //   used in the construction call.
+  //
+  //   Bind a const reference to the original object. Create another optional
+  //   of my_class2 type using the const reference as the initialization object
+  //   and non default allocator as the allocator argument.
+  //   Check the newly created object is disengaged.
+  //   Check the allocator of the newly created object is as the one
+  //   used in the construction call.
+  //
+  //   Repeat the above tests with my_class2a type.
+  //
+  //
+  // Testing:
+  //
+  //   optional(const optional& original)
+  //
+  //   void value();
+  //   void has_value();
+  //   void get_allocator();
+  //
+  // --------------------------------------------------------------------
+
+    if (verbose) printf(
+                       "\nTESTING copy construction "
+                       "\n=========================\n");
+
+    if (verbose) printf( "\nUsing 'my_Class1'.\n");
+    {
+        typedef my_Class1                  ValueType;
+        typedef bsl::optional<ValueType> Obj;
+
+        {
+            Obj source(ValueType(1));
+            ASSERT(source.has_value());
+
+            Obj dest = source;
+            ASSERT(dest.has_value());
+            ASSERT(dest.value() == source.value());
+            ASSERT(dest.value().value() == 1);
+            ASSERT(source.has_value());
+
+            const Obj & csource = source;
+            ASSERT(csource.has_value());
+
+            Obj dest2 = csource;
+            ASSERT(dest2.has_value());
+            ASSERT(dest2.value() == source.value());
+            ASSERT(dest2.value().value() == 1);
+        }
+        {
+            Obj source(nullopt);
+            ASSERT(!source.has_value());
+
+            Obj dest = source;
+            ASSERT(!dest.has_value());
+            ASSERT(!source.has_value());
+
+            const Obj & csource = source;
+            ASSERT(!csource.has_value());
+
+            Obj dest2 = csource;
+            ASSERT(!dest2.has_value());
+        }
+    }
+    if (verbose) printf( "\nUsing 'my_Class2'.\n");
+    {
+        bslma::TestAllocator da("default", veryVeryVeryVerbose);
+        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+        bslma::TestAllocator ta("third", veryVeryVeryVerbose);
+
+        bslma::DefaultAllocatorGuard dag(&da);
+
+        typedef my_Class2                  ValueType;
+        typedef bsl::optional<ValueType> Obj;
+
+        {
+          Obj source(bsl::allocator_arg, &oa, ValueType(1));
+          ASSERT(source.has_value());
+          ASSERT(&oa == source.get_allocator().mechanism());
+
+          Obj dest = source;
+          ASSERT(dest.has_value());
+          ASSERT(dest.value() == source.value());
+          ASSERT(dest.value().value() == 1);
+          ASSERT(&da == dest.get_allocator().mechanism());
+          ASSERT(source.has_value());
+          ASSERT(&oa == source.get_allocator().mechanism());
+
+          const Obj & csource = source;
+          ASSERT(csource.has_value());
+
+          Obj dest2 = csource;
+          ASSERT(dest2.has_value());
+          ASSERT(dest2.value() == source.value());
+          ASSERT(&da == dest2.get_allocator().mechanism());
+
+          Obj dest3(bsl::allocator_arg, &ta, source);
+          ASSERT(dest3.has_value());
+          ASSERT(dest3.value() == source.value());
+          ASSERT(dest3.value().value() == 1);
+          ASSERT(&ta == dest3.get_allocator().mechanism());
+          ASSERT(source.has_value());
+          ASSERT(&oa == source.get_allocator().mechanism());
+
+          Obj dest4(bsl::allocator_arg, &ta, csource);
+          ASSERT(dest2.has_value());
+          ASSERT(dest2.value() == source.value());
+          ASSERT(&ta == dest4.get_allocator().mechanism());
+       }
+       {
+          Obj source(bsl::allocator_arg, &oa, nullopt);
+          ASSERT(!source.has_value());
+          ASSERT(&oa == source.get_allocator().mechanism());
+
+          Obj dest = source;
+          ASSERT(!dest.has_value());
+          ASSERT(&da == dest.get_allocator().mechanism());
+          ASSERT(!source.has_value());
+
+          const Obj & csource = source;
+          ASSERT(!csource.has_value());
+
+          Obj dest2 = csource;
+          ASSERT(!dest2.has_value());
+          ASSERT(&da == dest2.get_allocator().mechanism());
+
+          Obj dest3(bsl::allocator_arg, &ta, source);
+          ASSERT(!dest3.has_value());
+          ASSERT(&ta == dest3.get_allocator().mechanism());
+
+          Obj dest4(bsl::allocator_arg, &ta, csource);
+          ASSERT(!dest4.has_value());
+          ASSERT(&ta == dest4.get_allocator().mechanism());
+       }
+    }
+}
+
 int main(int argc, char **argv)
 {
     const int                 test = argc > 1 ? atoi(argv[1]) : 0;
@@ -5128,6 +5380,9 @@ int main(int argc, char **argv)
     bslma::Default::setGlobalAllocator(&globalAllocator);
 
     switch (test) { case 0:
+      case 15:
+        bslstl_optional_test15();
+        break;
       case 14:
         bslstl_optional_test14();
         break;
