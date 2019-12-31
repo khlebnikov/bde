@@ -5188,7 +5188,7 @@ void bslstl_optional_test15()
   //   Create another optional of my_class2 type using the first object as
   //   the initialization object.
   //   Check the value of the newly created object is as expected.
-  //   Check the allocator of the newly created object is as the default
+  //   Check the allocator of the newly created object is the default
   //   allocator.
   //   Check the source object has not changed.
   //
@@ -5196,7 +5196,7 @@ void bslstl_optional_test15()
   //   the initialization object and a non default allocator as the allocator
   //   argument.
   //   Check the value of the newly created object is as expected.
-  //   Check the allocator of the newly created object is as the one used
+  //   Check the allocator of the newly created object is the one used
   //   as the allocator argument.
   //   Check the source object has not changed.
   //
@@ -5204,7 +5204,7 @@ void bslstl_optional_test15()
   //   of my_class2 type using the const reference as the initialization object
   //   and a non default allocator as the allocator argument.
   //   Check the value of the newly created object is as expected.
-  //   Check the allocator of the newly created object is as the one used
+  //   Check the allocator of the newly created object is the one used
   //   as the allocator argument.
   //
   //   Create a disengaged optional of my_class2 type using a non default
@@ -5212,21 +5212,21 @@ void bslstl_optional_test15()
   //   Create another optional of my_class2 type using the disengaged
   //   object as the initialization object.
   //   Check the newly created object is disengaged.
-  //   Check the allocator of the newly created object is as the default
+  //   Check the allocator of the newly created object is the default
   //   allocator.
   //
   //   Create another optional of my_class2 type using the disengaged
   //   object as the initialization object and non default allocator
   //   as the allocator argument.
   //   Check the newly created object is disengaged.
-  //   Check the allocator of the newly created object is as the one
+  //   Check the allocator of the newly created object is the one
   //   used in the construction call.
   //
   //   Bind a const reference to the original object. Create another optional
   //   of my_class2 type using the const reference as the initialization object
   //   and non default allocator as the allocator argument.
   //   Check the newly created object is disengaged.
-  //   Check the allocator of the newly created object is as the one
+  //   Check the allocator of the newly created object is the one
   //   used in the construction call.
   //
   //   Repeat the above tests with my_class2a type.
@@ -5234,7 +5234,8 @@ void bslstl_optional_test15()
   //
   // Testing:
   //
-  //   optional(const optional& original)
+  //   optional(const optional& )
+  //   optional(bsl::allocator_arg, allocator_type, const optional&)
   //
   //   void value();
   //   void has_value();
@@ -5266,7 +5267,7 @@ void bslstl_optional_test15()
 
             Obj dest2 = csource;
             ASSERT(dest2.has_value());
-            ASSERT(dest2.value() == source.value());
+            ASSERT(dest2.value() == csource.value());
             ASSERT(dest2.value().value() == 1);
         }
         {
@@ -5313,7 +5314,7 @@ void bslstl_optional_test15()
 
           Obj dest2 = csource;
           ASSERT(dest2.has_value());
-          ASSERT(dest2.value() == source.value());
+          ASSERT(dest2.value() == csource.value());
           ASSERT(&da == dest2.get_allocator().mechanism());
 
           Obj dest3(bsl::allocator_arg, &ta, source);
@@ -5355,8 +5356,1994 @@ void bslstl_optional_test15()
           ASSERT(&ta == dest4.get_allocator().mechanism());
        }
     }
-}
+    if (verbose) printf( "\nUsing 'my_Class2a'.\n");
+   {
+       bslma::TestAllocator da("default", veryVeryVeryVerbose);
+       bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+       bslma::TestAllocator ta("third", veryVeryVeryVerbose);
 
+       bslma::DefaultAllocatorGuard dag(&da);
+
+       typedef my_Class2a                  ValueType;
+       typedef bsl::optional<ValueType> Obj;
+
+       {
+         Obj source(bsl::allocator_arg, &oa, ValueType(1));
+         ASSERT(source.has_value());
+         ASSERT(&oa == source.get_allocator().mechanism());
+
+         Obj dest = source;
+         ASSERT(dest.has_value());
+         ASSERT(dest.value() == source.value());
+         ASSERT(dest.value().value() == 1);
+         ASSERT(&da == dest.get_allocator().mechanism());
+         ASSERT(source.has_value());
+         ASSERT(&oa == source.get_allocator().mechanism());
+
+         const Obj & csource = source;
+         ASSERT(csource.has_value());
+
+         Obj dest2 = csource;
+         ASSERT(dest2.has_value());
+         ASSERT(dest2.value() == csource.value());
+         ASSERT(&da == dest2.get_allocator().mechanism());
+
+         Obj dest3(bsl::allocator_arg, &ta, source);
+         ASSERT(dest3.has_value());
+         ASSERT(dest3.value() == source.value());
+         ASSERT(dest3.value().value() == 1);
+         ASSERT(&ta == dest3.get_allocator().mechanism());
+         ASSERT(source.has_value());
+         ASSERT(&oa == source.get_allocator().mechanism());
+
+         Obj dest4(bsl::allocator_arg, &ta, csource);
+         ASSERT(dest2.has_value());
+         ASSERT(dest2.value() == source.value());
+         ASSERT(&ta == dest4.get_allocator().mechanism());
+      }
+      {
+         Obj source(bsl::allocator_arg, &oa, nullopt);
+         ASSERT(!source.has_value());
+         ASSERT(&oa == source.get_allocator().mechanism());
+
+         Obj dest = source;
+         ASSERT(!dest.has_value());
+         ASSERT(&da == dest.get_allocator().mechanism());
+         ASSERT(!source.has_value());
+
+         const Obj & csource = source;
+         ASSERT(!csource.has_value());
+
+         Obj dest2 = csource;
+         ASSERT(!dest2.has_value());
+         ASSERT(&da == dest2.get_allocator().mechanism());
+
+         Obj dest3(bsl::allocator_arg, &ta, source);
+         ASSERT(!dest3.has_value());
+         ASSERT(&ta == dest3.get_allocator().mechanism());
+
+         Obj dest4(bsl::allocator_arg, &ta, csource);
+         ASSERT(!dest4.has_value());
+         ASSERT(&ta == dest4.get_allocator().mechanism());
+      }
+   }
+}
+void bslstl_optional_test16()
+{
+  // --------------------------------------------------------------------
+  // TESTING move construct FUNCTIONALITY
+  //   This test will verify that the move construction works as expected.
+  //
+  // Concerns:
+  //   * Move constructing an optional from an engaged optional of the same
+  //     type creates an engaged optional by moving from the source object's
+  //     value.
+  //   * Constructing an optional from a disengaged optional of the same type
+  //     creates a disengaged optional. The original is not modified.
+  //   * If no allocator is provided and the value type uses allocator, the
+  //     allocator from the moved from optional is used for the newly created
+  //     optional.
+  //   * If allocator extended version of copy constructor is used, the allocator
+  //     of the newly created optional is the one passed in.
+  //
+  //
+  // Plan:
+  //   Conduct the test using 'my_class1' (does not use allocator) and
+  //   'my_class2'/'my_Class2a' (uses allocator) for 'TYPE'.
+  //
+  //   Create an engaged optional of my_class1 type. Create another optional
+  //   of my_class1 type by move construction from the original object.
+  //   Check the value of the newly created object is as expected.
+  //   Check the source object's value type is in a moved from state.
+  //
+  //   Create a const engaged optional of my_class1 type. Create another
+  //   optional of my_class1 type by move construction from the original
+  //   object.
+  //   Check the value of the newly created object is as expected.
+  //   Check the source object has not changed.
+  //
+  //   Create a disengaged optional of my_class1 type. Create another optional
+  //   of my_class1 type by move construction from the original object.
+  //   Check the newly created object is disengaged.
+  //
+  //   Create a const disengaged optional of my_class1 type. Create another
+  //   optional of my_class1 type by move construction from the original
+  //   object.
+  //   Check the newly created object is disengaged.
+  //   Check the source object has not changed.
+  //
+  //   Create an engaged optional of my_class2 type using a non default
+  //   allocator.
+  //   Create another optional of my_class2 type by move construction from
+  //   the first object.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the one from
+  //   the source optional object.
+  //   Check the source object's value type is in a moved from state.
+  //
+  //   Create an engaged const optional of my_class2 type using a non default
+  //   allocator.
+  //   Create another optional of my_class2 type  by move construction from
+  //   the first object.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the
+  //   default allocator.
+  //   Check the source object's value type has not changed.
+  //
+  //   Create an engaged optional of my_class2 type using a non default
+  //   allocator.
+  //   Create another optional of my_class2 type  by move construction from
+  //   the first object and a non default allocator as the allocator
+  //   argument.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the same
+  //   as the one used for the source object.
+  //   Check the source object's value type is in a moved from state.
+  //
+  //   Create an engaged const optional of my_class2 type using a non default
+  //   allocator.
+  //   Create another optional of my_class2 type by move construction from
+  //   the first object and a non default allocator as the allocator argument.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the one used
+  //   as the allocator argument.
+  //   Check the source object has not changed.
+  //
+  //   Create a disengaged optional of my_class2 type using a non default
+  //   allocator.
+  //   Create another optional of my_class2 type by move construction from
+  //   the first object.
+  //   Check the newly created object is disengaged.
+  //   Check the allocator of the newly created object is the same as
+  //   the source optional object.
+  //
+  //   Create a disengaged const optional of my_class2 type using a non default
+  //   allocator.
+  //   Create another optional of my_class2 type by move construction from
+  //   the first object.
+  //   Check the newly created object is disengaged.
+  //   Check the allocator of the newly created object is the default
+  //   allocator.
+  //
+  //   Create a disengaged optional of my_class2 type using a non default
+  //   allocator.
+  //   Create another optional of my_class2 type by move construction from
+  //   the first object and with non default allocator as the allocator
+  //   argument.
+  //   Check the newly created object is disengaged.
+  //   Check the allocator of the newly created object is the one
+  //   used in the construction call.
+  //
+  //   Create a disengaged const optional of my_class2 type using a non
+  //   default allocator.
+  //   Create another optional of my_class2 type by move construction from
+  //   the first object.
+  //   Check the newly created object is disengaged.
+  //   Check the allocator of the newly created object is the default
+  //   allocator
+  //
+  //   Repeat the above tests with my_class2a type.
+  //
+  //
+  // Testing:
+  //
+  //   optional(MovableRef<optional>)
+  //   optional(bsl::allocator_arg, allocator_type, MovableRef<optional>)
+  //
+  //   void value();
+  //   void has_value();
+  //   void get_allocator();
+  //
+  // --------------------------------------------------------------------
+
+    if (verbose) printf(
+                       "\nTESTING move construction "
+                       "\n=========================\n");
+
+    if (verbose) printf( "\nUsing 'my_Class1'.\n");
+    {
+        typedef my_Class1                  ValueType;
+        typedef bsl::optional<ValueType> Obj;
+
+        {
+            Obj source(ValueType(1));
+            ASSERT(source.has_value());
+
+            Obj dest = MovUtl::move(source);
+            ASSERT(dest.has_value());
+            ASSERT(dest.value().value() == 1);
+            ASSERT(source.has_value());
+#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
+            ASSERT(source.value().value() == MOVED_FROM_VAL);
+#endif
+
+            const Obj source2(ValueType(2));
+            ASSERT(source2.has_value());
+
+            Obj dest2 = MovUtl::move(source2);
+            ASSERT(dest2.has_value());
+            ASSERT(dest2.value().value() == 2);
+            ASSERT(source2.has_value());
+            ASSERT(source2.value().value() == 2);
+        }
+        {
+            Obj source(nullopt);
+            ASSERT(!source.has_value());
+
+            Obj dest = MovUtl::move(source);
+            ASSERT(!dest.has_value());
+            ASSERT(!source.has_value());
+
+            const Obj source2(nullopt);
+            ASSERT(!source2.has_value());
+
+            Obj dest2 = MovUtl::move(source2);
+            ASSERT(!dest2.has_value());
+            ASSERT(!source2.has_value());
+        }
+    }
+    if (verbose) printf( "\nUsing 'my_Class2'.\n");
+    {
+        bslma::TestAllocator da("default", veryVeryVeryVerbose);
+        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+        bslma::TestAllocator ta("third", veryVeryVeryVerbose);
+
+        bslma::DefaultAllocatorGuard dag(&da);
+
+        typedef my_Class2                  ValueType;
+        typedef bsl::optional<ValueType> Obj;
+
+        {
+          Obj source(bsl::allocator_arg, &oa, ValueType(1));
+          ASSERT(source.has_value());
+          ASSERT(source.get_allocator().mechanism() == &oa);
+
+          Obj dest = MovUtl::move(source);
+          ASSERT(dest.has_value());
+          ASSERT(dest.value().value() == 1);
+          ASSERT(dest.get_allocator().mechanism() == &oa);
+          ASSERT(source.has_value());
+#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
+          ASSERT(source.value().value() == MOVED_FROM_VAL);
+#endif
+          ASSERT(source.get_allocator().mechanism() == &oa);
+
+          const Obj source2(bsl::allocator_arg, &oa, ValueType(2));
+          ASSERT(source2.has_value());
+          ASSERT(source.get_allocator().mechanism() == &oa);
+
+          Obj dest2 = MovUtl::move(source2);
+          ASSERT(dest2.has_value());
+          ASSERT(dest2.value().value() == 2);
+          ASSERT(dest2.get_allocator().mechanism() == &da);
+          ASSERT(source2.has_value());
+          ASSERT(source2.value().value() == 2);
+          ASSERT(source2.get_allocator().mechanism() == &oa);
+
+
+          Obj source3(bsl::allocator_arg, &oa, ValueType(3));
+          ASSERT(source3.has_value());
+          ASSERT(source3.get_allocator().mechanism() == &oa);
+
+          Obj dest3(bsl::allocator_arg, &ta, MovUtl::move(source3));
+          ASSERT(dest3.has_value());
+          ASSERT(dest3.value().value() == 3);
+          ASSERT(dest3.get_allocator().mechanism() == &ta);
+          ASSERT(source3.has_value());
+#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
+          ASSERT(source3.value().value() == MOVED_FROM_VAL);
+#endif
+          ASSERT(source3.get_allocator().mechanism() == &oa);
+
+
+          const Obj source4(bsl::allocator_arg, &oa, ValueType(4));
+          ASSERT(source4.has_value());
+          ASSERT(source4.get_allocator().mechanism() == &oa);
+
+          Obj dest4(bsl::allocator_arg, &ta, MovUtl::move(source4));
+          ASSERT(dest4.has_value());
+          ASSERT(dest4.value().value() == 4);
+          ASSERT(dest4.get_allocator().mechanism() == &ta);
+          ASSERT(source4.has_value());
+          ASSERT(source4.value().value() == 4);
+          ASSERT(source4.get_allocator().mechanism() == &oa);
+       }
+       {
+          Obj source(bsl::allocator_arg, &oa, nullopt);
+          ASSERT(!source.has_value());
+          ASSERT(source.get_allocator().mechanism() == &oa);
+
+          Obj dest = MovUtl::move(source);
+          ASSERT(!dest.has_value());
+          ASSERT(dest.get_allocator().mechanism() == &oa);
+          ASSERT(!source.has_value());
+          ASSERT(source.get_allocator().mechanism() == &oa);
+
+          const Obj source2(bsl::allocator_arg, &oa, nullopt);
+          ASSERT(!source2.has_value());
+          ASSERT(source2.get_allocator().mechanism() == &oa);
+
+          Obj dest2 = MovUtl::move(source2);
+          ASSERT(!dest2.has_value());
+          ASSERT(dest2.get_allocator().mechanism() == &da);
+          ASSERT(!source2.has_value());
+          ASSERT(source2.get_allocator().mechanism() == &oa);
+
+          Obj source3(bsl::allocator_arg, &oa, nullopt);
+          ASSERT(!source3.has_value());
+          ASSERT(source3.get_allocator().mechanism() == &oa);
+
+          Obj dest3(bsl::allocator_arg, &ta, MovUtl::move(source3));
+          ASSERT(!dest3.has_value());
+          ASSERT(dest3.get_allocator().mechanism() == &ta);
+
+          const Obj source4(bsl::allocator_arg, &oa, nullopt);
+          ASSERT(!source4.has_value());
+          ASSERT(source4.get_allocator().mechanism() == &oa);
+
+          Obj dest4(bsl::allocator_arg, &ta, MovUtl::move(source4));
+          ASSERT(!dest4.has_value());
+          ASSERT(&ta == dest4.get_allocator().mechanism());
+       }
+    }
+    if (verbose) printf( "\nUsing 'my_Class2a'.\n");
+    {
+        bslma::TestAllocator da("default", veryVeryVeryVerbose);
+        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+        bslma::TestAllocator ta("third", veryVeryVeryVerbose);
+
+        bslma::DefaultAllocatorGuard dag(&da);
+
+        typedef my_Class2a                  ValueType;
+        typedef bsl::optional<ValueType> Obj;
+
+        {
+          Obj source(bsl::allocator_arg, &oa, ValueType(1));
+          ASSERT(source.has_value());
+          ASSERT(source.get_allocator().mechanism() == &oa);
+
+          Obj dest = MovUtl::move(source);
+          ASSERT(dest.has_value());
+          ASSERT(dest.value().value() == 1);
+          ASSERT(dest.get_allocator().mechanism() == &oa);
+          ASSERT(source.has_value());
+#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
+          ASSERT(source.value().value() == MOVED_FROM_VAL);
+#endif
+          ASSERT(source.get_allocator().mechanism() == &oa);
+
+          const Obj source2(bsl::allocator_arg, &oa, ValueType(2));
+          ASSERT(source2.has_value());
+          ASSERT(source2.get_allocator().mechanism() == &oa);
+
+          Obj dest2 = MovUtl::move(source2);
+          ASSERT(dest2.has_value());
+          ASSERT(dest2.value().value() == 2);
+          ASSERT(dest2.get_allocator().mechanism() == &da);
+          ASSERT(source2.has_value());
+          ASSERT(source2.value().value() == 2);
+          ASSERT(source2.get_allocator().mechanism() == &oa);
+
+
+          Obj source3(bsl::allocator_arg, &oa, ValueType(3));
+          ASSERT(source3.has_value());
+          ASSERT(source3.get_allocator().mechanism() == &oa);
+
+          Obj dest3(bsl::allocator_arg, &ta, MovUtl::move(source3));
+          ASSERT(dest3.has_value());
+          ASSERT(dest3.value().value() == 3);
+          ASSERT(dest3.get_allocator().mechanism() == &ta);
+          ASSERT(source3.has_value());
+#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
+          ASSERT(source3.value().value() == MOVED_FROM_VAL);
+#endif
+          ASSERT(source3.get_allocator().mechanism() == &oa);
+
+
+          const Obj source4(bsl::allocator_arg, &oa, ValueType(4));
+          ASSERT(source4.has_value());
+          ASSERT(source4.get_allocator().mechanism() == &oa);
+
+          Obj dest4(bsl::allocator_arg, &ta, MovUtl::move(source4));
+          ASSERT(dest4.has_value());
+          ASSERT(dest4.value().value() == 4);
+          ASSERT(dest4.get_allocator().mechanism() == &ta);
+          ASSERT(source4.has_value());
+          ASSERT(source4.value().value() == 4);
+          ASSERT(source4.get_allocator().mechanism() == &oa);
+       }
+       {
+          Obj source(bsl::allocator_arg, &oa, nullopt);
+          ASSERT(!source.has_value());
+          ASSERT(source.get_allocator().mechanism() == &oa);
+
+          Obj dest = MovUtl::move(source);
+          ASSERT(!dest.has_value());
+          ASSERT(dest.get_allocator().mechanism() == &oa);
+          ASSERT(!source.has_value());
+          ASSERT(source.get_allocator().mechanism() == &oa);
+
+          const Obj source2(bsl::allocator_arg, &oa, nullopt);
+          ASSERT(!source2.has_value());
+          ASSERT(source2.get_allocator().mechanism() == &oa);
+
+          Obj dest2 = MovUtl::move(source2);
+          ASSERT(!dest2.has_value());
+          ASSERT(dest2.get_allocator().mechanism() == &da);
+          ASSERT(!source2.has_value());
+          ASSERT(source2.get_allocator().mechanism() == &oa);
+
+          Obj source3(bsl::allocator_arg, &oa, nullopt);
+          ASSERT(!source3.has_value());
+          ASSERT(source3.get_allocator().mechanism() == &oa);
+
+          Obj dest3(bsl::allocator_arg, &ta, MovUtl::move(source3));
+          ASSERT(!dest3.has_value());
+          ASSERT(dest3.get_allocator().mechanism() == &ta);
+
+          const Obj source4(bsl::allocator_arg, &oa, nullopt);
+          ASSERT(!source4.has_value());
+          ASSERT(source4.get_allocator().mechanism() == &oa);
+
+          Obj dest4(bsl::allocator_arg, &ta, MovUtl::move(source4));
+          ASSERT(!dest4.has_value());
+          ASSERT(&ta == dest4.get_allocator().mechanism());
+       }
+    }
+}
+void bslstl_optional_test17()
+{
+  // --------------------------------------------------------------------
+  // TESTING copy from value type FUNCTIONALITY
+  //   This test will verify that the copy construction from value type works
+  //   as expected.
+  //
+  // Concerns:
+  //   * Constructing an optional from a value type object creates an engaged
+  //     optional with the value of the source object. The source object is not
+  //     modified.
+  //   * If no allocator is provided and the value type uses allocator, the
+  //     default allocator is used for the newly created optional.
+  //   * If allocator extended version of copy constructor is used, the allocator
+  //     passed to the constructors is the allocator of the newly created
+  //     optional object.
+  //
+  //
+  // Plan:
+  //   Conduct the test using 'my_class1' (does not use allocator) and
+  //   'my_class2'/'my_Class2a' (uses allocator) for 'TYPE'.
+  //
+  //   Create an object of my_class1 type.
+  //   Create an optional of my_class1 type using the first object as the
+  //   initialization object.
+  //   Check the value of the newly created object is as expected.
+  //   Check the source object has not changed.
+  //
+  //   Bind a const reference to the original object. Create another optional
+  //   of my_class1 type using the const reference as the initialization object.
+  //   Check the value of the newly created object is as expected.
+  //
+  //   Create an object of my_class2 type using a non default allocator.
+  //   Create an optional of my_class2 type using the first object as
+  //   the initialization object.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the default
+  //   allocator.
+  //   Check the source object has not changed.
+  //
+  //   Create an optional of my_class2 type using the original my_class2
+  //   object as the initialization object and a non default allocator
+  //   as the allocator argument.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the one used
+  //   as the allocator argument.
+  //   Check the source object has not changed.
+  //
+  //   Bind a const reference to the original my_class2 object. Create an
+  //   optional of my_class2 type using the const reference as the
+  //   initialization object and a non default allocator as the allocator
+  //   argument.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the one used
+  //   as the allocator argument.
+  //
+  //
+  //   Repeat the above tests with my_class2a type.
+  //
+  //
+  // Testing:
+  //
+  //   optional(const TYPE&);
+  //   optional(allocator_arg_t, allocator_type, const TYPE&);
+  //
+  //   void value();
+  //   void has_value();
+  //   void get_allocator();
+  //
+  // --------------------------------------------------------------------
+
+    if (verbose) printf(
+                       "\nTESTING copy construction from value type "
+                       "\n=========================================\n");
+
+    if (verbose) printf( "\nUsing 'my_Class1'.\n");
+    {
+        typedef my_Class1                  ValueType;
+        typedef bsl::optional<ValueType> Obj;
+
+        {
+            ValueType source(ValueType(1));
+
+            Obj dest = source;
+            ASSERT(dest.has_value());
+            ASSERT(dest.value() == source);
+            ASSERT(dest.value().value() == 1);
+
+            const ValueType & csource = source;
+
+            Obj dest2 = csource;
+            ASSERT(dest2.has_value());
+            ASSERT(dest2.value() == csource);
+            ASSERT(dest2.value().value() == 1);
+        }
+    }
+    if (verbose) printf( "\nUsing 'my_Class2'.\n");
+    {
+        bslma::TestAllocator da("default", veryVeryVeryVerbose);
+        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+        bslma::TestAllocator ta("third", veryVeryVeryVerbose);
+
+        bslma::DefaultAllocatorGuard dag(&da);
+
+        typedef my_Class2                  ValueType;
+        typedef bsl::optional<ValueType> Obj;
+
+        {
+          ValueType source(1, &oa);
+
+          ASSERT(1 == source.value());
+          ASSERT(&oa == source.d_def.d_allocator_p);
+
+          Obj dest = source;
+          ASSERT(dest.has_value());
+          ASSERT(dest.value() == source);
+          ASSERT(dest.value().value() == 1);
+          ASSERT(&da == dest.get_allocator().mechanism());
+          ASSERT(1 == source.value());
+          ASSERT(&oa == source.d_def.d_allocator_p);
+
+          const ValueType & csource = source;
+
+          Obj dest2 = csource;
+          ASSERT(dest2.has_value());
+          ASSERT(dest2.value() == csource);
+          ASSERT(&da == dest2.get_allocator().mechanism());
+
+          Obj dest3(bsl::allocator_arg, &ta, source);
+          ASSERT(dest3.has_value());
+          ASSERT(dest3.value() == source);
+          ASSERT(dest3.value().value() == 1);
+          ASSERT(&ta == dest3.get_allocator().mechanism());
+          ASSERT(1 == source.value());
+          ASSERT(&oa == source.d_def.d_allocator_p);
+
+          Obj dest4(bsl::allocator_arg, &ta, csource);
+          ASSERT(dest2.has_value());
+          ASSERT(dest2.value() == source);
+          ASSERT(&ta == dest4.get_allocator().mechanism());
+       }
+     }
+    if (verbose) printf( "\nUsing 'my_Class2a'.\n");
+    {
+        bslma::TestAllocator da("default", veryVeryVeryVerbose);
+        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+        bslma::TestAllocator ta("third", veryVeryVeryVerbose);
+
+        bslma::DefaultAllocatorGuard dag(&da);
+
+        typedef my_Class2a                  ValueType;
+        typedef bsl::optional<ValueType> Obj;
+
+        {
+            ValueType source(bsl::allocator_arg, &oa, 1);
+
+            ASSERT(1 == source.value());
+            ASSERT(&oa == source.d_data.d_def.d_allocator_p);
+
+            Obj dest = source;
+            ASSERT(dest.has_value());
+            ASSERT(dest.value() == source);
+            ASSERT(dest.value().value() == 1);
+            ASSERT(&da == dest.get_allocator().mechanism());
+            ASSERT(1 == source.value());
+            ASSERT(&oa == source.d_data.d_def.d_allocator_p);
+
+            const ValueType & csource = source;
+
+            Obj dest2 = csource;
+            ASSERT(dest2.has_value());
+            ASSERT(dest2.value() == csource);
+            ASSERT(&da == dest2.get_allocator().mechanism());
+
+            Obj dest3(bsl::allocator_arg, &ta, source);
+            ASSERT(dest3.has_value());
+            ASSERT(dest3.value() == source);
+            ASSERT(dest3.value().value() == 1);
+            ASSERT(&ta == dest3.get_allocator().mechanism());
+            ASSERT(1 == source.value());
+            ASSERT(&oa == source.d_data.d_def.d_allocator_p);
+
+            Obj dest4(bsl::allocator_arg, &ta, csource);
+            ASSERT(dest2.has_value());
+            ASSERT(dest2.value() == source);
+            ASSERT(&ta == dest4.get_allocator().mechanism());
+         }
+     }
+}
+void bslstl_optional_test18()
+{
+  // --------------------------------------------------------------------
+  // TESTING move construct from value type FUNCTIONALITY
+  //   This test will verify that the move construction from value type
+  //   works as expected.
+  //
+  // Concerns:
+  //   * Move constructing an optional from an object of the value type
+  //     creates an engaged optional by moving from the source object.
+  //   * If no allocator is provided and the value type uses allocator, the
+  //     default allocator is used as the allocator for the optional object
+  //   * If allocator extended version of copy constructor is used, the allocator
+  //     passed to the constructor is the alloctor used for the optional
+  //     object.
+  //
+  //
+  // Plan:
+  //   Conduct the test using 'my_class1' (does not use allocator) and
+  //   'my_class2'/'my_Class2a' (uses allocator) for 'TYPE'.
+  //
+  //   Create an object of my_class1 type.
+  //   Create an optional of my_class1 type by move construction from the
+  //   original object.
+  //   Check the value of the newly created object is as expected.
+  //   Check the source object's value type is in a moved from state.
+  //
+  //   Create a const object of my_class1 type.
+  //   Create an optional of my_class1 type by move construction from the
+  //   original object.
+  //   Check the value of the newly created object is as expected.
+  //   Check the source object has not changed.
+  //
+  //
+  //   Create an object of my_class2 type using a non default allocator.
+  //   Create an optional of my_class2 type by move construction from the
+  //   my_class2 object.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the default
+  //   allocator.
+  //   Check the source object is in a moved from state.
+  //
+  //   Create a const object of my_class2 type using a non default allocator.
+  //   Create an optional of my_class2 type by move construction from the
+  //   my_class2 object.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the default
+  //   allocator.
+  //   Check the source object has not changed.
+  //
+  //   Create an object of my_class2 type using a non default allocator.
+  //   Create an optional of my_class2 type  by move construction from
+  //   the my_class2 object and a non default allocator as the allocator
+  //   argument.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the same
+  //   as the one used for the source object.
+  //   Check the source object is in a moved from state.
+  //
+  //   Create a const object of my_class2 type using a non default allocator.
+  //   Create an optional of my_class2 type by move construction from
+  //   the first object and a non default allocator as the allocator argument.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the one used
+  //   as the allocator argument.
+  //   Check the source object has not changed.
+  //
+  //   Repeat the above tests with my_class2a type.
+  //
+  //
+  // Testing:
+  //
+  //   optional(MovableRef<TYPE>);
+  //   optional(allocator_arg_t, allocator_type, MovableRef<TYPE>);
+  //
+  //   void value();
+  //   void has_value();
+  //   void get_allocator();
+  //
+  // --------------------------------------------------------------------
+
+    if (verbose) printf(
+                       "\nTESTING move construction from value type "
+                       "\n=========================================\n");
+
+    if (verbose) printf( "\nUsing 'my_Class1'.\n");
+    {
+        typedef my_Class1                  ValueType;
+        typedef bsl::optional<ValueType> Obj;
+
+        {
+            ValueType source(ValueType(1));
+            Obj dest = MovUtl::move(source);
+            ASSERT(dest.has_value());
+            ASSERT(dest.value().value() == 1);
+#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
+            ASSERT(source.value() == MOVED_FROM_VAL);
+#endif
+
+            const ValueType source2(2);
+           Obj dest2 = MovUtl::move(source2);
+            ASSERT(dest2.has_value());
+            ASSERT(dest2.value().value() == 2);
+            ASSERT(source2.value() == 2);
+        }
+    }
+    if (verbose) printf( "\nUsing 'my_Class2'.\n");
+    {
+        bslma::TestAllocator da("default", veryVeryVeryVerbose);
+        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+        bslma::TestAllocator ta("third", veryVeryVeryVerbose);
+
+        bslma::DefaultAllocatorGuard dag(&da);
+
+        typedef my_Class2                  ValueType;
+        typedef bsl::optional<ValueType> Obj;
+
+        {
+          ValueType source(1, &oa);
+          Obj dest = MovUtl::move(source);
+          ASSERT(dest.has_value());
+          ASSERT(dest.value().value() == 1);
+          ASSERT(dest.get_allocator().mechanism() == &da);
+#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
+          ASSERT(source.value() == MOVED_FROM_VAL);
+#endif
+          ASSERT(source.d_def.d_allocator_p == &oa);
+
+          const ValueType source2(2, &oa);
+          Obj dest2 = MovUtl::move(source2);
+          ASSERT(dest2.has_value());
+          ASSERT(dest2.value().value() == 2);
+          ASSERT(dest2.get_allocator().mechanism() == &da);
+          ASSERT(source2.value() == 2);
+          ASSERT(source2.d_def.d_allocator_p == &oa);
+
+          ValueType source3(3, &oa);
+          Obj dest3(bsl::allocator_arg, &ta, MovUtl::move(source3));
+          ASSERT(dest3.has_value());
+          ASSERT(dest3.value().value() == 3);
+          ASSERT(dest3.get_allocator().mechanism() == &ta);
+#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
+          ASSERT(source3.value() == MOVED_FROM_VAL);
+#endif
+          ASSERT(source3.d_def.d_allocator_p == &oa);
+
+          const ValueType source4(4, &oa);
+         Obj dest4(bsl::allocator_arg, &ta, MovUtl::move(source4));
+          ASSERT(dest4.has_value());
+          ASSERT(dest4.value().value() == 4);
+          ASSERT(dest4.get_allocator().mechanism() == &ta);
+          ASSERT(source4.value() == 4);
+          ASSERT(source4.d_def.d_allocator_p == &oa);
+       }
+    }
+    if (verbose) printf( "\nUsing 'my_Class2a'.\n");
+    {
+        bslma::TestAllocator da("default", veryVeryVeryVerbose);
+        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+        bslma::TestAllocator ta("third", veryVeryVeryVerbose);
+
+        bslma::DefaultAllocatorGuard dag(&da);
+
+        typedef my_Class2a                  ValueType;
+        typedef bsl::optional<ValueType> Obj;
+
+        {
+          ValueType source(bsl::allocator_arg, &oa, 1);
+
+          Obj dest = MovUtl::move(source);
+          ASSERT(dest.has_value());
+          ASSERT(dest.value().value() == 1);
+          ASSERT(dest.get_allocator().mechanism() == &da);
+#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
+          ASSERT(source.value() == MOVED_FROM_VAL);
+#endif
+          ASSERT(source.d_data.d_def.d_allocator_p == &oa);
+
+          const ValueType source2(bsl::allocator_arg, &oa, 2);
+          Obj dest2 = MovUtl::move(source2);
+          ASSERT(dest2.has_value());
+          ASSERT(dest2.value().value() == 2);
+          ASSERT(dest2.get_allocator().mechanism() == &da);
+          ASSERT(source2.value() == 2);
+          ASSERT(source2.d_data.d_def.d_allocator_p == &oa);
+
+          ValueType source3(bsl::allocator_arg, &oa, 3);
+          Obj dest3(bsl::allocator_arg, &ta, MovUtl::move(source3));
+          ASSERT(dest3.has_value());
+          ASSERT(dest3.value().value() == 3);
+          ASSERT(dest3.get_allocator().mechanism() == &ta);
+#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
+          ASSERT(source3.value() == MOVED_FROM_VAL);
+#endif
+          ASSERT(source3.d_data.d_def.d_allocator_p == &oa);
+
+
+          const ValueType source4(bsl::allocator_arg, &oa, 4);
+
+          Obj dest4(bsl::allocator_arg, &ta, MovUtl::move(source4));
+          ASSERT(dest4.has_value());
+          ASSERT(dest4.value().value() == 4);
+          ASSERT(dest4.get_allocator().mechanism() == &ta);
+          ASSERT(source4.value() == 4);
+          ASSERT(source4.d_data.d_def.d_allocator_p == &oa);
+       }
+    }
+}
+void bslstl_optional_test19()
+{
+  // --------------------------------------------------------------------
+  // TESTING copy construct from optional<otherType> FUNCTIONALITY
+  //   This test will verify that the copy construction from an optional
+  //   of different value type works as expected.
+  //
+  // Concerns:
+  //   * Constructing an optional from an engaged optional of a different type
+  //     creates an engaged optional. The original is not modified.
+  //   * Constructing an optional from a disengaged optional of a different type
+  //     creates a disengaged optional. The original is not modified.
+  //   * If no allocator is provided and the value type uses allocator, the
+  //     default allocator is used for the newly created optional.
+  //   * If allocator extended version of copy constructor is used, the allocator
+  //     passed to the constructor is the allocator of the newly created
+  //     optional.
+  //
+  //
+  // Plan:
+  //   Conduct the test using 'my_class1a' (does not use allocator) and
+  //   'my_class2'/'my_Class2a' (uses allocator) for 'TYPE'.
+  //
+  //   Create an engaged optional of my_class1 type. Create an optional of
+  //   my_class1a type using the first object as the initialization object.
+  //   Check the value of the newly created object is as expected.
+  //   Check the source object has not changed.
+  //
+  //   Bind a const reference to the my_class1 object. Create an optional
+  //   of my_class1a type using the const reference as the initialization object.
+  //   Check the value of the newly created object is as expected.
+  //
+  //   Create a disengaged optional of my_class1 type. Create an optional of
+  //   my_class1a type using the disengaged object as the initialization object.
+  //   Check the newly created object is disengaged.
+  //   Bind a const reference to the my_class1 object. Create an optional of
+  //   my_class1a type using the const reference as the initialization object.
+  //   Check the newly created object is disengaged.
+  //
+  //   Create an engaged optional of my_class1 type.
+  //   Create an optional of my_class2 type using the my_class1 object as
+  //   the initialization object.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the default
+  //   allocator.
+  //   Check the source object has not changed.
+  //
+  //   Bind a const reference to the my_class1 object. Create an optional
+  //   of my_class2 type using the const reference as the initialization
+  //   object.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the one used
+  //   as the allocator argument.
+  //
+  //   Create an optional of my_class2 type using the my_class1 object as
+  //   the initialization object and a non default allocator as the allocator
+  //   argument.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the one used
+  //   as the allocator argument.
+  //   Check the source object has not changed.
+  //
+  //   Bind a const reference to the my_class1 object. Create an optional
+  //   of my_class2 type using the const reference as the initialization object
+  //   and a non default allocator as the allocator argument.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the one used
+  //   as the allocator argument.
+  //
+  //   Create a disengaged optional of my_class1 type.
+  //   Create an optional of my_class2 type using the disengaged
+  //   object as the initialization object.
+  //   Check the newly created object is disengaged.
+  //   Check the allocator of the newly created object is the default
+  //   allocator.
+  //
+  //   Bind a const reference to the my_class1 optional object. Create an optional
+  //   of my_class2 type using the const reference as the initialization object.
+  //   Check the newly created object is disengaged.
+  //   Check the allocator of the newly created object is the one
+  //   used in the construction call.
+  //
+  //   Create an optional of my_class2 type using the disengaged my_class1
+  //   optional object as the initialization object and non default allocator
+  //   as the allocator argument.
+  //   Check the newly created object is disengaged.
+  //   Check the allocator of the newly created object is the one
+  //   used in the construction call.
+  //
+  //   Bind a const reference to the my_class1 optional object. Create an optional
+  //   of my_class2 type using the const reference as the initialization object
+  //   and non default allocator as the allocator argument.
+  //   Check the newly created object is disengaged.
+  //   Check the allocator of the newly created object is the one
+  //   used in the construction call.
+  //
+  //   Create an engaged optional of my_class2 type using a non default
+  //   allocator.
+  //   Create an optional of my_class2a type using the first object as
+  //   the initialization object.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the default
+  //   allocator.
+  //   Check the source object has not changed.
+  //
+  //   Bind a const reference to the my_class2 object.
+  //   Create an optional of my_class2a type using the const reference as
+  //   the initialization object.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the default
+  //   allocator.
+  //
+  //   Create an optional of my_class2a type using the my_class2 object as
+  //   the initialization object and a non default allocator as the allocator
+  //   argument.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the one used
+  //   as the allocator argument.
+  //   Check the source object has not changed.
+  //
+  //   Bind a const reference to the original object. Create an optional
+  //   of my_class2a type using the const reference as the initialization
+  //   object and a non default allocator as the allocator argument.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the one used
+  //   as the allocator argument.
+  //
+  //   Create a disengaged optional of my_class2 type using a non default
+  //   allocator.
+  //   Create an optional of my_class2a type using the disengaged
+  //   object as the initialization object.
+  //   Check the newly created object is disengaged.
+  //   Check the allocator of the newly created object is the default
+  //   allocator.
+  //
+  //   Bind a const reference to the my_class2 optional object. Create an optional
+  //   of my_class2a type using the const reference as the initialization object.
+  //   Check the newly created object is disengaged.
+  //   Check the allocator of the newly created object is the one
+  //   used in the construction call.
+  //
+  //   Create an optional of my_class2a type using the disengaged my_class2
+  //   optional object as the initialization object and non default allocator
+  //   as the allocator argument.
+  //   Check the newly created object is disengaged.
+  //   Check the allocator of the newly created object is the one
+  //   used in the construction call.
+  //
+  //   Bind a const reference to the my_class2 optional object. Create an optional
+  //   of my_class2a type using the const reference as the initialization object
+  //   and non default allocator as the allocator argument.
+  //   Check the newly created object is disengaged.
+  //   Check the allocator of the newly created object is the one
+  //   used in the construction call.
+  //
+  //
+  //
+  // Testing:
+  //
+  //   optional(const optional<ANY_TYPE>& )
+  //   optional(bsl::allocator_arg, allocator_type, const optional<ANY_TYPE>&)
+  //
+  //   void value();
+  //   void has_value();
+  //   void get_allocator();
+  //
+  // --------------------------------------------------------------------
+
+    if (verbose) printf(
+                       "\nTESTING copy construction from an optional of a "
+                       "different value type"
+                       "\n================================================="
+                       "===================\n");
+
+    if (verbose) printf( "\nUsing 'my_Class1'.\n");
+    {
+        typedef my_Class1                  SourceType;
+        typedef my_Class1a                  ValueType;
+        typedef bsl::optional<SourceType> SrcObj;
+        typedef bsl::optional<ValueType> Obj;
+
+        {
+            SrcObj source(SourceType(1));
+            ASSERT(source.has_value());
+
+            Obj dest = source;
+            ASSERT(dest.has_value());
+            ASSERT(dest.value().value() == 1);
+            ASSERT(source.has_value());
+            ASSERT(source.value().value() == 1);
+
+            const SrcObj &csource = source;
+
+            Obj dest2 = csource;
+            ASSERT(dest2.has_value());
+            ASSERT(dest2.value().value() == 1);
+        }
+        {
+          SrcObj source(nullopt);
+            ASSERT(!source.has_value());
+
+            Obj dest = source;
+            ASSERT(!dest.has_value());
+            ASSERT(!source.has_value());
+
+            const SrcObj & csource = source;
+            ASSERT(!csource.has_value());
+
+            Obj dest2 = csource;
+            ASSERT(!dest2.has_value());
+        }
+    }
+    if (verbose) printf( "\nUsing 'my_Class2'.\n");
+    {
+        bslma::TestAllocator da("default", veryVeryVeryVerbose);
+        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+        bslma::TestAllocator ta("third", veryVeryVeryVerbose);
+
+        bslma::DefaultAllocatorGuard dag(&da);
+
+        typedef my_Class1                   SourceType;
+        typedef my_Class2                   ValueType;
+        typedef bsl::optional<SourceType>   SrcObj;
+        typedef bsl::optional<ValueType>    Obj;
+
+        {
+          SrcObj source(SourceType(1));
+          ASSERT(source.has_value());
+
+          Obj dest = source;
+          ASSERT(dest.has_value());
+          ASSERT(dest.value().value() == 1);
+          ASSERT(dest.get_allocator().mechanism() == &da);
+          ASSERT(source.has_value());
+          ASSERT(source.value().value() == 1);
+
+          const SrcObj & csource = source;
+
+          Obj dest2 = csource;
+          ASSERT(dest2.has_value());
+          ASSERT(dest2.value().value() == 1);
+          ASSERT(dest2.value().d_def.d_allocator_p == &da);
+          ASSERT(dest2.get_allocator().mechanism() == &da);
+
+          Obj dest3(bsl::allocator_arg, &ta, source);
+          ASSERT(dest3.has_value());
+          ASSERT(dest3.value().value() == 1);
+          ASSERT(dest3.value().d_def.d_allocator_p == &ta);
+          ASSERT(dest3.get_allocator().mechanism() == &ta);
+          ASSERT(source.has_value());
+
+          Obj dest4(bsl::allocator_arg, &ta, csource);
+          ASSERT(dest4.has_value());
+          ASSERT(dest4.value().value() == 1);
+          ASSERT(dest4.value().d_def.d_allocator_p == &ta);
+          ASSERT(dest4.get_allocator().mechanism() == &ta);
+       }
+       {
+          SrcObj source(nullopt);
+          ASSERT(!source.has_value());
+
+          Obj dest = source;
+          ASSERT(!dest.has_value());
+          ASSERT(dest.get_allocator().mechanism() == &da);
+          ASSERT(!source.has_value());
+
+          const Obj & csource = source;
+          ASSERT(!csource.has_value());
+
+          Obj dest2 = csource;
+          ASSERT(!dest2.has_value());
+          ASSERT(dest2.get_allocator().mechanism() == &da);
+
+          Obj dest3(bsl::allocator_arg, &ta, source);
+          ASSERT(!dest3.has_value());
+          ASSERT(dest3.get_allocator().mechanism() == &ta);
+
+          Obj dest4(bsl::allocator_arg, &ta, csource);
+          ASSERT(!dest4.has_value());
+          ASSERT(dest4.get_allocator().mechanism() == &ta);
+       }
+    }
+    if (verbose) printf( "\nUsing 'my_Class2a'.\n");
+    {
+        bslma::TestAllocator da("default", veryVeryVeryVerbose);
+        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+        bslma::TestAllocator ta("third", veryVeryVeryVerbose);
+
+        bslma::DefaultAllocatorGuard dag(&da);
+
+        typedef my_Class2                   SourceType;
+        typedef my_Class2a                  ValueType;
+        typedef bsl::optional<SourceType>   SrcObj;
+        typedef bsl::optional<ValueType>    Obj;
+
+        {
+            SrcObj source(bsl::allocator_arg, &oa, SourceType(1));
+            ASSERT(source.has_value());
+            ASSERT(&oa == source.get_allocator().mechanism());
+
+            Obj dest = source;
+            ASSERT(dest.has_value());
+            ASSERT(dest.value() == source.value());
+            ASSERT(dest.value().value() == 1);
+            ASSERT(&da == dest.get_allocator().mechanism());
+            ASSERT(source.has_value());
+            ASSERT(&oa == source.get_allocator().mechanism());
+
+            const SrcObj & csource = source;
+            ASSERT(csource.has_value());
+
+            Obj dest2 = csource;
+            ASSERT(dest2.has_value());
+            ASSERT(dest2.value() == csource.value());
+            ASSERT(&da == dest2.get_allocator().mechanism());
+
+            Obj dest3(bsl::allocator_arg, &ta, source);
+            ASSERT(dest3.has_value());
+            ASSERT(dest3.value() == source.value());
+            ASSERT(dest3.value().value() == 1);
+            ASSERT(&ta == dest3.get_allocator().mechanism());
+            ASSERT(source.has_value());
+            ASSERT(&oa == source.get_allocator().mechanism());
+
+            Obj dest4(bsl::allocator_arg, &ta, csource);
+            ASSERT(dest2.has_value());
+            ASSERT(dest2.value() == source.value());
+            ASSERT(&ta == dest4.get_allocator().mechanism());
+        }
+        {
+            SrcObj source(bsl::allocator_arg, &oa, nullopt);
+            ASSERT(!source.has_value());
+            ASSERT(&oa == source.get_allocator().mechanism());
+
+            Obj dest = source;
+            ASSERT(!dest.has_value());
+            ASSERT(&da == dest.get_allocator().mechanism());
+            ASSERT(!source.has_value());
+
+            const SrcObj & csource = source;
+            ASSERT(!csource.has_value());
+
+            Obj dest2 = csource;
+            ASSERT(!dest2.has_value());
+            ASSERT(&da == dest2.get_allocator().mechanism());
+
+            Obj dest3(bsl::allocator_arg, &ta, source);
+            ASSERT(!dest3.has_value());
+            ASSERT(&ta == dest3.get_allocator().mechanism());
+
+            Obj dest4(bsl::allocator_arg, &ta, csource);
+            ASSERT(!dest4.has_value());
+            ASSERT(&ta == dest4.get_allocator().mechanism());
+      }
+   }
+}
+void bslstl_optional_test20()
+{
+  // --------------------------------------------------------------------
+  // TESTING move construct FUNCTIONALITY
+  //   This test will verify that the move construction works as expected.
+  //
+  // Concerns:
+  //   * Move constructing an optional from an engaged optional of the same
+  //     type creates an engaged optional by moving from the source object's
+  //     value.
+  //   * Constructing an optional from a disengaged optional of the same type
+  //     creates a disengaged optional. The original is not modified.
+  //   * If no allocator is provided and the value type uses allocator, the
+  //     allocator from the moved from optional is used for the newly created
+  //     optional.
+  //   * If allocator extended version of copy constructor is used, the allocator
+  //     of the newly created optional is the one passed in.
+  //
+  //
+  // Plan:
+  //   Conduct the test using 'my_class1' (does not use allocator) and
+  //   'my_class2'/'my_Class2a' (uses allocator) for 'TYPE'.
+  //
+  //   Create an engaged optional of my_class1 type. Create another optional
+  //   of my_class1 type by move construction from the original object.
+  //   Check the value of the newly created object is as expected.
+  //   Check the source object's value type is in a moved from state.
+  //
+  //   Create a const engaged optional of my_class1 type. Create another
+  //   optional of my_class1 type by move construction from the original
+  //   object.
+  //   Check the value of the newly created object is as expected.
+  //   Check the source object has not changed.
+  //
+  //   Create a disengaged optional of my_class1 type. Create another optional
+  //   of my_class1 type by move construction from the original object.
+  //   Check the newly created object is disengaged.
+  //
+  //   Create a const disengaged optional of my_class1 type. Create another
+  //   optional of my_class1 type by move construction from the original
+  //   object.
+  //   Check the newly created object is disengaged.
+  //   Check the source object has not changed.
+  //
+  //   Create an engaged optional of my_class2 type using a non default
+  //   allocator.
+  //   Create another optional of my_class2 type by move construction from
+  //   the first object.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the one from
+  //   the source optional object.
+  //   Check the source object's value type is in a moved from state.
+  //
+  //   Create an engaged const optional of my_class2 type using a non default
+  //   allocator.
+  //   Create another optional of my_class2 type  by move construction from
+  //   the first object.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the
+  //   default allocator.
+  //   Check the source object's value type has not changed.
+  //
+  //   Create an engaged optional of my_class2 type using a non default
+  //   allocator.
+  //   Create another optional of my_class2 type  by move construction from
+  //   the first object and a non default allocator as the allocator
+  //   argument.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the same
+  //   as the one used for the source object.
+  //   Check the source object's value type is in a moved from state.
+  //
+  //   Create an engaged const optional of my_class2 type using a non default
+  //   allocator.
+  //   Create another optional of my_class2 type by move construction from
+  //   the first object and a non default allocator as the allocator argument.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the one used
+  //   as the allocator argument.
+  //   Check the source object has not changed.
+  //
+  //   Create a disengaged optional of my_class2 type using a non default
+  //   allocator.
+  //   Create another optional of my_class2 type by move construction from
+  //   the first object.
+  //   Check the newly created object is disengaged.
+  //   Check the allocator of the newly created object is the same as
+  //   the source optional object.
+  //
+  //   Create a disengaged const optional of my_class2 type using a non default
+  //   allocator.
+  //   Create another optional of my_class2 type by move construction from
+  //   the first object.
+  //   Check the newly created object is disengaged.
+  //   Check the allocator of the newly created object is the default
+  //   allocator.
+  //
+  //   Create a disengaged optional of my_class2 type using a non default
+  //   allocator.
+  //   Create another optional of my_class2 type by move construction from
+  //   the first object and with non default allocator as the allocator
+  //   argument.
+  //   Check the newly created object is disengaged.
+  //   Check the allocator of the newly created object is the one
+  //   used in the construction call.
+  //
+  //   Create a disengaged const optional of my_class2 type using a non
+  //   default allocator.
+  //   Create another optional of my_class2 type by move construction from
+  //   the first object.
+  //   Check the newly created object is disengaged.
+  //   Check the allocator of the newly created object is the default
+  //   allocator
+  //
+  //   Repeat the above tests with my_class2a type.
+  //
+  //
+  // Testing:
+  //
+  //   optional(MovableRef<optional>)
+  //   optional(bsl::allocator_arg, allocator_type, MovableRef<optional>)
+  //
+  //   void value();
+  //   void has_value();
+  //   void get_allocator();
+  //
+  // --------------------------------------------------------------------
+
+    if (verbose) printf(
+                       "\nTESTING move construction "
+                       "\n=========================\n");
+
+    if (verbose) printf( "\nUsing 'my_Class1'.\n");
+    {
+        typedef my_Class1                  ValueType;
+        typedef bsl::optional<ValueType> Obj;
+
+        {
+            Obj source(ValueType(1));
+            ASSERT(source.has_value());
+
+            Obj dest = MovUtl::move(source);
+            ASSERT(dest.has_value());
+            ASSERT(dest.value().value() == 1);
+            ASSERT(source.has_value());
+#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
+            ASSERT(source.value().value() == MOVED_FROM_VAL);
+#endif
+
+            const Obj source2(ValueType(2));
+            ASSERT(source2.has_value());
+
+            Obj dest2 = MovUtl::move(source2);
+            ASSERT(dest2.has_value());
+            ASSERT(dest2.value().value() == 2);
+            ASSERT(source2.has_value());
+            ASSERT(source2.value().value() == 2);
+        }
+        {
+            Obj source(nullopt);
+            ASSERT(!source.has_value());
+
+            Obj dest = MovUtl::move(source);
+            ASSERT(!dest.has_value());
+            ASSERT(!source.has_value());
+
+            const Obj source2(nullopt);
+            ASSERT(!source2.has_value());
+
+            Obj dest2 = MovUtl::move(source2);
+            ASSERT(!dest2.has_value());
+            ASSERT(!source2.has_value());
+        }
+    }
+    if (verbose) printf( "\nUsing 'my_Class2'.\n");
+    {
+        bslma::TestAllocator da("default", veryVeryVeryVerbose);
+        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+        bslma::TestAllocator ta("third", veryVeryVeryVerbose);
+
+        bslma::DefaultAllocatorGuard dag(&da);
+
+        typedef my_Class2                  ValueType;
+        typedef bsl::optional<ValueType> Obj;
+
+        {
+          Obj source(bsl::allocator_arg, &oa, ValueType(1));
+          ASSERT(source.has_value());
+          ASSERT(source.get_allocator().mechanism() == &oa);
+
+          Obj dest = MovUtl::move(source);
+          ASSERT(dest.has_value());
+          ASSERT(dest.value().value() == 1);
+          ASSERT(dest.get_allocator().mechanism() == &oa);
+          ASSERT(source.has_value());
+#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
+          ASSERT(source.value().value() == MOVED_FROM_VAL);
+#endif
+          ASSERT(source.get_allocator().mechanism() == &oa);
+
+          const Obj source2(bsl::allocator_arg, &oa, ValueType(2));
+          ASSERT(source2.has_value());
+          ASSERT(source.get_allocator().mechanism() == &oa);
+
+          Obj dest2 = MovUtl::move(source2);
+          ASSERT(dest2.has_value());
+          ASSERT(dest2.value().value() == 2);
+          ASSERT(dest2.get_allocator().mechanism() == &da);
+          ASSERT(source2.has_value());
+          ASSERT(source2.value().value() == 2);
+          ASSERT(source2.get_allocator().mechanism() == &oa);
+
+
+          Obj source3(bsl::allocator_arg, &oa, ValueType(3));
+          ASSERT(source3.has_value());
+          ASSERT(source3.get_allocator().mechanism() == &oa);
+
+          Obj dest3(bsl::allocator_arg, &ta, MovUtl::move(source3));
+          ASSERT(dest3.has_value());
+          ASSERT(dest3.value().value() == 3);
+          ASSERT(dest3.get_allocator().mechanism() == &ta);
+          ASSERT(source3.has_value());
+#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
+          ASSERT(source3.value().value() == MOVED_FROM_VAL);
+#endif
+          ASSERT(source3.get_allocator().mechanism() == &oa);
+
+
+          const Obj source4(bsl::allocator_arg, &oa, ValueType(4));
+          ASSERT(source4.has_value());
+          ASSERT(source4.get_allocator().mechanism() == &oa);
+
+          Obj dest4(bsl::allocator_arg, &ta, MovUtl::move(source4));
+          ASSERT(dest4.has_value());
+          ASSERT(dest4.value().value() == 4);
+          ASSERT(dest4.get_allocator().mechanism() == &ta);
+          ASSERT(source4.has_value());
+          ASSERT(source4.value().value() == 4);
+          ASSERT(source4.get_allocator().mechanism() == &oa);
+       }
+       {
+          Obj source(bsl::allocator_arg, &oa, nullopt);
+          ASSERT(!source.has_value());
+          ASSERT(source.get_allocator().mechanism() == &oa);
+
+          Obj dest = MovUtl::move(source);
+          ASSERT(!dest.has_value());
+          ASSERT(dest.get_allocator().mechanism() == &oa);
+          ASSERT(!source.has_value());
+          ASSERT(source.get_allocator().mechanism() == &oa);
+
+          const Obj source2(bsl::allocator_arg, &oa, nullopt);
+          ASSERT(!source2.has_value());
+          ASSERT(source2.get_allocator().mechanism() == &oa);
+
+          Obj dest2 = MovUtl::move(source2);
+          ASSERT(!dest2.has_value());
+          ASSERT(dest2.get_allocator().mechanism() == &da);
+          ASSERT(!source2.has_value());
+          ASSERT(source2.get_allocator().mechanism() == &oa);
+
+          Obj source3(bsl::allocator_arg, &oa, nullopt);
+          ASSERT(!source3.has_value());
+          ASSERT(source3.get_allocator().mechanism() == &oa);
+
+          Obj dest3(bsl::allocator_arg, &ta, MovUtl::move(source3));
+          ASSERT(!dest3.has_value());
+          ASSERT(dest3.get_allocator().mechanism() == &ta);
+
+          const Obj source4(bsl::allocator_arg, &oa, nullopt);
+          ASSERT(!source4.has_value());
+          ASSERT(source4.get_allocator().mechanism() == &oa);
+
+          Obj dest4(bsl::allocator_arg, &ta, MovUtl::move(source4));
+          ASSERT(!dest4.has_value());
+          ASSERT(&ta == dest4.get_allocator().mechanism());
+       }
+    }
+    if (verbose) printf( "\nUsing 'my_Class2a'.\n");
+    {
+        bslma::TestAllocator da("default", veryVeryVeryVerbose);
+        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+        bslma::TestAllocator ta("third", veryVeryVeryVerbose);
+
+        bslma::DefaultAllocatorGuard dag(&da);
+
+        typedef my_Class2a                  ValueType;
+        typedef bsl::optional<ValueType> Obj;
+
+        {
+          Obj source(bsl::allocator_arg, &oa, ValueType(1));
+          ASSERT(source.has_value());
+          ASSERT(source.get_allocator().mechanism() == &oa);
+
+          Obj dest = MovUtl::move(source);
+          ASSERT(dest.has_value());
+          ASSERT(dest.value().value() == 1);
+          ASSERT(dest.get_allocator().mechanism() == &oa);
+          ASSERT(source.has_value());
+#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
+          ASSERT(source.value().value() == MOVED_FROM_VAL);
+#endif
+          ASSERT(source.get_allocator().mechanism() == &oa);
+
+          const Obj source2(bsl::allocator_arg, &oa, ValueType(2));
+          ASSERT(source2.has_value());
+          ASSERT(source2.get_allocator().mechanism() == &oa);
+
+          Obj dest2 = MovUtl::move(source2);
+          ASSERT(dest2.has_value());
+          ASSERT(dest2.value().value() == 2);
+          ASSERT(dest2.get_allocator().mechanism() == &da);
+          ASSERT(source2.has_value());
+          ASSERT(source2.value().value() == 2);
+          ASSERT(source2.get_allocator().mechanism() == &oa);
+
+
+          Obj source3(bsl::allocator_arg, &oa, ValueType(3));
+          ASSERT(source3.has_value());
+          ASSERT(source3.get_allocator().mechanism() == &oa);
+
+          Obj dest3(bsl::allocator_arg, &ta, MovUtl::move(source3));
+          ASSERT(dest3.has_value());
+          ASSERT(dest3.value().value() == 3);
+          ASSERT(dest3.get_allocator().mechanism() == &ta);
+          ASSERT(source3.has_value());
+#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
+          ASSERT(source3.value().value() == MOVED_FROM_VAL);
+#endif
+          ASSERT(source3.get_allocator().mechanism() == &oa);
+
+
+          const Obj source4(bsl::allocator_arg, &oa, ValueType(4));
+          ASSERT(source4.has_value());
+          ASSERT(source4.get_allocator().mechanism() == &oa);
+
+          Obj dest4(bsl::allocator_arg, &ta, MovUtl::move(source4));
+          ASSERT(dest4.has_value());
+          ASSERT(dest4.value().value() == 4);
+          ASSERT(dest4.get_allocator().mechanism() == &ta);
+          ASSERT(source4.has_value());
+          ASSERT(source4.value().value() == 4);
+          ASSERT(source4.get_allocator().mechanism() == &oa);
+       }
+       {
+          Obj source(bsl::allocator_arg, &oa, nullopt);
+          ASSERT(!source.has_value());
+          ASSERT(source.get_allocator().mechanism() == &oa);
+
+          Obj dest = MovUtl::move(source);
+          ASSERT(!dest.has_value());
+          ASSERT(dest.get_allocator().mechanism() == &oa);
+          ASSERT(!source.has_value());
+          ASSERT(source.get_allocator().mechanism() == &oa);
+
+          const Obj source2(bsl::allocator_arg, &oa, nullopt);
+          ASSERT(!source2.has_value());
+          ASSERT(source2.get_allocator().mechanism() == &oa);
+
+          Obj dest2 = MovUtl::move(source2);
+          ASSERT(!dest2.has_value());
+          ASSERT(dest2.get_allocator().mechanism() == &da);
+          ASSERT(!source2.has_value());
+          ASSERT(source2.get_allocator().mechanism() == &oa);
+
+          Obj source3(bsl::allocator_arg, &oa, nullopt);
+          ASSERT(!source3.has_value());
+          ASSERT(source3.get_allocator().mechanism() == &oa);
+
+          Obj dest3(bsl::allocator_arg, &ta, MovUtl::move(source3));
+          ASSERT(!dest3.has_value());
+          ASSERT(dest3.get_allocator().mechanism() == &ta);
+
+          const Obj source4(bsl::allocator_arg, &oa, nullopt);
+          ASSERT(!source4.has_value());
+          ASSERT(source4.get_allocator().mechanism() == &oa);
+
+          Obj dest4(bsl::allocator_arg, &ta, MovUtl::move(source4));
+          ASSERT(!dest4.has_value());
+          ASSERT(&ta == dest4.get_allocator().mechanism());
+       }
+    }
+}
+void bslstl_optional_test21()
+{
+  // --------------------------------------------------------------------
+  // TESTING copy from value type FUNCTIONALITY
+  //   This test will verify that the copy construction from value type works
+  //   as expected.
+  //
+  // Concerns:
+  //   * Constructing an optional from a value type object creates an engaged
+  //     optional with the value of the source object. The source object is not
+  //     modified.
+  //   * If no allocator is provided and the value type uses allocator, the
+  //     default allocator is used for the newly created optional.
+  //   * If allocator extended version of copy constructor is used, the allocator
+  //     passed to the constructors is the allocator of the newly created
+  //     optional object.
+  //
+  //
+  // Plan:
+  //   Conduct the test using 'my_class1' (does not use allocator) and
+  //   'my_class2'/'my_Class2a' (uses allocator) for 'TYPE'.
+  //
+  //   Create an object of my_class1 type.
+  //   Create an optional of my_class1 type using the first object as the
+  //   initialization object.
+  //   Check the value of the newly created object is as expected.
+  //   Check the source object has not changed.
+  //
+  //   Bind a const reference to the original object. Create another optional
+  //   of my_class1 type using the const reference as the initialization object.
+  //   Check the value of the newly created object is as expected.
+  //
+  //   Create an object of my_class2 type using a non default allocator.
+  //   Create an optional of my_class2 type using the first object as
+  //   the initialization object.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the default
+  //   allocator.
+  //   Check the source object has not changed.
+  //
+  //   Create an optional of my_class2 type using the original my_class2
+  //   object as the initialization object and a non default allocator
+  //   as the allocator argument.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the one used
+  //   as the allocator argument.
+  //   Check the source object has not changed.
+  //
+  //   Bind a const reference to the original my_class2 object. Create an
+  //   optional of my_class2 type using the const reference as the
+  //   initialization object and a non default allocator as the allocator
+  //   argument.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the one used
+  //   as the allocator argument.
+  //
+  //
+  //   Repeat the above tests with my_class2a type.
+  //
+  //
+  // Testing:
+  //
+  //   optional(const TYPE&);
+  //   optional(allocator_arg_t, allocator_type, const TYPE&);
+  //
+  //   void value();
+  //   void has_value();
+  //   void get_allocator();
+  //
+  // --------------------------------------------------------------------
+
+    if (verbose) printf(
+                       "\nTESTING copy construction from value type "
+                       "\n=========================================\n");
+
+    if (verbose) printf( "\nUsing 'my_Class1'.\n");
+    {
+        typedef my_Class1                  ValueType;
+        typedef bsl::optional<ValueType> Obj;
+
+        {
+            ValueType source(ValueType(1));
+
+            Obj dest = source;
+            ASSERT(dest.has_value());
+            ASSERT(dest.value() == source);
+            ASSERT(dest.value().value() == 1);
+
+            const ValueType & csource = source;
+
+            Obj dest2 = csource;
+            ASSERT(dest2.has_value());
+            ASSERT(dest2.value() == csource);
+            ASSERT(dest2.value().value() == 1);
+        }
+    }
+    if (verbose) printf( "\nUsing 'my_Class2'.\n");
+    {
+        bslma::TestAllocator da("default", veryVeryVeryVerbose);
+        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+        bslma::TestAllocator ta("third", veryVeryVeryVerbose);
+
+        bslma::DefaultAllocatorGuard dag(&da);
+
+        typedef my_Class2                  ValueType;
+        typedef bsl::optional<ValueType> Obj;
+
+        {
+          ValueType source(1, &oa);
+
+          ASSERT(1 == source.value());
+          ASSERT(&oa == source.d_def.d_allocator_p);
+
+          Obj dest = source;
+          ASSERT(dest.has_value());
+          ASSERT(dest.value() == source);
+          ASSERT(dest.value().value() == 1);
+          ASSERT(&da == dest.get_allocator().mechanism());
+          ASSERT(1 == source.value());
+          ASSERT(&oa == source.d_def.d_allocator_p);
+
+          const ValueType & csource = source;
+
+          Obj dest2 = csource;
+          ASSERT(dest2.has_value());
+          ASSERT(dest2.value() == csource);
+          ASSERT(&da == dest2.get_allocator().mechanism());
+
+          Obj dest3(bsl::allocator_arg, &ta, source);
+          ASSERT(dest3.has_value());
+          ASSERT(dest3.value() == source);
+          ASSERT(dest3.value().value() == 1);
+          ASSERT(&ta == dest3.get_allocator().mechanism());
+          ASSERT(1 == source.value());
+          ASSERT(&oa == source.d_def.d_allocator_p);
+
+          Obj dest4(bsl::allocator_arg, &ta, csource);
+          ASSERT(dest2.has_value());
+          ASSERT(dest2.value() == source);
+          ASSERT(&ta == dest4.get_allocator().mechanism());
+       }
+     }
+    if (verbose) printf( "\nUsing 'my_Class2a'.\n");
+    {
+        bslma::TestAllocator da("default", veryVeryVeryVerbose);
+        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+        bslma::TestAllocator ta("third", veryVeryVeryVerbose);
+
+        bslma::DefaultAllocatorGuard dag(&da);
+
+        typedef my_Class2a                  ValueType;
+        typedef bsl::optional<ValueType> Obj;
+
+        {
+            ValueType source(bsl::allocator_arg, &oa, 1);
+
+            ASSERT(1 == source.value());
+            ASSERT(&oa == source.d_data.d_def.d_allocator_p);
+
+            Obj dest = source;
+            ASSERT(dest.has_value());
+            ASSERT(dest.value() == source);
+            ASSERT(dest.value().value() == 1);
+            ASSERT(&da == dest.get_allocator().mechanism());
+            ASSERT(1 == source.value());
+            ASSERT(&oa == source.d_data.d_def.d_allocator_p);
+
+            const ValueType & csource = source;
+
+            Obj dest2 = csource;
+            ASSERT(dest2.has_value());
+            ASSERT(dest2.value() == csource);
+            ASSERT(&da == dest2.get_allocator().mechanism());
+
+            Obj dest3(bsl::allocator_arg, &ta, source);
+            ASSERT(dest3.has_value());
+            ASSERT(dest3.value() == source);
+            ASSERT(dest3.value().value() == 1);
+            ASSERT(&ta == dest3.get_allocator().mechanism());
+            ASSERT(1 == source.value());
+            ASSERT(&oa == source.d_data.d_def.d_allocator_p);
+
+            Obj dest4(bsl::allocator_arg, &ta, csource);
+            ASSERT(dest2.has_value());
+            ASSERT(dest2.value() == source);
+            ASSERT(&ta == dest4.get_allocator().mechanism());
+         }
+     }
+}
+void bslstl_optional_test22()
+{
+  // --------------------------------------------------------------------
+  // TESTING move construct from value type FUNCTIONALITY
+  //   This test will verify that the move construction from value type
+  //   works as expected.
+  //
+  // Concerns:
+  //   * Move constructing an optional from an object of the value type
+  //     creates an engaged optional by moving from the source object.
+  //   * If no allocator is provided and the value type uses allocator, the
+  //     default allocator is used as the allocator for the optional object
+  //   * If allocator extended version of copy constructor is used, the allocator
+  //     passed to the constructor is the alloctor used for the optional
+  //     object.
+  //
+  //
+  // Plan:
+  //   Conduct the test using 'my_class1' (does not use allocator) and
+  //   'my_class2'/'my_Class2a' (uses allocator) for 'TYPE'.
+  //
+  //   Create an object of my_class1 type.
+  //   Create an optional of my_class1 type by move construction from the
+  //   original object.
+  //   Check the value of the newly created object is as expected.
+  //   Check the source object's value type is in a moved from state.
+  //
+  //   Create a const object of my_class1 type.
+  //   Create an optional of my_class1 type by move construction from the
+  //   original object.
+  //   Check the value of the newly created object is as expected.
+  //   Check the source object has not changed.
+  //
+  //
+  //   Create an object of my_class2 type using a non default allocator.
+  //   Create an optional of my_class2 type by move construction from the
+  //   my_class2 object.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the default
+  //   allocator.
+  //   Check the source object is in a moved from state.
+  //
+  //   Create a const object of my_class2 type using a non default allocator.
+  //   Create an optional of my_class2 type by move construction from the
+  //   my_class2 object.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the default
+  //   allocator.
+  //   Check the source object has not changed.
+  //
+  //   Create an object of my_class2 type using a non default allocator.
+  //   Create an optional of my_class2 type  by move construction from
+  //   the my_class2 object and a non default allocator as the allocator
+  //   argument.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the same
+  //   as the one used for the source object.
+  //   Check the source object is in a moved from state.
+  //
+  //   Create a const object of my_class2 type using a non default allocator.
+  //   Create an optional of my_class2 type by move construction from
+  //   the first object and a non default allocator as the allocator argument.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the one used
+  //   as the allocator argument.
+  //   Check the source object has not changed.
+  //
+  //   Repeat the above tests with my_class2a type.
+  //
+  //
+  // Testing:
+  //
+  //   optional(MovableRef<TYPE>);
+  //   optional(allocator_arg_t, allocator_type, MovableRef<TYPE>);
+  //
+  //   void value();
+  //   void has_value();
+  //   void get_allocator();
+  //
+  // --------------------------------------------------------------------
+
+    if (verbose) printf(
+                       "\nTESTING move construction from value type "
+                       "\n=========================================\n");
+
+    if (verbose) printf( "\nUsing 'my_Class1'.\n");
+    {
+        typedef my_Class1                  ValueType;
+        typedef bsl::optional<ValueType> Obj;
+
+        {
+            ValueType source(ValueType(1));
+            Obj dest = MovUtl::move(source);
+            ASSERT(dest.has_value());
+            ASSERT(dest.value().value() == 1);
+#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
+            ASSERT(source.value() == MOVED_FROM_VAL);
+#endif
+
+            const ValueType source2(2);
+           Obj dest2 = MovUtl::move(source2);
+            ASSERT(dest2.has_value());
+            ASSERT(dest2.value().value() == 2);
+            ASSERT(source2.value() == 2);
+        }
+    }
+    if (verbose) printf( "\nUsing 'my_Class2'.\n");
+    {
+        bslma::TestAllocator da("default", veryVeryVeryVerbose);
+        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+        bslma::TestAllocator ta("third", veryVeryVeryVerbose);
+
+        bslma::DefaultAllocatorGuard dag(&da);
+
+        typedef my_Class2                  ValueType;
+        typedef bsl::optional<ValueType> Obj;
+
+        {
+          ValueType source(1, &oa);
+          Obj dest = MovUtl::move(source);
+          ASSERT(dest.has_value());
+          ASSERT(dest.value().value() == 1);
+          ASSERT(dest.get_allocator().mechanism() == &da);
+#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
+          ASSERT(source.value() == MOVED_FROM_VAL);
+#endif
+          ASSERT(source.d_def.d_allocator_p == &oa);
+
+          const ValueType source2(2, &oa);
+          Obj dest2 = MovUtl::move(source2);
+          ASSERT(dest2.has_value());
+          ASSERT(dest2.value().value() == 2);
+          ASSERT(dest2.get_allocator().mechanism() == &da);
+          ASSERT(source2.value() == 2);
+          ASSERT(source2.d_def.d_allocator_p == &oa);
+
+          ValueType source3(3, &oa);
+          Obj dest3(bsl::allocator_arg, &ta, MovUtl::move(source3));
+          ASSERT(dest3.has_value());
+          ASSERT(dest3.value().value() == 3);
+          ASSERT(dest3.get_allocator().mechanism() == &ta);
+#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
+          ASSERT(source3.value() == MOVED_FROM_VAL);
+#endif
+          ASSERT(source3.d_def.d_allocator_p == &oa);
+
+          const ValueType source4(4, &oa);
+         Obj dest4(bsl::allocator_arg, &ta, MovUtl::move(source4));
+          ASSERT(dest4.has_value());
+          ASSERT(dest4.value().value() == 4);
+          ASSERT(dest4.get_allocator().mechanism() == &ta);
+          ASSERT(source4.value() == 4);
+          ASSERT(source4.d_def.d_allocator_p == &oa);
+       }
+    }
+    if (verbose) printf( "\nUsing 'my_Class2a'.\n");
+    {
+        bslma::TestAllocator da("default", veryVeryVeryVerbose);
+        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+        bslma::TestAllocator ta("third", veryVeryVeryVerbose);
+
+        bslma::DefaultAllocatorGuard dag(&da);
+
+        typedef my_Class2a                  ValueType;
+        typedef bsl::optional<ValueType> Obj;
+
+        {
+          ValueType source(bsl::allocator_arg, &oa, 1);
+
+          Obj dest = MovUtl::move(source);
+          ASSERT(dest.has_value());
+          ASSERT(dest.value().value() == 1);
+          ASSERT(dest.get_allocator().mechanism() == &da);
+#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
+          ASSERT(source.value() == MOVED_FROM_VAL);
+#endif
+          ASSERT(source.d_data.d_def.d_allocator_p == &oa);
+
+          const ValueType source2(bsl::allocator_arg, &oa, 2);
+          Obj dest2 = MovUtl::move(source2);
+          ASSERT(dest2.has_value());
+          ASSERT(dest2.value().value() == 2);
+          ASSERT(dest2.get_allocator().mechanism() == &da);
+          ASSERT(source2.value() == 2);
+          ASSERT(source2.d_data.d_def.d_allocator_p == &oa);
+
+          ValueType source3(bsl::allocator_arg, &oa, 3);
+          Obj dest3(bsl::allocator_arg, &ta, MovUtl::move(source3));
+          ASSERT(dest3.has_value());
+          ASSERT(dest3.value().value() == 3);
+          ASSERT(dest3.get_allocator().mechanism() == &ta);
+#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
+          ASSERT(source3.value() == MOVED_FROM_VAL);
+#endif
+          ASSERT(source3.d_data.d_def.d_allocator_p == &oa);
+
+
+          const ValueType source4(bsl::allocator_arg, &oa, 4);
+
+          Obj dest4(bsl::allocator_arg, &ta, MovUtl::move(source4));
+          ASSERT(dest4.has_value());
+          ASSERT(dest4.value().value() == 4);
+          ASSERT(dest4.get_allocator().mechanism() == &ta);
+          ASSERT(source4.value() == 4);
+          ASSERT(source4.d_data.d_def.d_allocator_p == &oa);
+       }
+    }
+}
 int main(int argc, char **argv)
 {
     const int                 test = argc > 1 ? atoi(argv[1]) : 0;
@@ -5380,6 +7367,27 @@ int main(int argc, char **argv)
     bslma::Default::setGlobalAllocator(&globalAllocator);
 
     switch (test) { case 0:
+      case 22:
+        bslstl_optional_test22();
+        break;
+      case 21:
+        bslstl_optional_test21();
+        break;
+      case 20:
+        bslstl_optional_test20();
+        break;
+      case 19:
+        bslstl_optional_test19();
+        break;
+      case 18:
+        bslstl_optional_test18();
+        break;
+      case 17:
+        bslstl_optional_test17();
+        break;
+      case 16:
+        bslstl_optional_test16();
+        break;
       case 15:
         bslstl_optional_test15();
         break;
