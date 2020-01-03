@@ -9,6 +9,10 @@
 
 // Todo: - improve tests by checking for equality, as opposed to value and allocator separately
 //       - add class that is convertible/assignable from an optional object
+//       - tests from volatile/const of same type and from optional of volatile/const type
+//       - failure copy/move construction tests for non copyable and non moveable types
+//       - perfect forwarding tests for ARGS... constructor emplace and equal operator
+//         (requires perfect forwarding in the allocator construction utility)
 //
 
 #include "bslstl_optional.h"
@@ -1040,14 +1044,31 @@ class ConstructTestArg {
 
 public:
 // PUBLIC DATA FOR TEST DRIVER ONLY
-const int d_value;
+int d_value;
 
 // CREATORS
+ConstructTestArg(const ConstructTestArg & other);
+// Create an object by copying 'other'.
+ConstructTestArg(bslmf::MovableRef<ConstructTestArg> other);
+// Create an object by moving from 'other'.
+
 ConstructTestArg(int value = -1);                               // IMPLICIT
 // Create an object having the specified 'value'.
 };
 
 // CREATORS
+template <int ID>
+ConstructTestArg<ID>::ConstructTestArg(const ConstructTestArg & other)
+: d_value(other.d_value)
+{
+}
+template <int ID>
+ConstructTestArg<ID>::ConstructTestArg(
+    bslmf::MovableRef<ConstructTestArg> other)
+: d_value(other.d_value)
+{
+  other.d_value = MOVED_FROM_VAL;
+}
 template <int ID>
 ConstructTestArg<ID>::ConstructTestArg(int value)
 : d_value(value)
@@ -1644,53 +1665,35 @@ ConstructTestArg<14>   VA14(14);
 // macros TEST_EMPLACE*
 // ======================
 
-#define TEST_EMPLACE(obj, emplace, expArgs)                                 \
+#define TEST_EMPLACE(valtype, obj, emplace, expArgs)                        \
 {                                                                           \
-  ConstructTestTypeNoAlloc EXP expArgs ;                                    \
+  valtype EXP expArgs ;                                    \
   obj . emplace ;                                                           \
   ASSERT(EXP == obj .value());                                              \
 }
-#define TEST_EMPLACEIL(obj, emplace, expArgs, ilsum)                        \
+#define TEST_EMPLACEIL(valtype, obj, emplace, expArgs, ilsum)            \
 {                                                                           \
-  ConstructTestTypeNoAlloc EXP expArgs ;                                    \
+  valtype EXP expArgs ;                                    \
   obj . emplace ;                                                           \
   ASSERT(EXP == obj .value());                                              \
   ASSERT(ilsum == obj .value().d_ilsum);                                    \
 }
-#define TEST_EMPLACEA1(obj, emplace, expArgs, alloc)                         \
+#define TEST_EMPLACEA(valtype, obj, emplace, expArgs, alloc)                         \
 {                                                                           \
-  /* Expects allocator at end of argument list */                           \
-  ConstructTestTypeAlloc EXP expArgs ;                                      \
+  valtype EXP expArgs ;                                      \
   obj . emplace ;                                                           \
   ASSERT(EXP == obj .value());                                              \
   ASSERT(alloc == obj.value().d_allocator_p);                                 \
 }
-#define TEST_EMPLACEILA1(obj, emplace, expArgs, ilsum, alloc)               \
+#define TEST_EMPLACEILA(valtype, obj, emplace, expArgs, ilsum, alloc)               \
 {                                                                           \
-  /* Expects allocator at end of argument list */                           \
-  ConstructTestTypeAlloc EXP expArgs ;                                      \
+  valtype EXP expArgs ;                                      \
   obj . emplace ;                                                           \
   ASSERT(EXP == obj .value());                                              \
   ASSERT(alloc == obj.value().d_allocator_p);                               \
   ASSERT(ilsum == obj .value().d_ilsum);                                    \
 }
-#define TEST_EMPLACEA2(obj, emplace, expArgs, alloc)                         \
-{                                                                           \
-  /* Expects allocator after 'allocator_arg_t' tag */                       \
-  ConstructTestTypeAllocArgT EXP expArgs ;                                    \
-  obj . emplace ;                                                           \
-  ASSERT(EXP == obj .value());                                              \
-  ASSERT(alloc == obj.value().d_allocator_p);                                 \
-}
-#define TEST_EMPLACEILA2(obj, emplace, expArgs, ilsum, alloc)               \
-{                                                                           \
-  /* Expects allocator after 'allocator_arg_t' tag */                       \
-  ConstructTestTypeAllocArgT EXP expArgs ;                                  \
-  obj . emplace ;                                                           \
-  ASSERT(EXP == obj .value());                                              \
-  ASSERT(alloc == obj.value().d_allocator_p);                               \
-  ASSERT(ilsum == obj .value().d_ilsum);                                    \
-}
+
 #define TEST_EQUAL_EMPTY(obj, type)                                         \
 {                                                                           \
   type sourceObj;                                                           \
@@ -1702,7 +1705,7 @@ ConstructTestArg<14>   VA14(14);
 #define TEST_EQUAL_EMPTY_MOVE(obj, type)                                    \
 {                                                                           \
   type sourceObj;                                                           \
-   ASSERT(!sourceObj.has_value());                                          \
+  ASSERT(!sourceObj.has_value());                                          \
   obj = MovUtl::move(sourceObj);                                            \
   ASSERT(!obj.has_value());                                                 \
   ASSERT(!sourceObj.has_value());                                           \
@@ -1767,6 +1770,38 @@ ConstructTestArg<14>   VA14(14);
   ASSERT(sourceObj.has_value());                                            \
   ASSERT(expVal == sourceObj.value().value());                              \
 }
+
+#define TEST_COPY(valtype, optype, init, expArgs)                                 \
+{                                                                           \
+  valtype EXP expArgs ;                                                    \
+  optype obj init ;                                                           \
+  ASSERT(EXP == obj.value());                                              \
+}
+#define TEST_COPYIL(valtype, optype, init, expArgs, ilsum)                        \
+{                                                                           \
+  valtype EXP expArgs ;                                    \
+  optype obj init ;                                                           \
+  ASSERT(EXP == obj.value());                                              \
+  ASSERT(ilsum == obj.value().d_ilsum);                                    \
+}
+#define TEST_COPYA(valtype, optype, init, expArgs, alloc)                   \
+{                                                                           \
+  /* Expects allocator at end of argument list */                           \
+  valtype EXP expArgs ;                                                     \
+  optype obj init ;                                                         \
+  ASSERT(EXP == obj.value());                                               \
+  ASSERT(alloc == obj.value().d_allocator_p);                               \
+}
+#define TEST_COPYILA(valtype, opttype, init, expArgs, ilsum, alloc)        \
+{                                                                           \
+  /* Expects allocator at end of argument list */                           \
+  valtype EXP expArgs ;                                      \
+  opttype obj init;                                                           \
+  ASSERT(EXP == obj .value());                                              \
+  ASSERT(alloc == obj.value().d_allocator_p);                               \
+  ASSERT(ilsum == obj.value().d_ilsum);                                    \
+}
+
 //=============================================================================
 //                              MAIN PROGRAM
 //-----------------------------------------------------------------------------
@@ -3288,11 +3323,188 @@ void bslstl_optional_test8()
        }
     }
 }
+template <typename ValType, typename OptType>
+void test_emplaceil_helper()
+{
+  OptType mX;
+  // ---   -------------------------------------------------
+  TEST_EMPLACEIL( ValType, mX,  emplace({1,2,3}),                            // OP
+                 /* no ctor arg list */                            // EXP
+                , 6);
+
+  TEST_EMPLACEIL( ValType, mX,  emplace({1,2,3},VA1),                       // OP
+                 (VA1)                                             // EXP
+                , 6);
+
+  TEST_EMPLACEIL( ValType, mX,  emplace({1,2,3},VA1, VA2),                  // OP
+                 (VA1, VA2)                                        // EXP
+                , 6);
+
+  TEST_EMPLACEIL( ValType, mX,  emplace({1,2,3},VA1, VA2, VA3),             // OP
+                 (VA1, VA2, VA3)                                   // EXP
+                , 6);
+
+  TEST_EMPLACEIL( ValType, mX,  emplace({1,2,3},VA1, VA2, VA3, VA4),        // OP
+                 (VA1, VA2, VA3, VA4)                              // EXP
+                , 6);
+
+  TEST_EMPLACEIL( ValType, mX,  emplace({1,2,3},VA1, VA2, VA3, VA4, VA5),                            // OP
+                 (VA1, VA2, VA3, VA4, VA5)                         // EXP
+                , 6);
+
+  TEST_EMPLACEIL( ValType, mX,  emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
+                                   VA6),                       // OP
+                 (VA1, VA2, VA3, VA4, VA5, VA6)                    // EXP
+                , 6);
+
+  TEST_EMPLACEIL( ValType, mX,  emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
+                                   VA6, VA7),                  // OP
+                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7)               // EXP
+                , 6);
+
+  TEST_EMPLACEIL( ValType, mX,  emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
+                                   VA6, VA7, VA8),             // OP
+                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8)          // EXP
+                , 6);
+
+  TEST_EMPLACEIL( ValType, mX,  emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
+                                   VA6, VA7, VA8, VA9),        // OP
+                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                  VA9)                                             // EXP
+                , 6);
+
+  TEST_EMPLACEIL( ValType, mX,  emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
+                                   VA6, VA7, VA8, VA9, VA10),                            // OP
+                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7,
+                  VA8, VA9, VA10)                                  // EXP
+                , 6);
+
+  TEST_EMPLACEIL( ValType, mX,  emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
+                                   VA6, VA7, VA8, VA9, VA10,
+                                   VA11),                      // OP
+                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                  VA9, VA10, VA11)                                 // EXP
+                , 6);
+
+  TEST_EMPLACEIL( ValType, mX,  emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
+                                   VA6, VA7, VA8, VA9, VA10,
+                                   VA11, VA12),                // OP
+                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                  VA9, VA10, VA11, VA12)                           // EXP
+                , 6);
+
+  TEST_EMPLACEIL( ValType, mX,  emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
+                                   VA6, VA7, VA8, VA9, VA10,
+                                   VA11, VA12, VA13),          // OP
+                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                  VA9, VA10, VA11, VA12, VA13)                     // EXP
+                , 6);
+
+}
+template <typename ValType, typename OptType>
+void test_emplaceila_helper()
+{
+    bslma::TestAllocator da("default", veryVeryVeryVerbose);
+    bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+    bslma::TestAllocator ta("third", veryVeryVeryVerbose);
+
+    bslma::DefaultAllocatorGuard dag(&da);
+    OptType mX(bsl::allocator_arg, &oa);
+    // OP  = construct(&ConstructTestArg, VA[1--N])
+    // EXP = ConstructTestArg(VA[1--N])
+    // ---   -------------------------------------------------
+    TEST_EMPLACEILA( ValType, mX,  emplace({1,2,3}),                            // OP
+                  /* no ctor arg list */ ,                           // EXP
+                 6,
+                 &oa);
+
+    TEST_EMPLACEILA( ValType, mX,  emplace({1,2,3}, VA1),                       // OP
+                  (VA1),                                             // EXP
+                  6,
+                 &oa);
+
+    TEST_EMPLACEILA( ValType, mX,  emplace({1,2,3}, VA1, VA2),                  // OP
+                  (VA1, VA2) ,                                       // EXP
+                  6,
+                 &oa);
+
+    TEST_EMPLACEILA( ValType, mX,  emplace({1,2,3}, VA1, VA2, VA3),             // OP
+                  (VA1, VA2, VA3),                                   // EXP
+                  6,
+                 &oa);
+
+    TEST_EMPLACEILA( ValType, mX,  emplace({1,2,3}, VA1, VA2, VA3, VA4),        // OP
+                  (VA1, VA2, VA3, VA4),                              // EXP
+                  6,
+                 &oa);
+
+    TEST_EMPLACEILA( ValType, mX,  emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5),                            // OP
+                  (VA1, VA2, VA3, VA4, VA5),                         // EXP
+                  6,
+                 &oa);
+
+    TEST_EMPLACEILA( ValType, mX,  emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                    VA6),                       // OP
+                  (VA1, VA2, VA3, VA4, VA5, VA6),                    // EXP
+                  6,
+                 &oa);
+
+    TEST_EMPLACEILA( ValType, mX,  emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                    VA6, VA7),                  // OP
+                  (VA1, VA2, VA3, VA4, VA5, VA6, VA7),                // EXP
+                  6,
+                 &oa);
+
+    TEST_EMPLACEILA( ValType, mX,  emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                    VA6, VA7, VA8),             // OP
+                  (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8),          // EXP
+                  6,
+                 &oa);
+
+    TEST_EMPLACEILA( ValType, mX,  emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                    VA6, VA7, VA8, VA9),        // OP
+                  (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                   VA9)                              ,                // EXP
+                   6,
+                 &oa);
+
+    TEST_EMPLACEILA( ValType, mX,  emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                    VA6, VA7, VA8, VA9, VA10),                            // OP
+                  (VA1, VA2, VA3, VA4, VA5, VA6, VA7,
+                   VA8, VA9, VA10)                   ,                // EXP
+                   6,
+                 &oa);
+
+    TEST_EMPLACEILA( ValType, mX,  emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                    VA6, VA7, VA8, VA9, VA10,
+                                    VA11),                      // OP
+                  (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                   VA9, VA10, VA11)                  ,                // EXP
+                   6,
+                 &oa);
+
+    TEST_EMPLACEILA( ValType, mX,  emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                    VA6, VA7, VA8, VA9, VA10,
+                                    VA11, VA12),                // OP
+                  (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                   VA9, VA10, VA11, VA12)            ,                // EXP
+                   6,
+                 &oa);
+
+    TEST_EMPLACEILA( ValType, mX,  emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                    VA6, VA7, VA8, VA9, VA10,
+                                    VA11, VA12, VA13),          // OP
+                  (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                   VA9, VA10, VA11, VA12, VA13)      ,                // EXP
+                   6,
+                 &oa);
+
+}
 void bslstl_optional_test9()
 {
     // --------------------------------------------------------------------
     // TESTING emplace FUNCTIONALITY
-    //   This test will verify that the intiializer list emplace function works
+    //   This test will verify that the intializer list emplace function works
     //   as expected.
     //
     // Concerns:
@@ -3300,7 +3512,7 @@ void bslstl_optional_test9()
     //     using the optional's allocator and emplace arguments
     //   * Calling emplace on an engaged optional replaces the value type object
     //     with a new one created using the optional's allocator and emplace arguments
-    //   * Whe using initializer_list, the correct value type constructros is selected
+    //   * Whe using initializer_list, the correct value type constructors is selected
     //   * Multiple arguments are correctly forwarded.
     //   * emplace can not be used on a const qualified optional.
     //
@@ -3327,161 +3539,12 @@ void bslstl_optional_test9()
         typedef bsl::optional<ValueType> Obj;
         typedef bsl::optional<ConstValueType> ObjC;
 
-        {
-          Obj mX;
-          // OP  = construct(&ConstructTestArg, VA[1--N])
-          // EXP = ConstructTestArg(VA[1--N])
-          // ---   -------------------------------------------------
-          TEST_EMPLACEIL( mX, emplace({1,2,3}),                            // OP
-                         /* no ctor arg list */                            // EXP
-                        , 6);
+        test_emplaceil_helper<ValueType, Obj>();
+        test_emplaceil_helper<ValueType, ObjC>();
+        test_emplaceil_helper<ConstValueType, Obj>();
+        test_emplaceil_helper<ConstValueType, ObjC>();
 
-          TEST_EMPLACEIL( mX, emplace({1,2,3},VA1),                       // OP
-                         (VA1)                                             // EXP
-                        , 6);
 
-          TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2),                  // OP
-                         (VA1, VA2)                                        // EXP
-                        , 6);
-
-          TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3),             // OP
-                         (VA1, VA2, VA3)                                   // EXP
-                        , 6);
-
-          TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4),        // OP
-                         (VA1, VA2, VA3, VA4)                              // EXP
-                        , 6);
-
-          TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4, VA5),                            // OP
-                         (VA1, VA2, VA3, VA4, VA5)                         // EXP
-                        , 6);
-
-          TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
-                                           VA6),                       // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6)                    // EXP
-                        , 6);
-
-          TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
-                                           VA6, VA7),                  // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7)               // EXP
-                        , 6);
-
-          TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
-                                           VA6, VA7, VA8),             // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8)          // EXP
-                        , 6);
-
-          TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
-                                           VA6, VA7, VA8, VA9),        // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                          VA9)                                             // EXP
-                        , 6);
-
-          TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
-                                           VA6, VA7, VA8, VA9, VA10),                            // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7,
-                          VA8, VA9, VA10)                                  // EXP
-                        , 6);
-
-          TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
-                                           VA6, VA7, VA8, VA9, VA10,
-                                           VA11),                      // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                          VA9, VA10, VA11)                                 // EXP
-                        , 6);
-
-          TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
-                                           VA6, VA7, VA8, VA9, VA10,
-                                           VA11, VA12),                // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                          VA9, VA10, VA11, VA12)                           // EXP
-                        , 6);
-
-          TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
-                                           VA6, VA7, VA8, VA9, VA10,
-                                           VA11, VA12, VA13),          // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                          VA9, VA10, VA11, VA12, VA13)                     // EXP
-                        , 6);
-
-        }
-        {
-          ObjC mX;
-          // OP  = construct(&ConstructTestArg, VA[1--N])
-          // EXP = ConstructTestArg(VA[1--N])
-          // ---   -------------------------------------------------
-          TEST_EMPLACEIL( mX, emplace({1,2,3}),                            // OP
-                                   /* no ctor arg list */                            // EXP
-                                  , 6);
-
-            TEST_EMPLACEIL( mX, emplace({1,2,3},VA1),                       // OP
-                           (VA1)                                             // EXP
-                          , 6);
-
-            TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2),                  // OP
-                           (VA1, VA2)                                        // EXP
-                          , 6);
-
-            TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3),             // OP
-                           (VA1, VA2, VA3)                                   // EXP
-                          , 6);
-
-            TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4),        // OP
-                           (VA1, VA2, VA3, VA4)                              // EXP
-                          , 6);
-
-            TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4, VA5),                            // OP
-                           (VA1, VA2, VA3, VA4, VA5)                         // EXP
-                          , 6);
-
-            TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
-                                             VA6),                       // OP
-                           (VA1, VA2, VA3, VA4, VA5, VA6)                    // EXP
-                          , 6);
-
-            TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
-                                             VA6, VA7),                  // OP
-                           (VA1, VA2, VA3, VA4, VA5, VA6, VA7)               // EXP
-                          , 6);
-
-            TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
-                                             VA6, VA7, VA8),             // OP
-                           (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8)          // EXP
-                          , 6);
-
-            TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
-                                             VA6, VA7, VA8, VA9),        // OP
-                           (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                            VA9)                                             // EXP
-                          , 6);
-
-            TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
-                                             VA6, VA7, VA8, VA9, VA10),                            // OP
-                           (VA1, VA2, VA3, VA4, VA5, VA6, VA7,
-                            VA8, VA9, VA10)                                  // EXP
-                          , 6);
-
-            TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
-                                             VA6, VA7, VA8, VA9, VA10,
-                                             VA11),                      // OP
-                           (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                            VA9, VA10, VA11)                                 // EXP
-                          , 6);
-
-            TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
-                                             VA6, VA7, VA8, VA9, VA10,
-                                             VA11, VA12),                // OP
-                           (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                            VA9, VA10, VA11, VA12)                           // EXP
-                          , 6);
-
-            TEST_EMPLACEIL( mX, emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
-                                             VA6, VA7, VA8, VA9, VA10,
-                                             VA11, VA12, VA13),          // OP
-                           (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                            VA9, VA10, VA11, VA12, VA13)                     // EXP
-                          , 6);
-        }
 #if defined(BSLSTL_OPTIONAL_TEST_BAD_IL_EMPLACE1)
         {
             CObj bad1;
@@ -3503,195 +3566,22 @@ void bslstl_optional_test9()
     }
     if (verbose) printf( "\nUsing 'ConstructTestTypeAlloc'.\n");
     {
-        bslma::TestAllocator da("default", veryVeryVeryVerbose);
-        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
-        bslma::TestAllocator ta("third", veryVeryVeryVerbose);
-
-        bslma::DefaultAllocatorGuard dag(&da);
-
         typedef ConstructTestTypeAlloc                  ValueType;
         typedef const ConstructTestTypeAlloc            ConstValueType;
         typedef bsl::optional<ValueType> Obj;
         typedef bsl::optional<ConstValueType> ObjC;
 
-        {
-          Obj mX(bsl::allocator_arg, &oa);
-          // OP  = construct(&ConstructTestArg, VA[1--N])
-          // EXP = ConstructTestArg(VA[1--N])
-          // ---   -------------------------------------------------
-          TEST_EMPLACEILA1( mX, emplace({1,2,3}),                            // OP
-                         /* no ctor arg list */ ,                           // EXP
-                        6,
-                        &oa);
+        test_emplaceil_helper<ValueType, Obj>();
+        test_emplaceil_helper<ValueType, ObjC>();
+        test_emplaceil_helper<ConstValueType, Obj>();
+        test_emplaceil_helper<ConstValueType, ObjC>();
 
-          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1),                       // OP
-                         (VA1),                                             // EXP
-                         6,
-                        &oa);
+        test_emplaceila_helper<ValueType, Obj>();
+        test_emplaceila_helper<ValueType, ObjC>();
+        test_emplaceila_helper<ConstValueType, Obj>();
+        test_emplaceila_helper<ConstValueType, ObjC>();
 
-          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2),                  // OP
-                         (VA1, VA2) ,                                       // EXP
-                         6,
-                        &oa);
 
-          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3),             // OP
-                         (VA1, VA2, VA3),                                   // EXP
-                         6,
-                        &oa);
-
-          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4),        // OP
-                         (VA1, VA2, VA3, VA4),                              // EXP
-                         6,
-                        &oa);
-
-          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5),                            // OP
-                         (VA1, VA2, VA3, VA4, VA5),                         // EXP
-                         6,
-                        &oa);
-
-          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                           VA6),                       // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6),                    // EXP
-                         6,
-                        &oa);
-
-          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                           VA6, VA7),                  // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7),                // EXP
-                         6,
-                        &oa);
-
-          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                           VA6, VA7, VA8),             // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8),          // EXP
-                         6,
-                        &oa);
-
-          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                           VA6, VA7, VA8, VA9),        // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                          VA9)                              ,                // EXP
-                          6,
-                        &oa);
-
-          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                           VA6, VA7, VA8, VA9, VA10),                            // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7,
-                          VA8, VA9, VA10)                   ,                // EXP
-                          6,
-                        &oa);
-
-          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                           VA6, VA7, VA8, VA9, VA10,
-                                           VA11),                      // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                          VA9, VA10, VA11)                  ,                // EXP
-                          6,
-                        &oa);
-
-          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                           VA6, VA7, VA8, VA9, VA10,
-                                           VA11, VA12),                // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                          VA9, VA10, VA11, VA12)            ,                // EXP
-                          6,
-                        &oa);
-
-          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                           VA6, VA7, VA8, VA9, VA10,
-                                           VA11, VA12, VA13),          // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                          VA9, VA10, VA11, VA12, VA13)      ,                // EXP
-                          6,
-                        &oa);
-
-               }
-        {
-          ObjC mX(bsl::allocator_arg, &oa);
-          // OP  = construct(&ConstructTestArg, VA[1--N])
-          // EXP = ConstructTestArg(VA[1--N])
-          // ---   -------------------------------------------------
-          TEST_EMPLACEILA1( mX, emplace({1,2,3}),                            // OP
-                         /* no ctor arg list */             ,                // EXP
-                         6,
-                        &oa);
-
-          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1),                       // OP
-                         (VA1)                              ,                // EXP
-                         6,
-                        &oa);
-
-          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2),                  // OP
-                         (VA1, VA2)                         ,                // EXP
-                         6,
-                        &oa);
-
-          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4),        // OP
-                         (VA1, VA2, VA3, VA4)               ,                // EXP
-                         6,
-                        &oa);
-
-          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5),                            // OP
-                         (VA1, VA2, VA3, VA4, VA5)          ,                // EXP
-                         6,
-                        &oa);
-
-          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                           VA6),                       // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6)     ,                // EXP
-                         6,
-                        &oa);
-
-          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                           VA6, VA7),                  // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7),                // EXP
-                         6,
-                        &oa);
-
-          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                           VA6, VA7, VA8),             // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8),          // EXP
-                         6,
-                        &oa);
-
-          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                           VA6, VA7, VA8, VA9),        // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                          VA9)                              ,                // EXP
-                          6,
-                        &oa);
-
-          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                           VA6, VA7, VA8, VA9, VA10),                            // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7,
-                          VA8, VA9, VA10)                   ,                // EXP
-                          6,
-                        &oa);
-
-          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                           VA6, VA7, VA8, VA9, VA10,
-                                           VA11),                      // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                          VA9, VA10, VA11)                  ,                // EXP
-                          6,
-                        &oa);
-
-          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                           VA6, VA7, VA8, VA9, VA10,
-                                           VA11, VA12),                // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                          VA9, VA10, VA11, VA12)            ,                // EXP
-                          6,
-                        &oa);
-
-          TEST_EMPLACEILA1( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                           VA6, VA7, VA8, VA9, VA10,
-                                           VA11, VA12, VA13),          // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                          VA9, VA10, VA11, VA12, VA13)      ,                // EXP
-                          6,
-                        &oa);
-        }
 #if defined(BSLSTL_OPTIONAL_TEST_BAD_IL_EMPLACE2)
         {
             CObj bad1;
@@ -3724,184 +3614,18 @@ void bslstl_optional_test9()
         typedef bsl::optional<ValueType> Obj;
         typedef bsl::optional<ConstValueType> ObjC;
 
-        {
-          Obj mX(bsl::allocator_arg, &oa);
-          // OP  = construct(&ConstructTestArg, VA[1--N])
-          // EXP = ConstructTestArg(VA[1--N])
-          // ---   -------------------------------------------------
-          TEST_EMPLACEILA2( mX, emplace({1,2,3}),                            // OP
-                         /* no ctor arg list */ ,                           // EXP
-                        6,
-                        &oa);
+        typedef bsl::optional<ValueType> Obj;
+        typedef bsl::optional<ConstValueType> ObjC;
 
-          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1),                       // OP
-                         (VA1),                                             // EXP
-                         6,
-                        &oa);
+        test_emplaceil_helper<ValueType, Obj>();
+        test_emplaceil_helper<ValueType, ObjC>();
+        test_emplaceil_helper<ConstValueType, Obj>();
+        test_emplaceil_helper<ConstValueType, ObjC>();
 
-          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2),                  // OP
-                         (VA1, VA2) ,                                       // EXP
-                         6,
-                        &oa);
-
-          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3),             // OP
-                         (VA1, VA2, VA3),                                   // EXP
-                         6,
-                        &oa);
-
-          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4),        // OP
-                         (VA1, VA2, VA3, VA4),                              // EXP
-                         6,
-                        &oa);
-
-          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5),                            // OP
-                         (VA1, VA2, VA3, VA4, VA5),                         // EXP
-                         6,
-                        &oa);
-
-          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                           VA6),                       // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6),                    // EXP
-                         6,
-                        &oa);
-
-          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                           VA6, VA7),                  // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7),                // EXP
-                         6,
-                        &oa);
-
-          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                           VA6, VA7, VA8),             // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8),          // EXP
-                         6,
-                        &oa);
-
-          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                           VA6, VA7, VA8, VA9),        // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                          VA9)                              ,                // EXP
-                          6,
-                        &oa);
-
-          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                           VA6, VA7, VA8, VA9, VA10),                            // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7,
-                          VA8, VA9, VA10)                   ,                // EXP
-                          6,
-                        &oa);
-
-          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                           VA6, VA7, VA8, VA9, VA10,
-                                           VA11),                      // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                          VA9, VA10, VA11)                  ,                // EXP
-                          6,
-                        &oa);
-
-          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                           VA6, VA7, VA8, VA9, VA10,
-                                           VA11, VA12),                // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                          VA9, VA10, VA11, VA12)            ,                // EXP
-                          6,
-                        &oa);
-
-          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                           VA6, VA7, VA8, VA9, VA10,
-                                           VA11, VA12, VA13),          // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                          VA9, VA10, VA11, VA12, VA13)      ,                // EXP
-                          6,
-                        &oa);
-
-        }
-        {
-          ObjC mX(bsl::allocator_arg, &oa);
-          // OP  = construct(&ConstructTestArg, VA[1--N])
-          // EXP = ConstructTestArg(VA[1--N])
-          // ---   -------------------------------------------------
-          TEST_EMPLACEILA2( mX, emplace({1,2,3}),                            // OP
-                         /* no ctor arg list */             ,                // EXP
-                         6,
-                        &oa);
-
-          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1),                       // OP
-                         (VA1)                              ,                // EXP
-                         6,
-                        &oa);
-
-          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2),                  // OP
-                         (VA1, VA2)                         ,                // EXP
-                         6,
-                        &oa);
-
-          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4),        // OP
-                         (VA1, VA2, VA3, VA4)               ,                // EXP
-                         6,
-                        &oa);
-
-          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5),                            // OP
-                         (VA1, VA2, VA3, VA4, VA5)          ,                // EXP
-                         6,
-                        &oa);
-
-          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                           VA6),                       // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6)     ,                // EXP
-                         6,
-                        &oa);
-
-          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                           VA6, VA7),                  // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7),                // EXP
-                         6,
-                        &oa);
-
-          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                           VA6, VA7, VA8),             // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8),          // EXP
-                         6,
-                        &oa);
-
-          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                           VA6, VA7, VA8, VA9),        // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                          VA9)                              ,                // EXP
-                          6,
-                        &oa);
-
-          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                           VA6, VA7, VA8, VA9, VA10),                            // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7,
-                          VA8, VA9, VA10)                   ,                // EXP
-                          6,
-                        &oa);
-
-          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                           VA6, VA7, VA8, VA9, VA10,
-                                           VA11),                      // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                          VA9, VA10, VA11)                  ,                // EXP
-                          6,
-                        &oa);
-
-          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                           VA6, VA7, VA8, VA9, VA10,
-                                           VA11, VA12),                // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                          VA9, VA10, VA11, VA12)            ,                // EXP
-                          6,
-                        &oa);
-
-          TEST_EMPLACEILA2( mX, emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                           VA6, VA7, VA8, VA9, VA10,
-                                           VA11, VA12, VA13),          // OP
-                         (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                          VA9, VA10, VA11, VA12, VA13)      ,                // EXP
-                          6,
-                        &oa);
-        }
+        test_emplaceila_helper<ValueType, Obj>();
+        test_emplaceila_helper<ValueType, ObjC>();
+        test_emplaceila_helper<ConstValueType, Obj>();
+        test_emplaceila_helper<ConstValueType, ObjC>();
     }
 }
 void bslstl_optional_test10()
@@ -5161,7 +4885,8 @@ void bslstl_optional_test15()
   //   * If no allocator is provided and the value type uses allocator, the
   //     default allocator is used for the newly create doptional.
   //   * If allocator extended version of copy constructor is used, the allocator
-  //     of the newly created optional is the one passed in.
+  //     passed to the constructor is the allocator of the newly created
+  //     optional.
   //
   //
   // Plan:
@@ -5262,13 +4987,13 @@ void bslstl_optional_test15()
             ASSERT(dest.value().value() == 1);
             ASSERT(source.has_value());
 
-            const Obj & csource = source;
-            ASSERT(csource.has_value());
+            const Obj source2(ValueType(2));
+            ASSERT(source2.has_value());
 
-            Obj dest2 = csource;
+            Obj dest2 = source2;
             ASSERT(dest2.has_value());
-            ASSERT(dest2.value() == csource.value());
-            ASSERT(dest2.value().value() == 1);
+            ASSERT(dest2.value() == source2.value());
+            ASSERT(dest2.value().value() == 2);
         }
         {
             Obj source(nullopt);
@@ -5444,7 +5169,8 @@ void bslstl_optional_test16()
   //     allocator from the moved from optional is used for the newly created
   //     optional.
   //   * If allocator extended version of copy constructor is used, the allocator
-  //     of the newly created optional is the one passed in.
+  //     passed to the constructor is the allocator of the newly created
+  //     optional.
   //
   //
   // Plan:
@@ -5932,24 +5658,24 @@ void bslstl_optional_test17()
           ASSERT(1 == source.value());
           ASSERT(&oa == source.d_def.d_allocator_p);
 
-          const ValueType & csource = source;
-
-          Obj dest2 = csource;
+          const ValueType source2(2, &oa);
+          Obj dest2 = source2;
           ASSERT(dest2.has_value());
-          ASSERT(dest2.value() == csource);
+          ASSERT(dest2.value() == source2);
           ASSERT(&da == dest2.get_allocator().mechanism());
 
-          Obj dest3(bsl::allocator_arg, &ta, source);
+          ValueType source3(3, &oa);
+          Obj dest3(bsl::allocator_arg, &ta, source3);
           ASSERT(dest3.has_value());
-          ASSERT(dest3.value() == source);
-          ASSERT(dest3.value().value() == 1);
+          ASSERT(dest3.value() == source3);
+          ASSERT(dest3.value().value() == 3);
           ASSERT(&ta == dest3.get_allocator().mechanism());
-          ASSERT(1 == source.value());
           ASSERT(&oa == source.d_def.d_allocator_p);
 
-          Obj dest4(bsl::allocator_arg, &ta, csource);
-          ASSERT(dest2.has_value());
-          ASSERT(dest2.value() == source);
+          const ValueType source4(4, &oa);
+          Obj dest4(bsl::allocator_arg, &ta, source4);
+          ASSERT(dest4.has_value());
+          ASSERT(dest4.value() == source4);
           ASSERT(&ta == dest4.get_allocator().mechanism());
        }
      }
@@ -6384,7 +6110,7 @@ void bslstl_optional_test19()
 
     if (verbose) printf( "\nUsing 'my_Class1'.\n");
     {
-        typedef my_Class1                  SourceType;
+        typedef my_Class1                   SourceType;
         typedef my_Class1a                  ValueType;
         typedef bsl::optional<SourceType> SrcObj;
         typedef bsl::optional<ValueType> Obj;
@@ -6399,14 +6125,13 @@ void bslstl_optional_test19()
             ASSERT(source.has_value());
             ASSERT(source.value().value() == 1);
 
-            const SrcObj &csource = source;
-
-            Obj dest2 = csource;
+            const SrcObj source2(SourceType(2));;
+            Obj dest2 = source2;
             ASSERT(dest2.has_value());
-            ASSERT(dest2.value().value() == 1);
+            ASSERT(dest.value().value() == 2);
         }
         {
-          SrcObj source(nullopt);
+            SrcObj source(nullopt);
             ASSERT(!source.has_value());
 
             Obj dest = source;
@@ -6444,24 +6169,27 @@ void bslstl_optional_test19()
           ASSERT(source.has_value());
           ASSERT(source.value().value() == 1);
 
-          const SrcObj & csource = source;
-
-          Obj dest2 = csource;
+          const SrcObj source2(SourceType(2));
+          Obj dest2 = source2;
           ASSERT(dest2.has_value());
-          ASSERT(dest2.value().value() == 1);
+          ASSERT(dest2.value().value() == 2);
           ASSERT(dest2.value().d_def.d_allocator_p == &da);
           ASSERT(dest2.get_allocator().mechanism() == &da);
 
+
+          SrcObj source3(SourceType(3));
           Obj dest3(bsl::allocator_arg, &ta, source);
           ASSERT(dest3.has_value());
-          ASSERT(dest3.value().value() == 1);
+          ASSERT(dest3.value().value() == 3);
           ASSERT(dest3.value().d_def.d_allocator_p == &ta);
           ASSERT(dest3.get_allocator().mechanism() == &ta);
-          ASSERT(source.has_value());
+          ASSERT(source3.has_value());
+          ASSERT(source3.value().value() == 3);
 
-          Obj dest4(bsl::allocator_arg, &ta, csource);
+          const SrcObj source4(SourceType(4));
+          Obj dest4(bsl::allocator_arg, &ta, source4);
           ASSERT(dest4.has_value());
-          ASSERT(dest4.value().value() == 1);
+          ASSERT(dest4.value().value() == 4);
           ASSERT(dest4.value().d_def.d_allocator_p == &ta);
           ASSERT(dest4.get_allocator().mechanism() == &ta);
        }
@@ -6567,68 +6295,69 @@ void bslstl_optional_test19()
 void bslstl_optional_test20()
 {
   // --------------------------------------------------------------------
-  // TESTING move construct FUNCTIONALITY
-  //   This test will verify that the move construction works as expected.
+  // TESTING move construct optional<otherType> FUNCTIONALITY
+  //   This test will verify that the move construction from an optional of
+  //   different value type works as expected.
   //
   // Concerns:
-  //   * Move constructing an optional from an engaged optional of the same
-  //     type creates an engaged optional by moving from the source object's
-  //     value.
-  //   * Constructing an optional from a disengaged optional of the same type
-  //     creates a disengaged optional. The original is not modified.
+  //   * Move constructing an optional from an engaged optional of a different
+  //     value type type creates an engaged optional by moving from the source
+  //     object's value.
+  //   * Constructing an optional from a disengaged optional of a different
+  //     value type type creates a disengaged optional. The original is not
+  //     modified.
   //   * If no allocator is provided and the value type uses allocator, the
-  //     allocator from the moved from optional is used for the newly created
-  //     optional.
+  //     default allocator is used for the newly created optional.
   //   * If allocator extended version of copy constructor is used, the allocator
-  //     of the newly created optional is the one passed in.
+  //     passed to the constructor is the allocator of the newly created
+  //     optional.
   //
   //
   // Plan:
-  //   Conduct the test using 'my_class1' (does not use allocator) and
+  //   Conduct the test using 'my_class1a' (does not use allocator) and
   //   'my_class2'/'my_Class2a' (uses allocator) for 'TYPE'.
   //
-  //   Create an engaged optional of my_class1 type. Create another optional
-  //   of my_class1 type by move construction from the original object.
+  //   Create an engaged optional of my_class1 type. Create an optional
+  //   of my_class1a type by move construction from the original object.
   //   Check the value of the newly created object is as expected.
   //   Check the source object's value type is in a moved from state.
   //
-  //   Create a const engaged optional of my_class1 type. Create another
-  //   optional of my_class1 type by move construction from the original
+  //   Create a const engaged optional of my_class1 type. Create an
+  //   optional of my_class1a type by move construction from the original
   //   object.
   //   Check the value of the newly created object is as expected.
   //   Check the source object has not changed.
   //
-  //   Create a disengaged optional of my_class1 type. Create another optional
-  //   of my_class1 type by move construction from the original object.
+  //   Create a disengaged optional of my_class1 type. Create an optional
+  //   of my_class1a type by move construction from the original object.
   //   Check the newly created object is disengaged.
   //
-  //   Create a const disengaged optional of my_class1 type. Create another
-  //   optional of my_class1 type by move construction from the original
+  //   Create a const disengaged optional of my_class1 type. Create an
+  //   optional of my_class1a type by move construction from the original
   //   object.
   //   Check the newly created object is disengaged.
   //   Check the source object has not changed.
   //
-  //   Create an engaged optional of my_class2 type using a non default
-  //   allocator.
-  //   Create another optional of my_class2 type by move construction from
-  //   the first object.
+  //   Create an engaged optional of my_class1 type.
+  //   Create an optional of my_class2 type by move construction from the
+  //   my_class1 optional object.
   //   Check the value of the newly created object is as expected.
-  //   Check the allocator of the newly created object is the one from
-  //   the source optional object.
+  //   Check the allocator of the newly created object is the default
+  //   allocator
   //   Check the source object's value type is in a moved from state.
   //
-  //   Create an engaged const optional of my_class2 type using a non default
+  //   Create an engaged const optional of my_class1 type using a non default
   //   allocator.
-  //   Create another optional of my_class2 type  by move construction from
-  //   the first object.
+  //   Create an optional of my_class2 type by move construction from the
+  //   my_class1 optional object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the
   //   default allocator.
   //   Check the source object's value type has not changed.
   //
-  //   Create an engaged optional of my_class2 type using a non default
+  //   Create an engaged optional of my_class1 type using a non default
   //   allocator.
-  //   Create another optional of my_class2 type  by move construction from
+  //   Create another optional of my_class2 type by move construction from
   //   the first object and a non default allocator as the allocator
   //   argument.
   //   Check the value of the newly created object is as expected.
@@ -6636,55 +6365,120 @@ void bslstl_optional_test20()
   //   as the one used for the source object.
   //   Check the source object's value type is in a moved from state.
   //
-  //   Create an engaged const optional of my_class2 type using a non default
+  //   Create an engaged const optional of my_class1 type using a non default
   //   allocator.
-  //   Create another optional of my_class2 type by move construction from
-  //   the first object and a non default allocator as the allocator argument.
+  //   Create an optional of my_class2 type by move construction from the
+  //   first object and a non default allocator as the allocator argument.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the one used
   //   as the allocator argument.
   //   Check the source object has not changed.
   //
-  //   Create a disengaged optional of my_class2 type using a non default
-  //   allocator.
-  //   Create another optional of my_class2 type by move construction from
-  //   the first object.
-  //   Check the newly created object is disengaged.
-  //   Check the allocator of the newly created object is the same as
-  //   the source optional object.
-  //
-  //   Create a disengaged const optional of my_class2 type using a non default
-  //   allocator.
-  //   Create another optional of my_class2 type by move construction from
-  //   the first object.
+  //   Create a disengaged optional of my_class1 type
+  //   Create an optional of my_class2 type by move construction from the
+  //   first object.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //
+  //   Create a disengaged const optional of my_class1 type.
+  //   Create an optional of my_class2 type by move construction from the
+  //   first object.
+  //   Check the newly created object is disengaged.
+  //   Check the allocator of the newly created object is the default
+  //   allocator.
+  //
+  //   Create a disengaged optional of my_class1 type.
+  //   Create an optional of my_class2 type by move construction from the
+  //   first object and with non default allocator as the allocator argument.
+  //   Check the newly created object is disengaged.
+  //   Check the allocator of the newly created object is the one
+  //   used in the construction call.
+  //
+  //   Create a disengaged const optional of my_class1 type.
+  //   Create another optional of my_class2 type by move construction from the
+  //   first object.
+  //   Check the newly created object is disengaged.
+  //   Check the allocator of the newly created object is the default
+  //   allocator
+  //
+  //   Create an engaged optional of my_class2 type using a non default
+  //   allocator.
+  //   Create an optional of my_class2a type by move construction from the
+  //   my_class2 optional object.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the default
+  //   allocator.
+  //   Check the source object is in a moved from state.
+  //
+  //   Create an engaged const optional of my_class2 type using a non default
+  //   allocator.
+  //   Create an optional of my_class2a type by move construction from the
+  //   optional of my_class2.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the default
+  //   allocator.
+  //
+  //   Create an engaged optional of my_class2 type using a non default
+  //   allocator.
+  //   Create an optional of my_class2a type by move construction from the
+  //   my_class2 optional object and a non default allocator as the allocator
+  //   argument.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the one used
+  //   as the allocator argument.
+  //   Check the source object is in a moved from state.
+  //
+  //   Create an engaged const optional of my_class2 type using a non default
+  //   allocator.
+  //   Create an optional by move construction from the my_class2 optional
+  //   object and a non default allocator as the allocator
+  //   argument.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the one used
+  //   as the allocator argument.
+  //
   //   Create a disengaged optional of my_class2 type using a non default
   //   allocator.
-  //   Create another optional of my_class2 type by move construction from
-  //   the first object and with non default allocator as the allocator
+  //   Create an optional of my_class2a type by move construction from the
+  //   optional of my_class2.
+  //   Check the newly created object is disengaged.
+  //   Check the allocator of the newly created object is the default
+  //   allocator.
+  //
+  //   Create a disengaged const optional of my_class2 type using a non default
+  //   allocator.
+  //   Create an optional of my_class2a type by move construction from the
+  //   optional of my_class2.
+  //   Check the newly created object is disengaged.
+  //   Check the allocator of the newly created object is the one
+  //   used in the construction call.
+  //
+  //   Create a disengaged optional of my_class2 type using a non default
+  //   allocator.
+  //   Create an optional of my_class2a type by move construction from the
+  //   optional of my_class2 and non default allocator as the allocator
   //   argument.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the one
   //   used in the construction call.
   //
-  //   Create a disengaged const optional of my_class2 type using a non
-  //   default allocator.
-  //   Create another optional of my_class2 type by move construction from
-  //   the first object.
+  //   Create a disengaged const optional of my_class2 type using a non default
+  //   allocator.
+  //   Create an optional of my_class2a type by move construction from the
+  //   optional of my_class2 and non default allocator as the allocator
+  //   argument.
   //   Check the newly created object is disengaged.
-  //   Check the allocator of the newly created object is the default
-  //   allocator
-  //
-  //   Repeat the above tests with my_class2a type.
+  //   Check the allocator of the newly created object is the one
+  //   used in the construction call.
   //
   //
   // Testing:
   //
-  //   optional(MovableRef<optional>)
-  //   optional(bsl::allocator_arg, allocator_type, MovableRef<optional>)
+  //   optional(MovableRef<optional <ANY_TYPE> >)
+  //   optional(bsl::allocator_arg,
+  //            allocator_type,
+  //            MovableRef<optional <ANY_TYPE> >)
   //
   //   void value();
   //   void has_value();
@@ -6693,49 +6487,48 @@ void bslstl_optional_test20()
   // --------------------------------------------------------------------
 
     if (verbose) printf(
-                       "\nTESTING move construction "
-                       "\n=========================\n");
+                       "\nTESTING move construction from an optional of a "
+                       "different value type"
+                       "\n================================================="
+                       "===================\n");
 
     if (verbose) printf( "\nUsing 'my_Class1'.\n");
     {
-        typedef my_Class1                  ValueType;
+        typedef my_Class1                  SourceType;
+        typedef my_Class1a                  ValueType;
+        typedef bsl::optional<SourceType> SrcObj;
         typedef bsl::optional<ValueType> Obj;
 
         {
-            Obj source(ValueType(1));
+            SrcObj source(SourceType(1));
             ASSERT(source.has_value());
 
             Obj dest = MovUtl::move(source);
             ASSERT(dest.has_value());
             ASSERT(dest.value().value() == 1);
-            ASSERT(source.has_value());
 #if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
             ASSERT(source.value().value() == MOVED_FROM_VAL);
 #endif
 
-            const Obj source2(ValueType(2));
-            ASSERT(source2.has_value());
+            const SrcObj &csource = source;
 
-            Obj dest2 = MovUtl::move(source2);
+            Obj dest2 = MovUtl::move(csource);
             ASSERT(dest2.has_value());
-            ASSERT(dest2.value().value() == 2);
-            ASSERT(source2.has_value());
-            ASSERT(source2.value().value() == 2);
+            ASSERT(dest2.value().value() == 1);
         }
         {
-            Obj source(nullopt);
+            SrcObj source(nullopt);
             ASSERT(!source.has_value());
 
             Obj dest = MovUtl::move(source);
             ASSERT(!dest.has_value());
             ASSERT(!source.has_value());
 
-            const Obj source2(nullopt);
-            ASSERT(!source2.has_value());
+            const SrcObj & csource = source;
+            ASSERT(!csource.has_value());
 
-            Obj dest2 = MovUtl::move(source2);
+            Obj dest2 = MovUtl::move(csource);
             ASSERT(!dest2.has_value());
-            ASSERT(!source2.has_value());
         }
     }
     if (verbose) printf( "\nUsing 'my_Class2'.\n");
@@ -6746,100 +6539,70 @@ void bslstl_optional_test20()
 
         bslma::DefaultAllocatorGuard dag(&da);
 
-        typedef my_Class2                  ValueType;
-        typedef bsl::optional<ValueType> Obj;
+        typedef my_Class1                   SourceType;
+        typedef my_Class2                   ValueType;
+        typedef bsl::optional<SourceType>   SrcObj;
+        typedef bsl::optional<ValueType>    Obj;
 
         {
-          Obj source(bsl::allocator_arg, &oa, ValueType(1));
+          SrcObj source(SourceType(1));
           ASSERT(source.has_value());
-          ASSERT(source.get_allocator().mechanism() == &oa);
 
           Obj dest = MovUtl::move(source);
           ASSERT(dest.has_value());
           ASSERT(dest.value().value() == 1);
-          ASSERT(dest.get_allocator().mechanism() == &oa);
-          ASSERT(source.has_value());
+          ASSERT(dest.get_allocator().mechanism() == &da);
 #if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
           ASSERT(source.value().value() == MOVED_FROM_VAL);
 #endif
-          ASSERT(source.get_allocator().mechanism() == &oa);
 
-          const Obj source2(bsl::allocator_arg, &oa, ValueType(2));
-          ASSERT(source2.has_value());
-          ASSERT(source.get_allocator().mechanism() == &oa);
-
-          Obj dest2 = MovUtl::move(source2);
+          const SrcObj source2(SourceType(2));
+          Obj dest2 = MovUtl::move(source2);;
           ASSERT(dest2.has_value());
           ASSERT(dest2.value().value() == 2);
+          ASSERT(dest2.value().d_def.d_allocator_p == &da);
           ASSERT(dest2.get_allocator().mechanism() == &da);
-          ASSERT(source2.has_value());
-          ASSERT(source2.value().value() == 2);
-          ASSERT(source2.get_allocator().mechanism() == &oa);
 
-
-          Obj source3(bsl::allocator_arg, &oa, ValueType(3));
-          ASSERT(source3.has_value());
-          ASSERT(source3.get_allocator().mechanism() == &oa);
-
+          SrcObj source3(SourceType(3));
           Obj dest3(bsl::allocator_arg, &ta, MovUtl::move(source3));
           ASSERT(dest3.has_value());
           ASSERT(dest3.value().value() == 3);
+          ASSERT(dest3.value().d_def.d_allocator_p == &ta);
           ASSERT(dest3.get_allocator().mechanism() == &ta);
-          ASSERT(source3.has_value());
 #if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
           ASSERT(source3.value().value() == MOVED_FROM_VAL);
 #endif
-          ASSERT(source3.get_allocator().mechanism() == &oa);
 
-
-          const Obj source4(bsl::allocator_arg, &oa, ValueType(4));
-          ASSERT(source4.has_value());
-          ASSERT(source4.get_allocator().mechanism() == &oa);
-
+          const SrcObj source4(SourceType(4));
           Obj dest4(bsl::allocator_arg, &ta, MovUtl::move(source4));
           ASSERT(dest4.has_value());
           ASSERT(dest4.value().value() == 4);
+          ASSERT(dest4.value().d_def.d_allocator_p == &ta);
           ASSERT(dest4.get_allocator().mechanism() == &ta);
-          ASSERT(source4.has_value());
-          ASSERT(source4.value().value() == 4);
-          ASSERT(source4.get_allocator().mechanism() == &oa);
        }
        {
-          Obj source(bsl::allocator_arg, &oa, nullopt);
+          SrcObj source(nullopt);
           ASSERT(!source.has_value());
-          ASSERT(source.get_allocator().mechanism() == &oa);
 
           Obj dest = MovUtl::move(source);
           ASSERT(!dest.has_value());
-          ASSERT(dest.get_allocator().mechanism() == &oa);
+          ASSERT(dest.get_allocator().mechanism() == &da);
           ASSERT(!source.has_value());
-          ASSERT(source.get_allocator().mechanism() == &oa);
 
-          const Obj source2(bsl::allocator_arg, &oa, nullopt);
-          ASSERT(!source2.has_value());
-          ASSERT(source2.get_allocator().mechanism() == &oa);
-
+          const SrcObj source2(nullopt);
           Obj dest2 = MovUtl::move(source2);
           ASSERT(!dest2.has_value());
           ASSERT(dest2.get_allocator().mechanism() == &da);
-          ASSERT(!source2.has_value());
-          ASSERT(source2.get_allocator().mechanism() == &oa);
 
-          Obj source3(bsl::allocator_arg, &oa, nullopt);
-          ASSERT(!source3.has_value());
-          ASSERT(source3.get_allocator().mechanism() == &oa);
-
+          SrcObj source3(nullopt);
           Obj dest3(bsl::allocator_arg, &ta, MovUtl::move(source3));
           ASSERT(!dest3.has_value());
           ASSERT(dest3.get_allocator().mechanism() == &ta);
 
-          const Obj source4(bsl::allocator_arg, &oa, nullopt);
-          ASSERT(!source4.has_value());
-          ASSERT(source4.get_allocator().mechanism() == &oa);
-
+          const SrcObj source4(nullopt);
           Obj dest4(bsl::allocator_arg, &ta, MovUtl::move(source4));
           ASSERT(!dest4.has_value());
-          ASSERT(&ta == dest4.get_allocator().mechanism());
+          ASSERT(dest4.get_allocator().mechanism() == &ta);
        }
     }
     if (verbose) printf( "\nUsing 'my_Class2a'.\n");
@@ -6850,114 +6613,76 @@ void bslstl_optional_test20()
 
         bslma::DefaultAllocatorGuard dag(&da);
 
+        typedef my_Class2                   SourceType;
         typedef my_Class2a                  ValueType;
-        typedef bsl::optional<ValueType> Obj;
+        typedef bsl::optional<SourceType>   SrcObj;
+        typedef bsl::optional<ValueType>    Obj;
 
         {
-          Obj source(bsl::allocator_arg, &oa, ValueType(1));
-          ASSERT(source.has_value());
-          ASSERT(source.get_allocator().mechanism() == &oa);
-
-          Obj dest = MovUtl::move(source);
-          ASSERT(dest.has_value());
-          ASSERT(dest.value().value() == 1);
-          ASSERT(dest.get_allocator().mechanism() == &oa);
-          ASSERT(source.has_value());
+            SrcObj source(bsl::allocator_arg, &oa, SourceType(1));
+            Obj dest = MovUtl::move(source);
+            ASSERT(dest.has_value());
+            ASSERT(dest.value().value() == 1);
+            ASSERT(&da == dest.get_allocator().mechanism());
 #if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
-          ASSERT(source.value().value() == MOVED_FROM_VAL);
+            ASSERT(source.value().value() == MOVED_FROM_VAL);
 #endif
-          ASSERT(source.get_allocator().mechanism() == &oa);
 
-          const Obj source2(bsl::allocator_arg, &oa, ValueType(2));
-          ASSERT(source2.has_value());
-          ASSERT(source2.get_allocator().mechanism() == &oa);
+            const SrcObj source2(bsl::allocator_arg, &oa, SourceType(2));
+            Obj dest2 = MovUtl::move(source2);;
+            ASSERT(dest2.has_value());
+            ASSERT(dest2.value().value() == 2);
+            ASSERT(&da == dest2.get_allocator().mechanism());
 
-          Obj dest2 = MovUtl::move(source2);
-          ASSERT(dest2.has_value());
-          ASSERT(dest2.value().value() == 2);
-          ASSERT(dest2.get_allocator().mechanism() == &da);
-          ASSERT(source2.has_value());
-          ASSERT(source2.value().value() == 2);
-          ASSERT(source2.get_allocator().mechanism() == &oa);
-
-
-          Obj source3(bsl::allocator_arg, &oa, ValueType(3));
-          ASSERT(source3.has_value());
-          ASSERT(source3.get_allocator().mechanism() == &oa);
-
-          Obj dest3(bsl::allocator_arg, &ta, MovUtl::move(source3));
-          ASSERT(dest3.has_value());
-          ASSERT(dest3.value().value() == 3);
-          ASSERT(dest3.get_allocator().mechanism() == &ta);
-          ASSERT(source3.has_value());
+            SrcObj source3(bsl::allocator_arg, &oa, SourceType(3));
+            Obj dest3(bsl::allocator_arg, &ta, MovUtl::move(source3));
+            ASSERT(dest3.has_value());
+            ASSERT(dest3.value().value() == 3);
+            ASSERT(&ta == dest3.get_allocator().mechanism());
 #if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
-          ASSERT(source3.value().value() == MOVED_FROM_VAL);
+            ASSERT(source3.value().value() == MOVED_FROM_VAL);
 #endif
-          ASSERT(source3.get_allocator().mechanism() == &oa);
+
+            const SrcObj source4(bsl::allocator_arg, &oa, SourceType(4));
+            Obj dest4(bsl::allocator_arg, &ta, MovUtl::move(source4));
+            ASSERT(dest4.value().value() == 4);
+            ASSERT(&ta == dest4.get_allocator().mechanism());
+        }
+        {
+            SrcObj source(bsl::allocator_arg, &oa, nullopt);
+            Obj dest = MovUtl::move(source);
+            ASSERT(&da == dest.get_allocator().mechanism());
+            ASSERT(!source.has_value());
+
+            const SrcObj source2(bsl::allocator_arg, &oa, nullopt);
+            Obj dest2 = MovUtl::move(source2);;
+            ASSERT(!dest2.has_value());
+            ASSERT(&da == dest2.get_allocator().mechanism());
+
+            SrcObj source3(bsl::allocator_arg, &oa, nullopt);
+            Obj dest3(bsl::allocator_arg, &ta, MovUtl::move(source3));
+            ASSERT(!dest3.has_value());
+            ASSERT(&ta == dest3.get_allocator().mechanism());
 
 
-          const Obj source4(bsl::allocator_arg, &oa, ValueType(4));
-          ASSERT(source4.has_value());
-          ASSERT(source4.get_allocator().mechanism() == &oa);
-
-          Obj dest4(bsl::allocator_arg, &ta, MovUtl::move(source4));
-          ASSERT(dest4.has_value());
-          ASSERT(dest4.value().value() == 4);
-          ASSERT(dest4.get_allocator().mechanism() == &ta);
-          ASSERT(source4.has_value());
-          ASSERT(source4.value().value() == 4);
-          ASSERT(source4.get_allocator().mechanism() == &oa);
-       }
-       {
-          Obj source(bsl::allocator_arg, &oa, nullopt);
-          ASSERT(!source.has_value());
-          ASSERT(source.get_allocator().mechanism() == &oa);
-
-          Obj dest = MovUtl::move(source);
-          ASSERT(!dest.has_value());
-          ASSERT(dest.get_allocator().mechanism() == &oa);
-          ASSERT(!source.has_value());
-          ASSERT(source.get_allocator().mechanism() == &oa);
-
-          const Obj source2(bsl::allocator_arg, &oa, nullopt);
-          ASSERT(!source2.has_value());
-          ASSERT(source2.get_allocator().mechanism() == &oa);
-
-          Obj dest2 = MovUtl::move(source2);
-          ASSERT(!dest2.has_value());
-          ASSERT(dest2.get_allocator().mechanism() == &da);
-          ASSERT(!source2.has_value());
-          ASSERT(source2.get_allocator().mechanism() == &oa);
-
-          Obj source3(bsl::allocator_arg, &oa, nullopt);
-          ASSERT(!source3.has_value());
-          ASSERT(source3.get_allocator().mechanism() == &oa);
-
-          Obj dest3(bsl::allocator_arg, &ta, MovUtl::move(source3));
-          ASSERT(!dest3.has_value());
-          ASSERT(dest3.get_allocator().mechanism() == &ta);
-
-          const Obj source4(bsl::allocator_arg, &oa, nullopt);
-          ASSERT(!source4.has_value());
-          ASSERT(source4.get_allocator().mechanism() == &oa);
-
-          Obj dest4(bsl::allocator_arg, &ta, MovUtl::move(source4));
-          ASSERT(!dest4.has_value());
-          ASSERT(&ta == dest4.get_allocator().mechanism());
-       }
-    }
+            const SrcObj source4(bsl::allocator_arg, &oa, nullopt);
+            Obj dest4(bsl::allocator_arg, &ta, MovUtl::move(source4));
+            ASSERT(!dest4.has_value());
+            ASSERT(&ta == dest4.get_allocator().mechanism());
+      }
+   }
 }
 void bslstl_optional_test21()
 {
   // --------------------------------------------------------------------
-  // TESTING copy from value type FUNCTIONALITY
-  //   This test will verify that the copy construction from value type works
+  // TESTING copy from OTHER type FUNCTIONALITY
+  //   This test will verify that the copy construction from OTHER type works
   //   as expected.
   //
   // Concerns:
-  //   * Constructing an optional from a value type object creates an engaged
-  //     optional with the value of the source object. The source object is not
-  //     modified.
+  //   * Constructing an optional from a OTHER type object creates an engaged
+  //     optional with the value of the source object converted to value type.
+  //     The source object is not modified.
   //   * If no allocator is provided and the value type uses allocator, the
   //     default allocator is used for the newly created optional.
   //   * If allocator extended version of copy constructor is used, the allocator
@@ -6966,20 +6691,21 @@ void bslstl_optional_test21()
   //
   //
   // Plan:
-  //   Conduct the test using 'my_class1' (does not use allocator) and
+  //   Conduct the test using 'my_class1a' (does not use allocator) and
   //   'my_class2'/'my_Class2a' (uses allocator) for 'TYPE'.
   //
   //   Create an object of my_class1 type.
-  //   Create an optional of my_class1 type using the first object as the
+  //   Create an optional of my_class1a type using the first object as the
   //   initialization object.
   //   Check the value of the newly created object is as expected.
   //   Check the source object has not changed.
   //
   //   Bind a const reference to the original object. Create another optional
-  //   of my_class1 type using the const reference as the initialization object.
+  //   of my_class1a type using the const reference as the initialization
+  //   object.
   //   Check the value of the newly created object is as expected.
   //
-  //   Create an object of my_class2 type using a non default allocator.
+  //   Create an object of my_class1 type.
   //   Create an optional of my_class2 type using the first object as
   //   the initialization object.
   //   Check the value of the newly created object is as expected.
@@ -6987,30 +6713,70 @@ void bslstl_optional_test21()
   //   allocator.
   //   Check the source object has not changed.
   //
-  //   Create an optional of my_class2 type using the original my_class2
-  //   object as the initialization object and a non default allocator
-  //   as the allocator argument.
+  //   Create a const object of my_class1 type using a non default allocator.
+  //   Create an optional of my_class2 type using the first object as
+  //   the initialization object.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the default
+  //   allocator.
+  //   Check the source object has not changed.
+  //
+  //   Create an object of my_class1 type.
+  //   Create an optional of my_class2 type using the my_class1 object as the
+  //   initialization object and a non default allocator as the allocator
+  //   argument.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the one used
   //   as the allocator argument.
   //   Check the source object has not changed.
   //
-  //   Bind a const reference to the original my_class2 object. Create an
-  //   optional of my_class2 type using the const reference as the
+  //   Create a const object of my_class1 type using a non default allocator.
+  //   Create an optional of my_class2 type using the my_class1 object as the
   //   initialization object and a non default allocator as the allocator
   //   argument.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the one used
   //   as the allocator argument.
   //
+  //   Create an object my_class2 type using a non default allocator.
+  //   Create an optional of my_class2a type using the first object as
+  //   the initialization object.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the default
+  //   allocator.
+  //   Check the source object has not changed.
   //
-  //   Repeat the above tests with my_class2a type.
+  //   Create a const object my_class2 type using a non default allocator.
+  //   Bind a const reference to the my_class2 object.
+  //   Create an optional of my_class2a type using the const object as
+  //   the initialization object.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the default
+  //   allocator.
+  //
+  //   Create an object my_class2 type using a non default allocator.
+  //   Create an optional of my_class2a type using the my_class2 object as
+  //   the initialization object and a non default allocator as the allocator
+  //   argument.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the one used
+  //   as the allocator argument.
+  //   Check the source object has not changed.
+  //
+  //   Create a const object my_class2 type using a non default allocator.
+  //   Create an optional of my_class2a type using the const object as
+  //   the initialization object and a non default allocator as the allocator
+  //   argument.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the one used
+  //   as the allocator argument.
+  //
   //
   //
   // Testing:
   //
-  //   optional(const TYPE&);
-  //   optional(allocator_arg_t, allocator_type, const TYPE&);
+  //   optional(const ANY_TYPE&);
+  //   optional(allocator_arg_t, allocator_type, const ANY_TYPE&);
   //
   //   void value();
   //   void has_value();
@@ -7019,16 +6785,17 @@ void bslstl_optional_test21()
   // --------------------------------------------------------------------
 
     if (verbose) printf(
-                       "\nTESTING copy construction from value type "
+                       "\nTESTING copy construction from OTHER type "
                        "\n=========================================\n");
 
-    if (verbose) printf( "\nUsing 'my_Class1'.\n");
+    if (verbose) printf( "\nUsing 'my_Class1a'.\n");
     {
-        typedef my_Class1                  ValueType;
+        typedef my_Class1                   SourceType;
+        typedef my_Class1a                  ValueType;
         typedef bsl::optional<ValueType> Obj;
 
         {
-            ValueType source(ValueType(1));
+            SourceType source(1);
 
             Obj dest = source;
             ASSERT(dest.has_value());
@@ -7036,7 +6803,6 @@ void bslstl_optional_test21()
             ASSERT(dest.value().value() == 1);
 
             const ValueType & csource = source;
-
             Obj dest2 = csource;
             ASSERT(dest2.has_value());
             ASSERT(dest2.value() == csource);
@@ -7051,42 +6817,36 @@ void bslstl_optional_test21()
 
         bslma::DefaultAllocatorGuard dag(&da);
 
-        typedef my_Class2                  ValueType;
+        typedef my_Class1                   SourceType;
+        typedef my_Class2                   ValueType;
         typedef bsl::optional<ValueType> Obj;
 
         {
-          ValueType source(1, &oa);
+            SourceType source(1);
+            Obj dest = source;
+            ASSERT(dest.has_value());
+            ASSERT(dest.value() == source);
+            ASSERT(dest.value().value() == 1);
+            ASSERT(&da == dest.get_allocator().mechanism());
 
-          ASSERT(1 == source.value());
-          ASSERT(&oa == source.d_def.d_allocator_p);
+            const SourceType source2(2);
+            Obj dest2 = source2;
+            ASSERT(dest2.has_value());
+            ASSERT(dest2.value() == source2);
+            ASSERT(&da == dest2.get_allocator().mechanism());
 
-          Obj dest = source;
-          ASSERT(dest.has_value());
-          ASSERT(dest.value() == source);
-          ASSERT(dest.value().value() == 1);
-          ASSERT(&da == dest.get_allocator().mechanism());
-          ASSERT(1 == source.value());
-          ASSERT(&oa == source.d_def.d_allocator_p);
+            const SourceType source3(3);
+            Obj dest3(bsl::allocator_arg, &ta, source3);
+            ASSERT(dest3.has_value());
+            ASSERT(dest3.value() == source3);
+            ASSERT(dest3.value().value() == 3);
+            ASSERT(&ta == dest3.get_allocator().mechanism());
 
-          const ValueType & csource = source;
-
-          Obj dest2 = csource;
-          ASSERT(dest2.has_value());
-          ASSERT(dest2.value() == csource);
-          ASSERT(&da == dest2.get_allocator().mechanism());
-
-          Obj dest3(bsl::allocator_arg, &ta, source);
-          ASSERT(dest3.has_value());
-          ASSERT(dest3.value() == source);
-          ASSERT(dest3.value().value() == 1);
-          ASSERT(&ta == dest3.get_allocator().mechanism());
-          ASSERT(1 == source.value());
-          ASSERT(&oa == source.d_def.d_allocator_p);
-
-          Obj dest4(bsl::allocator_arg, &ta, csource);
-          ASSERT(dest2.has_value());
-          ASSERT(dest2.value() == source);
-          ASSERT(&ta == dest4.get_allocator().mechanism());
+            const SourceType source4(4);
+            Obj dest4(bsl::allocator_arg, &ta, source4);
+            ASSERT(dest4.has_value());
+            ASSERT(dest4.value() == source4);
+            ASSERT(&ta == dest4.get_allocator().mechanism());
        }
      }
     if (verbose) printf( "\nUsing 'my_Class2a'.\n");
@@ -7097,41 +6857,40 @@ void bslstl_optional_test21()
 
         bslma::DefaultAllocatorGuard dag(&da);
 
+        typedef my_Class2                   SourceType;
         typedef my_Class2a                  ValueType;
         typedef bsl::optional<ValueType> Obj;
 
         {
-            ValueType source(bsl::allocator_arg, &oa, 1);
-
+            SourceType source(1, &oa);
             ASSERT(1 == source.value());
-            ASSERT(&oa == source.d_data.d_def.d_allocator_p);
+            ASSERT(&oa == source.d_def.d_allocator_p);
 
             Obj dest = source;
             ASSERT(dest.has_value());
-            ASSERT(dest.value() == source);
             ASSERT(dest.value().value() == 1);
             ASSERT(&da == dest.get_allocator().mechanism());
             ASSERT(1 == source.value());
-            ASSERT(&oa == source.d_data.d_def.d_allocator_p);
+            ASSERT(&oa == source.d_def.d_allocator_p);
 
-            const ValueType & csource = source;
-
-            Obj dest2 = csource;
+            const SourceType source2(2, &oa);
+            Obj dest2 = source2;
             ASSERT(dest2.has_value());
-            ASSERT(dest2.value() == csource);
+            ASSERT(dest2.value().value() == 2);
             ASSERT(&da == dest2.get_allocator().mechanism());
 
-            Obj dest3(bsl::allocator_arg, &ta, source);
+            SourceType source3(3, &oa);
+            Obj dest3(bsl::allocator_arg, &ta, source3);
             ASSERT(dest3.has_value());
-            ASSERT(dest3.value() == source);
-            ASSERT(dest3.value().value() == 1);
+            ASSERT(dest3.value().value() == 3);
             ASSERT(&ta == dest3.get_allocator().mechanism());
-            ASSERT(1 == source.value());
-            ASSERT(&oa == source.d_data.d_def.d_allocator_p);
+            ASSERT(3 == source3.value());
+            ASSERT(&oa == source3.d_def.d_allocator_p);
 
-            Obj dest4(bsl::allocator_arg, &ta, csource);
-            ASSERT(dest2.has_value());
-            ASSERT(dest2.value() == source);
+            const SourceType source4(4, &oa);
+            Obj dest4(bsl::allocator_arg, &ta, source4);
+            ASSERT(dest4.has_value());
+            ASSERT(dest4.value().value() == 4);
             ASSERT(&ta == dest4.get_allocator().mechanism());
          }
      }
@@ -7139,39 +6898,72 @@ void bslstl_optional_test21()
 void bslstl_optional_test22()
 {
   // --------------------------------------------------------------------
-  // TESTING move construct from value type FUNCTIONALITY
-  //   This test will verify that the move construction from value type
+  // TESTING move construct from OTHER type FUNCTIONALITY
+  //   This test will verify that the move construction from OTHER type
   //   works as expected.
   //
   // Concerns:
-  //   * Move constructing an optional from an object of the value type
-  //     creates an engaged optional by moving from the source object.
+  //   * Move constructing an optional from an object of OTHER type
+  //     creates an engaged optional with the value of the source object
+  //     converted to value type by moving from the source object.
   //   * If no allocator is provided and the value type uses allocator, the
   //     default allocator is used as the allocator for the optional object
   //   * If allocator extended version of copy constructor is used, the allocator
-  //     passed to the constructor is the alloctor used for the optional
+  //     passed to the constructor is the allocator used for the optional
   //     object.
   //
   //
   // Plan:
-  //   Conduct the test using 'my_class1' (does not use allocator) and
+  //   Conduct the test using 'my_class1a' (does not use allocator) and
   //   'my_class2'/'my_Class2a' (uses allocator) for 'TYPE'.
   //
   //   Create an object of my_class1 type.
-  //   Create an optional of my_class1 type by move construction from the
+  //   Create an optional of my_class1a type by move construction from the
   //   original object.
   //   Check the value of the newly created object is as expected.
   //   Check the source object's value type is in a moved from state.
   //
   //   Create a const object of my_class1 type.
-  //   Create an optional of my_class1 type by move construction from the
+  //   Create an optional of my_class1a type by move construction from the
   //   original object.
   //   Check the value of the newly created object is as expected.
   //   Check the source object has not changed.
   //
+  //   Create an object of my_class1 type.
+  //   Create an optional of my_class2 type by move construction from the
+  //   my_class1 object.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the default
+  //   allocator.
+  //   Check the source object is in a moved from state.
+  //
+  //   Create a const object of my_class1 type.
+  //   Create an optional of my_class2 type by move construction from the
+  //   my_class1 object.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the default
+  //   allocator.
+  //   Check the source object has not changed.
+  //
+  //   Create an object of my_class1.
+  //   Create an optional of my_class2 type  by move construction from
+  //   the my_class1 object and a non default allocator as the allocator
+  //   argument.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the same
+  //   as the one used for the source object.
+  //   Check the source object is in a moved from state.
+  //
+  //   Create a const object of my_class1 type.
+  //   Create an optional of my_class2 type by move construction from
+  //   the first object and a non default allocator as the allocator argument.
+  //   Check the value of the newly created object is as expected.
+  //   Check the allocator of the newly created object is the one used
+  //   as the allocator argument.
+  //   Check the source object has not changed.
   //
   //   Create an object of my_class2 type using a non default allocator.
-  //   Create an optional of my_class2 type by move construction from the
+  //   Create an optional of my_class2a type by move construction from the
   //   my_class2 object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
@@ -7179,7 +6971,7 @@ void bslstl_optional_test22()
   //   Check the source object is in a moved from state.
   //
   //   Create a const object of my_class2 type using a non default allocator.
-  //   Create an optional of my_class2 type by move construction from the
+  //   Create an optional of my_class2a type by move construction from the
   //   my_class2 object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
@@ -7187,7 +6979,7 @@ void bslstl_optional_test22()
   //   Check the source object has not changed.
   //
   //   Create an object of my_class2 type using a non default allocator.
-  //   Create an optional of my_class2 type  by move construction from
+  //   Create an optional of my_class2a type  by move construction from
   //   the my_class2 object and a non default allocator as the allocator
   //   argument.
   //   Check the value of the newly created object is as expected.
@@ -7196,14 +6988,13 @@ void bslstl_optional_test22()
   //   Check the source object is in a moved from state.
   //
   //   Create a const object of my_class2 type using a non default allocator.
-  //   Create an optional of my_class2 type by move construction from
-  //   the first object and a non default allocator as the allocator argument.
+  //   Create an optional of my_class2a type by move construction from
+  //   the my_class2 object and a non default allocator as the allocator
+  //   argument.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the one used
   //   as the allocator argument.
   //   Check the source object has not changed.
-  //
-  //   Repeat the above tests with my_class2a type.
   //
   //
   // Testing:
@@ -7218,16 +7009,17 @@ void bslstl_optional_test22()
   // --------------------------------------------------------------------
 
     if (verbose) printf(
-                       "\nTESTING move construction from value type "
+                       "\nTESTING move construction from OTHER type "
                        "\n=========================================\n");
 
-    if (verbose) printf( "\nUsing 'my_Class1'.\n");
+    if (verbose) printf( "\nUsing 'my_Class1a'.\n");
     {
-        typedef my_Class1                  ValueType;
-        typedef bsl::optional<ValueType> Obj;
+        typedef my_Class1                   SourceType;
+        typedef my_Class1a                  ValueType;
+        typedef bsl::optional<ValueType>    Obj;
 
         {
-            ValueType source(ValueType(1));
+            SourceType source(1);
             Obj dest = MovUtl::move(source);
             ASSERT(dest.has_value());
             ASSERT(dest.value().value() == 1);
@@ -7235,8 +7027,8 @@ void bslstl_optional_test22()
             ASSERT(source.value() == MOVED_FROM_VAL);
 #endif
 
-            const ValueType source2(2);
-           Obj dest2 = MovUtl::move(source2);
+            const SourceType source2(2);
+            Obj dest2 = MovUtl::move(source2);
             ASSERT(dest2.has_value());
             ASSERT(dest2.value().value() == 2);
             ASSERT(source2.value() == 2);
@@ -7250,11 +7042,12 @@ void bslstl_optional_test22()
 
         bslma::DefaultAllocatorGuard dag(&da);
 
-        typedef my_Class2                  ValueType;
-        typedef bsl::optional<ValueType> Obj;
+        typedef my_Class2                   SourceType;
+        typedef my_Class2a                  ValueType;
+        typedef bsl::optional<ValueType>    Obj;
 
         {
-          ValueType source(1, &oa);
+          SourceType source(1, &oa);
           Obj dest = MovUtl::move(source);
           ASSERT(dest.has_value());
           ASSERT(dest.value().value() == 1);
@@ -7264,7 +7057,7 @@ void bslstl_optional_test22()
 #endif
           ASSERT(source.d_def.d_allocator_p == &oa);
 
-          const ValueType source2(2, &oa);
+          const SourceType source2(2, &oa);
           Obj dest2 = MovUtl::move(source2);
           ASSERT(dest2.has_value());
           ASSERT(dest2.value().value() == 2);
@@ -7272,7 +7065,7 @@ void bslstl_optional_test22()
           ASSERT(source2.value() == 2);
           ASSERT(source2.d_def.d_allocator_p == &oa);
 
-          ValueType source3(3, &oa);
+          SourceType source3(3, &oa);
           Obj dest3(bsl::allocator_arg, &ta, MovUtl::move(source3));
           ASSERT(dest3.has_value());
           ASSERT(dest3.value().value() == 3);
@@ -7282,8 +7075,8 @@ void bslstl_optional_test22()
 #endif
           ASSERT(source3.d_def.d_allocator_p == &oa);
 
-          const ValueType source4(4, &oa);
-         Obj dest4(bsl::allocator_arg, &ta, MovUtl::move(source4));
+          const SourceType source4(4, &oa);
+          Obj dest4(bsl::allocator_arg, &ta, MovUtl::move(source4));
           ASSERT(dest4.has_value());
           ASSERT(dest4.value().value() == 4);
           ASSERT(dest4.get_allocator().mechanism() == &ta);
@@ -7299,12 +7092,12 @@ void bslstl_optional_test22()
 
         bslma::DefaultAllocatorGuard dag(&da);
 
+        typedef my_Class2                   SourceType;
         typedef my_Class2a                  ValueType;
         typedef bsl::optional<ValueType> Obj;
 
         {
-          ValueType source(bsl::allocator_arg, &oa, 1);
-
+          SourceType source(1, &oa);
           Obj dest = MovUtl::move(source);
           ASSERT(dest.has_value());
           ASSERT(dest.value().value() == 1);
@@ -7312,17 +7105,17 @@ void bslstl_optional_test22()
 #if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
           ASSERT(source.value() == MOVED_FROM_VAL);
 #endif
-          ASSERT(source.d_data.d_def.d_allocator_p == &oa);
+          ASSERT(source.d_def.d_allocator_p == &oa);
 
-          const ValueType source2(bsl::allocator_arg, &oa, 2);
+          const SourceType source2(2, &oa);
           Obj dest2 = MovUtl::move(source2);
           ASSERT(dest2.has_value());
           ASSERT(dest2.value().value() == 2);
           ASSERT(dest2.get_allocator().mechanism() == &da);
           ASSERT(source2.value() == 2);
-          ASSERT(source2.d_data.d_def.d_allocator_p == &oa);
+          ASSERT(source2.d_def.d_allocator_p == &oa);
 
-          ValueType source3(bsl::allocator_arg, &oa, 3);
+          SourceType source3(3, &oa);
           Obj dest3(bsl::allocator_arg, &ta, MovUtl::move(source3));
           ASSERT(dest3.has_value());
           ASSERT(dest3.value().value() == 3);
@@ -7330,18 +7123,931 @@ void bslstl_optional_test22()
 #if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
           ASSERT(source3.value() == MOVED_FROM_VAL);
 #endif
-          ASSERT(source3.d_data.d_def.d_allocator_p == &oa);
+          ASSERT(source3.d_def.d_allocator_p == &oa);
 
-
-          const ValueType source4(bsl::allocator_arg, &oa, 4);
-
+          const SourceType source4(4, &oa);
           Obj dest4(bsl::allocator_arg, &ta, MovUtl::move(source4));
           ASSERT(dest4.has_value());
           ASSERT(dest4.value().value() == 4);
           ASSERT(dest4.get_allocator().mechanism() == &ta);
           ASSERT(source4.value() == 4);
-          ASSERT(source4.d_data.d_def.d_allocator_p == &oa);
+          ASSERT(source4.d_def.d_allocator_p == &oa);
        }
+    }
+}
+template <typename ValType,typename OptType>
+void test_emplace_helper()
+{
+    OptType mX;
+    // ---   -------------------------------------------------
+    TEST_EMPLACE( ValType, mX, emplace(),                            // OP
+                   /* no ctor arg list */                            // EXP
+                  );
+
+    TEST_EMPLACE( ValType, mX,emplace(VA1),                       // OP
+                   (VA1)                                             // EXP
+                  );
+
+    TEST_EMPLACE( ValType, mX,emplace(VA1, VA2),                  // OP
+                   (VA1, VA2)                                        // EXP
+                  );
+
+    TEST_EMPLACE( ValType, mX,emplace(VA1, VA2, VA3),             // OP
+                   (VA1, VA2, VA3)                                   // EXP
+                  );
+
+    TEST_EMPLACE( ValType, mX,emplace(VA1, VA2, VA3, VA4),        // OP
+                   (VA1, VA2, VA3, VA4)                              // EXP
+                  );
+
+    TEST_EMPLACE( ValType, mX,emplace(VA1, VA2, VA3, VA4, VA5),                            // OP
+                   (VA1, VA2, VA3, VA4, VA5)                         // EXP
+                  );
+
+    TEST_EMPLACE( ValType, mX,emplace(VA1, VA2, VA3, VA4, VA5,
+                                     VA6),                       // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6)                    // EXP
+                  );
+
+    TEST_EMPLACE( ValType, mX,emplace(VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7),                  // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7)               // EXP
+                  );
+
+    TEST_EMPLACE( ValType, mX,emplace(VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7, VA8),             // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8)          // EXP
+                  );
+
+    TEST_EMPLACE( ValType, mX,emplace(VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7, VA8, VA9),        // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                    VA9)                                             // EXP
+                  );
+
+    TEST_EMPLACE( ValType, mX,emplace(VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7, VA8, VA9, VA10),                            // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7,
+                    VA8, VA9, VA10)                                  // EXP
+                  );
+
+    TEST_EMPLACE( ValType, mX,emplace(VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7, VA8, VA9, VA10,
+                                     VA11),                      // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                    VA9, VA10, VA11)                                 // EXP
+                  );
+
+    TEST_EMPLACE( ValType, mX,emplace(VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7, VA8, VA9, VA10,
+                                     VA11, VA12),                // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                    VA9, VA10, VA11, VA12)                           // EXP
+                  );
+
+    TEST_EMPLACE( ValType, mX,emplace(VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7, VA8, VA9, VA10,
+                                     VA11, VA12, VA13),          // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                    VA9, VA10, VA11, VA12, VA13)                     // EXP
+                  );
+
+}
+template <typename ValType, typename ObjType>
+void test_emplacea_helper()
+{
+    bslma::TestAllocator da("default", veryVeryVeryVerbose);
+    bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+    bslma::TestAllocator ta("third", veryVeryVeryVerbose);
+
+    bslma::DefaultAllocatorGuard dag(&da);
+
+    ObjType mX(bsl::allocator_arg, &oa);
+     TEST_EMPLACEA( ValType, mX, emplace(),                            // OP
+                   /* no ctor arg list */ ,                           // EXP
+                   &oa);
+
+    TEST_EMPLACEA( ValType, mX, emplace( VA1),                       // OP
+                   (VA1),                                             // EXP
+                  &oa);
+
+    TEST_EMPLACEA( ValType, mX, emplace( VA1, VA2),                  // OP
+                   (VA1, VA2) ,                                       // EXP
+                  &oa);
+
+    TEST_EMPLACEA( ValType, mX, emplace( VA1, VA2, VA3),             // OP
+                   (VA1, VA2, VA3),                                   // EXP
+                  &oa);
+
+    TEST_EMPLACEA( ValType, mX, emplace( VA1, VA2, VA3, VA4),        // OP
+                   (VA1, VA2, VA3, VA4),                              // EXP
+                   &oa);
+
+    TEST_EMPLACEA( ValType, mX, emplace( VA1, VA2, VA3, VA4, VA5),                            // OP
+                   (VA1, VA2, VA3, VA4, VA5),                         // EXP
+                  &oa);
+
+    TEST_EMPLACEA( ValType, mX, emplace( VA1, VA2, VA3, VA4, VA5,
+                                     VA6),                       // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6),                    // EXP
+                  &oa);
+
+    TEST_EMPLACEA( ValType, mX, emplace( VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7),                  // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7),                // EXP
+                  &oa);
+
+    TEST_EMPLACEA( ValType, mX, emplace( VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7, VA8),             // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8),          // EXP
+                 &oa);
+
+    TEST_EMPLACEA( ValType, mX, emplace( VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7, VA8, VA9),        // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                    VA9)                              ,                // EXP
+                   &oa);
+
+    TEST_EMPLACEA( ValType, mX, emplace( VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7, VA8, VA9, VA10),                            // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7,
+                    VA8, VA9, VA10)                   ,                // EXP
+                   &oa);
+
+    TEST_EMPLACEA( ValType, mX, emplace( VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7, VA8, VA9, VA10,
+                                     VA11),                      // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                    VA9, VA10, VA11)                  ,                // EXP
+                  &oa);
+
+    TEST_EMPLACEA( ValType, mX, emplace( VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7, VA8, VA9, VA10,
+                                     VA11, VA12),                // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                    VA9, VA10, VA11, VA12)            ,                // EXP
+                  &oa);
+
+    TEST_EMPLACEA( ValType, mX, emplace( VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7, VA8, VA9, VA10,
+                                     VA11, VA12, VA13),          // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                    VA9, VA10, VA11, VA12, VA13)      ,                // EXP
+                  &oa);
+
+}
+void bslstl_optional_test23()
+{
+    // --------------------------------------------------------------------
+    // TESTING emplace ARGS... FUNCTIONALITY
+    //   This test will verify that the var args emplace function works
+    //   as expected.
+    //
+    // Concerns:
+    //   * Calling emplace on a non-engaged optional creates a value type object
+    //     using the optional's allocator and emplace arguments
+    //   * Calling emplace on an engaged optional replaces the value type object
+    //     with a new one created using the optional's allocator and emplace arguments
+    //   * Multiple arguments are correctly forwarded.
+    //   * emplace can not be used on a const qualified optional.
+    //
+    //
+    // Plan:
+    //
+    //
+    // Testing:
+    //
+    //   void emplace( Args&&...);
+    //
+    //   void value();
+    //
+    // --------------------------------------------------------------------
+
+    if (verbose) printf(
+                       "\nTESTING emplace ARGS... MEMBER FUNCTION "
+                       "\n==================================\n");
+
+    if (verbose) printf( "\nUsing 'ConstructTestTypeNoAlloc'.\n");
+    {
+        typedef ConstructTestTypeNoAlloc                  ValueType;
+        typedef const ConstructTestTypeNoAlloc            ConstValueType;
+        typedef bsl::optional<ValueType> Obj;
+        typedef bsl::optional<ConstValueType> ObjC;
+
+        test_emplace_helper<ValueType,Obj> ();
+        test_emplace_helper<ValueType,ObjC> ();
+        test_emplace_helper<ConstValueType,Obj> ();
+        test_emplace_helper<ConstValueType,ObjC> ();
+#if defined(BSLSTL_OPTIONAL_TEST_BAD_IL_EMPLACE1)
+        {
+            CObj bad1;
+            bad1.emplace();  // this should not compile 1/10
+            bad1.emplace( VA1); // this should not compile 2/10
+            bad1.emplace( VA1, VA2); // this should not compile 3/10
+            bad1.emplace( VA1, VA2, VA3); // this should not compile 4/10
+            bad1.emplace( VA1, VA2, VA3, VA4); // this should not compile 5/10
+
+            CObjC bad2;
+            bad2.emplace();  // this should not compile 6/10
+            bad2.emplace( VA1); // this should not compile 7/10
+            bad2.emplace( VA1, VA2); // this should not compile 8/10
+            bad2.emplace( VA1, VA2, VA3); // this should not compile 9/10
+            bad2.emplace( VA1, VA2, VA3, VA4); // this should not compile 10/10
+
+        }
+#endif
+    }
+    if (verbose) printf( "\nUsing 'ConstructTestTypeAlloc'.\n");
+    {
+        bslma::TestAllocator da("default", veryVeryVeryVerbose);
+        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+        bslma::TestAllocator ta("third", veryVeryVeryVerbose);
+
+        bslma::DefaultAllocatorGuard dag(&da);
+
+        typedef ConstructTestTypeAlloc                  ValueType;
+        typedef const ConstructTestTypeAlloc            ConstValueType;
+        typedef bsl::optional<ValueType> Obj;
+        typedef bsl::optional<ConstValueType> ObjC;
+
+        test_emplace_helper<ValueType,Obj> ();
+        test_emplace_helper<ValueType,ObjC> ();
+        test_emplace_helper<ConstValueType,Obj> ();
+        test_emplace_helper<ConstValueType,ObjC> ();
+
+        test_emplacea_helper<ValueType,Obj> ();
+        test_emplacea_helper<ValueType,ObjC> ();
+        test_emplacea_helper<ConstValueType,Obj> ();
+        test_emplacea_helper<ConstValueType,ObjC> ();
+#if defined(BSLSTL_OPTIONAL_TEST_BAD_IL_EMPLACE2)
+        {
+            CObj bad1;
+            bad1.emplace();  // this should not compile 1/10
+            bad1.emplace(VA1); // this should not compile 2/10
+            bad1.emplace(VA1, VA2); // this should not compile 3/10
+            bad1.emplace(VA1, VA2, VA3); // this should not compile 4/10
+            bad1.emplace(VA1, VA2, VA3, VA4); // this should not compile 5/10
+
+            CObjC bad2;
+            bad2.emplace();  // this should not compile 6/10
+            bad2.emplace(VA1); // this should not compile 7/10
+            bad2.emplace(VA1, VA2); // this should not compile 8/10
+            bad2.emplace(VA1, VA2, VA3); // this should not compile 9/10
+            bad2.emplace(VA1, VA2, VA3, VA4); // this should not compile 10/10
+
+        }
+#endif
+    }
+    if (verbose) printf( "\nUsing 'ConstructTestTypeAllocArgT'.\n");
+    {
+        bslma::TestAllocator da("default", veryVeryVeryVerbose);
+        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+        bslma::TestAllocator ta("third", veryVeryVeryVerbose);
+
+        bslma::DefaultAllocatorGuard dag(&da);
+
+        typedef ConstructTestTypeAllocArgT               ValueType;
+        typedef const ConstructTestTypeAllocArgT         ConstValueType;
+        typedef bsl::optional<ValueType> Obj;
+        typedef bsl::optional<ConstValueType> ObjC;
+
+        test_emplace_helper<ValueType,Obj> ();
+        test_emplace_helper<ValueType,ObjC> ();
+        test_emplace_helper<ConstValueType,Obj> ();
+        test_emplace_helper<ConstValueType,ObjC> ();
+
+        test_emplacea_helper<ValueType,Obj> ();
+        test_emplacea_helper<ValueType,ObjC> ();
+        test_emplacea_helper<ConstValueType,Obj> ();
+        test_emplacea_helper<ConstValueType,ObjC> ();
+    }
+}
+template <typename VALTYPE, typename OPTYPE>
+void test_copy_helper()
+{
+  TEST_COPY(VALTYPE, OPTYPE, (bsl::in_place),                            // OP
+                 /* no ctor arg list */                            // EXP
+                );
+
+  TEST_COPY(VALTYPE, OPTYPE, (bsl::in_place,VA1),                       // OP
+                 (VA1)                                             // EXP
+                );
+
+  TEST_COPY(VALTYPE, OPTYPE, (bsl::in_place,VA1, VA2),                  // OP
+                 (VA1, VA2)                                        // EXP
+                );
+
+  TEST_COPY(VALTYPE, OPTYPE, (bsl::in_place,VA1, VA2, VA3),             // OP
+                 (VA1, VA2, VA3)                                   // EXP
+                );
+
+  TEST_COPY(VALTYPE, OPTYPE, (bsl::in_place,VA1, VA2, VA3, VA4),        // OP
+                 (VA1, VA2, VA3, VA4)                              // EXP
+                );
+
+  TEST_COPY(VALTYPE, OPTYPE, (bsl::in_place,VA1, VA2, VA3, VA4, VA5),                            // OP
+                 (VA1, VA2, VA3, VA4, VA5)                         // EXP
+                );
+
+  TEST_COPY(VALTYPE, OPTYPE, (bsl::in_place,VA1, VA2, VA3, VA4, VA5,
+                                   VA6),                       // OP
+                 (VA1, VA2, VA3, VA4, VA5, VA6)                    // EXP
+                );
+
+  TEST_COPY(VALTYPE, OPTYPE, (bsl::in_place,VA1, VA2, VA3, VA4, VA5,
+                                   VA6, VA7),                  // OP
+                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7)               // EXP
+                );
+
+  TEST_COPY(VALTYPE, OPTYPE, (bsl::in_place,VA1, VA2, VA3, VA4, VA5,
+                                   VA6, VA7, VA8),             // OP
+                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8)          // EXP
+                );
+
+  TEST_COPY(VALTYPE, OPTYPE, (bsl::in_place,VA1, VA2, VA3, VA4, VA5,
+                                   VA6, VA7, VA8, VA9),        // OP
+                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                  VA9)                                             // EXP
+                );
+
+  TEST_COPY(VALTYPE, OPTYPE, (bsl::in_place,VA1, VA2, VA3, VA4, VA5,
+                                   VA6, VA7, VA8, VA9, VA10),                            // OP
+                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7,
+                  VA8, VA9, VA10)                                  // EXP
+                );
+
+  TEST_COPY(VALTYPE, OPTYPE, (bsl::in_place,VA1, VA2, VA3, VA4, VA5,
+                                   VA6, VA7, VA8, VA9, VA10,
+                                   VA11),                      // OP
+                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                  VA9, VA10, VA11)                                 // EXP
+                );
+
+  TEST_COPY(VALTYPE, OPTYPE, (bsl::in_place,VA1, VA2, VA3, VA4, VA5,
+                                   VA6, VA7, VA8, VA9, VA10,
+                                   VA11, VA12),                // OP
+                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                  VA9, VA10, VA11, VA12)                           // EXP
+                );
+
+  TEST_COPY(VALTYPE, OPTYPE, (bsl::in_place,VA1, VA2, VA3, VA4, VA5,
+                                   VA6, VA7, VA8, VA9, VA10,
+                                   VA11, VA12, VA13),          // OP
+                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                  VA9, VA10, VA11, VA12, VA13)                     // EXP
+                );
+
+}
+template <typename VALTYPE, typename OPTYPE>
+void test_copyad_helper()
+{
+    bslma::TestAllocator da("default", veryVeryVeryVerbose);
+    bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+    bslma::TestAllocator ta("third", veryVeryVeryVerbose);
+
+    bslma::DefaultAllocatorGuard dag(&da);
+    // ---   -------------------------------------------------
+    TEST_COPYA(VALTYPE, OPTYPE, (bsl::in_place, {1,2,3}),                            // OP
+                   /* no ctor arg list */ ,                           // EXP
+                  &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE, (bsl::in_place, VA1),                       // OP
+                   (VA1),                                             // EXP
+                   &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE, (bsl::in_place, VA1, VA2),                  // OP
+                   (VA1, VA2) ,                                       // EXP
+                  &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE, (bsl::in_place, VA1, VA2, VA3),             // OP
+                   (VA1, VA2, VA3),                                   // EXP
+                  &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE, (bsl::in_place, VA1, VA2, VA3, VA4),        // OP
+                   (VA1, VA2, VA3, VA4),                              // EXP
+                  &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE, (bsl::in_place, VA1, VA2, VA3, VA4, VA5),                            // OP
+                   (VA1, VA2, VA3, VA4, VA5),                         // EXP
+                  &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE, (bsl::in_place, VA1, VA2, VA3, VA4, VA5,
+                                     VA6),                       // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6),                    // EXP
+                  &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE, (bsl::in_place, VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7),                  // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7),                // EXP
+                  &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE, (bsl::in_place, VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7, VA8),             // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8),          // EXP
+                  &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE, (bsl::in_place, VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7, VA8, VA9),        // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                    VA9)                              ,                // EXP
+                  &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE, (bsl::in_place, VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7, VA8, VA9, VA10),                            // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7,
+                    VA8, VA9, VA10)                   ,                // EXP
+                  &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE, (bsl::in_place, VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7, VA8, VA9, VA10,
+                                     VA11),                      // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                    VA9, VA10, VA11)                  ,                // EXP
+                  &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE, (bsl::in_place, VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7, VA8, VA9, VA10,
+                                     VA11, VA12),                // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                    VA9, VA10, VA11, VA12)            ,                // EXP
+                  &da);
+}
+template <typename VALTYPE, typename OPTYPE>
+void test_copya_helper()
+{
+    bslma::TestAllocator da("default", veryVeryVeryVerbose);
+    bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+    bslma::TestAllocator ta("third", veryVeryVeryVerbose);
+
+    bslma::DefaultAllocatorGuard dag(&da);
+    // ---   -------------------------------------------------
+    TEST_COPYA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3}),                            // OP
+                   /* no ctor arg list */ ,                           // EXP
+                  &oa);
+
+    TEST_COPYA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place, VA1),                       // OP
+                   (VA1),                                             // EXP
+                   &oa);
+
+    TEST_COPYA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place, VA1, VA2),                  // OP
+                   (VA1, VA2) ,                                       // EXP
+                  &oa);
+
+    TEST_COPYA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place, VA1, VA2, VA3),             // OP
+                   (VA1, VA2, VA3),                                   // EXP
+                  &oa);
+
+    TEST_COPYA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place, VA1, VA2, VA3, VA4),        // OP
+                   (VA1, VA2, VA3, VA4),                              // EXP
+                  &oa);
+
+    TEST_COPYA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place, VA1, VA2, VA3, VA4, VA5),                            // OP
+                   (VA1, VA2, VA3, VA4, VA5),                         // EXP
+                  &oa);
+
+    TEST_COPYA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place, VA1, VA2, VA3, VA4, VA5,
+                                     VA6),                       // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6),                    // EXP
+                  &oa);
+
+    TEST_COPYA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place, VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7),                  // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7),                // EXP
+                  &oa);
+
+    TEST_COPYA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place, VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7, VA8),             // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8),          // EXP
+                  &oa);
+
+    TEST_COPYA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place, VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7, VA8, VA9),        // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                    VA9)                              ,                // EXP
+                  &oa);
+
+    TEST_COPYA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place, VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7, VA8, VA9, VA10),                            // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7,
+                    VA8, VA9, VA10)                   ,                // EXP
+                  &oa);
+
+    TEST_COPYA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place, VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7, VA8, VA9, VA10,
+                                     VA11),                      // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                    VA9, VA10, VA11)                  ,                // EXP
+                  &oa);
+
+    TEST_COPYA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place, VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7, VA8, VA9, VA10,
+                                     VA11, VA12),                // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                    VA9, VA10, VA11, VA12)            ,                // EXP
+                  &oa);
+}
+template <typename VALTYPE, typename OPTYPE>
+void test_copyil_helper()
+{
+  TEST_COPYIL(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3}),                            // OP
+                 /* no ctor arg list */                            // EXP
+                , 6);
+
+  TEST_COPYIL(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3},VA1),                       // OP
+                 (VA1)                                             // EXP
+                , 6);
+
+  TEST_COPYIL(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3},VA1, VA2),                  // OP
+                 (VA1, VA2)                                        // EXP
+                , 6);
+
+  TEST_COPYIL(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3},VA1, VA2, VA3),             // OP
+                 (VA1, VA2, VA3)                                   // EXP
+                , 6);
+
+  TEST_COPYIL(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3},VA1, VA2, VA3, VA4),        // OP
+                 (VA1, VA2, VA3, VA4)                              // EXP
+                , 6);
+
+  TEST_COPYIL(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3},VA1, VA2, VA3, VA4, VA5),                            // OP
+                 (VA1, VA2, VA3, VA4, VA5)                         // EXP
+                , 6);
+
+  TEST_COPYIL(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3},VA1, VA2, VA3, VA4, VA5,
+                                   VA6),                       // OP
+                 (VA1, VA2, VA3, VA4, VA5, VA6)                    // EXP
+                , 6);
+
+  TEST_COPYIL(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3},VA1, VA2, VA3, VA4, VA5,
+                                   VA6, VA7),                  // OP
+                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7)               // EXP
+                , 6);
+
+  TEST_COPYIL(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3},VA1, VA2, VA3, VA4, VA5,
+                                   VA6, VA7, VA8),             // OP
+                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8)          // EXP
+                , 6);
+
+  TEST_COPYIL(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3},VA1, VA2, VA3, VA4, VA5,
+                                   VA6, VA7, VA8, VA9),        // OP
+                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                  VA9)                                             // EXP
+                , 6);
+
+  TEST_COPYIL(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3},VA1, VA2, VA3, VA4, VA5,
+                                   VA6, VA7, VA8, VA9, VA10),                            // OP
+                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7,
+                  VA8, VA9, VA10)                                  // EXP
+                , 6);
+
+  TEST_COPYIL(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3},VA1, VA2, VA3, VA4, VA5,
+                                   VA6, VA7, VA8, VA9, VA10,
+                                   VA11),                      // OP
+                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                  VA9, VA10, VA11)                                 // EXP
+                , 6);
+
+  TEST_COPYIL(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3},VA1, VA2, VA3, VA4, VA5,
+                                   VA6, VA7, VA8, VA9, VA10,
+                                   VA11, VA12),                // OP
+                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                  VA9, VA10, VA11, VA12)                           // EXP
+                , 6);
+
+  TEST_COPYIL(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3},VA1, VA2, VA3, VA4, VA5,
+                                   VA6, VA7, VA8, VA9, VA10,
+                                   VA11, VA12, VA13),          // OP
+                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                  VA9, VA10, VA11, VA12, VA13)                     // EXP
+                , 6);
+
+}
+template <typename VALTYPE, typename OPTYPE>
+void test_copyila_helper()
+{
+    bslma::TestAllocator da("default", veryVeryVeryVerbose);
+    bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+    bslma::TestAllocator ta("third", veryVeryVeryVerbose);
+
+    bslma::DefaultAllocatorGuard dag(&da);
+    // ---   -------------------------------------------------
+    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3}),                            // OP
+                   /* no ctor arg list */ ,                           // EXP
+                  6,
+                  &oa);
+
+    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place,{1,2,3}, VA1),                       // OP
+                   (VA1),                                             // EXP
+                   6,
+                  &oa);
+
+    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place,{1,2,3}, VA1, VA2),                  // OP
+                   (VA1, VA2) ,                                       // EXP
+                   6,
+                  &oa);
+
+    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place,{1,2,3}, VA1, VA2, VA3),             // OP
+                   (VA1, VA2, VA3),                                   // EXP
+                   6,
+                  &oa);
+
+    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place,{1,2,3}, VA1, VA2, VA3, VA4),        // OP
+                   (VA1, VA2, VA3, VA4),                              // EXP
+                   6,
+                  &oa);
+
+    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place,{1,2,3}, VA1, VA2, VA3, VA4, VA5),                            // OP
+                   (VA1, VA2, VA3, VA4, VA5),                         // EXP
+                   6,
+                  &oa);
+
+    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place,{1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                     VA6),                       // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6),                    // EXP
+                   6,
+                  &oa);
+
+    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place,{1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7),                  // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7),                // EXP
+                   6,
+                  &oa);
+
+    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place,{1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7, VA8),             // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8),          // EXP
+                   6,
+                  &oa);
+
+    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place,{1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7, VA8, VA9),        // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                    VA9)                              ,                // EXP
+                    6,
+                  &oa);
+
+    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place,{1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7, VA8, VA9, VA10),                            // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7,
+                    VA8, VA9, VA10)                   ,                // EXP
+                    6,
+                  &oa);
+
+    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place,{1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7, VA8, VA9, VA10,
+                                     VA11),                      // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                    VA9, VA10, VA11)                  ,                // EXP
+                    6,
+                  &oa);
+
+    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place,{1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7, VA8, VA9, VA10,
+                                     VA11, VA12),                // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                    VA9, VA10, VA11, VA12)            ,                // EXP
+                    6,
+                  &oa);
+}
+template <typename VALTYPE, typename OPTYPE>
+void test_copyilad_helper()
+{
+    bslma::TestAllocator da("default", veryVeryVeryVerbose);
+    bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+    bslma::TestAllocator ta("third", veryVeryVeryVerbose);
+
+    bslma::DefaultAllocatorGuard dag(&da);
+    // ---   -------------------------------------------------
+    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::in_place, {1,2,3}),                            // OP
+                   /* no ctor arg list */ ,                           // EXP
+                  6,
+                  &da);
+
+    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3}, VA1),                       // OP
+                   (VA1),                                             // EXP
+                   6,
+                  &da);
+
+    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3}, VA1, VA2),                  // OP
+                   (VA1, VA2) ,                                       // EXP
+                   6,
+                  &da);
+
+    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3}, VA1, VA2, VA3),             // OP
+                   (VA1, VA2, VA3),                                   // EXP
+                   6,
+                  &da);
+
+    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3}, VA1, VA2, VA3, VA4),        // OP
+                   (VA1, VA2, VA3, VA4),                              // EXP
+                   6,
+                  &da);
+
+    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3}, VA1, VA2, VA3, VA4, VA5),                            // OP
+                   (VA1, VA2, VA3, VA4, VA5),                         // EXP
+                   6,
+                  &da);
+
+    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                     VA6),                       // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6),                    // EXP
+                   6,
+                  &da);
+
+    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7),                  // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7),                // EXP
+                   6,
+                  &da);
+
+    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7, VA8),             // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8),          // EXP
+                   6,
+                  &da);
+
+    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7, VA8, VA9),        // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                    VA9)                              ,                // EXP
+                    6,
+                  &da);
+
+    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7, VA8, VA9, VA10),                            // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7,
+                    VA8, VA9, VA10)                   ,                // EXP
+                    6,
+                  &da);
+
+    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7, VA8, VA9, VA10,
+                                     VA11),                      // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                    VA9, VA10, VA11)                  ,                // EXP
+                    6,
+                  &da);
+
+    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3}, VA1, VA2, VA3, VA4, VA5,
+                                     VA6, VA7, VA8, VA9, VA10,
+                                     VA11, VA12),                // OP
+                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
+                    VA9, VA10, VA11, VA12)            ,                // EXP
+                    6,
+                  &da);
+}
+void bslstl_optional_test24()
+{
+    // --------------------------------------------------------------------
+    // TESTING in_place_t constructor FUNCTIONALITY
+    //   This test will verify that the in_place_t constructor works
+    //   as expected.
+    //
+    // Concerns:
+    //   * Calling in_place_t constructor creates an engaged optional whose
+    //     value type object is created using theconstructors arguments
+    //   * Multiple arguments are correctly forwarded.
+    //   * If no allocators is provided for a type which uses an allocator,
+    //     default allocator is used.
+    //
+    //
+    // Plan:
+    //
+    //
+    // Testing:
+    //
+    //   void optional(in_place_t, Args&&...);
+    //   void optional(in_place_t, allocator_arg, allocator, Args&&...);
+    //
+    //   void value();
+    //
+    // --------------------------------------------------------------------
+
+    if (verbose) printf(
+                       "\nTESTING in_place_t constructor "
+                       "\n==============================\n");
+
+    if (verbose) printf( "\nUsing 'ConstructTestTypeNoAlloc'.\n");
+    {
+        typedef ConstructTestTypeNoAlloc                  ValueType;
+        test_copy_helper<ValueType, bsl::optional<ValueType> >();
+        test_copy_helper<ValueType, const bsl::optional<ValueType> >();
+        test_copy_helper<ValueType, bsl::optional< const ValueType> >();
+        test_copy_helper<const ValueType, bsl::optional<ValueType> >();
+        test_copy_helper<const ValueType, const bsl::optional<ValueType> >();
+        test_copy_helper<const ValueType, bsl::optional< const ValueType> >();
+    }
+
+    if (verbose) printf( "\nUsing 'ConstructTestTypeAlloc'.\n");
+    {
+        typedef ConstructTestTypeAlloc                  ValueType;
+        test_copyad_helper<ValueType, bsl::optional<ValueType> >();
+        test_copyad_helper<ValueType, const bsl::optional<ValueType> >();
+        test_copyad_helper<ValueType, bsl::optional< const ValueType> >();
+        test_copyad_helper<const ValueType, bsl::optional<ValueType> >();
+        test_copyad_helper<const ValueType, const bsl::optional<ValueType> >();
+        test_copyad_helper<const ValueType, bsl::optional< const ValueType> >();
+
+        test_copya_helper<ValueType, bsl::optional<ValueType> >();
+        test_copya_helper<ValueType, const bsl::optional<ValueType> >();
+        test_copya_helper<ValueType, bsl::optional< const ValueType> >();
+        test_copya_helper<const ValueType, bsl::optional<ValueType> >();
+        test_copya_helper<const ValueType, const bsl::optional<ValueType> >();
+        test_copya_helper<const ValueType, bsl::optional< const ValueType> >();
+    }
+    if (verbose) printf( "\nUsing 'ConstructTestTypeAllocArgT'.\n");
+    {
+        typedef ConstructTestTypeAllocArgT                ValueType;
+        test_copyad_helper<ValueType, bsl::optional<ValueType> >();
+        test_copyad_helper<ValueType, const bsl::optional<ValueType> >();
+        test_copyad_helper<ValueType, bsl::optional< const ValueType> >();
+        test_copyad_helper<const ValueType, bsl::optional<ValueType> >();
+        test_copyad_helper<const ValueType, const bsl::optional<ValueType> >();
+        test_copyad_helper<const ValueType, bsl::optional< const ValueType> >();
+
+        test_copya_helper<ValueType, bsl::optional<ValueType> >();
+        test_copya_helper<ValueType, const bsl::optional<ValueType> >();
+        test_copya_helper<ValueType, bsl::optional< const ValueType> >();
+        test_copya_helper<const ValueType, bsl::optional<ValueType> >();
+        test_copya_helper<const ValueType, const bsl::optional<ValueType> >();
+        test_copya_helper<const ValueType, bsl::optional< const ValueType> >();
+    }
+}
+void bslstl_optional_test25()
+{
+    // --------------------------------------------------------------------
+    // TESTING init list in_place constructor FUNCTIONALITY
+    //   This test will verify that the init list in_place constructor works
+    //   as expected.
+    //
+    // Concerns:
+    //   * When using initializer_list, the correct value type constructors is selected
+    //   * Multiple arguments are correctly forwarded.
+    //   * emplace can not be used on a const qualified optional.
+    //   * If no allocators is provided for a type which uses an allocator,
+    //     default allocator is used.
+    //
+    //
+    // Plan:
+    //
+    //
+    // Testing:
+    //
+    //   void optional(in_place_t, std::initializer_list<U>, Args&&...);
+    //   void optional(in_place_t, allocator_arg, allocator, std::initializer_list<U>, Args&&...);
+    //
+    //   void value();
+    //
+    // --------------------------------------------------------------------
+
+    if (verbose) printf(
+                       "\nTESTING emplace MEMBER FUNCTION "
+                       "\n==================================\n");
+
+    if (verbose) printf( "\nUsing 'ConstructTestTypeNoAlloc'.\n");
+    {
+        typedef ConstructTestTypeNoAlloc                  ValueType;
+        test_copyil_helper<ValueType, bsl::optional<ValueType> >();
+        test_copyil_helper<ValueType, const bsl::optional<ValueType> >();
+        test_copyil_helper<ValueType, bsl::optional< const ValueType> >();
+        test_copyil_helper<const ValueType, bsl::optional<ValueType> >();
+        test_copyil_helper<const ValueType, const bsl::optional<ValueType> >();
+        test_copyil_helper<const ValueType, bsl::optional< const ValueType> >();
+    }
+
+    if (verbose) printf( "\nUsing 'ConstructTestTypeAlloc'.\n");
+    {
+        typedef ConstructTestTypeAlloc                  ValueType;
+        test_copyilad_helper<ValueType, bsl::optional<ValueType> >();
+        test_copyilad_helper<ValueType, const bsl::optional<ValueType> >();
+        test_copyilad_helper<ValueType, bsl::optional< const ValueType> >();
+        test_copyilad_helper<const ValueType, bsl::optional<ValueType> >();
+        test_copyilad_helper<const ValueType, const bsl::optional<ValueType> >();
+        test_copyilad_helper<const ValueType, bsl::optional< const ValueType> >();
+
+        test_copyila_helper<ValueType, bsl::optional<ValueType> >();
+        test_copyila_helper<ValueType, const bsl::optional<ValueType> >();
+        test_copyila_helper<ValueType, bsl::optional< const ValueType> >();
+        test_copyila_helper<const ValueType, bsl::optional<ValueType> >();
+        test_copyila_helper<const ValueType, const bsl::optional<ValueType> >();
+        test_copyila_helper<const ValueType, bsl::optional< const ValueType> >();
+    }
+    if (verbose) printf( "\nUsing 'ConstructTestTypeAllocArgT'.\n");
+    {
+        typedef ConstructTestTypeAllocArgT                ValueType;
+        test_copyilad_helper<ValueType, bsl::optional<ValueType> >();
+        test_copyilad_helper<ValueType, const bsl::optional<ValueType> >();
+        test_copyilad_helper<ValueType, bsl::optional< const ValueType> >();
+        test_copyilad_helper<const ValueType, bsl::optional<ValueType> >();
+        test_copyilad_helper<const ValueType, const bsl::optional<ValueType> >();
+        test_copyilad_helper<const ValueType, bsl::optional< const ValueType> >();
+
+        test_copyila_helper<ValueType, bsl::optional<ValueType> >();
+        test_copyila_helper<ValueType, const bsl::optional<ValueType> >();
+        test_copyila_helper<ValueType, bsl::optional< const ValueType> >();
+        test_copyila_helper<const ValueType, bsl::optional<ValueType> >();
+        test_copyila_helper<const ValueType, const bsl::optional<ValueType> >();
+        test_copyila_helper<const ValueType, bsl::optional< const ValueType> >();
     }
 }
 int main(int argc, char **argv)
@@ -7367,6 +8073,15 @@ int main(int argc, char **argv)
     bslma::Default::setGlobalAllocator(&globalAllocator);
 
     switch (test) { case 0:
+      case 25:
+        bslstl_optional_test25();
+        break;
+      case 24:
+        bslstl_optional_test24();
+        break;
+      case 23:
+        bslstl_optional_test23();
+        break;
       case 22:
         bslstl_optional_test22();
         break;

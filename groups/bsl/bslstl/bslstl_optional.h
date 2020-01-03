@@ -256,11 +256,13 @@ struct optional_data_imp {
   //MANIPULATORS
     void emplace(bsl::allocator_arg_t, allocator_type basicAllocator);
 #if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES // $var-args=5
-    template<class... Args>
-    void emplace(bsl::allocator_arg_t, allocator_type , Args&&...);
+    template<class... ARGS>
+    void emplace(bsl::allocator_arg_t, allocator_type,
+                BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)...);
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
-    template<class U, class... Args>
-    void emplace(bsl::allocator_arg_t, allocator_type , std::initializer_list<U>, Args&&...);
+    template<class U, class... ARGS>
+    void emplace(bsl::allocator_arg_t, allocator_type , std::initializer_list<U>,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)...);
 #endif//BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
 #elif BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
 #endif // BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
@@ -300,11 +302,12 @@ struct optional_data_imp<TYPE, false> {
    //MANIPULATORS
     void emplace();
 #if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES // $var-args=5
-    template<class... Args>
-    void emplace(Args&&...);
+    template<class... ARGS>
+    void emplace(BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)...);
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
-    template<class U, class... Args>
-    void emplace(std::initializer_list<U>, Args&&...);
+    template<class U, class... ARGS>
+    void emplace(std::initializer_list<U>,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)...);
 #endif//BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
 #elif BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
 #endif // BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
@@ -353,7 +356,8 @@ template <typename TYPE, bool UsesBslmaAllocator>
 template <class... ARGS>
 inline
 void optional_data_imp<TYPE, UsesBslmaAllocator>::emplace(
-    bsl::allocator_arg_t, allocator_type allocator, ARGS&&... args)
+    bsl::allocator_arg_t, allocator_type allocator,
+    BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args)
 {
     reset();
     BloombergLP::bslalg::ScalarPrimitives::construct(
@@ -369,7 +373,7 @@ void optional_data_imp<TYPE, UsesBslmaAllocator>::emplace(
     bsl::allocator_arg_t,
     allocator_type allocator,
     std::initializer_list<U> il,
-    ARGS&&... args)
+    BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args)
 {
     reset();
     BloombergLP::bslalg::ScalarPrimitives::construct(
@@ -461,7 +465,8 @@ void optional_data_imp<TYPE, false>::emplace()
 template <typename TYPE>
 template <class... ARGS>
 inline
-void optional_data_imp<TYPE, false>::emplace(ARGS&&... args)
+void optional_data_imp<TYPE, false>::emplace(
+                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args)
 {
     reset();
     BloombergLP::bslalg::ScalarPrimitives::construct(
@@ -475,7 +480,7 @@ template <typename TYPE>
 template<class U, class... ARGS>
 void optional_data_imp<TYPE, false>::emplace(
     std::initializer_list<U> il,
-    ARGS&&... args)
+    BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args)
 {
     reset();
     BloombergLP::bslalg::ScalarPrimitives::construct(
@@ -645,11 +650,13 @@ class optional {
       // future value objects.
 
 #if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES // $var-args=5
-    template<class... Args>
-    explicit optional(in_place_t, Args&&...);
+    template<class... ARGS>
+    explicit optional(in_place_t,
+        BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)...);
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
-    template<class U, class... Args>
-    explicit optional(in_place_t, std::initializer_list<U>, Args&&...);
+    template<class U, class... ARGS>
+    explicit optional(in_place_t, std::initializer_list<U>,
+        BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)...);
 #endif//BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
 #elif BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
 
@@ -723,11 +730,15 @@ class optional {
         // Use the specified 'basicAllocator' to supply memory.
 
 #if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES // $var-args=5
-    template<class... Args>
-    explicit optional(in_place_t, bsl::allocator_arg_t, allocator_type , Args&&...);
+    template<class... ARGS>
+    explicit optional(bsl::allocator_arg_t, allocator_type,
+                      in_place_t,
+                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)...);
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
-    template<class U, class... Args>
-    explicit optional(in_place_t, bsl::allocator_arg_t, allocator_type , std::initializer_list<U>, Args&&...);
+    template<class U, class... ARGS>
+    explicit optional(bsl::allocator_arg_t, allocator_type,
+                      in_place_t, std::initializer_list<U>,
+                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)...);
 #endif//BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
 #elif BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
 
@@ -738,11 +749,11 @@ class optional {
 
     //MANIPULATORS
 #if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES // $var-args=5
-    template<class... Args>
-    void emplace(Args&&...);
+    template<class... ARGS>
+    void emplace(ARGS&&...);
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
-    template<class U, class... Args>
-    void emplace(std::initializer_list<U>, Args&&...);
+    template<class U, class... ARGS>
+    void emplace(std::initializer_list<U>, ARGS&&...);
 #endif//BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
 #elif BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
     // {{{ BEGIN GENERATED CODE
@@ -1015,11 +1026,12 @@ class optional<TYPE, false> {
       // If original contains a value, initialize the contained value by moving
       // from *original. rhswise, create a disengaged optional.
 #if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES // $var-args=5
-    template<class... Args>
-    explicit optional(in_place_t, Args&&...);
+    template<class... ARGS>
+    explicit optional(in_place_t, BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)...);
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
-    template<class U, class... Args>
-    explicit optional(in_place_t, std::initializer_list<U>, Args&&...);
+    template<class U, class... ARGS>
+    explicit optional(in_place_t, std::initializer_list<U>,
+                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)...);
 #endif//BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
 #elif BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
 
@@ -1031,11 +1043,11 @@ class optional<TYPE, false> {
   //MANIPULATORS
   //MANIPULATORS
   #if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES // $var-args=5
-    template<class... Args>
-    void emplace(BSLS_COMPILERFEATURES_FORWARD_REF(Args)...);
+    template<class... ARGS>
+    void emplace(BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)...);
     #if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
-    template<class U, class... Args>
-    void emplace(std::initializer_list<U>, BSLS_COMPILERFEATURES_FORWARD_REF(Args)...);
+    template<class U, class... ARGS>
+    void emplace(std::initializer_list<U>, BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)...);
     #endif//BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
 #elif BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
 #else
@@ -1243,6 +1255,29 @@ optional<TYPE, UsesBslmaAllocator>::optional(
     }
 }
 
+#if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES // $var-args=5
+template <typename TYPE, bool UsesBslmaAllocator>
+template<class... ARGS>
+inline
+optional<TYPE, UsesBslmaAllocator>::optional(in_place_t,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args)
+{
+    emplace(std::forward<ARGS>(args)...);
+}
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
+template <typename TYPE, bool UsesBslmaAllocator>
+template<class U, class... ARGS>
+inline
+optional<TYPE, UsesBslmaAllocator>::optional(in_place_t,
+                std::initializer_list<U> it,
+                BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args)
+{
+    emplace(it, std::forward<ARGS>(args)...);
+}
+#endif//BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
+#elif BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
+#endif //BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
+
 template <typename TYPE, bool UsesBslmaAllocator>
 inline
 optional<TYPE, UsesBslmaAllocator>::optional(bsl::allocator_arg_t,
@@ -1361,7 +1396,37 @@ optional<TYPE, UsesBslmaAllocator>::optional(bsl::allocator_arg_t,
        emplace(MoveUtil::move(lvalue.value()));
     }
 }
+#if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES // $var-args=5
+template <typename TYPE, bool UsesBslmaAllocator>
+template<class... ARGS>
+inline
+optional<TYPE, UsesBslmaAllocator>::optional(
+    bsl::allocator_arg_t,
+    allocator_type alloc,
+    in_place_t,
+    BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args)
+: d_allocator(alloc)
+{
+      emplace(std::forward<ARGS>(args)...);
+}
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
+template <typename TYPE, bool UsesBslmaAllocator>
+template<class U, class... ARGS>
+inline
+optional<TYPE, UsesBslmaAllocator>::optional(
+                  bsl::allocator_arg_t,
+                  allocator_type alloc,
+                  in_place_t,
+                  std::initializer_list<U> il,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args)
+: d_allocator(alloc)
+{
+    emplace(il, std::forward<ARGS>(args)...);
+}
+#endif//BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
+#elif BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
 
+#endif // BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
 template <typename TYPE, bool UsesBslmaAllocator>
 inline
 optional<TYPE, UsesBslmaAllocator>::~optional()
@@ -1801,6 +1866,28 @@ optional<TYPE, false>::optional(
     }
 }
 
+#if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES // $var-args=5
+template <class TYPE>
+template<class... ARGS>
+inline
+optional<TYPE, false>::optional(in_place_t,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args)
+{
+    emplace(std::forward<ARGS>(args)...);
+}
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
+template <class TYPE>
+template<class U, class... ARGS>
+inline
+optional<TYPE, false>::optional(in_place_t,
+                std::initializer_list<U> it,
+                BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args)
+{
+    emplace(it, std::forward<ARGS>(args)...);
+}
+#endif//BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
+#elif BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
+#endif //BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
 
 template <class TYPE>
 inline
@@ -1822,7 +1909,7 @@ void optional<TYPE, false>::emplace(BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... a
 template <typename TYPE>
 template<class U, class... ARGS>
 void optional<TYPE, false>::emplace(std::initializer_list<U> il,
-    ARGS&&... args)
+    BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args)
 {
     d_value.emplace(il, BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...);
 }
