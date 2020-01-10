@@ -17,7 +17,6 @@ BSLS_IDENT("$Id: $")
 // questions:
 //     - how to include traits header bsl_type_traits.h ?
 //todo : add constructor constraints
-//todo : add
 //todo : add swap
 //todo : add make optional
 //todo : add alloc_optional
