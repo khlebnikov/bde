@@ -14,13 +14,52 @@
 #include <bsls_ident.h>
 #endif
 BSLS_IDENT("$Id: $")
+// questions:
+//     - how to include traits header bsl_type_traits.h ?
+//todo : add constructor constraints
+//todo : add
+//todo : add swap
+//todo : add make optional
+//todo : add alloc_optional
 //todo : fix doucmentation
 //todo : sprinkle constexpr
+//todo : replace traits with bsl traits
 // todo (decisions)
 //  * what allocator to use in value_or(T&&) &
 //  * what allocator to use in value_or(const T&) &&
-
-
+// C++03 notes :
+//   is_constructible is needed for correct overload resolution
+//   in operator= . Using is_convertible in C++03 may lead to
+//   different overload resolution when the type is_constructible
+//   but !is_convertible. Not having any constraints on
+//   operator=(moveable_ref<other_type>), and separating T from U
+///  overloads may be an option as
+//   perfect forwarding best match issue is not problematic
+//   in C++03. Will need investigating which assignment overloads
+//   should be removed in c++03.
+//
+//   !(bsl::is_same<ANY_TYPE, std::decay<TYPE>::type>
+//   && bsl::is_scalar<TYPE>) constraints on operator=(U&&) are
+//   needed so cases like bsl::optonal<int>={} create a disengaged
+//   optional.
+//
+//known limitations :
+//  - BloombergLP::bslalg::ScalarPrimitives::construct does not do
+//    argument forwarding, so move semantics are limited for
+//    cases where new value_type object is created
+//  - MoveableRef can not be used where the argument is a deduced type.
+//    This means that rvalue overloads taking optional<OTHER_TYPE>
+//    must use optional<OTHER_TYPE> &&
+//  - For assignment/construction constraints, we use is_constructible
+//    but the exact creation will be done using allocation construction
+//    which will invoke an allocator extended constructor for allocator
+//    aware types. If the value type is constructible from the
+//    assignment/constructor parameter, but doesn't have a corresponding
+//    allocator extended constructor, the overload selection may not be
+//    be correct.
+//
+//
+//
 //@PURPOSE: Provide a template for nullable (in-place) objects.
 //
 //@CLASSES:
@@ -102,7 +141,10 @@ BSLS_IDENT("$Id: $")
 
 #include <bslstl_badoptionalaccess.h>
 
-
+#ifdef BSLS_LIBRARYFEATURES_HAS_CPP11_BASELINE_LIBRARY
+//#include <bsl_type_traits.h>
+#include <type_traits>
+#endif
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
 #include <initializer_list>
@@ -241,7 +283,7 @@ struct optional_data_imp {
 
     BloombergLP::bsls::ObjectBuffer<stored_type>  d_buffer;
                                      // in-place 'TYPE' object
-    bool           d_hasValue;       // 'true' if object has value, rhswise
+    bool           d_hasValue;       // 'true' if object has value, Otherwise
                                      // 'false'
   public:
     BSLMF_NESTED_TRAIT_DECLARATION_IF(optional_data_imp,
@@ -291,7 +333,7 @@ struct optional_data_imp<TYPE, false> {
 
     BloombergLP::bsls::ObjectBuffer<stored_type>  d_buffer;
                                      // in-place 'TYPE' object
-    bool           d_hasValue;       // 'true' if object has value, rhswise
+    bool           d_hasValue;       // 'true' if object has value, Otherwise
                                      // 'false'
   public:
 
@@ -566,7 +608,7 @@ class optional {
   private:
     // note : Each category must be preceded by a tag comment that identifies the category.
     // The tag must appear immediately before the first declaration in that category, with
-    // no intervening blank line. A tag must not be used if the category is rhswise empty
+    // no intervening blank line. A tag must not be used if the category is Otherwise empty
 	// PRIVATE TYPES
 
 	typedef BloombergLP::bslmf::MovableRefUtil MoveUtil;
@@ -580,6 +622,7 @@ class optional {
 	// todo : check if any rhs nested traits can be added
     // TRAITS
     BSLMF_NESTED_TRAIT_DECLARATION(optional, BloombergLP::bslma::UsesBslmaAllocator);
+    BSLMF_NESTED_TRAIT_DECLARATION(optional, BloombergLP::bslmf::UsesAllocatorArgT);
     BSLMF_NESTED_TRAIT_DECLARATION_IF(optional,
         BloombergLP::bslmf::IsBitwiseMoveable,
         BloombergLP::bslmf::IsBitwiseMoveable<TYPE>::value);
@@ -595,57 +638,89 @@ class optional {
         // the currently installed default allocator to supply memory for
         // future value objects.
 
-    optional(const TYPE& original);
-        // Create an optional object having the value of the specified
-        // 'original' object.  Use the currently installed default
-        // allocator to supply memory for future value objects.
-
-    optional(BloombergLP::bslmf::MovableRef<TYPE> original);
-        // Create an optional object having the same value as the specified
-        // 'original' object by moving the contents of 'original' to the
-        // newly-created object.  The allocator associated with 'original' is
-        // used as the allocator for the optional object. 'original' is left
-        // in a valid but unspecified state.
-
     optional(const optional& original);
         // If original contains a value, initialize the contained value using
-        // *original. rhswise, create a disengaged optional. Use the currently
+        // *original. Otherwise, create a disengaged optional. Use the currently
         // installed default allocator to supply memory for this and any rhs
         // future value objects.
 
     optional(BloombergLP::bslmf::MovableRef<optional> original);
         // If original contains a value, initialize the contained value by moving
-        // from *original. rhswise, create a disengaged optional. Use the allocator
+        // from *original. Otherwise, create a disengaged optional. Use the allocator
         // from original to supply memory to supply memory for this and any rhs
         // future value objects.  'original' is left in a valid, but unspecified state.
 
-    template<class ANY_TYPE>
-    optional(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) original,
-        typename bsl::enable_if<!bsl::is_same<ANY_TYPE, TYPE>::value
+    template<class ANY_TYPE = TYPE,
+        typename bsl::enable_if<!bsl::is_same<ANY_TYPE, optional<TYPE>>::value
+                                &&
+                                !bsl::is_same<ANY_TYPE, nullopt_t>::value
+                                &&
+                                std::is_constructible<TYPE, ANY_TYPE>::value
                                 &&
                                 bsl::is_convertible<ANY_TYPE, TYPE>::value,
-                                void>::type * = 0);
+                                bool>::type = true>
+    optional(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) original);
+    template<class ANY_TYPE = TYPE,
+            typename bsl::enable_if<!bsl::is_same<ANY_TYPE, optional<TYPE>>::value
+                                    &&
+                                    !bsl::is_same<ANY_TYPE, nullopt_t>::value
+                                    &&
+                                    std::is_constructible<TYPE, ANY_TYPE>::value
+                                    &&
+                                    !bsl::is_convertible<ANY_TYPE, TYPE>::value,
+                                    bool>::type = false>
+    explicit
+    optional(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) original);
         // Create an optional object having the value of the specified
         // 'original' object.  Use the currently installed default
         // allocator to supply memory for future value objects.
 
-    template<class ANY_TYPE>
-    optional(const optional<ANY_TYPE>& original,
-                 typename bsl::enable_if<
-                         bsl::is_convertible<ANY_TYPE, TYPE>::value,
-                         void>::type * = 0);
-        // If original contains a value, initialize the contained value using
-        // *original. rhswise, create a disengaged optional. Use the currently
-        // installed default allocator to supply memory for this and any rhs
-        // future value objects.
-
-    template<class ANY_TYPE>
-    optional(BloombergLP::bslmf::MovableRef<optional<ANY_TYPE> > original,
+    template<class ANY_TYPE,
+              typename bsl::enable_if<
+                      !bsl::is_same<ANY_TYPE, TYPE>::value
+                      &&
+                      std::is_constructible<TYPE,const ANY_TYPE &>::value
+                      &&
+                      bsl::is_convertible<const ANY_TYPE &, TYPE>::value,
+                      bool>::type = true>
+    optional(const optional<ANY_TYPE>& original);
+    template<class ANY_TYPE,
              typename bsl::enable_if<
-                     bsl::is_convertible<ANY_TYPE, TYPE>::value,
-                     void>::type * = 0);
+                      !bsl::is_same<ANY_TYPE, TYPE>::value
+                      &&
+                      std::is_constructible<TYPE, const ANY_TYPE &>::value
+                      &&
+                      !bsl::is_convertible<const ANY_TYPE &, TYPE>::value,
+                      bool>::type = false>
+    explicit
+    optional(const optional<ANY_TYPE>& original);
+      // If original contains a value, initialize the contained value using
+      // *original. Otherwise, create a disengaged optional.
+
+    template<class ANY_TYPE,
+              typename bsl::enable_if<
+                      !bsl::is_same<ANY_TYPE, TYPE>::value
+                      &&
+                      std::is_constructible<TYPE, ANY_TYPE >::value
+                      &&
+                      bsl::is_convertible<ANY_TYPE , TYPE>::value,
+                      bool>::type = true>
+    optional(optional<ANY_TYPE>&& original);
+
+    template<class ANY_TYPE,
+              typename bsl::enable_if<
+                    !bsl::is_same<ANY_TYPE, TYPE>::value
+                    &&
+                    std::is_constructible<TYPE, ANY_TYPE >::value
+                    &&
+                    !bsl::is_convertible<ANY_TYPE , TYPE>::value,
+                    bool>::type = false>
+    explicit
+    optional(optional<ANY_TYPE>&& original);
       // If original contains a value, initialize the contained value by moving
-      // from *original. rhswise, create a disengaged optional. Use the currently
+      // from *original. Otherwise, create a disengaged optional.
+      // If original contains a value, initialize the contained value by moving
+      // from *original. Otherwise, create a disengaged optional. Use the currently
       // installed default allocator to supply memory for this and any rhs
       // future value objects.
 
@@ -673,60 +748,57 @@ class optional {
 
 
     optional(bsl::allocator_arg_t, allocator_type basicAllocator,
-                 const TYPE&);
-        // Create an optional object having the value of the specified
-        // 'original' object. Use the specified 'basicAllocator' to supply
-        // memory.
-
-    optional(bsl::allocator_arg_t, allocator_type basicAllocator,
-        BloombergLP::bslmf::MovableRef<TYPE>);
-        // Create a optional object having the same value as the specified
-        // 'original' object by moving the contents of 'original' to the
-        // newly-created object.  Use the specified 'basicAllocator' to supply
-        // memory.  'original' is left in a valid but unspecified state.
-
-    optional(bsl::allocator_arg_t, allocator_type basicAllocator,
                  const optional&);
         // If original contains a value, initialize the contained value
-        // with *original. rhswise, create a disengaged optional.
+        // with *original. Otherwise, create a disengaged optional.
         // Use the specified 'basicAllocator' to supply memory.
 
     optional(bsl::allocator_arg_t, allocator_type basicAllocator,
-        BloombergLP::bslmf::MovableRef<optional>);
+        BloombergLP::bslmf::MovableRef<optional> original);
         // If original contains a value, initialize the contained value by
-        // moving from *original. rhswise, create a disengaged optional.
+        // moving from *original. Otherwise, create a disengaged optional.
         // Use the specified 'basicAllocator' to supply memory.
 
-    template<class ANY_TYPE>
+    template<class ANY_TYPE = TYPE,
+             typename bsl::enable_if<
+                       !bsl::is_same<ANY_TYPE, optional<TYPE>>::value
+                        &&
+                        !bsl::is_same<ANY_TYPE, nullopt_t>::value
+                        &&
+                        std::is_constructible<TYPE, ANY_TYPE>::value,
+                        bool>::type = false>
+    explicit
     optional(bsl::allocator_arg_t, allocator_type basicAllocator,
-        BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) rhs,
-        typename bsl::enable_if<!bsl::is_same<ANY_TYPE, TYPE>::value
-                                &&
-                                bsl::is_convertible<ANY_TYPE, TYPE>::value,
-                                void>::type * = 0);
+        BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) rhs);
         // Create a optional object having the same value as the specified
         // 'original' object by moving the contents of 'original' to the
         // newly-created object.  Use the specified 'basicAllocator' to supply
         // memory.  'original' is left in a valid but unspecified state.
 
-    template<class ANY_TYPE>
-        optional(bsl::allocator_arg_t, allocator_type basicAllocator,
-            const optional<ANY_TYPE>& rhs,
-            typename bsl::enable_if<
-                     bsl::is_convertible<ANY_TYPE, TYPE>::value,
-                     void>::type * = 0);
+    template<class ANY_TYPE,
+    typename bsl::enable_if<
+             !bsl::is_same<ANY_TYPE, TYPE>::value
+             &&
+             std::is_constructible<TYPE, const ANY_TYPE &>::value,
+             bool>::type = false>
+    explicit
+    optional(bsl::allocator_arg_t, allocator_type basicAllocator,
+        const optional<ANY_TYPE>& rhs);
         // If original contains a value, initialize the contained value
-        // with *original. rhswise, create a disengaged optional.
+        // with *original. Otherwise, create a disengaged optional.
         // Use the specified 'basicAllocator' to supply memory.
 
-    template<class ANY_TYPE>
-        optional(bsl::allocator_arg_t, allocator_type basicAllocator,
-            BloombergLP::bslmf::MovableRef<optional<ANY_TYPE> > rhs,
-            typename bsl::enable_if<
-                     bsl::is_convertible<ANY_TYPE, TYPE>::value,
-                     void>::type * = 0);
+    template<class ANY_TYPE,
+    typename bsl::enable_if<
+             !bsl::is_same<ANY_TYPE, TYPE>::value
+             &&
+             std::is_constructible<TYPE,ANY_TYPE >::value,
+             bool>::type = false>
+    explicit
+    optional(bsl::allocator_arg_t, allocator_type basicAllocator,
+        optional<ANY_TYPE>&& rhs);
         // If original contains a value, initialize the contained value by
-        // moving from *original. rhswise, create a disengaged optional.
+        // moving from *original. Otherwise, create a disengaged optional.
         // Use the specified 'basicAllocator' to supply memory.
 
 #if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES // $var-args=5
@@ -836,30 +908,37 @@ class optional {
         // depending on whether the lhs optional object is engaged.
 
     template<class ANY_TYPE>
-    optional& operator=(const optional<ANY_TYPE> &rhs);
-    template<class ANY_TYPE>
-    optional& operator=(optional<ANY_TYPE>&& rhs);
-        // If rhs is engaged, convert its value to TYPE and assign it
-        // to this object. Otherwise, reset this object to a disengaged
-        // state. Return a reference providing modifiable access to this
-        // object.  Note that this method may invoke assignment from rhs, or
-        // construction from rhs, depending on whether the lhs optional object
-        // is engaged.
+    typename bsl::enable_if<
+              std::is_constructible<TYPE,const ANY_TYPE &>::value
+              &&
+              std::is_assignable<TYPE&, ANY_TYPE>::value
+              &&
+              !bsl::is_convertible< const optional<ANY_TYPE> &, TYPE>::value,
+              optional>::type &
+              operator=(const optional<ANY_TYPE> &);
 
-    optional& operator=(const TYPE& rhs);
-    optional& operator=(BloombergLP::bslmf::MovableRef<TYPE> rhs);
-        // Assign to this object the value of the specified 'rhs' object (of
-        // 'BDE_rhs_TYPE'), and return a reference
-        // providing modifiable access to this object.  Note that this
-        // method may invoke assignment from rhs, or construction from rhs,
-        // depending on whether the lhs optional object is engaged.
-
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES )
     template<class ANY_TYPE>
     typename bsl::enable_if<
-              !bsl::is_same<ANY_TYPE, TYPE>::value
+              std::is_constructible<TYPE, ANY_TYPE>::value
               &&
-              bsl::is_convertible<ANY_TYPE, TYPE>::value,
+              std::is_assignable<TYPE&, ANY_TYPE>::value
+              &&
+              !bsl::is_convertible<optional<ANY_TYPE>, TYPE>::value,
+              optional>::type &
+              operator=(optional<ANY_TYPE>&&);
+
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES )
+    template<class ANY_TYPE = TYPE>
+    typename bsl::enable_if<
+              !bsl::is_same<ANY_TYPE, optional>::value
+              &&
+              !(bsl::is_same<ANY_TYPE,
+                    typename std::decay<TYPE>::type >::value
+                && std::is_scalar<TYPE>::value)
+              &&
+              std::is_constructible<TYPE, ANY_TYPE>::value
+              &&
+              std::is_assignable<TYPE&, ANY_TYPE>::value,
               optional>::type &
     operator=(ANY_TYPE&& rhs);
         // Assign to this object the value of the specified 'rhs' object (of
@@ -873,11 +952,11 @@ class optional {
         // operator=(const optional& rhs). Without rvalue references
         // and perfect forwarding, this is not the case.
 #else
-    template<class ANY_TYPE>
+    template<class ANY_TYPE = TYPE>
     optional& operator=(const ANY_TYPE &rhs);
 
-    template<class ANY_TYPE>
-    optional& operator=(BloombergLP::bslmf::MovableRef(ANY_TYPE) rhs);
+    template<class ANY_TYPE = TYPE>
+    optional& operator=(ANY_TYPE&& rhs);
 #endif
 
 
@@ -910,10 +989,10 @@ class optional {
             // type does not use allocators, returns bsl::allocator<void>
 
     bool has_value() const BSLS_KEYWORD_NOEXCEPT;
-            // Return 'true' if this object is disengaged, and 'false' rhswise.
+            // Return 'true' if this object is disengaged, and 'false' Otherwise.
 
     BSLS_KEYWORD_EXPLICIT operator bool()  const  BSLS_KEYWORD_NOEXCEPT;
-            // Return 'true' if this object is disengaged, and 'false' rhswise.
+            // Return 'true' if this object is disengaged, and 'false' Otherwise.
 
     template<class ANY_TYPE>
     TYPE value_or(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE)) const BSLS_COMPILER_FEATURES_LVREF_QUAL;
@@ -938,9 +1017,9 @@ class optional {
 
 };
 
-// =========================
-// class optional<TYPE>
-// =========================
+                             // =========================
+                             // class optional<TYPE>
+                             // =========================
 //note : The body of a class definition is divided into public and
 //private sections using the public: and private: labels. These labels must appear on
 //lines by themselves, indented exactly two spaces, and preceded by a blank line
@@ -959,7 +1038,7 @@ class optional<TYPE, false> {
   private:
   // note : Each category must be preceded by a tag comment that identifies the category.
   // The tag must appear immediately before the first declaration in that category, with
-  // no intervening blank line. A tag must not be used if the category is rhswise empty
+  // no intervening blank line. A tag must not be used if the category is Otherwise empty
   // PRIVATE TYPES
 
   typedef BloombergLP::bslmf::MovableRefUtil MoveUtil;
@@ -982,49 +1061,83 @@ class optional<TYPE, false> {
     optional(nullopt_t );
       // Create a disengaged optional object having the null value.
 
-    optional(const TYPE& original);
-      // Create an optional object having the value of the specified
-      // 'original' object.
-
-    optional(BloombergLP::bslmf::MovableRef<TYPE> original);
-      // Create an optional object having the same value as the specified
-      // 'original' object by moving the contents of 'original' to the
-      // newly-created object. 'original' is left in a valid but
-      // unspecified state.
-
     optional(const optional& original);
       // If original contains a value, initialize the contained value using
-      // *original. rhswise, create a disengaged optional.
+      // *original. Otherwise, create a disengaged optional.
 
     optional(BloombergLP::bslmf::MovableRef<optional> original);
       // If original contains a value, initialize the contained value by moving
-      // from *original. rhswise, create a disengaged optional. 'original'
+      // from *original. Otherwise, create a disengaged optional. 'original'
       // is left in a valid, but unspecified state.
 
-    template<class ANY_TYPE>
-    optional(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) original,
-            typename bsl::enable_if<!bsl::is_same<ANY_TYPE, TYPE>::value
-                                    &&
-                                    bsl::is_convertible<ANY_TYPE, TYPE>::value,
-                                    void>::type * = 0);
+    template<class ANY_TYPE = TYPE,
+              typename bsl::enable_if<!bsl::is_same<ANY_TYPE, optional<TYPE>>::value
+                                      &&
+                                      !bsl::is_same<ANY_TYPE, nullopt_t>::value
+                                      &&
+                                      std::is_constructible<TYPE, ANY_TYPE>::value
+                                      &&
+                                      bsl::is_convertible<ANY_TYPE, TYPE>::value,
+                                      bool>::type = true>
+    optional(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) original);
+    template<class ANY_TYPE = TYPE,
+              typename bsl::enable_if<!bsl::is_same<ANY_TYPE, optional<TYPE>>::value
+                                      &&
+                                      !bsl::is_same<ANY_TYPE, nullopt_t>::value
+                                      &&
+                                      std::is_constructible<TYPE, ANY_TYPE>::value
+                                      &&
+                                      !bsl::is_convertible<ANY_TYPE, TYPE>::value,
+                                      bool>::type = false>
+    explicit
+    optional(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) original);
       // Create an optional object having the value of the specified
       // 'original' object.
 
-    template<class ANY_TYPE>
-    optional(const optional<ANY_TYPE>& original,
-                typename bsl::enable_if<
-                        bsl::is_convertible<ANY_TYPE, TYPE>::value,
-                        void>::type * = 0);
-      // If original contains a value, initialize the contained value using
-      // *original. rhswise, create a disengaged optional.
-
-    template<class ANY_TYPE>
-    optional(BloombergLP::bslmf::MovableRef<optional<ANY_TYPE> > original,
+    template<class ANY_TYPE,
             typename bsl::enable_if<
-                    bsl::is_convertible<ANY_TYPE, TYPE>::value,
-                    void>::type * = 0);
+                    !bsl::is_same<ANY_TYPE, TYPE>::value
+                    &&
+                    std::is_constructible<TYPE,const ANY_TYPE &>::value
+                    &&
+                    bsl::is_convertible<const ANY_TYPE &, TYPE>::value,
+                    bool>::type = true>
+    optional(const optional<ANY_TYPE>& original);
+    template<class ANY_TYPE,
+              typename bsl::enable_if<
+                      !bsl::is_same<ANY_TYPE, TYPE>::value
+                      &&
+                      std::is_constructible<TYPE, const ANY_TYPE &>::value
+                      &&
+                      !bsl::is_convertible<const ANY_TYPE &, TYPE>::value,
+                      bool>::type = false>
+    explicit
+    optional(const optional<ANY_TYPE>& original);
+      // If original contains a value, initialize the contained value using
+      // *original. Otherwise, create a disengaged optional.
+
+    template<class ANY_TYPE,
+            typename bsl::enable_if<
+                    !bsl::is_same<ANY_TYPE, TYPE>::value
+                    &&
+                    std::is_constructible<TYPE, ANY_TYPE >::value
+                    &&
+                    bsl::is_convertible<ANY_TYPE , TYPE>::value,
+                    bool>::type = true>
+    optional(optional<ANY_TYPE>&& original);
+
+    template<class ANY_TYPE,
+            typename bsl::enable_if<
+                    !bsl::is_same<ANY_TYPE, TYPE>::value
+                    &&
+                    std::is_constructible<TYPE, ANY_TYPE >::value
+                    &&
+                    !bsl::is_convertible<ANY_TYPE , TYPE>::value,
+                    bool>::type = false>
+    explicit
+    optional(optional<ANY_TYPE>&& original);
       // If original contains a value, initialize the contained value by moving
-      // from *original. rhswise, create a disengaged optional.
+      // from *original. Otherwise, create a disengaged optional.
 #if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES // $var-args=5
     template<class... ARGS>
     explicit optional(in_place_t, BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)...);
@@ -1079,20 +1192,40 @@ class optional<TYPE, false> {
   optional& operator=(BloombergLP::bslmf::MovableRef<optional>);
 
   template<class ANY_TYPE>
-  optional& operator=(const optional<ANY_TYPE> &);
-  template<class ANY_TYPE>
-  optional& operator=(optional<ANY_TYPE>&&);
+  typename bsl::enable_if<
+            std::is_constructible<TYPE,const ANY_TYPE &>::value
+            &&
+            std::is_assignable<TYPE&, ANY_TYPE>::value
+            &&
+            !bsl::is_convertible< const optional<ANY_TYPE> &, TYPE>::value,
+            optional>::type &
+            operator=(const optional<ANY_TYPE> &);
 
-  optional& operator=(const TYPE&);
-  optional& operator=(BloombergLP::bslmf::MovableRef<TYPE>);
+  template<class ANY_TYPE>
+  typename bsl::enable_if<
+            std::is_constructible<TYPE, ANY_TYPE>::value
+            &&
+            std::is_assignable<TYPE&, ANY_TYPE>::value
+            &&
+            !bsl::is_convertible<optional<ANY_TYPE>, TYPE>::value
+            ,
+            optional>::type &
+            operator=(optional<ANY_TYPE>&&);
+
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES )
-    template<class ANY_TYPE>
+    template<class ANY_TYPE = TYPE>
     typename bsl::enable_if<
-              !bsl::is_same<ANY_TYPE, TYPE>::value
-              &&
-              bsl::is_convertible<ANY_TYPE, TYPE>::value,
-              optional>::type &
+                  !bsl::is_same<ANY_TYPE, optional>::value
+                  &&
+                  !(bsl::is_same<ANY_TYPE,
+                        typename std::decay<TYPE>::type >::value
+                    && std::is_scalar<TYPE>::value)
+                  &&
+                  std::is_constructible<TYPE, ANY_TYPE>::value
+                  &&
+                  std::is_assignable<TYPE&, ANY_TYPE>::value,
+                  optional>::type &
     operator=(ANY_TYPE&& rhs);
           // Assign to this object the value of the specified 'rhs' object (of
           // 'BDE_rhs_TYPE') converted to 'TYPE', and return a reference
@@ -1105,11 +1238,11 @@ class optional<TYPE, false> {
           // operator=(const optional& rhs). Without rvalue references
           // and perfect forwarding, this is not the case.
 #else
-    template<class ANY_TYPE>
+    template<class ANY_TYPE = TYPE>
     optional& operator=(const ANY_TYPE &rhs);
 
-    template<class ANY_TYPE>
-    optional& operator=(BloombergLP::bslmf::MovableRef(ANY_TYPE) rhs);
+    template<class ANY_TYPE = TYPE>
+    optional& operator=(ANY_TYPE&& rhs);
 #endif
 
   TYPE* operator->();
@@ -1137,10 +1270,10 @@ class optional<TYPE, false> {
 
   //todo add Type&& and const Type&& overloads
   bool has_value() const BSLS_KEYWORD_NOEXCEPT;
-  // Return 'true' if this object is disengaged, and 'false' rhswise.
+  // Return 'true' if this object is disengaged, and 'false' Otherwise.
 
   BSLS_KEYWORD_EXPLICIT operator bool()  const  BSLS_KEYWORD_NOEXCEPT;
-  // Return 'true' if this object is disengaged, and 'false' rhswise.
+  // Return 'true' if this object is disengaged, and 'false' Otherwise.
 
   template<class ANY_TYPE>
     TYPE value_or(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE)) const BSLS_COMPILER_FEATURES_LVREF_QUAL;
@@ -1174,21 +1307,6 @@ optional<TYPE, UsesBslmaAllocator>::optional(nullopt_t)
 {}
 
 template <typename TYPE, bool UsesBslmaAllocator>
-inline optional<TYPE, UsesBslmaAllocator>::
-optional(const TYPE& original)
-{
-    this->emplace(original);
-}
-
-template <typename TYPE, bool UsesBslmaAllocator>
-inline optional<TYPE, UsesBslmaAllocator>::
-optional(BloombergLP::bslmf::MovableRef<TYPE> original)
-{
-  TYPE& lvalue = original;
-  this->emplace(MoveUtil::move(lvalue));
-}
-
-template <typename TYPE, bool UsesBslmaAllocator>
 inline
 optional<TYPE, UsesBslmaAllocator>::optional(
     const optional& original)
@@ -1213,45 +1331,105 @@ optional<TYPE, UsesBslmaAllocator>::optional(
 
 
 template <typename TYPE, bool UsesBslmaAllocator>
-template<class ANY_TYPE>
+template<class ANY_TYPE,
+        typename bsl::enable_if<!bsl::is_same<ANY_TYPE, optional<TYPE>>::value
+                                &&
+                                !bsl::is_same<ANY_TYPE, nullopt_t>::value
+                                &&
+                                std::is_constructible<TYPE, ANY_TYPE>::value
+                                &&
+                                bsl::is_convertible<ANY_TYPE, TYPE>::value,
+                                bool>::type>
 inline
 optional<TYPE, UsesBslmaAllocator>::optional(
-           BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) original,
-           typename bsl::enable_if<!bsl::is_same<ANY_TYPE, TYPE>::value
-                                   &&
-                                   bsl::is_convertible<ANY_TYPE, TYPE>::value,
-                                   void>::type *)
+           BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) original)
+{
+    this->emplace(BSLS_COMPILERFEATURES_FORWARD(ANY_TYPE, original));
+}
+template <typename TYPE, bool UsesBslmaAllocator>
+template<class ANY_TYPE,
+        typename bsl::enable_if<!bsl::is_same<ANY_TYPE, optional<TYPE>>::value
+                                &&
+                                !bsl::is_same<ANY_TYPE, nullopt_t>::value
+                                &&
+                                std::is_constructible<TYPE, ANY_TYPE>::value
+                                &&
+                                !bsl::is_convertible<ANY_TYPE, TYPE>::value,
+                                bool>::type>
+inline
+optional<TYPE, UsesBslmaAllocator>::optional(
+           BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) original)
 {
     this->emplace(BSLS_COMPILERFEATURES_FORWARD(ANY_TYPE, original));
 }
 
 template <typename TYPE, bool UsesBslmaAllocator>
-template<class ANY_TYPE>
+template<class ANY_TYPE,
+          typename bsl::enable_if<
+                  !bsl::is_same<ANY_TYPE, TYPE>::value
+                  &&
+                  std::is_constructible<TYPE, const ANY_TYPE &>::value
+                  &&
+                  !bsl::is_convertible<const ANY_TYPE &, TYPE>::value,
+                  bool>::type>
 inline
 optional<TYPE, UsesBslmaAllocator>::optional(
-    const optional<ANY_TYPE>& original,
-    typename bsl::enable_if<
-          bsl::is_convertible<ANY_TYPE, TYPE>::value,
-          void>::type *)
+    const optional<ANY_TYPE>& original)
 {
     if (original.has_value()) {
        emplace(original.value());
     }
 }
-
 template <typename TYPE, bool UsesBslmaAllocator>
-template<class ANY_TYPE>
+template<class ANY_TYPE,
+          typename bsl::enable_if<
+                  !bsl::is_same<ANY_TYPE, TYPE>::value
+                  &&
+                  std::is_constructible<TYPE, const ANY_TYPE &>::value
+                  &&
+                  bsl::is_convertible<const ANY_TYPE &, TYPE>::value,
+                  bool>::type>
 inline
 optional<TYPE, UsesBslmaAllocator>::optional(
-    BloombergLP::bslmf::MovableRef<optional<ANY_TYPE> > original,
-    typename bsl::enable_if<
-          bsl::is_convertible<ANY_TYPE, TYPE>::value,
-          void>::type *)
+    const optional<ANY_TYPE>& original)
 {
-    optional& lvalue = original;
+    if (original.has_value()) {
+       emplace(original.value());
+    }
+}
+template <typename TYPE, bool UsesBslmaAllocator>
+template<class ANY_TYPE,
+          typename bsl::enable_if<
+                  !bsl::is_same<ANY_TYPE, TYPE>::value
+                  &&
+                  std::is_constructible<TYPE, ANY_TYPE >::value
+                  &&
+                  bsl::is_convertible<ANY_TYPE , TYPE>::value,
+                  bool>::type>
+inline
+optional<TYPE, UsesBslmaAllocator>::optional(
+    optional<ANY_TYPE>&& original)
+{
+    if (original.has_value()) {
+       emplace(MoveUtil::move(original.value()));
+    }
+}
 
-    if (lvalue.has_value()) {
-       emplace(MoveUtil::move(lvalue.value()));
+template <typename TYPE, bool UsesBslmaAllocator>
+template<class ANY_TYPE,
+          typename bsl::enable_if<
+                  !bsl::is_same<ANY_TYPE, TYPE>::value
+                  &&
+                  std::is_constructible<TYPE, ANY_TYPE >::value
+                  &&
+                  !bsl::is_convertible<ANY_TYPE , TYPE>::value,
+                  bool>::type>
+inline
+optional<TYPE, UsesBslmaAllocator>::optional(
+    optional<ANY_TYPE>&& original)
+{
+    if (original.has_value()) {
+       emplace(MoveUtil::move(original.value()));
     }
 }
 
@@ -1301,28 +1479,6 @@ template <typename TYPE, bool UsesBslmaAllocator>
 inline
 optional<TYPE, UsesBslmaAllocator>::optional(bsl::allocator_arg_t,
                             allocator_type basicAllocator,
-                            const TYPE&  original)
-: d_allocator(basicAllocator)
-{
-    this->emplace(original);
-}
-
-
-template <typename TYPE, bool UsesBslmaAllocator>
-inline
-optional<TYPE, UsesBslmaAllocator>::optional(bsl::allocator_arg_t,
-                allocator_type basicAllocator,
-                BloombergLP::bslmf::MovableRef<TYPE>  original)
-: d_allocator(basicAllocator)
-{
-    TYPE& lvalue = original;
-    this->emplace(MoveUtil::move(lvalue));
-}
-
-template <typename TYPE, bool UsesBslmaAllocator>
-inline
-optional<TYPE, UsesBslmaAllocator>::optional(bsl::allocator_arg_t,
-                            allocator_type basicAllocator,
                             const optional&  original)
 : d_allocator(basicAllocator)
 {
@@ -1347,30 +1503,34 @@ optional<TYPE, UsesBslmaAllocator>::optional(bsl::allocator_arg_t,
 }
 
 template <typename TYPE, bool UsesBslmaAllocator>
-template <typename ANY_TYPE>
+template <typename ANY_TYPE,
+        typename bsl::enable_if<
+        !bsl::is_same<ANY_TYPE, optional<TYPE> >::value
+        &&
+        !bsl::is_same<ANY_TYPE, nullopt_t>::value
+        &&
+        std::is_constructible<TYPE, ANY_TYPE>::value,
+         bool>::type>
 inline
 optional<TYPE, UsesBslmaAllocator>::optional(bsl::allocator_arg_t,
                             allocator_type basicAllocator,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE)  original,
-                            typename bsl::enable_if<
-                                      !bsl::is_same<ANY_TYPE, TYPE>::value
-                                      &&
-                                      bsl::is_convertible<ANY_TYPE, TYPE>::value,
-                                      void>::type *)
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE)  original)
 : d_allocator(basicAllocator)
 {
     this->emplace(BSLS_COMPILERFEATURES_FORWARD(ANY_TYPE, original));
 }
 
 template <typename TYPE, bool UsesBslmaAllocator>
-template <typename ANY_TYPE>
+template <typename ANY_TYPE,
+          typename bsl::enable_if<
+          !bsl::is_same<ANY_TYPE, TYPE>::value
+          &&
+          std::is_constructible<TYPE, const ANY_TYPE &>::value,
+           bool>::type>
 inline
 optional<TYPE, UsesBslmaAllocator>::optional(bsl::allocator_arg_t,
                             allocator_type basicAllocator,
-                            const optional<ANY_TYPE>&  original,
-                            typename bsl::enable_if<
-                                             bsl::is_convertible<ANY_TYPE, TYPE>::value,
-                                             void>::type *)
+                            const optional<ANY_TYPE>&  original)
 : d_allocator(basicAllocator)
 {
     if (original.has_value()) {
@@ -1380,14 +1540,16 @@ optional<TYPE, UsesBslmaAllocator>::optional(bsl::allocator_arg_t,
 
 
 template <typename TYPE, bool UsesBslmaAllocator>
-template <typename ANY_TYPE>
+template <typename ANY_TYPE,
+          typename bsl::enable_if<
+          !bsl::is_same<ANY_TYPE, TYPE>::value
+          &&
+          std::is_constructible<TYPE, ANY_TYPE>::value,
+           bool>::type>
 inline
 optional<TYPE, UsesBslmaAllocator>::optional(bsl::allocator_arg_t,
                 allocator_type basicAllocator,
-                BloombergLP::bslmf::MovableRef<optional<ANY_TYPE>>  original,
-                typename bsl::enable_if<
-                                 bsl::is_convertible<ANY_TYPE, TYPE>::value,
-                                 void>::type *)
+                optional<ANY_TYPE>&&  original)
 : d_allocator(basicAllocator)
 {
     optional<ANY_TYPE>& lvalue = original;
@@ -1585,29 +1747,7 @@ optional<TYPE, UsesBslmaAllocator>::operator=(bsl::nullopt_t) BSLS_KEYWORD_NOEXC
     this->reset();
     return *this;
 }
-template <class TYPE, bool UsesBslmaAllocator>
-inline
-optional<TYPE, UsesBslmaAllocator>&
-optional<TYPE, UsesBslmaAllocator>::operator=(const TYPE &rhs)
-{
-  if (this->has_value())
-      this->value() = rhs;
-  else
-      this->emplace(rhs);
-  return *this;
-}
 
-template <class TYPE, bool UsesBslmaAllocator>
-inline
-optional<TYPE, UsesBslmaAllocator>&
-optional<TYPE, UsesBslmaAllocator>::operator=(BloombergLP::bslmf::MovableRef<TYPE> rhs)
-{
-  if (this->has_value())
-      this->value() = MoveUtil::move(rhs);
-  else
-      this->emplace(MoveUtil::move(rhs));
-  return *this;
-}
 template <class TYPE, bool UsesBslmaAllocator>
 inline
 optional<TYPE, UsesBslmaAllocator>&
@@ -1651,10 +1791,16 @@ template <class TYPE, bool UsesBslmaAllocator>
 template<class ANY_TYPE>
 inline
 typename bsl::enable_if<
-          !bsl::is_same<ANY_TYPE, TYPE>::value
-          &&
-          bsl::is_convertible<ANY_TYPE, TYPE>::value,
-          optional<TYPE, UsesBslmaAllocator>>::type &
+            !bsl::is_same<ANY_TYPE, optional<TYPE, UsesBslmaAllocator>>::value
+            &&
+            !(bsl::is_same<ANY_TYPE,
+                  typename std::decay<TYPE>::type >::value
+              && std::is_scalar<TYPE>::value)
+            &&
+            std::is_constructible<TYPE, ANY_TYPE>::value
+            &&
+            std::is_assignable<TYPE&, ANY_TYPE>::value,
+            optional<TYPE, UsesBslmaAllocator>>::type &
 optional<TYPE, UsesBslmaAllocator>::operator=(ANY_TYPE&& rhs)
 {
     if (this->has_value())
@@ -1673,7 +1819,13 @@ optional<TYPE, UsesBslmaAllocator>::operator=(ANY_TYPE&& rhs)
 template <class TYPE, bool UsesBslmaAllocator>
 template<class ANY_TYPE>
 inline
-optional<TYPE, UsesBslmaAllocator>&
+typename bsl::enable_if<
+          std::is_constructible<TYPE,const ANY_TYPE&>::value
+          &&
+          std::is_assignable<TYPE&, ANY_TYPE>::value
+          &&
+          !bsl::is_convertible< const optional<ANY_TYPE> &, TYPE>::value,
+          optional<TYPE, UsesBslmaAllocator>>::type &
 optional<TYPE, UsesBslmaAllocator>::operator=(const optional<ANY_TYPE> &rhs)
 {
     if (rhs.has_value())
@@ -1692,9 +1844,14 @@ optional<TYPE, UsesBslmaAllocator>::operator=(const optional<ANY_TYPE> &rhs)
 template <class TYPE, bool UsesBslmaAllocator>
 template<class ANY_TYPE>
 inline
-optional<TYPE, UsesBslmaAllocator>&
-optional<TYPE, UsesBslmaAllocator>::operator=(
-    optional<ANY_TYPE>&& rhs)
+typename bsl::enable_if<
+          std::is_constructible<TYPE, ANY_TYPE>::value
+          &&
+          std::is_assignable<TYPE&, ANY_TYPE>::value
+          &&
+          !bsl::is_convertible<optional<ANY_TYPE>, TYPE>::value,
+          optional<TYPE, UsesBslmaAllocator>>::type &
+optional<TYPE, UsesBslmaAllocator>::operator=(optional<ANY_TYPE>&& rhs)
 {
     if (rhs.has_value())
     {
@@ -1709,6 +1866,7 @@ optional<TYPE, UsesBslmaAllocator>::operator=(
     }
     return *this;
 }
+
 template <class TYPE, bool UsesBslmaAllocator>
 inline
 TYPE& optional<TYPE, UsesBslmaAllocator>::operator*() BSLS_COMPILER_FEATURES_LVREF_QUAL
@@ -1784,21 +1942,6 @@ inline
 optional<TYPE, false>::optional(nullopt_t)
 {
 }
-template <class TYPE>
-inline
-optional<TYPE, false>::optional(const TYPE& original)
-{
-    this->emplace(original);
-}
-
-template <class TYPE>
-inline
-optional<TYPE, false>::
-optional(BloombergLP::bslmf::MovableRef<TYPE> original)
-{
-    TYPE& lvalue = original;
-    this->emplace(MoveUtil::move(lvalue));
-}
 
 template <class TYPE>
 inline
@@ -1821,29 +1964,69 @@ optional<TYPE, false>::optional(
        emplace(MoveUtil::move(lvalue.value()));
     }
 }
-
-
 template <class TYPE>
-template<class ANY_TYPE>
+template<class ANY_TYPE,
+        typename bsl::enable_if<!bsl::is_same<ANY_TYPE, optional<TYPE>>::value
+                                &&
+                                !bsl::is_same<ANY_TYPE, nullopt_t>::value
+                                &&
+                                std::is_constructible<TYPE, ANY_TYPE>::value
+                                &&
+                                bsl::is_convertible<ANY_TYPE, TYPE>::value,
+                                bool>::type>
 inline
 optional<TYPE, false>::optional(
-           BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) original,
-           typename bsl::enable_if<!bsl::is_same<ANY_TYPE, TYPE>::value
-                                   &&
-                                   bsl::is_convertible<ANY_TYPE, TYPE>::value,
-                                   void>::type *)
+           BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) original)
 {
     this->emplace(BSLS_COMPILERFEATURES_FORWARD(ANY_TYPE, original));
 }
 
 template <class TYPE>
-template<class ANY_TYPE>
+template<class ANY_TYPE,
+        typename bsl::enable_if<!bsl::is_same<ANY_TYPE, optional<TYPE>>::value
+                                &&
+                                !bsl::is_same<ANY_TYPE, nullopt_t>::value
+                                &&
+                                std::is_constructible<TYPE, ANY_TYPE>::value
+                                &&
+                                !bsl::is_convertible<ANY_TYPE, TYPE>::value,
+                                bool>::type>
 inline
 optional<TYPE, false>::optional(
-    const optional<ANY_TYPE>& original,
-    typename bsl::enable_if<
-          bsl::is_convertible<ANY_TYPE, TYPE>::value,
-          void>::type *)
+           BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) original)
+{
+    this->emplace(BSLS_COMPILERFEATURES_FORWARD(ANY_TYPE, original));
+}
+
+template <class TYPE>
+template<class ANY_TYPE,
+        typename bsl::enable_if<
+        !bsl::is_same<ANY_TYPE, TYPE>::value
+        &&
+        std::is_constructible<TYPE, const ANY_TYPE &>::value
+        &&
+        bsl::is_convertible<const ANY_TYPE &, TYPE>::value,
+        bool>::type>
+inline
+optional<TYPE, false>::optional(
+    const optional<ANY_TYPE>& original)
+{
+    if (original.has_value()) {
+       emplace(original.value());
+    }
+}
+template <class TYPE>
+template<class ANY_TYPE,
+        typename bsl::enable_if<
+        !bsl::is_same<ANY_TYPE, TYPE>::value
+        &&
+        std::is_constructible<TYPE, const ANY_TYPE &>::value
+        &&
+        !bsl::is_convertible<const ANY_TYPE &, TYPE>::value,
+        bool>::type>
+inline
+optional<TYPE, false>::optional(
+    const optional<ANY_TYPE>& original)
 {
     if (original.has_value()) {
        emplace(original.value());
@@ -1851,20 +2034,39 @@ optional<TYPE, false>::optional(
 }
 
 template <class TYPE>
-template<class ANY_TYPE>
+template<class ANY_TYPE,
+          typename bsl::enable_if<
+                  !bsl::is_same<ANY_TYPE, TYPE>::value
+                  &&
+                  std::is_constructible<TYPE, ANY_TYPE >::value
+                  &&
+                  bsl::is_convertible<ANY_TYPE , TYPE>::value,
+                  bool>::type>
 inline
-optional<TYPE, false>::optional(
-    BloombergLP::bslmf::MovableRef<optional<ANY_TYPE> > original,
-    typename bsl::enable_if<
-          bsl::is_convertible<ANY_TYPE, TYPE>::value,
-          void>::type *)
+optional<TYPE, false>::optional(optional<ANY_TYPE>&& original)
 {
-    optional& lvalue = original;
-
-    if (lvalue.has_value()) {
-       emplace(MoveUtil::move(lvalue.value()));
+    if (original.has_value()) {
+       emplace(MoveUtil::move(original.value()));
     }
 }
+
+template <class TYPE>
+template<class ANY_TYPE,
+          typename bsl::enable_if<
+                  !bsl::is_same<ANY_TYPE, TYPE>::value
+                  &&
+                  std::is_constructible<TYPE, ANY_TYPE >::value
+                  &&
+                  !bsl::is_convertible<ANY_TYPE , TYPE>::value,
+                  bool>::type>
+inline
+optional<TYPE, false>::optional(optional<ANY_TYPE>&& original)
+{
+    if (original.has_value()) {
+       emplace(MoveUtil::move(original.value()));
+    }
+}
+
 
 #if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES // $var-args=5
 template <class TYPE>
@@ -2001,29 +2203,6 @@ optional<TYPE, false>::operator=(bsl::nullopt_t) BSLS_KEYWORD_NOEXCEPT
     return *this;
 }
 
-template <class TYPE>
-inline
-optional<TYPE, false>&
-optional<TYPE, false>::operator=(const TYPE &rhs)
-{
-  if (this->has_value())
-      this->value() = rhs;
-  else
-      this->emplace(rhs);
-  return *this;
-}
-
-template <class TYPE>
-inline
-optional<TYPE, false>&
-optional<TYPE, false>::operator=(BloombergLP::bslmf::MovableRef<TYPE> rhs)
-{
-  if (this->has_value())
-      this->value() = MoveUtil::move(rhs);
-  else
-      this->emplace(MoveUtil::move(rhs));
-  return *this;
-}
 
 template <class TYPE>
 inline
@@ -2068,10 +2247,16 @@ template <class TYPE>
 template<class ANY_TYPE>
 inline
 typename bsl::enable_if<
-          !bsl::is_same<ANY_TYPE, TYPE>::value
-          &&
-          bsl::is_convertible<ANY_TYPE, TYPE>::value,
-          optional<TYPE, false>>::type &
+              !bsl::is_same<ANY_TYPE, optional<TYPE, false>>::value
+              &&
+              !(bsl::is_same<ANY_TYPE,
+                    typename std::decay<TYPE>::type >::value
+                && std::is_scalar<TYPE>::value)
+              &&
+              std::is_constructible<TYPE, ANY_TYPE>::value
+              &&
+              std::is_assignable<TYPE&, ANY_TYPE>::value,
+              optional<TYPE, false>>::type &
 optional<TYPE, false>::operator=(ANY_TYPE&& rhs)
 {
     if (this->has_value())
@@ -2091,26 +2276,39 @@ optional<TYPE, false>::operator=(ANY_TYPE&& rhs)
 template <class TYPE>
 template<class ANY_TYPE>
 inline
-optional<TYPE, false>&
+typename bsl::enable_if<
+          std::is_constructible<TYPE, const ANY_TYPE &>::value
+          &&
+          std::is_assignable<TYPE&, ANY_TYPE>::value
+          &&
+          !bsl::is_convertible< const optional<ANY_TYPE> &, TYPE>::value,
+          optional<TYPE, false>>::type &
 optional<TYPE, false>::operator=(const optional<ANY_TYPE> &rhs)
 {
     if (rhs.has_value())
-      {
-        if (this->has_value())
-          this->value() = rhs.value();
-        else
-          this->emplace(rhs.value());
-      }
+    {
+      if (this->has_value())
+        this->value() = rhs.value();
       else
-      {
-        this->reset();
-      }
-      return *this;
+        this->emplace(rhs.value());
+    }
+    else
+    {
+      this->reset();
+    }
+    return *this;
 }
 template <class TYPE>
 template<class ANY_TYPE>
 inline
-optional<TYPE, false>&
+typename bsl::enable_if<
+          std::is_constructible<TYPE, ANY_TYPE>::value
+          &&
+          std::is_assignable<TYPE&, ANY_TYPE>::value
+          &&
+          !bsl::is_convertible<optional<ANY_TYPE>, TYPE>::value
+          ,
+          optional<TYPE, false>>::type &
 optional<TYPE, false>::operator=(
     optional<ANY_TYPE>&& rhs)
 {
