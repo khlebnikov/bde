@@ -7,8 +7,9 @@
 // should not be used as an example for new development.
 // ----------------------------------------------------------------------------
 
-// Todo: - improve tests by checking for equality, as opposed to value and allocator separately
+// Todo:
 //       - add class that is convertible/assignable from an optional object
+//       - add monitoring of the allocators
 //       - tests from volatile/const of same type and from optional of volatile/const type
 //       - failure copy/move construction tests for non copyable and non moveable types
 //       - perfect forwarding tests for ARGS... constructor emplace and equal operator
@@ -131,6 +132,7 @@ using namespace bsl;
 typedef bslmf::MovableRefUtil MovUtl;
 
 const int MOVED_FROM_VAL = 0x01d;
+const int OPT_OL_OFFSET = 0x00a;
 
 //=============================================================================
 //                  CLASSES FOR TESTING USAGE EXAMPLES
@@ -199,7 +201,7 @@ class my_Class1 {
         d_def.d_allocator_p = 0;
     }
 
-    my_Class1(bslmf::MovableRef<my_Class1> other) {                 // IMPLICIT
+    my_Class1(bslmf::MovableRef<my_Class1> other) {
         my_Class1& otherRef = MovUtl::access(other);
         d_def.d_value = otherRef.d_def.d_value;
         otherRef.d_def.d_value = MOVED_FROM_VAL;
@@ -224,6 +226,8 @@ class my_Class1 {
         d_def.d_allocator_p = 0;
     }
 #endif //(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
+
+
     ~my_Class1() {
         ASSERT(d_def.d_value != 91);
         d_def.d_value = 91;
@@ -283,7 +287,7 @@ class my_Class1a {
 
     my_Class1a(const my_Class1a& rhs) : d_data(rhs.d_data) {}
 
-    my_Class1a(bslmf::MovableRef<my_Class1a> rhs)                   // IMPLICIT
+    my_Class1a(bslmf::MovableRef<my_Class1a> rhs)
     : d_data(MovUtl::move(MovUtl::access(rhs).d_data)) {}
 
   // MANIPULATORS
@@ -327,7 +331,7 @@ class my_Class1b {
 
     my_Class1b(const my_Class1b& rhs) : d_data(rhs.d_data) {}
 
-    my_Class1b(bslmf::MovableRef<my_Class1b> rhs)                   // IMPLICIT
+    my_Class1b(bslmf::MovableRef<my_Class1b> rhs)
     : d_data(MovUtl::move(MovUtl::access(rhs).d_data)) {}
 
     // MANIPULATORS
@@ -376,7 +380,6 @@ class my_Class1c {
     // CREATORS
     my_Class1c() : d_data() { }
 
-    explicit
     my_Class1c(int v)  : d_data(v) {}
 
     explicit
@@ -389,7 +392,7 @@ class my_Class1c {
 
     my_Class1c(const my_Class1c& rhs) : d_data(rhs.d_data) {}
 
-    my_Class1c(bslmf::MovableRef<my_Class1c> rhs)                   // IMPLICIT
+    my_Class1c(bslmf::MovableRef<my_Class1c> rhs)
     : d_data(MovUtl::move(MovUtl::access(rhs).d_data)) {}
 
     // MANIPULATORS
@@ -408,6 +411,539 @@ class my_Class1c {
 };
 bool operator==(const my_Class1c& lhs,
                 const my_Class1c& rhs)
+{
+    return (lhs.value()==rhs.value());
+}
+
+
+                             // ================
+                             // class my_Class1d
+                             // ================
+
+class my_Class1d {
+    // This 'class' is a simple type that does not take allocators.  Its
+    // implementation owns a 'my_ClassDef' aggregate, but uses only the
+    // 'd_value' data member, to support the 'value' attribute.  The
+    // 'd_allocator_p' pointer is always initialized to a null pointer, while
+    // the 'd_data_p' pointer is never initialized.
+    // This class can be constructed from my_optional<my_class1>.
+    // This class is assignable from my_optional<my_class1>.
+
+
+  public:
+
+    // DATA
+    my_ClassDef d_def;
+
+    // CREATORS
+    my_Class1d(int v = 0) {
+        d_def.d_value = v;
+        d_def.d_allocator_p = 0;
+    }
+    my_Class1d(const my_Class1d& rhs) {
+        d_def.d_value = rhs.d_def.d_value;
+        d_def.d_allocator_p = 0;
+    }
+
+    my_Class1d(bslmf::MovableRef<my_Class1d> other) {
+        my_Class1d& otherRef = MovUtl::access(other);
+        d_def.d_value = otherRef.d_def.d_value;
+        otherRef.d_def.d_value = MOVED_FROM_VAL;
+        d_def.d_allocator_p = 0;
+    }
+
+    my_Class1d(const my_Class1& rhs) {
+        d_def.d_value = rhs.d_def.d_value;
+        d_def.d_allocator_p = 0;
+    }
+
+    my_Class1d(bslmf::MovableRef<my_Class1> other) {
+        my_Class1& otherRef = MovUtl::access(other);
+        d_def.d_value = otherRef.d_def.d_value;
+        otherRef.d_def.d_value = MOVED_FROM_VAL;
+        d_def.d_allocator_p = 0;
+    }
+
+    my_Class1d(const bsl::optional<my_Class1>& rhs) {
+       if (rhs)
+       {
+         d_def.d_value = rhs.value().value() + OPT_OL_OFFSET;
+         d_def.d_allocator_p = 0;
+       }
+       else
+       {
+         d_def.d_value = 0;
+         d_def.d_allocator_p = 0;
+       }
+    }
+
+    my_Class1d(bslmf::MovableRef<bsl::optional<my_Class1>> other) {
+        bsl::optional<my_Class1>& otherRef = MovUtl::access(other);
+        if (otherRef)
+        {
+          d_def.d_value = otherRef.value().value() + OPT_OL_OFFSET;
+          otherRef.value().d_def.d_value = MOVED_FROM_VAL;
+          d_def.d_allocator_p = 0;
+        }
+        else
+        {
+          d_def.d_value = 0;
+          d_def.d_allocator_p = 0;
+        }
+    }
+
+    ~my_Class1d() {
+        ASSERT(d_def.d_value != 91);
+        d_def.d_value = 91;
+        d_def.d_allocator_p = 0;
+        dumpClassDefState(d_def);
+    }
+
+
+    my_Class1d& operator=(const my_Class1d& rhs) {
+        d_def.d_value = rhs.d_def.d_value;
+        return *this;
+    }
+
+    my_Class1d& operator=(bslmf::MovableRef<my_Class1d> rhs) {
+        my_Class1d& otherRef = MovUtl::access(rhs);
+        d_def.d_value = otherRef.d_def.d_value;
+        otherRef.d_def.d_value = MOVED_FROM_VAL;
+        return *this;
+    }
+
+    my_Class1d& operator=(const my_Class1& rhs) {
+        d_def.d_value = rhs.d_def.d_value;
+        return *this;
+    }
+
+    my_Class1d& operator=(bslmf::MovableRef<my_Class1> rhs) {
+      my_Class1& otherRef = MovUtl::access(rhs);
+        d_def.d_value = otherRef.d_def.d_value;
+        otherRef.d_def.d_value = MOVED_FROM_VAL;
+        return *this;
+    }
+
+    my_Class1d& operator=(const bsl::optional<my_Class1>& rhs) {
+        if (rhs)
+        {
+         d_def.d_value = rhs.value().value() + OPT_OL_OFFSET ;
+         d_def.d_allocator_p = 0;
+        }
+        else
+        {
+         d_def.d_value = 0;
+         d_def.d_allocator_p = 0;
+        }
+        return *this;
+    }
+
+    my_Class1d& operator=(bslmf::MovableRef<bsl::optional<my_Class1>> rhs) {
+        bsl::optional<my_Class1>& otherRef = MovUtl::access(rhs);
+        if (otherRef)
+        {
+         d_def.d_value = otherRef.value().value()  + OPT_OL_OFFSET;
+         otherRef.value().d_def.d_value = MOVED_FROM_VAL;
+         d_def.d_allocator_p = 0;
+        }
+        else
+        {
+         d_def.d_value = 0;
+         d_def.d_allocator_p = 0;
+        }
+        return *this;
+    }
+
+    my_Class1d& operator=(int rhs) {
+    d_def.d_value = rhs;
+    return *this;
+    }
+
+    // ACCESSORS
+    int value() const { return d_def.d_value; }
+};
+bool operator==(const my_Class1d& lhs,
+const my_Class1d& rhs)
+{
+    return (lhs.value()==rhs.value());
+}
+                             // =================
+                             // class my_Class1d1
+                             // =================
+
+class my_Class1d1 {
+    // This 'class' is the same as my_Class1d, except it is constructible,
+    // but not assignable from my_optional<my_Class1>.
+
+
+  public:
+
+    // DATA
+    my_ClassDef d_def;
+
+    // CREATORS
+    my_Class1d1(int v = 0) {
+        d_def.d_value = v;
+        d_def.d_allocator_p = 0;
+    }
+
+    my_Class1d1(const my_Class1d1& rhs) {
+        d_def.d_value = rhs.d_def.d_value;
+        d_def.d_allocator_p = 0;
+    }
+
+    my_Class1d1(bslmf::MovableRef<my_Class1d1> other) {
+        my_Class1d1& otherRef = MovUtl::access(other);
+        d_def.d_value = otherRef.d_def.d_value;
+        otherRef.d_def.d_value = MOVED_FROM_VAL;
+        d_def.d_allocator_p = 0;
+    }
+
+    my_Class1d1(const my_Class1& rhs) {
+        d_def.d_value = rhs.d_def.d_value;
+        d_def.d_allocator_p = 0;
+    }
+
+    my_Class1d1(bslmf::MovableRef<my_Class1> other) {
+        my_Class1& otherRef = MovUtl::access(other);
+        d_def.d_value = otherRef.d_def.d_value;
+        otherRef.d_def.d_value = MOVED_FROM_VAL;
+        d_def.d_allocator_p = 0;
+    }
+
+    explicit
+    my_Class1d1(const bsl::optional<my_Class1>& rhs) {
+        if (rhs)
+        {
+        d_def.d_value = rhs.value().d_def.d_value + OPT_OL_OFFSET;
+        d_def.d_allocator_p = 0;
+        }
+        else
+        {
+        d_def.d_value = 0;
+        d_def.d_allocator_p = 0;
+        }
+    }
+
+    explicit
+    my_Class1d1(bslmf::MovableRef<bsl::optional<my_Class1>> other) {
+        bsl::optional<my_Class1>& otherRef = MovUtl::access(other);
+        if (otherRef)
+        {
+        d_def.d_value = otherRef.value().d_def.d_value + OPT_OL_OFFSET;
+        otherRef.value().d_def.d_value = MOVED_FROM_VAL;
+        d_def.d_allocator_p = 0;
+        }
+        else
+        {
+        d_def.d_value = 0;
+        d_def.d_allocator_p = 0;
+        }
+    }
+
+    ~my_Class1d1() {
+        ASSERT(d_def.d_value != 91);
+        d_def.d_value = 91;
+        d_def.d_allocator_p = 0;
+        dumpClassDefState(d_def);
+    }
+
+
+    my_Class1d1& operator=(const my_Class1d1& rhs) {
+        d_def.d_value = rhs.d_def.d_value;
+        return *this;
+    }
+
+    my_Class1d1& operator=(bslmf::MovableRef<my_Class1d1> rhs) {
+        my_Class1d1& otherRef = MovUtl::access(rhs);
+        d_def.d_value = otherRef.d_def.d_value;
+        otherRef.d_def.d_value = MOVED_FROM_VAL;
+        return *this;
+    }
+
+    my_Class1d1& operator=(const my_Class1& rhs) {
+        d_def.d_value = rhs.d_def.d_value;
+        return *this;
+    }
+
+    my_Class1d1& operator=(bslmf::MovableRef<my_Class1> rhs) {
+        my_Class1& otherRef = MovUtl::access(rhs);
+        d_def.d_value = otherRef.d_def.d_value;
+        otherRef.d_def.d_value = MOVED_FROM_VAL;
+        return *this;
+    }
+
+    my_Class1d1& operator=(int rhs) {
+        d_def.d_value = rhs;
+        return *this;
+    }
+
+    // ACCESSORS
+    int value() const { return d_def.d_value; }
+};
+
+                             // =================
+                             // class my_Class1d2
+                             // =================
+
+class my_Class1d2 {
+    // This 'class' is the same as my_Class1d, except it is assignable,
+    // but not constructible from my_optional<my_Class1>.
+
+
+  public:
+
+    // DATA
+    my_ClassDef d_def;
+
+    // CREATORS
+    my_Class1d2(int v = 0) {
+        d_def.d_value = v;
+        d_def.d_allocator_p = 0;
+    }
+    my_Class1d2(const my_Class1d2& rhs) {
+        d_def.d_value = rhs.d_def.d_value;
+        d_def.d_allocator_p = 0;
+    }
+
+    my_Class1d2(bslmf::MovableRef<my_Class1d2> other) {
+        my_Class1d2& otherRef = MovUtl::access(other);
+        d_def.d_value = otherRef.d_def.d_value;
+        otherRef.d_def.d_value = MOVED_FROM_VAL;
+        d_def.d_allocator_p = 0;
+    }
+
+    my_Class1d2(const my_Class1& rhs) {
+        d_def.d_value = rhs.d_def.d_value;
+        d_def.d_allocator_p = 0;
+    }
+
+    my_Class1d2(bslmf::MovableRef<my_Class1> other) {
+        my_Class1& otherRef = MovUtl::access(other);
+        d_def.d_value = otherRef.d_def.d_value;
+        otherRef.d_def.d_value = MOVED_FROM_VAL;
+        d_def.d_allocator_p = 0;
+    }
+
+    ~my_Class1d2() {
+        ASSERT(d_def.d_value != 91);
+        d_def.d_value = 91;
+        d_def.d_allocator_p = 0;
+        dumpClassDefState(d_def);
+    }
+
+
+    my_Class1d2& operator=(const my_Class1d2& rhs) {
+        d_def.d_value = rhs.d_def.d_value;
+        return *this;
+    }
+
+    my_Class1d2& operator=(bslmf::MovableRef<my_Class1d2> rhs) {
+        my_Class1d2& otherRef = MovUtl::access(rhs);
+        d_def.d_value = otherRef.d_def.d_value;
+        otherRef.d_def.d_value = MOVED_FROM_VAL;
+        return *this;
+    }
+
+    my_Class1d2& operator=(const my_Class1& rhs) {
+        d_def.d_value = rhs.d_def.d_value;
+        return *this;
+    }
+
+    my_Class1d2& operator=(bslmf::MovableRef<my_Class1> rhs) {
+        my_Class1& otherRef = MovUtl::access(rhs);
+        d_def.d_value = otherRef.d_def.d_value;
+        otherRef.d_def.d_value = MOVED_FROM_VAL;
+        return *this;
+    }
+
+    my_Class1d2& operator=(const bsl::optional<my_Class1>& rhs) {
+        if (rhs)
+        {
+         d_def.d_value = rhs.value().d_def.d_value + OPT_OL_OFFSET ;
+         d_def.d_allocator_p = 0;
+        }
+        else
+        {
+         d_def.d_value = 0;
+         d_def.d_allocator_p = 0;
+        }
+        return *this;
+    }
+
+    my_Class1d2& operator=(bslmf::MovableRef<bsl::optional<my_Class1>> rhs) {
+        bsl::optional<my_Class1>& otherRef = MovUtl::access(rhs);
+        if (otherRef)
+        {
+         d_def.d_value = otherRef.value().d_def.d_value  + OPT_OL_OFFSET;
+         otherRef.value().d_def.d_value = MOVED_FROM_VAL;
+         d_def.d_allocator_p = 0;
+        }
+        else
+        {
+         d_def.d_value = 0;
+         d_def.d_allocator_p = 0;
+        }
+        return *this;
+    }
+
+    my_Class1d2& operator=(int rhs) {
+        d_def.d_value = rhs;
+        return *this;
+    }
+
+    // ACCESSORS
+    int value() const { return d_def.d_value; }
+};
+bool operator==(const my_Class1d2& lhs,
+const my_Class1d2& rhs)
+{
+    return (lhs.value()==rhs.value());
+}
+
+                             // =================
+                             // class my_Class1d3
+                             // =================
+
+class my_Class1d3 {
+    // This 'class' is the same as my_Class1d, except it can only be constructed
+    // and assigned to from const my_optional<my_Class1>&. A move from my_Class1
+    // should be a better match than a move form optional<my_Class1>.
+
+
+  public:
+
+    // DATA
+    my_ClassDef d_def;
+
+    // CREATORS
+    my_Class1d3(int v = 0) {
+        d_def.d_value = v;
+        d_def.d_allocator_p = 0;
+    }
+    my_Class1d3(const my_Class1d3& rhs) {
+        d_def.d_value = rhs.d_def.d_value;
+        d_def.d_allocator_p = 0;
+    }
+
+    my_Class1d3(bslmf::MovableRef<my_Class1d3> other) {
+        my_Class1d3& otherRef = MovUtl::access(other);
+        d_def.d_value = otherRef.d_def.d_value;
+        otherRef.d_def.d_value = MOVED_FROM_VAL;
+        d_def.d_allocator_p = 0;
+    }
+
+    my_Class1d3(const my_Class1& rhs) {
+        d_def.d_value = rhs.d_def.d_value;
+        d_def.d_allocator_p = 0;
+    }
+
+    my_Class1d3(bslmf::MovableRef<my_Class1> other) {
+        my_Class1& otherRef = MovUtl::access(other);
+        d_def.d_value = otherRef.d_def.d_value;
+        otherRef.d_def.d_value = MOVED_FROM_VAL;
+        d_def.d_allocator_p = 0;
+    }
+
+    my_Class1d3(const bsl::optional<my_Class1>& rhs) {
+        if (rhs)
+        {
+            d_def.d_value = rhs.value().d_def.d_value + OPT_OL_OFFSET;
+            d_def.d_allocator_p = 0;
+        }
+        else
+        {
+            d_def.d_value = 0;
+            d_def.d_allocator_p = 0;
+        }
+    }
+
+
+    ~my_Class1d3() {
+        ASSERT(d_def.d_value != 91);
+        d_def.d_value = 91;
+        d_def.d_allocator_p = 0;
+        dumpClassDefState(d_def);
+    }
+
+
+    my_Class1d3& operator=(const my_Class1d3& rhs) {
+        d_def.d_value = rhs.d_def.d_value;
+        return *this;
+    }
+
+    my_Class1d3& operator=(bslmf::MovableRef<my_Class1d3> rhs) {
+        my_Class1d3& otherRef = MovUtl::access(rhs);
+        d_def.d_value = otherRef.d_def.d_value;
+        otherRef.d_def.d_value = MOVED_FROM_VAL;
+        return *this;
+    }
+
+    my_Class1d3& operator=(const my_Class1& rhs) {
+        d_def.d_value = rhs.d_def.d_value;
+        return *this;
+    }
+
+    my_Class1d3& operator=(int rhs) {
+        d_def.d_value = rhs;
+        return *this;
+    }
+
+    // ACCESSORS
+    int value() const { return d_def.d_value; }
+};
+                             // ===============
+                             // class my_Class1e
+                             // ===============
+
+class my_Class1e {
+  // This 'class' is a simple type that does not take allocators.  Its
+  // implementation owns a 'my_Class1' aggregate, but uses only the
+  // 'd_value' data member, to support the 'value' attribute.  The
+  // 'd_allocator_p' pointer is always initialized to a null pointer.
+  // The class can be constructed from my_Class1d and from
+  // optional<my_class1d>.
+
+  public:
+    my_Class1d d_data;
+
+    // CREATORS
+    my_Class1e() : d_data() { }
+
+    explicit
+    my_Class1e(int v)  : d_data(v) {}
+
+    my_Class1e(const my_Class1e& rhs) : d_data(rhs.d_data) {}
+
+    my_Class1e(bslmf::MovableRef<my_Class1e> rhs)
+    : d_data(MovUtl::move(MovUtl::access(rhs).d_data)) {}
+
+    // MANIPULATORS
+    my_Class1e& operator=(const my_Class1e& rhs) {
+        d_data.operator=(rhs.d_data);
+        return *this;
+    }
+
+    my_Class1e& operator=(bslmf::MovableRef<my_Class1e> rhs) {
+        d_data.operator=(MovUtl::move(MovUtl::access(rhs).d_data));
+        return *this;
+    }
+
+    my_Class1e& operator=(const my_Class1d& rhs) {
+        d_data.operator=(rhs);
+        return *this;
+    }
+
+    my_Class1e& operator=(bslmf::MovableRef<my_Class1d> rhs) {
+        d_data.operator=(MovUtl::move(MovUtl::access(rhs)));
+        return *this;
+    }
+
+    // ACCESSORS
+    int value() const { return d_data.value(); }
+};
+bool operator==(const my_Class1e& lhs,
+const my_Class1e& rhs)
 {
     return (lhs.value()==rhs.value());
 }
@@ -437,7 +973,7 @@ class my_Class2 {
         d_def.d_value = 0;
         d_def.d_allocator_p = a;
     }
-    explicit
+
     my_Class2(int v, bslma::Allocator *a = 0) {
         d_def.d_value = v;
         d_def.d_allocator_p = a;
@@ -448,7 +984,7 @@ class my_Class2 {
     }
 
     my_Class2(bslmf::MovableRef<my_Class2> other, bslma::Allocator *a = 0) {
-                                                                    // IMPLICIT
+
         my_Class2& otherRef = MovUtl::access(other);
         d_def.d_value = otherRef.d_def.d_value;
         otherRef.d_def.d_value = MOVED_FROM_VAL;
@@ -466,7 +1002,7 @@ class my_Class2 {
     }
 
     my_Class2(bslmf::MovableRef<my_Class1> other, bslma::Allocator *a = 0) {
-                                                                    // IMPLICIT
+
         my_Class1& otherRef = MovUtl::access(other);
         d_def.d_value = otherRef.d_def.d_value;
         otherRef.d_def.d_value = MOVED_FROM_VAL;
@@ -590,7 +1126,7 @@ class my_Class2a {
                const my_Class2a&     rhs)
         : d_data(rhs.d_data, a) {}
 
-    my_Class2a(bslmf::MovableRef<my_Class2a> rhs)                   // IMPLICIT
+    my_Class2a(bslmf::MovableRef<my_Class2a> rhs)
         : d_data(MovUtl::move(MovUtl::access(rhs).d_data)) {}
 
     my_Class2a(bsl::allocator_arg_t,
@@ -675,7 +1211,7 @@ class my_Class2b {
                 const my_Class2b&     rhs)
     : d_data(rhs.d_data, a) {}
 
-    my_Class2b(bslmf::MovableRef<my_Class2b> rhs)                   // IMPLICIT
+    my_Class2b(bslmf::MovableRef<my_Class2b> rhs)
     : d_data(MovUtl::move(MovUtl::access(rhs).d_data)) {}
 
     my_Class2b(bsl::allocator_arg_t,
@@ -766,7 +1302,7 @@ class my_Class2c {
     const my_Class2c&     rhs)
     : d_data(rhs.d_data, a) {}
 
-    my_Class2c(bslmf::MovableRef<my_Class2c> rhs)                   // IMPLICIT
+    my_Class2c(bslmf::MovableRef<my_Class2c> rhs)
     : d_data(MovUtl::move(MovUtl::access(rhs).d_data)) {}
 
     my_Class2c(bsl::allocator_arg_t,
@@ -823,6 +1359,512 @@ template <> struct UsesAllocatorArgT<my_Class2c> : bsl::true_type { };
 }  // close namespace bslmf
 
 }  // close enterprise namespace
+
+                             // ================
+                             // class my_Class2d
+                             // ================
+
+class my_Class2d {
+    // This 'class' supports the 'bslma::UsesBslmaAllocator' trait, providing
+    // an allocator-aware version of every constructor.  While it holds an
+    // allocator and has the expected allocator propagation properties of a
+    // 'bslma::Allocator'-aware type, it does not actually allocate any memory.
+    // In many ways, this is similar to a 'std::string' object that never grows
+    // beyond the small string optimization.  The 'd_data_p' member of the
+    // wrapper 'my_ClassDef' implementation type is never initialized, nor
+    // used.  A signal value, 'MOVED_FROM_VAL', is used to detect an object in
+    // a moved-from state.
+    // This class can be constructed from my_optional<my_Class2>.
+    // This class is assignable from my_optional<my_Class2>.
+
+  public:
+
+    // DATA
+    my_ClassDef d_def;
+
+    // CREATORS
+    explicit
+    my_Class2d(bslma::Allocator *a = 0) {
+        d_def.d_value = 0;
+        d_def.d_allocator_p = a;
+    }
+
+    my_Class2d(int v, bslma::Allocator *a = 0) {
+        d_def.d_value = v;
+        d_def.d_allocator_p = a;
+    }
+    my_Class2d(const my_Class2d& rhs, bslma::Allocator *a = 0) {
+        d_def.d_value = rhs.d_def.d_value;
+        d_def.d_allocator_p = a;
+    }
+
+    my_Class2d(bslmf::MovableRef<my_Class2d> other, bslma::Allocator *a = 0) {
+
+        my_Class2d& otherRef = MovUtl::access(other);
+        d_def.d_value = otherRef.d_def.d_value;
+        otherRef.d_def.d_value = MOVED_FROM_VAL;
+        if (a) {
+            d_def.d_allocator_p = a;
+        }
+        else {
+            d_def.d_allocator_p = otherRef.d_def.d_allocator_p;
+        }
+    }
+
+    my_Class2d(const my_Class2& rhs, bslma::Allocator *a = 0) {
+        d_def.d_value = rhs.d_def.d_value;
+        d_def.d_allocator_p = a;
+    }
+
+    my_Class2d(bslmf::MovableRef<my_Class2> other, bslma::Allocator *a = 0) {
+
+        my_Class2& otherRef = MovUtl::access(other);
+        d_def.d_value = otherRef.d_def.d_value;
+        otherRef.d_def.d_value = MOVED_FROM_VAL;
+        if (a) {
+            d_def.d_allocator_p = a;
+        }
+        else {
+            d_def.d_allocator_p = otherRef.d_def.d_allocator_p;
+        }
+    }
+
+    my_Class2d(const bsl::optional<my_Class2>& rhs, bslma::Allocator *a = 0) {
+        if (rhs)
+        {
+          d_def.d_value = rhs.value().d_def.d_value + OPT_OL_OFFSET;
+        }
+        else
+        {
+          d_def.d_value = 0;
+        }
+        if (a) {
+            d_def.d_allocator_p = a;
+        }
+        else {
+            d_def.d_allocator_p = 0;
+        }
+     }
+
+     my_Class2d(bslmf::MovableRef<bsl::optional<my_Class2>> other, bslma::Allocator *a = 0) {
+         bsl::optional<my_Class2>& otherRef = MovUtl::access(other);
+         if (otherRef)
+         {
+           d_def.d_value = otherRef.value().d_def.d_value + OPT_OL_OFFSET;
+           otherRef.value().d_def.d_value = MOVED_FROM_VAL;
+         }
+         else
+         {
+           d_def.d_value = 0;
+         }
+         if (a) {
+             d_def.d_allocator_p = a;
+         }
+         else {
+             d_def.d_allocator_p = 0;
+         }
+     }
+
+    ~my_Class2d() {
+        ASSERT(d_def.d_value != 92);
+        d_def.d_value = 92;
+        d_def.d_allocator_p = 0;
+        dumpClassDefState(d_def);
+    }
+
+    // MANIPULATORS
+    my_Class2d& operator=(const my_Class2d& rhs) {
+        d_def.d_value = rhs.d_def.d_value;
+        // do not touch allocator!
+        return *this;
+    }
+
+    my_Class2d& operator=(bslmf::MovableRef<my_Class2d> rhs) {
+        my_Class2d& otherRef = MovUtl::access(rhs);
+        d_def.d_value = otherRef.d_def.d_value;
+        otherRef.d_def.d_value = MOVED_FROM_VAL;
+        // do not touch allocator!
+        return *this;
+    }
+
+    my_Class2d& operator=(const my_Class2& rhs) {
+        d_def.d_value = rhs.d_def.d_value;
+        // do not touch allocator!
+        return *this;
+    }
+
+    my_Class2d& operator=(bslmf::MovableRef<my_Class2> rhs) {
+        my_Class2& otherRef = MovUtl::access(rhs);
+        d_def.d_value = otherRef.d_def.d_value;
+        otherRef.d_def.d_value = MOVED_FROM_VAL;
+        // do not touch allocator!
+        return *this;
+    }
+    my_Class2d& operator=(int rhs) {
+        d_def.d_value = rhs;
+        // do not touch allocator!
+        return *this;
+    }
+
+    my_Class2d& operator=(const bsl::optional<my_Class2>& rhs) {
+        if (rhs)
+        {
+         d_def.d_value = rhs.value().d_def.d_value + OPT_OL_OFFSET ;
+         d_def.d_allocator_p = 0;
+        }
+        else
+        {
+         d_def.d_value = 0;
+         d_def.d_allocator_p = 0;
+        }
+        return *this;
+    }
+
+    my_Class2d& operator=(bslmf::MovableRef<bsl::optional<my_Class2>> rhs) {
+        bsl::optional<my_Class2>& otherRef = MovUtl::access(rhs);
+        if (otherRef)
+        {
+         d_def.d_value = otherRef.value().d_def.d_value  + OPT_OL_OFFSET;
+         otherRef.value().d_def.d_value = MOVED_FROM_VAL;
+         d_def.d_allocator_p = 0;
+        }
+        else
+        {
+         d_def.d_value = 0;
+         d_def.d_allocator_p = 0;
+        }
+        return *this;
+    }
+
+    // ACCESSORS
+    int value() const { return d_def.d_value; }
+};
+bool operator==(const my_Class2d& lhs,
+const my_Class2d& rhs)
+{
+    return (lhs.value()==rhs.value());
+}
+
+// TRAITS
+namespace BloombergLP {
+namespace bslma {
+
+template <>
+struct UsesBslmaAllocator<my_Class2d> : bsl::true_type { };
+
+}  // close namespace bslma
+}  // close enterprise namespace
+
+
+                             // =================
+                             // class my_Class2d1
+                             // =================
+
+class my_Class2d1 {
+    // This 'class' is the same as my_Class2d, except it is constructible,
+    // but not assignable from my_optional<my_Class2>.
+
+  public:
+
+    // DATA
+    my_ClassDef d_def;
+
+    // CREATORS
+    explicit
+    my_Class2d1(bslma::Allocator *a = 0) {
+        d_def.d_value = 0;
+        d_def.d_allocator_p = a;
+    }
+
+    my_Class2d1(int v, bslma::Allocator *a = 0) {
+        d_def.d_value = v;
+        d_def.d_allocator_p = a;
+    }
+    my_Class2d1(const my_Class2d1& rhs, bslma::Allocator *a = 0) {
+        d_def.d_value = rhs.d_def.d_value;
+        d_def.d_allocator_p = a;
+    }
+
+    my_Class2d1(bslmf::MovableRef<my_Class2d1> other, bslma::Allocator *a = 0) {
+
+        my_Class2d1& otherRef = MovUtl::access(other);
+        d_def.d_value = otherRef.d_def.d_value;
+        otherRef.d_def.d_value = MOVED_FROM_VAL;
+        if (a) {
+            d_def.d_allocator_p = a;
+        }
+        else {
+            d_def.d_allocator_p = otherRef.d_def.d_allocator_p;
+        }
+    }
+
+    my_Class2d1(const my_Class2& rhs, bslma::Allocator *a = 0) {
+        d_def.d_value = rhs.d_def.d_value;
+        d_def.d_allocator_p = a;
+    }
+
+    my_Class2d1(bslmf::MovableRef<my_Class2> other, bslma::Allocator *a = 0) {
+
+        my_Class2& otherRef = MovUtl::access(other);
+        d_def.d_value = otherRef.d_def.d_value;
+        otherRef.d_def.d_value = MOVED_FROM_VAL;
+        if (a) {
+            d_def.d_allocator_p = a;
+        }
+        else {
+            d_def.d_allocator_p = otherRef.d_def.d_allocator_p;
+        }
+    }
+
+    my_Class2d1(const bsl::optional<my_Class2>& rhs, bslma::Allocator *a = 0) {
+        if (rhs)
+        {
+          d_def.d_value = rhs.value().d_def.d_value + OPT_OL_OFFSET;
+        }
+        else
+        {
+          d_def.d_value = 0;
+        }
+        if (a) {
+            d_def.d_allocator_p = a;
+        }
+        else {
+            d_def.d_allocator_p = 0;
+        }
+     }
+
+     my_Class2d1(bslmf::MovableRef<bsl::optional<my_Class2>> other
+         , bslma::Allocator *a = 0) {
+         bsl::optional<my_Class2>& otherRef = MovUtl::access(other);
+         if (otherRef)
+         {
+           d_def.d_value = otherRef.value().d_def.d_value + OPT_OL_OFFSET;
+           otherRef.value().d_def.d_value = MOVED_FROM_VAL;
+         }
+         else
+         {
+           d_def.d_value = 0;
+         }
+         if (a) {
+             d_def.d_allocator_p = a;
+         }
+         else {
+             d_def.d_allocator_p = 0;
+         }
+     }
+
+    ~my_Class2d1() {
+        ASSERT(d_def.d_value != 92);
+        d_def.d_value = 92;
+        d_def.d_allocator_p = 0;
+        dumpClassDefState(d_def);
+    }
+
+    // MANIPULATORS
+    my_Class2d1& operator=(const my_Class2d1& rhs) {
+        d_def.d_value = rhs.d_def.d_value;
+        // do not touch allocator!
+        return *this;
+    }
+
+    my_Class2d1& operator=(bslmf::MovableRef<my_Class2d1> rhs) {
+    my_Class2d1& otherRef = MovUtl::access(rhs);
+        d_def.d_value = otherRef.d_def.d_value;
+        otherRef.d_def.d_value = MOVED_FROM_VAL;
+        // do not touch allocator!
+        return *this;
+    }
+
+    my_Class2d1& operator=(const my_Class2& rhs) {
+        d_def.d_value = rhs.d_def.d_value;
+        // do not touch allocator!
+        return *this;
+    }
+
+    my_Class2d1& operator=(bslmf::MovableRef<my_Class2> rhs) {
+        my_Class2& otherRef = MovUtl::access(rhs);
+        d_def.d_value = otherRef.d_def.d_value;
+        otherRef.d_def.d_value = MOVED_FROM_VAL;
+        // do not touch allocator!
+        return *this;
+    }
+
+    my_Class2d1& operator=(int rhs) {
+        d_def.d_value = rhs;
+        // do not touch allocator!
+        return *this;
+    }
+
+    // ACCESSORS
+    int value() const { return d_def.d_value; }
+};
+bool operator==(const my_Class2d1& lhs,
+const my_Class2d1& rhs)
+{
+    return (lhs.value()==rhs.value());
+}
+
+// TRAITS
+namespace BloombergLP {
+namespace bslma {
+
+template <>
+struct UsesBslmaAllocator<my_Class2d1> : bsl::true_type { };
+
+}  // close namespace bslma
+}  // close enterprise namespace
+
+                             // =================
+                             // class my_Class2d2
+                             // =================
+
+class my_Class2d2 {
+    // This 'class' is the same as my_Class2d, except it is assignable,
+    // but not constructible from my_optional<my_Class2>.
+
+  public:
+
+    // DATA
+    my_ClassDef d_def;
+
+    // CREATORS
+    explicit
+    my_Class2d2(bslma::Allocator *a = 0) {
+        d_def.d_value = 0;
+        d_def.d_allocator_p = a;
+    }
+
+    my_Class2d2(int v, bslma::Allocator *a = 0) {
+        d_def.d_value = v;
+        d_def.d_allocator_p = a;
+    }
+    my_Class2d2(const my_Class2d2& rhs, bslma::Allocator *a = 0) {
+        d_def.d_value = rhs.d_def.d_value;
+        d_def.d_allocator_p = a;
+    }
+
+    my_Class2d2(bslmf::MovableRef<my_Class2d2> other, bslma::Allocator *a = 0) {
+
+    my_Class2d2& otherRef = MovUtl::access(other);
+        d_def.d_value = otherRef.d_def.d_value;
+        otherRef.d_def.d_value = MOVED_FROM_VAL;
+        if (a) {
+            d_def.d_allocator_p = a;
+        }
+        else {
+            d_def.d_allocator_p = otherRef.d_def.d_allocator_p;
+        }
+    }
+
+    my_Class2d2(const my_Class2& rhs, bslma::Allocator *a = 0) {
+            d_def.d_value = rhs.d_def.d_value;
+            d_def.d_allocator_p = a;
+    }
+
+    my_Class2d2(bslmf::MovableRef<my_Class2> other, bslma::Allocator *a = 0) {
+        my_Class2& otherRef = MovUtl::access(other);
+        d_def.d_value = otherRef.d_def.d_value;
+        otherRef.d_def.d_value = MOVED_FROM_VAL;
+        if (a) {
+            d_def.d_allocator_p = a;
+        }
+        else {
+            d_def.d_allocator_p = otherRef.d_def.d_allocator_p;
+        }
+    }
+
+
+    ~my_Class2d2() {
+        ASSERT(d_def.d_value != 92);
+        d_def.d_value = 92;
+        d_def.d_allocator_p = 0;
+        dumpClassDefState(d_def);
+    }
+
+    // MANIPULATORS
+    my_Class2d2& operator=(const my_Class2d2& rhs) {
+        d_def.d_value = rhs.d_def.d_value;
+        // do not touch allocator!
+        return *this;
+    }
+
+    my_Class2d2& operator=(bslmf::MovableRef<my_Class2d2> rhs) {
+        my_Class2d2& otherRef = MovUtl::access(rhs);
+        d_def.d_value = otherRef.d_def.d_value;
+        otherRef.d_def.d_value = MOVED_FROM_VAL;
+        // do not touch allocator!
+        return *this;
+    }
+
+    my_Class2d2& operator=(const my_Class2& rhs) {
+            d_def.d_value = rhs.d_def.d_value;
+            // do not touch allocator!
+            return *this;
+    }
+
+    my_Class2d2& operator=(bslmf::MovableRef<my_Class2> rhs) {
+        my_Class2& otherRef = MovUtl::access(rhs);
+        d_def.d_value = otherRef.d_def.d_value;
+        otherRef.d_def.d_value = MOVED_FROM_VAL;
+        // do not touch allocator!
+        return *this;
+    }
+
+    my_Class2d2& operator=(int rhs) {
+        d_def.d_value = rhs;
+        // do not touch allocator!
+        return *this;
+    }
+
+    my_Class2d2& operator=(const bsl::optional<my_Class2>& rhs) {
+        if (rhs)
+        {
+            d_def.d_value = rhs.value().d_def.d_value + OPT_OL_OFFSET ;
+            d_def.d_allocator_p = 0;
+        }
+        else
+        {
+            d_def.d_value = 0;
+            d_def.d_allocator_p = 0;
+        }
+        return *this;
+    }
+
+    my_Class2d2& operator=(bslmf::MovableRef<bsl::optional<my_Class2>> rhs) {
+        bsl::optional<my_Class2>& otherRef = MovUtl::access(rhs);
+        if (otherRef)
+        {
+            d_def.d_value = otherRef.value().d_def.d_value  + OPT_OL_OFFSET;
+            otherRef.value().d_def.d_value = MOVED_FROM_VAL;
+            d_def.d_allocator_p = 0;
+        }
+        else
+        {
+            d_def.d_value = 0;
+            d_def.d_allocator_p = 0;
+        }
+        return *this;
+    }
+
+    // ACCESSORS
+    int value() const { return d_def.d_value; }
+};
+bool operator==(const my_Class2d2& lhs,
+const my_Class2d2& rhs)
+{
+    return (lhs.value()==rhs.value());
+}
+
+// TRAITS
+namespace BloombergLP {
+namespace bslma {
+
+template <>
+struct UsesBslmaAllocator<my_Class2d2> : bsl::true_type { };
+
+}  // close namespace bslma
+}  // close enterprise namespace
+
                              // ===============
                              // class my_Class3
                              // ===============
@@ -920,7 +1962,7 @@ public:
       }
 
       my_Class4(bslmf::MovableRef<my_Class4> other, bslma::Allocator *a = 0) {
-                                                                      // IMPLICIT
+
         my_Class4& otherRef = MovUtl::access(other);
           d_def.d_value = otherRef.d_def.d_value + 10;
           otherRef.d_def.d_value = MOVED_FROM_VAL;
@@ -1052,7 +2094,7 @@ ConstructTestArg(const ConstructTestArg & other);
 ConstructTestArg(bslmf::MovableRef<ConstructTestArg> other);
 // Create an object by moving from 'other'.
 
-ConstructTestArg(int value = -1);                               // IMPLICIT
+ConstructTestArg(int value = -1);
 // Create an object having the specified 'value'.
 };
 
@@ -1723,7 +2765,7 @@ ConstructTestArg<14>   VA14(14);
 #define TEST_EQUAL_ENGAGED_MOVE(obj, otype, type, val, expVal)              \
 {                                                                           \
   otype sourceObj(type(val));                                               \
-   ASSERT(sourceObj.has_value());                                           \
+  ASSERT(sourceObj.has_value());                                           \
   obj = MovUtl::move(sourceObj);                                            \
   ASSERT(obj.has_value());                                                  \
   ASSERT(val == obj.value().value());                                       \
@@ -4224,9 +5266,9 @@ void bslstl_optional_test13()
   //
   // Concerns:
   //   * assigning an engaged optional to an optional object assigns the
-  //     value of the rh optional to the value of the destination optional.
+  //     value of the rhs optional to the value of the destination optional.
   //   * assigning a disengaged optional to an optional object assigns the
-  //     value of the rh optional to the value of the destination optional.
+  //     value of the rhs optional to the value of the destination optional.
   //   * for allocator aware types, the assignment to a disengaged optional
   //     uses the stored allocator.
   //   * for allocator aware types, the assignment to an engaged optional
@@ -4617,8 +5659,16 @@ void bslstl_optional_test13()
             mX.emplace(2);
             TEST_EQUAL_ENGAGED_MOVE_A(mX, CObjC, ValueType, 7, 7);
 
+
+            ASSERT((std::is_constructible<ValueType, OtherType>::value));
+            ASSERT((std::is_assignable<ValueType&, OtherType>::value));
+            ASSERT((!bsl::is_convertible<BloombergLP::bslmf::MovableRef<optional<OtherType>>, ValueType>::value));
             mX.emplace(2);
-            TEST_EQUAL_ENGAGED_MOVE_A(mX, OtherObj, OtherType, 7, MOVED_FROM_VAL);
+            {                                                                           \
+              OtherObj sourceObj(bsl::allocator_arg, &ta, OtherType(7));                      \
+              mX = MovUtl::move(sourceObj);                                            \
+            }
+            //TEST_EQUAL_ENGAGED_MOVE_A(mX, OtherObj, OtherType, 7, MOVED_FROM_VAL);
 
             mX.emplace(2);
             TEST_EQUAL_ENGAGED_MOVE_A(mX, COtherObj, OtherType, 7, 7);
@@ -4781,6 +5831,7 @@ void bslstl_optional_test13()
 #endif //BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST
      }
 }
+
 void bslstl_optional_test14()
 {
   // --------------------------------------------------------------------
@@ -6128,7 +7179,7 @@ void bslstl_optional_test19()
             const SrcObj source2(SourceType(2));;
             Obj dest2 = source2;
             ASSERT(dest2.has_value());
-            ASSERT(dest.value().value() == 2);
+            ASSERT(dest2.value().value() == 2);
         }
         {
             SrcObj source(nullopt);
@@ -6178,7 +7229,7 @@ void bslstl_optional_test19()
 
 
           SrcObj source3(SourceType(3));
-          Obj dest3(bsl::allocator_arg, &ta, source);
+          Obj dest3(bsl::allocator_arg, &ta, source3);
           ASSERT(dest3.has_value());
           ASSERT(dest3.value().value() == 3);
           ASSERT(dest3.value().d_def.d_allocator_p == &ta);
@@ -8050,6 +9101,148 @@ void bslstl_optional_test25()
         test_copyila_helper<const ValueType, bsl::optional< const ValueType> >();
     }
 }
+
+void bslstl_optional_test26()
+{
+  // --------------------------------------------------------------------
+  // TESTING operator=(optional_type) OVERLOAD RESOLUTION
+  //   This test will verify that the operator=(optional) function works
+  //   as expected in the presence of constructors and assignment
+  //   operators in value type taking an optional.
+  //   In these tests we do not care about the different allocation argument
+  //   policies because the allocator propagation is tested in the
+  //   functionality tests for operator=. Here, we only care that the correct
+  //   overload is selected.
+  //   Similarly, we do not care about the allocator state after assignment,
+  //   nor do we care about the difference in behaviour when the source and
+  //   destination optionals are engaged/disengaged. We deliberately always
+  //   use engaged optionals as that directly forwards to the underlying
+  //   value type assignment.
+  //
+  // Concerns:
+  //   * if value type is assignable and constructible from an optional of
+  //     another value type, the rhs optional is passed in to the value type.
+  //     The resulting optional is always engaged.
+  //   * assigning {} to an optional creates a disengaged optional
+  //
+  // Plan:
+  //
+  //   Conduct the test using 'int' (scalar type, doesn't use allocator) and
+  //   'bsl::string' (non scalar type, uses allocator) for 'TYPE'.
+  //
+  //   Create a source optional of each type.
+  //   Create a destination optional of optional of each type.
+  //   Assign the source object to the destination object. Check the
+  //   resulting optional is engaged.
+  //
+  //   Assign {} to the each destination object. Check the resulting
+  //   optional is disengaged
+  //
+  //
+  //
+  //
+  // Testing:
+  //
+  //   optional& operator= overload set
+  //
+  //
+  //   void has_value();
+  //
+  // --------------------------------------------------------------------
+
+    if (verbose) printf(
+                       "\nTESTING operator=(optional_type) OVERLOAD set"
+                       "\n===================================================\n");
+
+    if (verbose) printf( "\nUsing 'int'.\n");
+    {
+        typedef int                             ValueType;
+        typedef bsl::optional<ValueType>        OptV;
+        typedef const OptV                      COptV;
+        typedef bsl::optional<OptV>             Obj;
+
+        OptV source = 4;
+        Obj destination;
+        destination = source;
+        ASSERT(destination.has_value());
+        ASSERT(destination.value().has_value());
+        ASSERT(destination.value().value() == 4);
+
+        source = {};
+        ASSERT(!source.has_value());
+        destination = {};
+        ASSERT(!destination.has_value());
+
+        source = 5;
+        destination = MovUtl::move(source);
+        ASSERT(destination.has_value());
+        ASSERT(destination.value().value() == 5);
+
+        COptV source2(6);
+        destination = source2;
+        ASSERT(destination.has_value());
+        ASSERT(destination.value().has_value());
+        ASSERT(destination.value().value() == 6);
+
+        source = 8;
+        ASSERT(source.has_value());
+        ASSERT(source.value() == 8);
+        destination = 9;
+        ASSERT(destination.has_value());
+        ASSERT(destination.value().value() == 9);
+
+        destination = MovUtl::move(source2);
+        ASSERT(destination.has_value());
+        ASSERT(destination.value().has_value());
+        ASSERT(destination.value().value() == 6);
+
+    }
+    if (verbose) printf( "\nUsing 'bsl::string'.\n");
+    {
+        typedef bsl::string                     ValueType;
+        typedef bsl::optional<ValueType>        OptV;
+        typedef const OptV                      COptV;
+        typedef bsl::optional<OptV>             Obj;
+
+        OptV source("test26");
+        Obj destination;
+        destination = source;
+        ASSERT(destination.has_value());
+        ASSERT(destination.value().has_value());
+        ASSERT(destination.value().value() == "test26");
+
+        source = {};
+        ASSERT(!source.has_value());
+        destination = {};
+        ASSERT(!destination.has_value());
+
+
+        source = "another test string";
+        destination = std::move(source);
+        ASSERT(destination.has_value());
+        ASSERT(destination.value().value() == "another test string");
+
+
+        COptV source2("test26");
+        destination = source2;
+        ASSERT(destination.has_value());
+        ASSERT(destination.value().has_value());
+        ASSERT(destination.value().value() == "test26");
+
+        source = "booboo";
+        ASSERT(source.has_value());
+        ASSERT(source.value() == "booboo");
+        destination = "haha";
+        ASSERT(destination.has_value());
+        ASSERT(destination.value().value() == "haha");
+
+        destination = MovUtl::move(source2);
+        ASSERT(destination.has_value());
+        ASSERT(destination.value().has_value());
+        ASSERT(destination.value().value() == "test26");
+    }
+
+}
 int main(int argc, char **argv)
 {
     const int                 test = argc > 1 ? atoi(argv[1]) : 0;
@@ -8073,6 +9266,9 @@ int main(int argc, char **argv)
     bslma::Default::setGlobalAllocator(&globalAllocator);
 
     switch (test) { case 0:
+      case 26:
+        bslstl_optional_test26();
+        break;
       case 25:
         bslstl_optional_test25();
         break;
