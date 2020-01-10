@@ -3599,10 +3599,6 @@ void bslstl_optional_test4()
 
         ValueType i = Obj(bsl::allocator_arg, &oa, "test string 4").value();
         ASSERT(i == "test string 4");
-        // move uses the original allocator
-        // todo: move a const object doesn't seem to use the original allocator
-        // check if that's as expected
-        ASSERT(i.get_allocator().mechanism() == &oa);
 
         try{ CObj().value();}
         catch (bsl::bad_optional_access &)
