@@ -118,6 +118,7 @@ BSLS_IDENT("$Id: $")
 
 #include <bslalg_constructusingallocator.h>
 #include <bslalg_scalarprimitives.h>
+#include <bslalg_swaputil.h>
 
 #include <bslma_stdallocator.h>
 #include <bslma_constructionutil.h>
@@ -278,13 +279,14 @@ struct optional_data_imp {
 
   private:
     typedef typename bsl::remove_const<TYPE>::type stored_type;
-    typedef typename bsl::allocator<char> allocator_type;
 
     BloombergLP::bsls::ObjectBuffer<stored_type>  d_buffer;
                                      // in-place 'TYPE' object
     bool           d_hasValue;       // 'true' if object has value, Otherwise
                                      // 'false'
   public:
+    typedef typename bsl::allocator<char> allocator_type;
+
     BSLMF_NESTED_TRAIT_DECLARATION_IF(optional_data_imp,
                                       BloombergLP::bslma::UsesBslmaAllocator,
                                       BloombergLP::bslma::UsesBslmaAllocator<TYPE>::value);
@@ -1012,6 +1014,10 @@ class optional {
         ANY_TYPE&&) BSLS_COMPILER_FEATURES_RVREF_QUAL;
 #endif
 
+    void swap(optional& other);
+        // Efficiently exchange the value of this object with the value of the
+        // specified 'other' object.  In effect, performs
+        // 'using bsl::swap; swap(c, other.c);'.
   private :
 
 };
@@ -1153,7 +1159,6 @@ class optional<TYPE, false> {
           // Destroy this object.
 
   //MANIPULATORS
-  //MANIPULATORS
   #if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES // $var-args=5
     template<class... ARGS>
     void emplace(BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)...);
@@ -1281,10 +1286,320 @@ class optional<TYPE, false> {
     TYPE value_or(ANY_TYPE&&) BSLS_COMPILER_FEATURES_RVREF_QUAL;
 #endif
 
+    void swap(optional& other);
+        // Efficiently exchange the value of this object with the value of the
+        // specified 'other' object.  In effect, performs
+        // 'using bsl::swap; swap(c, other.c);'.
   private:
 
 
 };
+
+// FREE FUNCTIONS
+template <class TYPE>
+void swap(bsl::optional<TYPE>& lhs,
+          bsl::optional<TYPE>& rhs);
+    // Swap the value of the specified 'lhs' optional with the value of the
+    // specified 'rhs' optional.
+
+// FREE OPERATORS
+template <class LHS_TYPE, class RHS_TYPE>
+bool operator==(const optional<LHS_TYPE>& lhs,
+                const optional<RHS_TYPE>& rhs);
+    // Return 'true' if the specified 'lhs' and 'rhs' optional objects have the
+    // same value, and 'false' otherwise.  Two optional objects have the same
+    // value if both are null, or if both are non-null and the values of their
+    // underlying objects compare equal.  Note that this function will fail to
+    // compile if 'LHS_TYPE' and 'RHS_TYPE' are not compatible.
+
+template <class LHS_TYPE, class RHS_TYPE>
+bool operator!=(const optional<LHS_TYPE>& lhs,
+                const optional<RHS_TYPE>& rhs);
+    // Return 'true' if the specified 'lhs' and 'rhs' optional objects do not
+    // have the same value, and 'false' otherwise.  Two optional objects do not
+    // have the same value if one is null and the other is non-null, or if both
+    // are non-null and the values of their underlying objects do not compare
+    // equal.  Note that this function will fail to compile if 'LHS_TYPE' and
+    // 'RHS_TYPE' are not compatible.
+
+template <class LHS_TYPE, class RHS_TYPE>
+bool operator!=(const optional<LHS_TYPE>& lhs,
+                const RHS_TYPE&                rhs);
+template <class LHS_TYPE, class RHS_TYPE>
+bool operator!=(const LHS_TYPE&                lhs,
+                const optional<RHS_TYPE>& rhs);
+    // Return 'true' if the specified 'lhs' and 'rhs' objects do not have the
+    // same value, and 'false' otherwise.  A optional object and a value of
+    // some type do not have the same value if either the optional object is
+    // null, or its underlying value does not compare equal to the other value.
+    // Note that this function will fail to compile if 'LHS_TYPE' and
+    // 'RHS_TYPE' are not compatible.
+
+template <class LHS_TYPE, class RHS_TYPE>
+bool operator==(const optional<LHS_TYPE>& lhs,
+                const RHS_TYPE&                rhs);
+template <class LHS_TYPE, class RHS_TYPE>
+bool operator==(const LHS_TYPE&                lhs,
+                const optional<RHS_TYPE>& rhs);
+    // Return 'true' if the specified 'lhs' and 'rhs' objects have the same
+    // value, and 'false' otherwise.  A optional object and a value of some
+    // type have the same value if the optional object is non-null and its
+    // underlying value compares equal to the other value.  Note that this
+    // function will fail to compile if 'LHS_TYPE' and 'RHS_TYPE' are not
+    // compatible.
+
+template <class LHS_TYPE, class RHS_TYPE>
+bool operator<(const optional<LHS_TYPE>& lhs,
+               const optional<RHS_TYPE>& rhs);
+    // Return 'true' if the specified 'lhs' optional object is ordered before
+    // the specified 'rhs' optional object, and 'false' otherwise.  'lhs' is
+    // ordered before 'rhs' if 'lhs' is null and 'rhs' is non-null or if both
+    // are non-null and 'lhs.value()' is ordered before 'rhs.value()'.  Note
+    // that this function will fail to compile if 'LHS_TYPE' and 'RHS_TYPE' are
+    // not compatible.
+
+template <class LHS_TYPE, class RHS_TYPE>
+bool operator<(const optional<LHS_TYPE>& lhs,
+               const RHS_TYPE&                rhs);
+    // Return 'true' if the specified 'lhs' optional object is ordered before
+    // the specified 'rhs', and 'false' otherwise.  'lhs' is ordered before
+    // 'rhs' if 'lhs' is null or 'lhs.value()' is ordered before 'rhs'.
+
+template <class LHS_TYPE, class RHS_TYPE>
+bool operator<(const LHS_TYPE&                lhs,
+               const optional<RHS_TYPE>& rhs);
+    // Return 'true' if the specified 'lhs' is ordered before the specified
+    // 'rhs' optional object, and 'false' otherwise.  'lhs' is ordered before
+    // 'rhs' if 'rhs' is not null and 'lhs' is ordered before 'rhs.value()'.
+
+template <class LHS_TYPE, class RHS_TYPE>
+bool operator>(const optional<LHS_TYPE>& lhs,
+               const optional<RHS_TYPE>& rhs);
+    // Return 'true' if the specified 'lhs' optional object is ordered after
+    // the specified 'rhs' optional object, and 'false' otherwise.  'lhs' is
+    // ordered after 'rhs' if 'lhs' is non-null and 'rhs' is null or if both
+    // are non-null and 'lhs.value()' is ordered after 'rhs.value()'.  Note
+    // that this operator returns 'rhs < lhs'.  Also note that this function
+    // will fail to compile if 'LHS_TYPE' and 'RHS_TYPE' are not compatible.
+
+template <class LHS_TYPE, class RHS_TYPE>
+bool operator>(const optional<LHS_TYPE>& lhs,
+               const RHS_TYPE&                rhs);
+    // Return 'true' if the specified 'lhs' optional object is ordered after
+    // the specified 'rhs', and 'false' otherwise.  'lhs' is ordered after
+    // 'rhs' if 'lhs' is not null and 'lhs.value()' is ordered after 'rhs'.
+    // Note that this operator returns 'rhs < lhs'.
+
+template <class LHS_TYPE, class RHS_TYPE>
+bool operator>(const LHS_TYPE&                lhs,
+               const optional<RHS_TYPE>& rhs);
+    // Return 'true' if the specified 'lhs' is ordered after the specified
+    // 'rhs' optional object, and 'false' otherwise.  'lhs' is ordered after
+    // 'rhs' if 'rhs' is null or 'lhs' is ordered after 'rhs.value()'.  Note
+    // that this operator returns 'rhs < lhs'.
+
+
+template <class LHS_TYPE, class RHS_TYPE>
+bool operator<=(const optional<LHS_TYPE>& lhs,
+                const optional<RHS_TYPE>& rhs);
+    // Return 'true' if the specified 'lhs' optional object is ordered before
+    // the specified 'rhs' optional object or 'lhs' and 'rhs' have the same
+    // value, and 'false' otherwise.  (See 'operator<' and 'operator=='.)  Note
+    // that this operator returns '!(rhs < lhs)'.  Also note that this function
+    // will fail to compile if 'LHS_TYPE' and 'RHS_TYPE' are not compatible.
+
+template <class LHS_TYPE, class RHS_TYPE>
+bool operator<=(const optional<LHS_TYPE>& lhs,
+                const RHS_TYPE&                rhs);
+    // Return 'true' if the specified 'lhs' optional object is ordered before
+    // the specified 'rhs' or 'lhs' and 'rhs' have the same value, and 'false'
+    // otherwise.  (See 'operator<' and 'operator=='.)  Note that this operator
+    // returns '!(rhs < lhs)'.
+
+template <class LHS_TYPE, class RHS_TYPE>
+bool operator<=(const LHS_TYPE&                lhs,
+                const optional<RHS_TYPE>& rhs);
+    // Return 'true' if the specified 'lhs' is ordered before the specified
+    // 'rhs' optional object or 'lhs' and 'rhs' have the same value, and
+    // 'false' otherwise.  (See 'operator<' and 'operator=='.)  Note that this
+    // operator returns '!(rhs < lhs)'.
+
+template <class LHS_TYPE, class RHS_TYPE>
+bool operator>=(const optional<LHS_TYPE>& lhs,
+                const optional<RHS_TYPE>& rhs);
+    // Return 'true' if the specified 'lhs' optional object is ordered after
+    // the specified 'rhs' optional object or 'lhs' and 'rhs' have the same
+    // value, and 'false' otherwise.  (See 'operator>' and 'operator=='.)  Note
+    // that this operator returns '!(lhs < rhs)'.  Also note that this function
+    // will fail to compile if 'LHS_TYPE' and 'RHS_TYPE' are not compatible.
+
+template <class LHS_TYPE, class RHS_TYPE>
+bool operator>=(const optional<LHS_TYPE>& lhs,
+                const RHS_TYPE&                rhs);
+    // Return 'true' if the specified 'lhs' optional object is ordered after
+    // the specified 'rhs' or 'lhs' and 'rhs' have the same value, and 'false'
+    // otherwise.  (See 'operator>' and 'operator=='.)  Note that this operator
+    // returns '!(lhs < rhs)'.
+
+template <class LHS_TYPE, class RHS_TYPE>
+bool operator>=(const LHS_TYPE&                lhs,
+                const optional<RHS_TYPE>& rhs);
+    // Return 'true' if the specified 'lhs' is ordered after the specified
+    // 'rhs' optional object or 'lhs' and 'rhs' have the same value, and
+    // 'false' otherwise.  (See 'operator>' and 'operator=='.)  Note that this
+    // operator returns '!(lhs < rhs)'.
+
+template <class TYPE>
+BSLS_KEYWORD_CONSTEXPR
+bool operator==(const optional<TYPE>& value,
+                const nullopt_t&         ) BSLS_KEYWORD_NOEXCEPT;
+template <class TYPE>
+BSLS_KEYWORD_CONSTEXPR
+bool operator==(const nullopt_t&         ,
+                const optional<TYPE>& value) BSLS_KEYWORD_NOEXCEPT;
+    // Return 'true' if the specified 'value' is null, and 'false' otherwise.
+
+template <class TYPE>
+BSLS_KEYWORD_CONSTEXPR
+bool operator!=(const optional<TYPE>& value,
+                const nullopt_t&         ) BSLS_KEYWORD_NOEXCEPT;
+template <class TYPE>
+BSLS_KEYWORD_CONSTEXPR
+bool operator!=(const nullopt_t&         ,
+                const optional<TYPE>& value) BSLS_KEYWORD_NOEXCEPT;
+    // Return 'true' if the specified 'value' is not null, and 'false'
+    // otherwise.
+
+template <class TYPE>
+BSLS_KEYWORD_CONSTEXPR
+bool operator<(const optional<TYPE>&,
+               const nullopt_t&        ) BSLS_KEYWORD_NOEXCEPT;
+    // Return 'false'.  Note that 'bdlb::nullOpt' never orders before a
+    // 'optional'.
+
+template <class TYPE>
+BSLS_KEYWORD_CONSTEXPR
+bool operator<(const nullopt_t&         ,
+               const optional<TYPE>& value) BSLS_KEYWORD_NOEXCEPT;
+    // Return 'true' if the specified 'value' is not null, and 'false'
+    // otherwise.  Note that 'bdlb::nullOpt' sorts before any 'optional'
+    // that is not null.
+
+template <class TYPE>
+BSLS_KEYWORD_CONSTEXPR
+bool operator>(const optional<TYPE>& value,
+               const nullopt_t&         ) BSLS_KEYWORD_NOEXCEPT;
+    // Return 'true' if the specified 'value' is not null, and 'false'
+    // otherwise.
+
+template <class TYPE>
+BSLS_KEYWORD_CONSTEXPR
+bool operator>(const nullopt_t&         ,
+               const optional<TYPE>& value) BSLS_KEYWORD_NOEXCEPT;
+    // Return 'false'.  Note that 'bdlb::nullOpt' never orders after a
+    // 'optional'.
+
+template <class TYPE>
+BSLS_KEYWORD_CONSTEXPR
+bool operator<=(const optional<TYPE>& value,
+                const nullopt_t&         ) BSLS_KEYWORD_NOEXCEPT;
+    // Return 'true' if the specified 'value' is null, and 'false'
+    // otherwise.
+
+template <class TYPE>
+BSLS_KEYWORD_CONSTEXPR
+bool operator<=(const nullopt_t&         ,
+                const optional<TYPE>& value) BSLS_KEYWORD_NOEXCEPT;
+    // Return 'true'.
+
+template <class TYPE>
+BSLS_KEYWORD_CONSTEXPR
+bool operator>=(const optional<TYPE>& value,
+                const nullopt_t&         ) BSLS_KEYWORD_NOEXCEPT;
+    // Return 'true'.
+
+template <class TYPE>
+BSLS_KEYWORD_CONSTEXPR
+bool operator>=(const nullopt_t&         ,
+                const optional<TYPE>& value) BSLS_KEYWORD_NOEXCEPT;
+    // Return 'true' if the specified 'value' is null, and 'false' otherwise.
+
+
+template<class TYPE>
+BSLS_KEYWORD_CONSTEXPR
+optional<typename std::decay<TYPE>::type>
+make_optional(BSLS_COMPILERFEATURES_FORWARD_REF(TYPE) rhs);
+    // Return an 'optional' object containing a 'TYPE' object created from
+    // the given parameter using
+    // optional((BSLS_COMPILERFEATURES_FORWARD_REF(TYPE) rhs);
+    // If TYPE uses an allocator, the default allocator will be used for the
+    // optional object.
+
+template<class TYPE, class... ARGS>
+BSLS_KEYWORD_CONSTEXPR
+optional<TYPE>
+make_optional(BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args);
+    // Return an 'optional' object containing a 'TYPE' object created from
+    // the given parameters using
+    // optional(in_place, (BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args);
+    // If TYPE uses an allocator, the default allocator will be used for the
+    // optional object.
+
+template<class TYPE, class U, class... ARGS>
+BSLS_KEYWORD_CONSTEXPR
+optional<TYPE>
+make_optional(std::initializer_list<U> il,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args);
+    // Return an 'optional' object containing a 'TYPE' object created from
+    // the given parameters using
+    // optional(in_place,
+    //          il,
+    //          (BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args);
+    // If TYPE uses an allocator, the default allocator will be used for the
+    // optional object.
+
+template<class TYPE>
+BSLS_KEYWORD_CONSTEXPR
+optional<TYPE>
+alloc_optional(typename optional<TYPE>::allocator_type const&,
+               BSLS_COMPILERFEATURES_FORWARD_REF(TYPE) rhs);
+    // Return an 'optional' object containing a 'TYPE' object created from
+    // the given TYPE parameter using
+    // optional(allocator_arg,
+    //          alloc,
+    //          (BSLS_COMPILERFEATURES_FORWARD_REF(TYPE) rhs));
+    // Note that this function will fail to compile if TYPE doesn't use
+    // allocators.
+
+template<class TYPE, class... ARGS>
+BSLS_KEYWORD_CONSTEXPR
+optional<TYPE>
+alloc_optional(typename optional<TYPE>::allocator_type const& alloc,
+               BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args);
+    // Return an 'optional' object containing a 'TYPE' object created from
+    // the given TYPE parameter using
+    // optional(allocator_arg,
+    //          alloc,
+    //          in_place,
+    //          (BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args);
+    // Note that this function will fail to compile if TYPE doesn't use
+    // allocators.
+
+template<class TYPE, class U, class... ARGS>
+BSLS_KEYWORD_CONSTEXPR
+optional<TYPE>
+alloc_optional(typename optional<TYPE>::allocator_type const& alloc,
+               std::initializer_list<U> il,
+               BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args);
+    // Return an 'optional' object containing a 'TYPE' object created from
+    // the given TYPE parameter using
+    // optional(allocator_arg,
+    //          alloc,
+    //          in_place,
+    //          il,
+    //          (BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args);
+    // Note that this function will fail to compile if TYPE doesn't use
+    // allocators.
 
 
 // ============================================================================
@@ -1917,14 +2232,24 @@ optional<TYPE, UsesBslmaAllocator>::get_allocator() const BSLS_KEYWORD_NOEXCEPT
 {
     return d_allocator;
 }
-                      // ---------------------------------------
-                      // class optional<TYPE>
-                      // ---------------------------------------
 
-
-
-
-// ACCESSORS
+template <class TYPE, bool UsesBslmaAllocator>
+void optional<TYPE, UsesBslmaAllocator>::swap(optional &other)
+{
+    if (this->has_value() && other.has_value())
+        BloombergLP::bslalg::SwapUtil::swap(&(this->value()),
+                                            &(other.value()));
+    else if (this->has_value())
+    {
+        other.emplace(MoveUtil::move(this->value()));
+        this->reset();
+    }
+    else if (other.has_value())
+    {
+        this->emplace(MoveUtil::move(other.value()));
+        other.reset();
+    }
+}
 
                       // ------------------------------------------
                       // class optional_WithoutAllocator<TYPE>
@@ -2368,9 +2693,350 @@ optional<TYPE, false>::operator bool() const BSLS_KEYWORD_NOEXCEPT
 {
     return this->has_value();
 }
+template <class TYPE>
+void optional<TYPE, false>::swap(optional &other)
+{
+    if (this->has_value() && other.has_value())
+        BloombergLP::bslalg::SwapUtil::swap(&(this->value()),
+                                            &(other.value()));
+    else if (this->has_value())
+    {
+        other.emplace(MoveUtil::move(this->value()));
+        this->reset();
+    }
+    else if (other.has_value())
+    {
+        this->emplace(MoveUtil::move(other.value()));
+        other.reset();
+    }
+}
 
+// FREE FUNCTIONS
+template<typename TYPE>
+inline
+void swap(bsl::optional<TYPE>& lhs, optional<TYPE>& rhs)
+{
+    lhs.swap(rhs);
+}
+
+template <class LHS_TYPE, class RHS_TYPE>
+inline
+bool operator==(const optional<LHS_TYPE>& lhs,
+                      const optional<RHS_TYPE>& rhs)
+{
+    if (lhs && rhs) {
+        return lhs.value() == rhs.value();                            // RETURN
+    }
+
+    return lhs.has_value() == rhs.has_value();
+}
+
+template <class LHS_TYPE, class RHS_TYPE>
+inline
+bool operator!=(const optional<LHS_TYPE>& lhs,
+                      const optional<RHS_TYPE>& rhs)
+{
+    if (lhs && rhs) {
+        return lhs.value() != rhs.value();                            // RETURN
+    }
+
+    return lhs.has_value() != rhs.has_value();
+}
+
+template <class LHS_TYPE, class RHS_TYPE>
+inline
+bool operator==(const optional<LHS_TYPE>& lhs,
+                      const RHS_TYPE&                rhs)
+{
+    return lhs && lhs.value() == rhs;
+}
+
+template <class LHS_TYPE, class RHS_TYPE>
+inline
+bool operator==(const LHS_TYPE&                lhs,
+                      const optional<RHS_TYPE>& rhs)
+{
+    return rhs && rhs.value() == lhs;
+}
+
+template <class LHS_TYPE, class RHS_TYPE>
+inline
+bool operator!=(const optional<LHS_TYPE>& lhs,
+                      const RHS_TYPE&                rhs)
+{
+    return !lhs || lhs.value() != rhs;
+}
+
+template <class LHS_TYPE, class RHS_TYPE>
+inline
+bool operator!=(const LHS_TYPE&                lhs,
+                      const optional<RHS_TYPE>& rhs)
+{
+    return !rhs || rhs.value() != lhs;
+}
+
+template <class LHS_TYPE, class RHS_TYPE>
+inline
+bool operator<(const optional<LHS_TYPE>& lhs,
+                     const optional<RHS_TYPE>& rhs)
+{
+    if (!rhs) {
+        return false;                                                 // RETURN
+    }
+
+    return !lhs || lhs.value() < rhs.value();
+}
+
+template <class LHS_TYPE, class RHS_TYPE>
+inline
+bool operator<(const optional<LHS_TYPE>& lhs,
+                     const RHS_TYPE&                rhs)
+{
+    return !lhs || lhs.value() < rhs;
+}
+
+template <class LHS_TYPE, class RHS_TYPE>
+inline
+bool operator<(const LHS_TYPE&                lhs,
+                     const optional<RHS_TYPE>& rhs)
+{
+    return rhs && lhs < rhs.value();
+}
+
+template <class LHS_TYPE, class RHS_TYPE>
+inline
+bool operator>(const optional<LHS_TYPE>& lhs,
+                     const optional<RHS_TYPE>& rhs)
+{
+    return rhs < lhs;
+}
+
+template <class LHS_TYPE, class RHS_TYPE>
+inline
+bool operator>(const optional<LHS_TYPE>& lhs,
+                     const RHS_TYPE&                rhs)
+{
+    return rhs < lhs;
+}
+
+template <class LHS_TYPE, class RHS_TYPE>
+inline
+bool operator>(const LHS_TYPE&                lhs,
+                     const optional<RHS_TYPE>& rhs)
+{
+    return rhs < lhs;
+}
+
+template <class LHS_TYPE, class RHS_TYPE>
+inline
+bool operator<=(const optional<LHS_TYPE>& lhs,
+                      const optional<RHS_TYPE>& rhs)
+{
+    return !(rhs < lhs);
+}
+
+template <class LHS_TYPE, class RHS_TYPE>
+inline
+bool operator<=(const optional<LHS_TYPE>& lhs,
+                      const RHS_TYPE&                rhs)
+{
+    return !(rhs < lhs);
+}
+
+template <class LHS_TYPE, class RHS_TYPE>
+inline
+bool operator<=(const LHS_TYPE&                lhs,
+                      const optional<RHS_TYPE>& rhs)
+{
+    return !(rhs < lhs);
+}
+
+template <class LHS_TYPE, class RHS_TYPE>
+inline
+bool operator>=(const optional<LHS_TYPE>& lhs,
+                      const optional<RHS_TYPE>& rhs)
+{
+    return !(lhs < rhs);
+}
+
+template <class LHS_TYPE, class RHS_TYPE>
+inline
+bool operator>=(const optional<LHS_TYPE>& lhs,
+                      const RHS_TYPE&                rhs)
+{
+    return !(lhs < rhs);
+}
+
+template <class LHS_TYPE, class RHS_TYPE>
+inline
+bool operator>=(const LHS_TYPE&                lhs,
+                      const optional<RHS_TYPE>& rhs)
+{
+    return !(lhs < rhs);
+}
+
+
+template <class TYPE>
+inline BSLS_KEYWORD_CONSTEXPR
+bool operator==(const optional<TYPE>& value,
+                      const nullopt_t&         ) BSLS_KEYWORD_NOEXCEPT
+{
+    return value.isNull();
+}
+
+template <class TYPE>
+inline BSLS_KEYWORD_CONSTEXPR
+bool operator==(const nullopt_t&         ,
+                      const optional<TYPE>& value) BSLS_KEYWORD_NOEXCEPT
+{
+    return value.isNull();
+}
+
+template <class TYPE>
+inline BSLS_KEYWORD_CONSTEXPR
+bool operator!=(const optional<TYPE>& value,
+                      const nullopt_t&         ) BSLS_KEYWORD_NOEXCEPT
+{
+    return !value.isNull();
+}
+
+template <class TYPE>
+inline BSLS_KEYWORD_CONSTEXPR
+bool operator!=(const nullopt_t&         ,
+                      const optional<TYPE>& value) BSLS_KEYWORD_NOEXCEPT
+{
+    return !value.isNull();
+}
+
+template <class TYPE>
+inline BSLS_KEYWORD_CONSTEXPR
+bool operator<(const optional<TYPE>&,
+                     const nullopt_t&        ) BSLS_KEYWORD_NOEXCEPT
+{
+    return false;
+}
+
+template <class TYPE>
+inline BSLS_KEYWORD_CONSTEXPR
+bool operator<(const nullopt_t&         ,
+                     const optional<TYPE>& value) BSLS_KEYWORD_NOEXCEPT
+{
+    return !value.isNull();
+}
+
+template <class TYPE>
+inline BSLS_KEYWORD_CONSTEXPR
+bool operator>(const optional<TYPE>& value,
+                     const nullopt_t&         ) BSLS_KEYWORD_NOEXCEPT
+{
+    return !value.isNull();
+}
+
+template <class TYPE>
+inline BSLS_KEYWORD_CONSTEXPR
+bool operator>(const nullopt_t&         ,
+                     const optional<TYPE>& ) BSLS_KEYWORD_NOEXCEPT
+{
+    return false;
+}
+
+template <class TYPE>
+inline BSLS_KEYWORD_CONSTEXPR
+bool operator<=(const optional<TYPE>& value,
+                      const nullopt_t&         ) BSLS_KEYWORD_NOEXCEPT
+{
+    return value.isNull();
+}
+
+template <class TYPE>
+inline BSLS_KEYWORD_CONSTEXPR
+bool operator<=(const nullopt_t&         ,
+                      const optional<TYPE>& ) BSLS_KEYWORD_NOEXCEPT
+{
+    return true;
+}
+
+template <class TYPE>
+inline BSLS_KEYWORD_CONSTEXPR
+bool operator>=(const optional<TYPE>& ,
+                      const nullopt_t&         ) BSLS_KEYWORD_NOEXCEPT
+{
+    return true;
+}
+
+template <class TYPE>
+inline BSLS_KEYWORD_CONSTEXPR
+bool operator>=(const nullopt_t&  ,
+                      const optional<TYPE>& value) BSLS_KEYWORD_NOEXCEPT
+{
+    return value.isNull();
+}
+
+
+template<class TYPE>
+BSLS_KEYWORD_CONSTEXPR
+optional<typename std::decay<TYPE>::type>
+make_optional(BSLS_COMPILERFEATURES_FORWARD_REF(TYPE) rhs)
+{
+    return optional<typename std::decay<TYPE>::type>(
+          BSLS_COMPILERFEATURES_FORWARD(TYPE, rhs));
+}
+
+template<class TYPE, class... ARGS>
+BSLS_KEYWORD_CONSTEXPR
+optional<TYPE>
+make_optional(BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args)
+{
+    return optional<TYPE>(in_place,
+                          BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...);
+}
+
+template<class TYPE, class U, class... ARGS>
+BSLS_KEYWORD_CONSTEXPR
+optional<TYPE>
+make_optional(std::initializer_list<U> il,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args)
+{
+    return optional<TYPE>(in_place, il,
+                          BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...);
+}
+
+template<class TYPE>
+BSLS_KEYWORD_CONSTEXPR
+optional<TYPE>
+alloc_optional(typename optional<TYPE>::allocator_type const& alloc,
+               BSLS_COMPILERFEATURES_FORWARD_REF(TYPE) rhs)
+{
+    return optional<TYPE>(allocator_arg,
+                          alloc,
+                          in_place,
+                          BSLS_COMPILERFEATURES_FORWARD(TYPE, rhs));
+}
+template<class TYPE, class... ARGS>
+BSLS_KEYWORD_CONSTEXPR
+optional<TYPE>
+alloc_optional(typename optional<TYPE>::allocator_type const& alloc,
+               BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)...args)
+{
+    return optional<TYPE>(allocator_arg,
+                          alloc,
+                          in_place,
+                          BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...);
+}
+template<class TYPE, class U, class... ARGS>
+BSLS_KEYWORD_CONSTEXPR
+optional<TYPE>
+alloc_optional(typename optional<TYPE>::allocator_type const& alloc,
+               std::initializer_list<U> il,
+               BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args)
+{
+    return optional<TYPE>(allocator_arg,
+                          alloc,
+                          in_place,
+                          il,
+                          BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...);
+}
 }  // close bsl namespace
-
 #endif // INCLUDED_BSLSTL_OPTIONAL
 //todo : fix license
 // ----------------------------------------------------------------------------

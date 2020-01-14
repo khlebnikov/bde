@@ -25,6 +25,11 @@
 #include <bslma_testallocator.h>
 #include <bslma_testallocatormonitor.h>
 
+
+#include <bslt_trackablevalue.h>
+
+#include <bsltf_moveonlyalloctesttype.h>
+
 // A list of disabled tests :
 // BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING
 //      Tests in this group rely on perfect forwarding of arguments in
@@ -2703,6 +2708,120 @@ ConstructTestArg<12>   VA12(12);
 ConstructTestArg<13>   VA13(13);
 ConstructTestArg<14>   VA14(14);
 
+struct Swappable {
+
+    // PUBLIC CLASS DATA
+    static int s_swapCalled;
+
+    // PUBLIC DATA
+    int d_value;
+
+    // CLASS METHODS
+    static bool swapCalled()
+    {
+        return 0 != s_swapCalled;
+    }
+
+    static void swapReset()
+    {
+        s_swapCalled = 0;
+    }
+
+    // CREATORS
+    explicit Swappable(int v)
+    : d_value(v)
+    {
+    }
+};
+
+// FREE OPERATORS
+bool operator==(const Swappable& lhs, const Swappable& rhs)
+{
+    return lhs.d_value == rhs.d_value;
+}
+
+// PUBLIC CLASS DATA
+int Swappable::s_swapCalled = 0;
+
+void swap(Swappable& a, Swappable& b)
+{
+    ++Swappable::s_swapCalled;
+
+    BloombergLP::bslalg::SwapUtil::swap(&a.d_value, &b.d_value);
+}
+
+struct SwappableAA {
+
+    // PUBLIC CLASS DATA
+    static int s_swapCalled;
+
+    // PUBLIC DATA
+    my_ClassDef d_def;
+
+    // CLASS METHODS
+    static bool swapCalled()
+    {
+        return 0 != s_swapCalled;
+    }
+
+    static void swapReset()
+    {
+        s_swapCalled = 0;
+    }
+
+    // CREATORS
+    explicit SwappableAA(int v, bslma::Allocator *a = 0)
+    {
+        d_def.d_value = v;
+        d_def.d_allocator_p = a;
+    }
+
+    SwappableAA(const SwappableAA& rhs, bslma::Allocator *a = 0) {
+       d_def.d_value = rhs.d_def.d_value;
+       d_def.d_allocator_p = a;
+    }
+
+    SwappableAA(bslmf::MovableRef<SwappableAA> other, bslma::Allocator *a = 0)
+    {
+
+        SwappableAA& otherRef = MovUtl::access(other);
+        d_def.d_value = otherRef.d_def.d_value;
+        otherRef.d_def.d_value = MOVED_FROM_VAL;
+        if (a) {
+            d_def.d_allocator_p = a;
+        }
+        else {
+            d_def.d_allocator_p = otherRef.d_def.d_allocator_p;
+        }
+    }
+
+
+};
+
+// FREE OPERATORS
+bool operator==(const SwappableAA& lhs, const SwappableAA& rhs)
+{
+    return lhs.d_def.d_value == rhs.d_def.d_value;
+}
+
+// PUBLIC CLASS DATA
+int SwappableAA::s_swapCalled = 0;
+
+void swap(SwappableAA& a, SwappableAA& b)
+{
+    ++SwappableAA::s_swapCalled;
+
+    BloombergLP::bslalg::SwapUtil::swap(&a.d_def.d_value, &b.d_def.d_value);
+}
+// TRAITS
+namespace BloombergLP {
+namespace bslma {
+
+template <>
+struct UsesBslmaAllocator<SwappableAA> : bsl::true_type { };
+
+}  // close namespace bslma
+} // close namespace BloombergLP
 // ======================
 // macros TEST_EMPLACE*
 // ======================
@@ -9097,6 +9216,14 @@ void bslstl_optional_test25()
         test_copyila_helper<const ValueType, bsl::optional< const ValueType> >();
     }
 }
+TrackableValue give_me_tv()
+{
+  return TrackableValue();
+}
+bsltf::MoveOnlyAllocTestType give_me_moatt()
+{
+  return bsltf::MoveOnlyAllocTestType();
+}
 
 void bslstl_optional_test26()
 {
@@ -9123,15 +9250,28 @@ void bslstl_optional_test26()
   //
   // Plan:
   //
-  //   Conduct the test using 'int' (scalar type, doesn't use allocator) and
-  //   'bsl::string' (non scalar type, uses allocator) for 'TYPE'.
+  //   Conduct the test using 'int' (scalar type, doesn't use allocator),
+  //   'my_class1' (non scalar type, doesn't use allocator), and
+  //   'my_class2' (non scalar type, uses allocator), for 'TYPE'.
   //
-  //   Create a source optional of each type.
+  //   Create a disengaged source optional of each type.
   //   Create a destination optional of optional of each type.
   //   Assign the source object to the destination object. Check the
   //   resulting optional is engaged.
   //
-  //   Assign {} to the each destination object. Check the resulting
+  //   Assign source optional's value type object to destination type. Check
+  //   the value has been propagated to the destination's value type object
+  //
+  //   Move assign source optional's value type object to destination type.
+  //   Check the value has been propagated to the destination's value type
+  //   object.
+  //
+  //   Assign {} to each of the destination objects. Check the resulting
+  //   optional is disengaged
+  //
+  //   Emplace a value in the destination object.
+  //
+  //   Assign nullopt to each destination object. Check the resulting
   //   optional is disengaged
   //
   //
@@ -9156,6 +9296,7 @@ void bslstl_optional_test26()
         typedef bsl::optional<ValueType>        OptV;
         typedef const OptV                      COptV;
         typedef bsl::optional<OptV>             Obj;
+        typedef bsl::optional<COptV>             ObjC;
 
         OptV source = 4;
         Obj destination;
@@ -9174,12 +9315,6 @@ void bslstl_optional_test26()
         ASSERT(destination.has_value());
         ASSERT(destination.value().value() == 5);
 
-        COptV source2(6);
-        destination = source2;
-        ASSERT(destination.has_value());
-        ASSERT(destination.value().has_value());
-        ASSERT(destination.value().value() == 6);
-
         source = 8;
         ASSERT(source.has_value());
         ASSERT(source.value() == 8);
@@ -9187,12 +9322,32 @@ void bslstl_optional_test26()
         ASSERT(destination.has_value());
         ASSERT(destination.value().value() == 9);
 
+        COptV source2;
+        destination = source2;
+        ASSERT(destination.has_value());
+        ASSERT(!destination.value().has_value());
+
+        destination = 4;
         destination = MovUtl::move(source2);
         ASSERT(destination.has_value());
-        ASSERT(destination.value().has_value());
-        ASSERT(destination.value().value() == 6);
+        ASSERT(!destination.value().has_value());
+
+        source = bsl::nullopt;
+        ASSERT(!source.has_value());
+        destination = bsl::nullopt;
+        ASSERT(!destination.has_value());
+
+        Obj source3;
+        destination = source3;
+        ASSERT(!destination.has_value());
+
+        ObjC source4;
+        destination = source4;
+        ASSERT(!destination.has_value());
 
     }
+
+
     if (verbose) printf( "\nUsing 'bsl::string'.\n");
     {
         typedef bsl::string                     ValueType;
@@ -9239,6 +9394,178 @@ void bslstl_optional_test26()
     }
 
 }
+void bslstl_optional_test27()
+{
+    // --------------------------------------------------------------------
+    // TESTING operator=(optional_type) OVERLOAD RESOLUTION
+    // Concerns:
+    //   1. Swap of two disengaged objects is a no-op,
+    //   2. Swap of an engaged and a disengage doptional moves the value
+    //      from the engaged object to another without calling swap for the
+    //      value type.
+    //   3. Swap of two engaged objects calls swap for the value type.
+    //
+    // Plan:
+    //   Conduct the test using 'Swappable' (doesn't use allocator),
+    //   and 'SwappableAA' for 'TYPE'.
+    //
+    //   For each type, swap two disengaged optional objects and
+    //   verify swap has not been called.
+    //
+    //   For each type, swap two engaged optional objects and
+    //   verify swap has been called.
+    //
+    //   For each type, swap an engaged and disengaged optional
+    //   object. Check swap has not been called. Check the correct
+    //   values of swapped optional objects.
+    //
+    //   Execute the tests for both swap member function and free
+    //   function
+    //
+    //
+    // Testing:
+    //   void swap(optional<TYPE>& other);
+    //   void swap(optional<TYPE>& lhs,optional<TYPE>& rhs);
+    // --------------------------------------------------------------------
+
+    if (verbose) printf("\nTESTING SWAP METHOD"
+                        "\n===================\n");
+
+    using bsl::swap;
+    {
+
+        bsl::optional<Swappable> a;
+        bsl::optional<Swappable> b;
+
+        Swappable::swapReset();
+        swap(a, b);
+
+        ASSERT(!Swappable::swapCalled());
+        ASSERT(!a.has_value());
+        ASSERT(!b.has_value());
+
+        Swappable::swapReset();
+        a.swap(b);
+
+        ASSERT(!Swappable::swapCalled());
+        ASSERT(!a.has_value());
+        ASSERT(!b.has_value());
+    }
+    {
+        Swappable obj1(1);
+        Swappable obj2(2);
+
+        const Swappable Zobj1(obj1);
+        const Swappable Zobj2(obj2);
+
+        bsl::optional<Swappable> a = obj1;
+        bsl::optional<Swappable> b = obj2;
+        ASSERT(a.value() == Zobj1);
+        ASSERT(b.value() == Zobj2);
+
+        Swappable::swapReset();
+        ASSERT(!Swappable::swapCalled());
+        swap(a, b);
+        ASSERT( Swappable::swapCalled());
+
+        ASSERT(b.value() == Zobj1);
+        ASSERT(a.value() == Zobj2);
+
+        Swappable::swapReset();
+        ASSERT(!Swappable::swapCalled());
+        a.swap(b);
+        ASSERT( Swappable::swapCalled());
+
+        ASSERT(a.value() == Zobj1);
+        ASSERT(b.value() == Zobj2);
+    }
+    {
+        bsl::optional<Swappable> nonNullObj(Swappable(10));
+        bsl::optional<Swappable> nonNullObjCopy(nonNullObj);
+        bsl::optional<Swappable> nullObj;
+
+        Swappable::swapReset();
+        swap(nonNullObj, nullObj);
+
+        ASSERT(!SwappableAA::swapCalled());
+        ASSERT(nonNullObjCopy == nullObj);
+        ASSERT(!nonNullObj.has_value());
+
+        Swappable::swapReset();
+        nonNullObj.swap(nullObj);
+
+        ASSERT(!Swappable::swapCalled());
+        ASSERT(nonNullObjCopy == nonNullObj);
+        ASSERT(!nullObj.has_value());
+    }
+    {
+
+        bsl::optional<SwappableAA> a;
+        bsl::optional<SwappableAA> b;
+
+        SwappableAA::swapReset();
+        swap(a, b);
+
+        ASSERT(!SwappableAA::swapCalled());
+        ASSERT(!a.has_value());
+        ASSERT(!b.has_value());
+
+        SwappableAA::swapReset();
+        a.swap(b);
+
+        ASSERT(!SwappableAA::swapCalled());
+        ASSERT(!a.has_value());
+        ASSERT(!b.has_value());
+    }
+    {
+        SwappableAA obj1(1);
+        SwappableAA obj2(2);
+
+        const SwappableAA Zobj1(obj1);
+        const SwappableAA Zobj2(obj2);
+
+        bsl::optional<SwappableAA> a = obj1;
+        bsl::optional<SwappableAA> b = obj2;
+        ASSERT(a.value() == Zobj1);
+        ASSERT(b.value() == Zobj2);
+
+        SwappableAA::swapReset();
+        ASSERT(!SwappableAA::swapCalled());
+        swap(a, b);
+        ASSERT( SwappableAA::swapCalled());
+
+        ASSERT(b.value() == Zobj1);
+        ASSERT(a.value() == Zobj2);
+
+        SwappableAA::swapReset();
+        ASSERT(!SwappableAA::swapCalled());
+        a.swap(b);
+        ASSERT( SwappableAA::swapCalled());
+
+        ASSERT(a.value() == Zobj1);
+        ASSERT(b.value() == Zobj2);
+    }
+    {
+        bsl::optional<SwappableAA> nonNullObj(SwappableAA(10));
+        bsl::optional<SwappableAA> nonNullObjCopy(nonNullObj);
+        bsl::optional<SwappableAA> nullObj;
+
+        SwappableAA::swapReset();
+        swap(nonNullObj, nullObj);
+
+        ASSERT(!SwappableAA::swapCalled());
+        ASSERT(nonNullObjCopy == nullObj);
+        ASSERT(!nonNullObj.has_value());
+
+        SwappableAA::swapReset();
+        nonNullObj.swap(nullObj);
+
+        ASSERT(!SwappableAA::swapCalled());
+        ASSERT(nonNullObjCopy == nonNullObj);
+        ASSERT(!nullObj.has_value());
+    }
+
+}
 int main(int argc, char **argv)
 {
     const int                 test = argc > 1 ? atoi(argv[1]) : 0;
@@ -9262,6 +9589,9 @@ int main(int argc, char **argv)
     bslma::Default::setGlobalAllocator(&globalAllocator);
 
     switch (test) { case 0:
+      case 27:
+        bslstl_optional_test27();
+        break;
       case 26:
         bslstl_optional_test26();
         break;
