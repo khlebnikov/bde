@@ -30,6 +30,8 @@
 
 #include <bsltf_moveonlyalloctesttype.h>
 
+
+#define BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING true
 // A list of disabled tests :
 // BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING
 //      Tests in this group rely on perfect forwarding of arguments in
@@ -5060,7 +5062,7 @@ void bslstl_optional_test11()
 
           mX.reset();
           ASSERT(!mX.has_value());
-          mX = MovUtl::move(i);
+          mX = MovUtl::move(ci);
           ASSERT(mX.value().value() == 3);
           ASSERT(ci.value() == 3);
       }
@@ -7676,11 +7678,11 @@ void bslstl_optional_test20()
             ASSERT(source.value().value() == MOVED_FROM_VAL);
 #endif
 
-            const SrcObj &csource = source;
+            const SrcObj csource(SourceType(2));
 
             Obj dest2 = MovUtl::move(csource);
             ASSERT(dest2.has_value());
-            ASSERT(dest2.value().value() == 1);
+            ASSERT(dest2.value().value() == 2);
         }
         {
             SrcObj source(nullopt);
