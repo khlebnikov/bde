@@ -20,7 +20,7 @@ BSLS_IDENT("$Id: $")
 //todo : add swap
 //todo : add make optional
 //todo : add alloc_optional
-//todo : fix doucmentation
+//todo : fix documentation
 //todo : sprinkle constexpr
 //todo : replace traits with bsl traits
 // todo (decisions)
@@ -127,6 +127,7 @@ BSLS_IDENT("$Id: $")
 
 #include <bslmf_allocatorargt.h>
 #include <bslmf_if.h>
+#include <bslmf_integralconstant.h>
 #include <bslmf_isbitwisemoveable.h>
 #include <bslmf_movableref.h>
 #include <bslmf_nestedtraitdeclaration.h>
@@ -267,6 +268,51 @@ extern in_place_t in_place;
 
 
 #endif //__cpp_lib_optional
+
+template <class TYPE, bool UsesBslmaAllocator = BloombergLP::bslma::UsesBslmaAllocator<TYPE>::value>
+class optional;
+
+// Type traits to assist in choosing the correct assignment
+// and construction overload. If the value_type converts
+// or assigns from an optional<other_type>, then the overload
+// passing the optional parameter to the value type is preferred.
+// As in std implementation, if the value type converts or assigns
+// from any value category, we consider it convertible/assignable
+// from optional.
+
+template <typename TYPE, typename ANY_TYPE>
+struct bsl_converts_from_optional
+: integral_constant< bool,
+          std::is_constructible<TYPE, const optional<ANY_TYPE>&>::value
+          ||
+          std::is_constructible<TYPE, optional<ANY_TYPE>&>::value
+          ||
+          std::is_constructible<TYPE, const optional<ANY_TYPE>&&>::value
+          ||
+          std::is_constructible<TYPE, optional<ANY_TYPE>&&>::value
+          ||
+          std::is_convertible<const optional<ANY_TYPE>&, TYPE>::value
+          ||
+          std::is_convertible<optional<ANY_TYPE>&, TYPE>::value
+          ||
+          std::is_convertible<const optional<ANY_TYPE>&&, TYPE>::value
+          ||
+          std::is_convertible<optional<ANY_TYPE>&&, TYPE>::value>{
+};
+
+
+template <typename TYPE, typename ANY_TYPE>
+struct bsl_assigns_from_optional
+: integral_constant< bool,
+            std::is_assignable<TYPE&, const optional<ANY_TYPE>&>::value
+            ||
+            std::is_assignable<TYPE&, optional<ANY_TYPE>&>::value
+            ||
+            std::is_assignable<TYPE&, const optional<ANY_TYPE>&&>::value
+            ||
+            std::is_assignable<TYPE&, optional<ANY_TYPE>&&>::value> {
+
+};
 
                         // =========================
                         // class optional_data_imp
@@ -594,7 +640,7 @@ const TYPE&& optional_data_imp<TYPE, false>::value() const  BSLS_COMPILER_FEATUR
 //note : The body of a class definition is divided into public and
 //private sections using the public: and private: labels. These labels must appear on
 //lines by themselves, indented exactly two spaces, and preceded by a blank line
-template <class TYPE, bool UsesBslmaAllocator = BloombergLP::bslma::UsesBslmaAllocator<TYPE>::value>
+template <class TYPE, bool UsesBslmaAllocator>
 class optional {
   public :
     // PUBLIC TYPES
@@ -682,7 +728,9 @@ class optional {
                       &&
                       std::is_constructible<TYPE,const ANY_TYPE &>::value
                       &&
-                      bsl::is_convertible<const ANY_TYPE &, TYPE>::value,
+                      bsl::is_convertible<const ANY_TYPE &, TYPE>::value
+                      &&
+                      !bsl_converts_from_optional<TYPE,ANY_TYPE>::value,
                       bool>::type = true>
     optional(const optional<ANY_TYPE>& original);
     template<class ANY_TYPE,
@@ -691,7 +739,9 @@ class optional {
                       &&
                       std::is_constructible<TYPE, const ANY_TYPE &>::value
                       &&
-                      !bsl::is_convertible<const ANY_TYPE &, TYPE>::value,
+                      !bsl::is_convertible<const ANY_TYPE &, TYPE>::value
+                      &&
+                      !bsl_converts_from_optional<TYPE,ANY_TYPE>::value ,
                       bool>::type = false>
     explicit
     optional(const optional<ANY_TYPE>& original);
@@ -704,7 +754,9 @@ class optional {
                       &&
                       std::is_constructible<TYPE, ANY_TYPE >::value
                       &&
-                      bsl::is_convertible<ANY_TYPE , TYPE>::value,
+                      bsl::is_convertible<ANY_TYPE , TYPE>::value
+                      &&
+                      !bsl_converts_from_optional<TYPE,ANY_TYPE>::value,
                       bool>::type = true>
     optional(optional<ANY_TYPE>&& original);
 
@@ -714,7 +766,9 @@ class optional {
                     &&
                     std::is_constructible<TYPE, ANY_TYPE >::value
                     &&
-                    !bsl::is_convertible<ANY_TYPE , TYPE>::value,
+                    !bsl::is_convertible<ANY_TYPE , TYPE>::value
+                    &&
+                    !bsl_converts_from_optional<TYPE,ANY_TYPE>::value,
                     bool>::type = false>
     explicit
     optional(optional<ANY_TYPE>&& original);
@@ -780,7 +834,9 @@ class optional {
     typename bsl::enable_if<
              !bsl::is_same<ANY_TYPE, TYPE>::value
              &&
-             std::is_constructible<TYPE, const ANY_TYPE &>::value,
+             std::is_constructible<TYPE, const ANY_TYPE &>::value
+             &&
+             !bsl_converts_from_optional<TYPE,ANY_TYPE>::value ,
              bool>::type = false>
     explicit
     optional(bsl::allocator_arg_t, allocator_type basicAllocator,
@@ -793,7 +849,9 @@ class optional {
     typename bsl::enable_if<
              !bsl::is_same<ANY_TYPE, TYPE>::value
              &&
-             std::is_constructible<TYPE,ANY_TYPE >::value,
+             std::is_constructible<TYPE,ANY_TYPE >::value
+             &&
+             !bsl_converts_from_optional<TYPE,ANY_TYPE>::value,
              bool>::type = false>
     explicit
     optional(bsl::allocator_arg_t, allocator_type basicAllocator,
@@ -914,7 +972,9 @@ class optional {
               &&
               std::is_assignable<TYPE&, ANY_TYPE>::value
               &&
-              !bsl::is_convertible< const optional<ANY_TYPE> &, TYPE>::value,
+              !bsl_converts_from_optional<TYPE,ANY_TYPE>::value
+              &&
+              !bsl_assigns_from_optional<TYPE,ANY_TYPE>::value,
               optional>::type &
               operator=(const optional<ANY_TYPE> &);
 
@@ -924,7 +984,9 @@ class optional {
               &&
               std::is_assignable<TYPE&, ANY_TYPE>::value
               &&
-              !bsl::is_convertible<optional<ANY_TYPE>, TYPE>::value,
+              !bsl_converts_from_optional<TYPE,ANY_TYPE>::value
+              &&
+              !bsl_assigns_from_optional<TYPE,ANY_TYPE>::value,
               optional>::type &
               operator=(optional<ANY_TYPE>&&);
 
@@ -1105,7 +1167,9 @@ class optional<TYPE, false> {
                     &&
                     std::is_constructible<TYPE,const ANY_TYPE &>::value
                     &&
-                    bsl::is_convertible<const ANY_TYPE &, TYPE>::value,
+                    bsl::is_convertible<const ANY_TYPE &, TYPE>::value
+                    &&
+                    !bsl_converts_from_optional<TYPE,ANY_TYPE>::value,
                     bool>::type = true>
     optional(const optional<ANY_TYPE>& original);
     template<class ANY_TYPE,
@@ -1114,7 +1178,9 @@ class optional<TYPE, false> {
                       &&
                       std::is_constructible<TYPE, const ANY_TYPE &>::value
                       &&
-                      !bsl::is_convertible<const ANY_TYPE &, TYPE>::value,
+                      !bsl::is_convertible<const ANY_TYPE &, TYPE>::value
+                      &&
+                      !bsl_converts_from_optional<TYPE,ANY_TYPE>::value,
                       bool>::type = false>
     explicit
     optional(const optional<ANY_TYPE>& original);
@@ -1127,7 +1193,9 @@ class optional<TYPE, false> {
                     &&
                     std::is_constructible<TYPE, ANY_TYPE >::value
                     &&
-                    bsl::is_convertible<ANY_TYPE , TYPE>::value,
+                    bsl::is_convertible<ANY_TYPE , TYPE>::value
+                    &&
+                    !bsl_converts_from_optional<TYPE,ANY_TYPE>::value,
                     bool>::type = true>
     optional(optional<ANY_TYPE>&& original);
 
@@ -1137,7 +1205,9 @@ class optional<TYPE, false> {
                     &&
                     std::is_constructible<TYPE, ANY_TYPE >::value
                     &&
-                    !bsl::is_convertible<ANY_TYPE , TYPE>::value,
+                    !bsl::is_convertible<ANY_TYPE , TYPE>::value
+                    &&
+                    !bsl_converts_from_optional<TYPE,ANY_TYPE>::value,
                     bool>::type = false>
     explicit
     optional(optional<ANY_TYPE>&& original);
@@ -1201,7 +1271,9 @@ class optional<TYPE, false> {
             &&
             std::is_assignable<TYPE&, ANY_TYPE>::value
             &&
-            !bsl::is_convertible< const optional<ANY_TYPE> &, TYPE>::value,
+            !bsl_converts_from_optional<TYPE,ANY_TYPE>::value
+            &&
+            !bsl_assigns_from_optional<TYPE,ANY_TYPE>::value,
             optional>::type &
             operator=(const optional<ANY_TYPE> &);
 
@@ -1211,8 +1283,9 @@ class optional<TYPE, false> {
             &&
             std::is_assignable<TYPE&, ANY_TYPE>::value
             &&
-            !bsl::is_convertible<optional<ANY_TYPE>, TYPE>::value
-            ,
+            !bsl_converts_from_optional<TYPE,ANY_TYPE>::value
+            &&
+            !bsl_assigns_from_optional<TYPE,ANY_TYPE>::value,
             optional>::type &
             operator=(optional<ANY_TYPE>&&);
 
@@ -1684,7 +1757,9 @@ template<class ANY_TYPE,
                   &&
                   std::is_constructible<TYPE, const ANY_TYPE &>::value
                   &&
-                  !bsl::is_convertible<const ANY_TYPE &, TYPE>::value,
+                  !bsl::is_convertible<const ANY_TYPE &, TYPE>::value
+                  &&
+                  !bsl_converts_from_optional<TYPE,ANY_TYPE>::value,
                   bool>::type>
 inline
 optional<TYPE, UsesBslmaAllocator>::optional(
@@ -1701,7 +1776,9 @@ template<class ANY_TYPE,
                   &&
                   std::is_constructible<TYPE, const ANY_TYPE &>::value
                   &&
-                  bsl::is_convertible<const ANY_TYPE &, TYPE>::value,
+                  bsl::is_convertible<const ANY_TYPE &, TYPE>::value
+                  &&
+                  !bsl_converts_from_optional<TYPE,ANY_TYPE>::value,
                   bool>::type>
 inline
 optional<TYPE, UsesBslmaAllocator>::optional(
@@ -1718,7 +1795,9 @@ template<class ANY_TYPE,
                   &&
                   std::is_constructible<TYPE, ANY_TYPE >::value
                   &&
-                  bsl::is_convertible<ANY_TYPE , TYPE>::value,
+                  bsl::is_convertible<ANY_TYPE , TYPE>::value
+                  &&
+                  !bsl_converts_from_optional<TYPE,ANY_TYPE>::value,
                   bool>::type>
 inline
 optional<TYPE, UsesBslmaAllocator>::optional(
@@ -1736,7 +1815,9 @@ template<class ANY_TYPE,
                   &&
                   std::is_constructible<TYPE, ANY_TYPE >::value
                   &&
-                  !bsl::is_convertible<ANY_TYPE , TYPE>::value,
+                  !bsl::is_convertible<ANY_TYPE , TYPE>::value
+                  &&
+                  !bsl_converts_from_optional<TYPE,ANY_TYPE>::value,
                   bool>::type>
 inline
 optional<TYPE, UsesBslmaAllocator>::optional(
@@ -1839,7 +1920,9 @@ template <typename ANY_TYPE,
           typename bsl::enable_if<
           !bsl::is_same<ANY_TYPE, TYPE>::value
           &&
-          std::is_constructible<TYPE, const ANY_TYPE &>::value,
+          std::is_constructible<TYPE, const ANY_TYPE &>::value
+          &&
+          !bsl_converts_from_optional<TYPE,ANY_TYPE>::value,
            bool>::type>
 inline
 optional<TYPE, UsesBslmaAllocator>::optional(bsl::allocator_arg_t,
@@ -1858,7 +1941,9 @@ template <typename ANY_TYPE,
           typename bsl::enable_if<
           !bsl::is_same<ANY_TYPE, TYPE>::value
           &&
-          std::is_constructible<TYPE, ANY_TYPE>::value,
+          std::is_constructible<TYPE, ANY_TYPE>::value
+          &&
+          !bsl_converts_from_optional<TYPE,ANY_TYPE>::value,
            bool>::type>
 inline
 optional<TYPE, UsesBslmaAllocator>::optional(bsl::allocator_arg_t,
@@ -2138,7 +2223,9 @@ typename bsl::enable_if<
           &&
           std::is_assignable<TYPE&, ANY_TYPE>::value
           &&
-          !bsl::is_convertible< const optional<ANY_TYPE> &, TYPE>::value,
+          !bsl_converts_from_optional<TYPE,ANY_TYPE>::value
+          &&
+          !bsl_assigns_from_optional<TYPE,ANY_TYPE>::value,
           optional<TYPE, UsesBslmaAllocator>>::type &
 optional<TYPE, UsesBslmaAllocator>::operator=(const optional<ANY_TYPE> &rhs)
 {
@@ -2163,7 +2250,9 @@ typename bsl::enable_if<
           &&
           std::is_assignable<TYPE&, ANY_TYPE>::value
           &&
-          !bsl::is_convertible<optional<ANY_TYPE>, TYPE>::value,
+          !bsl_converts_from_optional<TYPE,ANY_TYPE>::value
+          &&
+          !bsl_assigns_from_optional<TYPE,ANY_TYPE>::value,
           optional<TYPE, UsesBslmaAllocator>>::type &
 optional<TYPE, UsesBslmaAllocator>::operator=(optional<ANY_TYPE>&& rhs)
 {
@@ -2329,7 +2418,9 @@ template<class ANY_TYPE,
         &&
         std::is_constructible<TYPE, const ANY_TYPE &>::value
         &&
-        bsl::is_convertible<const ANY_TYPE &, TYPE>::value,
+        bsl::is_convertible<const ANY_TYPE &, TYPE>::value
+        &&
+        !bsl_converts_from_optional<TYPE,ANY_TYPE>::value,
         bool>::type>
 inline
 optional<TYPE, false>::optional(
@@ -2346,7 +2437,9 @@ template<class ANY_TYPE,
         &&
         std::is_constructible<TYPE, const ANY_TYPE &>::value
         &&
-        !bsl::is_convertible<const ANY_TYPE &, TYPE>::value,
+        !bsl::is_convertible<const ANY_TYPE &, TYPE>::value
+        &&
+        !bsl_converts_from_optional<TYPE,ANY_TYPE>::value,
         bool>::type>
 inline
 optional<TYPE, false>::optional(
@@ -2364,7 +2457,9 @@ template<class ANY_TYPE,
                   &&
                   std::is_constructible<TYPE, ANY_TYPE >::value
                   &&
-                  bsl::is_convertible<ANY_TYPE , TYPE>::value,
+                  bsl::is_convertible<ANY_TYPE , TYPE>::value
+                  &&
+                  !bsl_converts_from_optional<TYPE,ANY_TYPE>::value,
                   bool>::type>
 inline
 optional<TYPE, false>::optional(optional<ANY_TYPE>&& original)
@@ -2381,7 +2476,9 @@ template<class ANY_TYPE,
                   &&
                   std::is_constructible<TYPE, ANY_TYPE >::value
                   &&
-                  !bsl::is_convertible<ANY_TYPE , TYPE>::value,
+                  !bsl::is_convertible<ANY_TYPE , TYPE>::value
+                  &&
+                  !bsl_converts_from_optional<TYPE,ANY_TYPE>::value,
                   bool>::type>
 inline
 optional<TYPE, false>::optional(optional<ANY_TYPE>&& original)
@@ -2605,7 +2702,9 @@ typename bsl::enable_if<
           &&
           std::is_assignable<TYPE&, ANY_TYPE>::value
           &&
-          !bsl::is_convertible< const optional<ANY_TYPE> &, TYPE>::value,
+          !bsl_converts_from_optional<TYPE,ANY_TYPE>::value
+          &&
+          !bsl_assigns_from_optional<TYPE,ANY_TYPE>::value,
           optional<TYPE, false>>::type &
 optional<TYPE, false>::operator=(const optional<ANY_TYPE> &rhs)
 {
@@ -2630,8 +2729,9 @@ typename bsl::enable_if<
           &&
           std::is_assignable<TYPE&, ANY_TYPE>::value
           &&
-          !bsl::is_convertible<optional<ANY_TYPE>, TYPE>::value
-          ,
+          !bsl_converts_from_optional<TYPE,ANY_TYPE>::value
+          &&
+          !bsl_assigns_from_optional<TYPE,ANY_TYPE>::value,
           optional<TYPE, false>>::type &
 optional<TYPE, false>::operator=(
     optional<ANY_TYPE>&& rhs)
