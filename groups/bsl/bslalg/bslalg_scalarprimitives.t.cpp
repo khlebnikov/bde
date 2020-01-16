@@ -1046,7 +1046,7 @@ class ConstructTestArg {
   public:
     // PUBLIC DATA FOR TEST DRIVER ONLY
     const int d_value;
-    const bool  d_moved_to;
+    int  d_copied_count;
         // if true, indicates this object was created from an rvalue
 
     // CREATORS
@@ -1060,18 +1060,19 @@ class ConstructTestArg {
 // CREATORS
 template <int ID>
 ConstructTestArg<ID>::ConstructTestArg(int value)
-    : d_value(value), d_moved_to(false)
+    : d_value(value), d_copied_count(0)
 {
 }
 template <int ID>
 ConstructTestArg<ID>::ConstructTestArg(const ConstructTestArg& other)
-    : d_value(other.d_value), d_moved_to(false)
+    : d_value(other.d_value), d_copied_count(other.d_copied_count + 1)
 {
 }
 template <int ID>
 ConstructTestArg<ID>::ConstructTestArg(
                                      bslmf::MovableRef<ConstructTestArg> other)
-    : d_value(MovUtl::access(other).d_value), d_moved_to(true)
+    : d_value(MovUtl::access(other).d_value),
+      d_copied_count(MovUtl::access(other).d_copied_count)
 {}
                      // ==============================
                        // class ConstructTestTypeNoAlloc
@@ -1472,20 +1473,20 @@ bool operator==(const ConstructTestTypeNoAlloc& lhs,
 bool createdAlike(const ConstructTestTypeNoAlloc& lhs,
                   const ConstructTestTypeNoAlloc& rhs)
 {
-    return lhs.d_a1.d_moved_to  == rhs.d_a1.d_moved_to &&
-           lhs.d_a2.d_moved_to  == rhs.d_a2.d_moved_to &&
-           lhs.d_a3.d_moved_to  == rhs.d_a3.d_moved_to &&
-           lhs.d_a4.d_moved_to  == rhs.d_a4.d_moved_to &&
-           lhs.d_a5.d_moved_to  == rhs.d_a5.d_moved_to &&
-           lhs.d_a6.d_moved_to  == rhs.d_a6.d_moved_to &&
-           lhs.d_a7.d_moved_to  == rhs.d_a7.d_moved_to &&
-           lhs.d_a8.d_moved_to  == rhs.d_a8.d_moved_to &&
-           lhs.d_a9.d_moved_to  == rhs.d_a9.d_moved_to &&
-           lhs.d_a10.d_moved_to == rhs.d_a10.d_moved_to &&
-           lhs.d_a11.d_moved_to == rhs.d_a11.d_moved_to &&
-           lhs.d_a12.d_moved_to == rhs.d_a12.d_moved_to &&
-           lhs.d_a13.d_moved_to == rhs.d_a13.d_moved_to &&
-           lhs.d_a14.d_moved_to == rhs.d_a14.d_moved_to;
+    return lhs.d_a1.d_copied_count  == rhs.d_a1.d_copied_count &&
+           lhs.d_a2.d_copied_count  == rhs.d_a2.d_copied_count &&
+           lhs.d_a3.d_copied_count  == rhs.d_a3.d_copied_count &&
+           lhs.d_a4.d_copied_count  == rhs.d_a4.d_copied_count &&
+           lhs.d_a5.d_copied_count  == rhs.d_a5.d_copied_count &&
+           lhs.d_a6.d_copied_count  == rhs.d_a6.d_copied_count &&
+           lhs.d_a7.d_copied_count  == rhs.d_a7.d_copied_count &&
+           lhs.d_a8.d_copied_count  == rhs.d_a8.d_copied_count &&
+           lhs.d_a9.d_copied_count  == rhs.d_a9.d_copied_count &&
+           lhs.d_a10.d_copied_count == rhs.d_a10.d_copied_count &&
+           lhs.d_a11.d_copied_count == rhs.d_a11.d_copied_count &&
+           lhs.d_a12.d_copied_count == rhs.d_a12.d_copied_count &&
+           lhs.d_a13.d_copied_count == rhs.d_a13.d_copied_count &&
+           lhs.d_a14.d_copied_count == rhs.d_a14.d_copied_count;
 }
                        // =============================
                        // class ConstructTestTypeAlloc
@@ -1661,20 +1662,20 @@ bool operator==(const ConstructTestTypeAlloc& lhs,
 bool createdAlike(const ConstructTestTypeAlloc& lhs,
                   const ConstructTestTypeAlloc& rhs)
 {
-    return lhs.d_a1.d_moved_to  == rhs.d_a1.d_moved_to &&
-           lhs.d_a2.d_moved_to  == rhs.d_a2.d_moved_to &&
-           lhs.d_a3.d_moved_to  == rhs.d_a3.d_moved_to &&
-           lhs.d_a4.d_moved_to  == rhs.d_a4.d_moved_to &&
-           lhs.d_a5.d_moved_to  == rhs.d_a5.d_moved_to &&
-           lhs.d_a6.d_moved_to  == rhs.d_a6.d_moved_to &&
-           lhs.d_a7.d_moved_to  == rhs.d_a7.d_moved_to &&
-           lhs.d_a8.d_moved_to  == rhs.d_a8.d_moved_to &&
-           lhs.d_a9.d_moved_to  == rhs.d_a9.d_moved_to &&
-           lhs.d_a10.d_moved_to == rhs.d_a10.d_moved_to &&
-           lhs.d_a11.d_moved_to == rhs.d_a11.d_moved_to &&
-           lhs.d_a12.d_moved_to == rhs.d_a12.d_moved_to &&
-           lhs.d_a13.d_moved_to == rhs.d_a13.d_moved_to &&
-           lhs.d_a14.d_moved_to == rhs.d_a14.d_moved_to;
+    return lhs.d_a1.d_copied_count  == rhs.d_a1.d_copied_count &&
+           lhs.d_a2.d_copied_count  == rhs.d_a2.d_copied_count &&
+           lhs.d_a3.d_copied_count  == rhs.d_a3.d_copied_count &&
+           lhs.d_a4.d_copied_count  == rhs.d_a4.d_copied_count &&
+           lhs.d_a5.d_copied_count  == rhs.d_a5.d_copied_count &&
+           lhs.d_a6.d_copied_count  == rhs.d_a6.d_copied_count &&
+           lhs.d_a7.d_copied_count  == rhs.d_a7.d_copied_count &&
+           lhs.d_a8.d_copied_count  == rhs.d_a8.d_copied_count &&
+           lhs.d_a9.d_copied_count  == rhs.d_a9.d_copied_count &&
+           lhs.d_a10.d_copied_count == rhs.d_a10.d_copied_count &&
+           lhs.d_a11.d_copied_count == rhs.d_a11.d_copied_count &&
+           lhs.d_a12.d_copied_count == rhs.d_a12.d_copied_count &&
+           lhs.d_a13.d_copied_count == rhs.d_a13.d_copied_count &&
+           lhs.d_a14.d_copied_count == rhs.d_a14.d_copied_count;
 }
                        // ================================
                        // class ConstructTestTypeAllocArgT
@@ -1791,20 +1792,20 @@ bool operator==(const ConstructTestTypeAllocArgT& lhs,
 bool createdAlike(const ConstructTestTypeAllocArgT& lhs,
                   const ConstructTestTypeAllocArgT& rhs)
 {
-    return lhs.d_a1.d_moved_to  == rhs.d_a1.d_moved_to &&
-           lhs.d_a2.d_moved_to  == rhs.d_a2.d_moved_to &&
-           lhs.d_a3.d_moved_to  == rhs.d_a3.d_moved_to &&
-           lhs.d_a4.d_moved_to  == rhs.d_a4.d_moved_to &&
-           lhs.d_a5.d_moved_to  == rhs.d_a5.d_moved_to &&
-           lhs.d_a6.d_moved_to  == rhs.d_a6.d_moved_to &&
-           lhs.d_a7.d_moved_to  == rhs.d_a7.d_moved_to &&
-           lhs.d_a8.d_moved_to  == rhs.d_a8.d_moved_to &&
-           lhs.d_a9.d_moved_to  == rhs.d_a9.d_moved_to &&
-           lhs.d_a10.d_moved_to == rhs.d_a10.d_moved_to &&
-           lhs.d_a11.d_moved_to == rhs.d_a11.d_moved_to &&
-           lhs.d_a12.d_moved_to == rhs.d_a12.d_moved_to &&
-           lhs.d_a13.d_moved_to == rhs.d_a13.d_moved_to &&
-           lhs.d_a14.d_moved_to == rhs.d_a14.d_moved_to;
+    return lhs.d_a1.d_copied_count  == rhs.d_a1.d_copied_count &&
+           lhs.d_a2.d_copied_count  == rhs.d_a2.d_copied_count &&
+           lhs.d_a3.d_copied_count  == rhs.d_a3.d_copied_count &&
+           lhs.d_a4.d_copied_count  == rhs.d_a4.d_copied_count &&
+           lhs.d_a5.d_copied_count  == rhs.d_a5.d_copied_count &&
+           lhs.d_a6.d_copied_count  == rhs.d_a6.d_copied_count &&
+           lhs.d_a7.d_copied_count  == rhs.d_a7.d_copied_count &&
+           lhs.d_a8.d_copied_count  == rhs.d_a8.d_copied_count &&
+           lhs.d_a9.d_copied_count  == rhs.d_a9.d_copied_count &&
+           lhs.d_a10.d_copied_count == rhs.d_a10.d_copied_count &&
+           lhs.d_a11.d_copied_count == rhs.d_a11.d_copied_count &&
+           lhs.d_a12.d_copied_count == rhs.d_a12.d_copied_count &&
+           lhs.d_a13.d_copied_count == rhs.d_a13.d_copied_count &&
+           lhs.d_a14.d_copied_count == rhs.d_a14.d_copied_count;
 }
                            // ======================
                            // macros TEST_CONSTRUCT*
