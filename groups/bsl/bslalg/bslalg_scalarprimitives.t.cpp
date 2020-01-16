@@ -1046,20 +1046,34 @@ class ConstructTestArg {
   public:
     // PUBLIC DATA FOR TEST DRIVER ONLY
     const int d_value;
+    const bool  d_moved_to;
+        // if true, indicates this object was created from an rvalue
 
     // CREATORS
     ConstructTestArg(int value = -1);                               // IMPLICIT
         // Create an object having the specified 'value'.
+
+    ConstructTestArg(const ConstructTestArg& other);
+    ConstructTestArg(bslmf::MovableRef<ConstructTestArg>  other);
 };
 
 // CREATORS
 template <int ID>
 ConstructTestArg<ID>::ConstructTestArg(int value)
-    : d_value(value)
+    : d_value(value), d_moved_to(false)
 {
 }
-
-                       // ==============================
+template <int ID>
+ConstructTestArg<ID>::ConstructTestArg(const ConstructTestArg& other)
+    : d_value(other.d_value), d_moved_to(false)
+{
+}
+template <int ID>
+ConstructTestArg<ID>::ConstructTestArg(
+                                     bslmf::MovableRef<ConstructTestArg> other)
+    : d_value(MovUtl::access(other).d_value), d_moved_to(true)
+{}
+                     // ==============================
                        // class ConstructTestTypeNoAlloc
                        // ==============================
 
@@ -1115,15 +1129,325 @@ class ConstructTestTypeNoAlloc {
     Arg14 d_a14;
 
     // CREATORS (exceptionally in-line, only within a test driver)
+
+    ConstructTestTypeNoAlloc(){};
+
+    template <class ARG1>
     explicit
     ConstructTestTypeNoAlloc(
-                Arg1  a1  = N1, Arg2  a2  = N1, Arg3  a3  = N1,
-                Arg4  a4  = N1, Arg5  a5  = N1, Arg6  a6  = N1, Arg7  a7  = N1,
-                Arg8  a8  = N1, Arg9  a9  = N1, Arg10 a10 = N1, Arg11 a11 = N1,
-                Arg12 a12 = N1, Arg13 a13 = N1, Arg14 a14 = N1)
-        : d_a1(a1), d_a2(a2), d_a3(a3), d_a4(a4), d_a5(a5), d_a6(a6), d_a7(a7)
-        , d_a8(a8), d_a9(a9), d_a10(a10), d_a11(a11), d_a12(a12), d_a13(a13)
-        , d_a14(a14) {}
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1)
+       : d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1))
+
+    {}
+
+    template <class ARG1,  class ARG2>
+    explicit
+    ConstructTestTypeNoAlloc(
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2)
+       : d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2))
+    {}
+
+    template <class ARG1,  class ARG2,  class ARG3>
+        explicit
+        ConstructTestTypeNoAlloc(
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3)
+           : d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+              d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+              d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3))
+        {}
+    template <class ARG1,  class ARG2,  class ARG3,
+                          class ARG4>
+        explicit
+        ConstructTestTypeNoAlloc(
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4)
+           : d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+              d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+              d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+              d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4))
+        {}
+    template <class ARG1,  class ARG2,  class ARG3,
+                          class ARG4,  class ARG5>
+        explicit
+        ConstructTestTypeNoAlloc(
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5)
+           : d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+              d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+              d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+              d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+              d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5))
+        {}
+    template <class ARG1,  class ARG2,  class ARG3,
+                          class ARG4,  class ARG5,  class ARG6>
+        explicit
+        ConstructTestTypeNoAlloc(
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6)
+           : d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+              d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+              d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+              d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+              d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+              d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6))
+        {}
+    template <class ARG1,  class ARG2,  class ARG3,
+                          class ARG4,  class ARG5,  class ARG6,
+                          class ARG7>
+        explicit
+        ConstructTestTypeNoAlloc(
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7)
+           : d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+              d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+              d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+              d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+              d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+              d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+              d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7))
+        {}
+    template <class ARG1,  class ARG2,  class ARG3,
+                          class ARG4,  class ARG5,  class ARG6,
+                          class ARG7,  class ARG8>
+        explicit
+        ConstructTestTypeNoAlloc(
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8)
+           : d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+              d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+              d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+              d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+              d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+              d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+              d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+              d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8))
+        {}
+    template <class ARG1,  class ARG2,  class ARG3,
+                          class ARG4,  class ARG5,  class ARG6,
+                          class ARG7,  class ARG8,  class ARG9>
+        explicit
+        ConstructTestTypeNoAlloc(
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9)
+           : d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+              d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+              d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+              d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+              d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+              d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+              d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+              d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+              d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9))
+        {}
+    template <class ARG1,  class ARG2,  class ARG3,
+                          class ARG4,  class ARG5,  class ARG6,
+                          class ARG7,  class ARG8,  class ARG9,
+                          class ARG10>
+    explicit
+    ConstructTestTypeNoAlloc(
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10)
+       : d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+          d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10))
+    {}
+    template <class ARG1,  class ARG2,  class ARG3,
+                          class ARG4,  class ARG5,  class ARG6,
+                          class ARG7,  class ARG8,  class ARG9,
+                          class ARG10, class ARG11>
+    explicit
+    ConstructTestTypeNoAlloc(
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11)
+       : d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+          d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
+          d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11))
+    {}
+
+    template <class ARG1,  class ARG2,  class ARG3,
+                      class ARG4,  class ARG5,  class ARG6,
+                      class ARG7,  class ARG8,  class ARG9,
+                      class ARG10, class ARG11, class ARG12>
+    explicit
+    ConstructTestTypeNoAlloc(
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG12) a12)
+       : d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+          d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
+          d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11)),
+          d_a12(BSLS_COMPILERFEATURES_FORWARD(ARG12, a12))
+    {}
+
+    template <class ARG1,  class ARG2,  class ARG3,
+                  class ARG4,  class ARG5,  class ARG6,
+                  class ARG7,  class ARG8,  class ARG9,
+                  class ARG10, class ARG11, class ARG12,
+                  class ARG13>
+    explicit
+    ConstructTestTypeNoAlloc(
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG12) a12,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG13) a13)
+        : d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+          d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
+          d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11)),
+          d_a12(BSLS_COMPILERFEATURES_FORWARD(ARG12, a12)),
+          d_a13(BSLS_COMPILERFEATURES_FORWARD(ARG13, a13)) {}
+
+
+    template <class ARG1,  class ARG2,  class ARG3,
+                  class ARG4,  class ARG5,  class ARG6,
+                  class ARG7,  class ARG8,  class ARG9,
+                  class ARG10, class ARG11, class ARG12,
+                  class ARG13, class ARG14>
+    explicit
+    ConstructTestTypeNoAlloc(
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG12) a12,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG13) a13,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG14) a14)
+        : d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+          d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
+          d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11)),
+          d_a12(BSLS_COMPILERFEATURES_FORWARD(ARG12, a12)),
+          d_a13(BSLS_COMPILERFEATURES_FORWARD(ARG13, a13)),
+          d_a14(BSLS_COMPILERFEATURES_FORWARD(ARG14, a14)) {}
+
+    ConstructTestTypeNoAlloc(const ConstructTestTypeNoAlloc &other)
+        : d_a1(other.d_a1), d_a2(other.d_a2), d_a3(other.d_a3),
+          d_a4(other.d_a4), d_a5(other.d_a5), d_a6(other.d_a6),
+          d_a7(other.d_a7), d_a8(other.d_a8), d_a9(other.d_a9),
+          d_a10(other.d_a10), d_a11(other.d_a11), d_a12(other.d_a12),
+          d_a13(other.d_a13), d_a14(other.d_a14)
+    {}
+
+    ConstructTestTypeNoAlloc(
+                           bslmf::MovableRef<ConstructTestTypeNoAlloc> &other)
+        : d_a1(MovUtl::access(other).d_a1), d_a2(MovUtl::access(other).d_a2),
+          d_a3(MovUtl::access(other).d_a3), d_a4(MovUtl::access(other).d_a4),
+          d_a5(MovUtl::access(other).d_a5), d_a6(MovUtl::access(other).d_a6),
+          d_a7(MovUtl::access(other).d_a7), d_a8(MovUtl::access(other).d_a8),
+          d_a9(MovUtl::access(other).d_a9),d_a10(MovUtl::access(other).d_a10),
+          d_a11(MovUtl::access(other).d_a11), d_a12(MovUtl::access(other).d_a12),
+          d_a13(MovUtl::access(other).d_a13), d_a14(MovUtl::access(other).d_a14)
+    { }
 };
 
 // FREE OPERATORS
@@ -1143,9 +1467,26 @@ bool operator==(const ConstructTestTypeNoAlloc& lhs,
            lhs.d_a11.d_value == rhs.d_a11.d_value &&
            lhs.d_a12.d_value == rhs.d_a12.d_value &&
            lhs.d_a13.d_value == rhs.d_a13.d_value &&
-           lhs.d_a14.d_value == rhs.d_a14.d_value;
+           lhs.d_a14.d_value == rhs.d_a14.d_value ;
 }
-
+bool createdAlike(const ConstructTestTypeNoAlloc& lhs,
+                  const ConstructTestTypeNoAlloc& rhs)
+{
+    return lhs.d_a1.d_moved_to  == rhs.d_a1.d_moved_to &&
+           lhs.d_a2.d_moved_to  == rhs.d_a2.d_moved_to &&
+           lhs.d_a3.d_moved_to  == rhs.d_a3.d_moved_to &&
+           lhs.d_a4.d_moved_to  == rhs.d_a4.d_moved_to &&
+           lhs.d_a5.d_moved_to  == rhs.d_a5.d_moved_to &&
+           lhs.d_a6.d_moved_to  == rhs.d_a6.d_moved_to &&
+           lhs.d_a7.d_moved_to  == rhs.d_a7.d_moved_to &&
+           lhs.d_a8.d_moved_to  == rhs.d_a8.d_moved_to &&
+           lhs.d_a9.d_moved_to  == rhs.d_a9.d_moved_to &&
+           lhs.d_a10.d_moved_to == rhs.d_a10.d_moved_to &&
+           lhs.d_a11.d_moved_to == rhs.d_a11.d_moved_to &&
+           lhs.d_a12.d_moved_to == rhs.d_a12.d_moved_to &&
+           lhs.d_a13.d_moved_to == rhs.d_a13.d_moved_to &&
+           lhs.d_a14.d_moved_to == rhs.d_a14.d_moved_to;
+}
                        // =============================
                        // class ConstructTestTypeAlloc
                        // =============================
@@ -1317,7 +1658,24 @@ bool operator==(const ConstructTestTypeAlloc& lhs,
            lhs.d_a13.d_value == rhs.d_a13.d_value &&
            lhs.d_a14.d_value == rhs.d_a14.d_value;
 }
-
+bool createdAlike(const ConstructTestTypeAlloc& lhs,
+                  const ConstructTestTypeAlloc& rhs)
+{
+    return lhs.d_a1.d_moved_to  == rhs.d_a1.d_moved_to &&
+           lhs.d_a2.d_moved_to  == rhs.d_a2.d_moved_to &&
+           lhs.d_a3.d_moved_to  == rhs.d_a3.d_moved_to &&
+           lhs.d_a4.d_moved_to  == rhs.d_a4.d_moved_to &&
+           lhs.d_a5.d_moved_to  == rhs.d_a5.d_moved_to &&
+           lhs.d_a6.d_moved_to  == rhs.d_a6.d_moved_to &&
+           lhs.d_a7.d_moved_to  == rhs.d_a7.d_moved_to &&
+           lhs.d_a8.d_moved_to  == rhs.d_a8.d_moved_to &&
+           lhs.d_a9.d_moved_to  == rhs.d_a9.d_moved_to &&
+           lhs.d_a10.d_moved_to == rhs.d_a10.d_moved_to &&
+           lhs.d_a11.d_moved_to == rhs.d_a11.d_moved_to &&
+           lhs.d_a12.d_moved_to == rhs.d_a12.d_moved_to &&
+           lhs.d_a13.d_moved_to == rhs.d_a13.d_moved_to &&
+           lhs.d_a14.d_moved_to == rhs.d_a14.d_moved_to;
+}
                        // ================================
                        // class ConstructTestTypeAllocArgT
                        // ================================
@@ -1430,7 +1788,24 @@ bool operator==(const ConstructTestTypeAllocArgT& lhs,
            lhs.d_a13.d_value == rhs.d_a13.d_value &&
            lhs.d_a14.d_value == rhs.d_a14.d_value;
 }
-
+bool createdAlike(const ConstructTestTypeAllocArgT& lhs,
+                  const ConstructTestTypeAllocArgT& rhs)
+{
+    return lhs.d_a1.d_moved_to  == rhs.d_a1.d_moved_to &&
+           lhs.d_a2.d_moved_to  == rhs.d_a2.d_moved_to &&
+           lhs.d_a3.d_moved_to  == rhs.d_a3.d_moved_to &&
+           lhs.d_a4.d_moved_to  == rhs.d_a4.d_moved_to &&
+           lhs.d_a5.d_moved_to  == rhs.d_a5.d_moved_to &&
+           lhs.d_a6.d_moved_to  == rhs.d_a6.d_moved_to &&
+           lhs.d_a7.d_moved_to  == rhs.d_a7.d_moved_to &&
+           lhs.d_a8.d_moved_to  == rhs.d_a8.d_moved_to &&
+           lhs.d_a9.d_moved_to  == rhs.d_a9.d_moved_to &&
+           lhs.d_a10.d_moved_to == rhs.d_a10.d_moved_to &&
+           lhs.d_a11.d_moved_to == rhs.d_a11.d_moved_to &&
+           lhs.d_a12.d_moved_to == rhs.d_a12.d_moved_to &&
+           lhs.d_a13.d_moved_to == rhs.d_a13.d_moved_to &&
+           lhs.d_a14.d_moved_to == rhs.d_a14.d_moved_to;
+}
                            // ======================
                            // macros TEST_CONSTRUCT*
                            // ======================
@@ -1445,6 +1820,7 @@ bool operator==(const ConstructTestTypeAllocArgT& lhs,
     memset(static_cast<void *>(&mX), 92, sizeof mX);                          \
     Obj:: op ;                                                                \
     ASSERT(EXP == X);                                                         \
+    ASSERT(createdAlike(EXP,X) == true);                                      \
   }
 
 #define TEST_CONSTRUCTA(op, expArgs, alloc)                                   \
@@ -1459,6 +1835,7 @@ bool operator==(const ConstructTestTypeAllocArgT& lhs,
     Obj:: op ;                                                                \
     ASSERT(EXP == X);                                                         \
     ASSERT(alloc == X.d_allocator);                                           \
+    ASSERT(createdAlike(EXP,X) == true);                                      \
   }                                                                           \
   {                                                                           \
     /* Expects allocator after 'allocator_arg_t' tag */                       \
@@ -1471,6 +1848,7 @@ bool operator==(const ConstructTestTypeAllocArgT& lhs,
     Obj:: op ;                                                                \
     ASSERT(EXP == X);                                                         \
     ASSERT(alloc == X.d_allocator);                                           \
+    ASSERT(createdAlike(EXP,X) == true);                                      \
   }
 
 //=============================================================================
@@ -1895,12 +2273,11 @@ int main(int argc, char *argv[])
         // TESTING 'construct'
         //
         // Concerns:
-        //  o That arguments are forwarded in the proper order and
+        //  o That arguments are perfect forwarded in the proper order and
         //    number (typos could easily make a10 become the 11th argument to
         //    the constructor).
         //  o That allocators are forwarded appropriately according to the
         //    traits and to the type (bslma::Allocator* or void*).
-        //  o That even though
         //
         // Plan: Construct an object in some uninitialized buffer, and verify
         //   that the value and allocator is as expected.  In order to
@@ -2004,6 +2381,367 @@ int main(int argc, char *argv[])
                                          VA11, VA12, VA13, VA14, TA),    // OP
                        (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
                         VA9, VA10, VA11, VA12, VA13, VA14)               // EXP
+                      );
+        // OP  = construct(&ConstructTestArg, VA[1--N], TA)
+        // EXP = ConstructTestArg(VA[1--N])
+        // ---   -------------------------------------------------
+        TEST_CONSTRUCT(construct(objPtr, MovUtl::move(VA1), TA),         // OP
+                       (MovUtl::move(VA1))                               // EXP
+                      );
+
+        TEST_CONSTRUCT(construct(objPtr,
+                                 MovUtl::move(VA1), VA2, TA),            // OP
+                       (MovUtl::move(VA1), VA2)                          // EXP
+                        );
+        TEST_CONSTRUCT(construct(objPtr,
+                                 VA1, MovUtl::move(VA2), TA),            // OP
+                       (VA1, MovUtl::move(VA2))                          // EXP
+                      );
+        TEST_CONSTRUCT(construct(objPtr,
+                                 MovUtl::move(VA1), VA2, VA3, TA),       // OP
+                       (MovUtl::move(VA1), VA2, VA3)                     // EXP
+                        );
+        TEST_CONSTRUCT(construct(objPtr,
+                                 VA1, MovUtl::move(VA2), VA3, TA),       // OP
+                       (VA1, MovUtl::move(VA2), VA3)                     // EXP
+                      );
+        TEST_CONSTRUCT(construct(objPtr,
+                                 VA1, VA2, MovUtl::move(VA3), TA),       // OP
+                       (VA1, VA2, MovUtl::move(VA3))                     // EXP
+                      );
+
+        TEST_CONSTRUCT(construct(objPtr,
+                                 MovUtl::move(VA1), VA2, VA3,
+                                 MovUtl::move(VA4),
+                                 TA),                                    // OP
+                       (MovUtl::move(VA1), VA2, VA3,
+                        MovUtl::move(VA4))                               // EXP
+                        );
+        TEST_CONSTRUCT(construct(objPtr,
+                                 VA1, MovUtl::move(VA2), VA3,
+                                 VA4,
+                                 TA),                                    // OP
+                       (VA1, MovUtl::move(VA2), VA3,
+                        VA4)                                             // EXP
+                      );
+        TEST_CONSTRUCT(construct(objPtr,
+                                 VA1, VA2, MovUtl::move(VA3),
+                                 VA4,
+                                 TA),                                    // OP
+                       (VA1, VA2, MovUtl::move(VA3),
+                        VA4)                                             // EXP
+                      );
+
+        TEST_CONSTRUCT(construct(objPtr,
+                                 MovUtl::move(VA1), VA2, VA3,
+                                 MovUtl::move(VA4), VA5,
+                                 TA),                                    // OP
+                       (MovUtl::move(VA1), VA2, VA3,
+                        MovUtl::move(VA4), VA5)                          // EXP
+                        );
+        TEST_CONSTRUCT(construct(objPtr,
+                                 VA1, MovUtl::move(VA2), VA3,
+                                 VA4, MovUtl::move(VA5),
+                                 TA),                                    // OP
+                       (VA1, MovUtl::move(VA2), VA3,
+                        VA4, MovUtl::move(VA5))                          // EXP
+                      );
+        TEST_CONSTRUCT(construct(objPtr,
+                                 VA1, VA2, MovUtl::move(VA3),
+                                 VA4, VA5,
+                                 TA),                                    // OP
+                       (VA1, VA2, MovUtl::move(VA3),
+                        VA4, VA5)                                        // EXP
+                      );
+
+        TEST_CONSTRUCT(construct(objPtr,
+                                 MovUtl::move(VA1), VA2, VA3,
+                                 MovUtl::move(VA4), VA5, VA6,
+                                 TA),                                    // OP
+                         (MovUtl::move(VA1), VA2, VA3,
+                          MovUtl::move(VA4), VA5, VA6)                   // EXP
+                        );
+        TEST_CONSTRUCT(construct(objPtr,
+                                 VA1, MovUtl::move(VA2), VA3,
+                                 VA4, MovUtl::move(VA5), VA6,
+                                 TA),                                    // OP
+                       (VA1, MovUtl::move(VA2), VA3,
+                        VA4, MovUtl::move(VA5), VA6)                     // EXP
+                      );
+        TEST_CONSTRUCT(construct(objPtr,
+                                 VA1, VA2, MovUtl::move(VA3),
+                                 VA4, VA5, MovUtl::move(VA6),
+                                 TA),                                    // OP
+                       (VA1, VA2, MovUtl::move(VA3),
+                        VA4, VA5, MovUtl::move(VA6))                     // EXP
+                      );
+
+
+        TEST_CONSTRUCT(construct(objPtr,
+                                 MovUtl::move(VA1), VA2, VA3,
+                                 MovUtl::move(VA4), VA5, VA6,
+                                 MovUtl::move(VA7),
+                                 TA),                                    // OP
+                       (MovUtl::move(VA1), VA2, VA3,
+                        MovUtl::move(VA4), VA5, VA6,
+                        MovUtl::move(VA7))                               // EXP
+                      );
+        TEST_CONSTRUCT(construct(objPtr,
+                                 VA1, MovUtl::move(VA2), VA3,
+                                 VA4, MovUtl::move(VA5), VA6,
+                                 VA7,
+                                 TA),                                    // OP
+                       (VA1, MovUtl::move(VA2), VA3,
+                        VA4, MovUtl::move(VA5), VA6,
+                        VA7)                                             // EXP
+                      );
+        TEST_CONSTRUCT(construct(objPtr,
+                                 VA1, VA2, MovUtl::move(VA3),
+                                 VA4, VA5, MovUtl::move(VA6),
+                                 VA7,
+                                 TA),                                    // OP
+                       (VA1, VA2, MovUtl::move(VA3),
+                        VA4, VA5, MovUtl::move(VA6),
+                        VA7)                                             // EXP
+                      );
+
+
+        TEST_CONSTRUCT(construct(objPtr,
+                                 MovUtl::move(VA1), VA2, VA3,
+                                 MovUtl::move(VA4), VA5, VA6,
+                                 MovUtl::move(VA7), VA8,
+                                 TA),                                    // OP
+                       (MovUtl::move(VA1), VA2, VA3,
+                        MovUtl::move(VA4), VA5, VA6,
+                        MovUtl::move(VA7), VA8)                          // EXP
+                      );
+        TEST_CONSTRUCT(construct(objPtr,
+                                 VA1, MovUtl::move(VA2), VA3,
+                                 VA4, MovUtl::move(VA5), VA6,
+                                 VA7, MovUtl::move(VA8),
+                                 TA),                                    // OP
+                       (VA1, MovUtl::move(VA2), VA3,
+                        VA4, MovUtl::move(VA5), VA6,
+                        VA7, MovUtl::move(VA8))                          // EXP
+                      );
+        TEST_CONSTRUCT(construct(objPtr,
+                                 VA1, VA2, MovUtl::move(VA3),
+                                 VA4, VA5, MovUtl::move(VA6),
+                                 VA7, VA8,
+                                 TA),                                    // OP
+                       (VA1, VA2, MovUtl::move(VA3),
+                        VA4, VA5, MovUtl::move(VA6),
+                        VA7, VA8)                                        // EXP
+                      );
+
+        TEST_CONSTRUCT(construct(objPtr,
+                                 MovUtl::move(VA1), VA2, VA3,
+                                 MovUtl::move(VA4), VA5, VA6,
+                                 MovUtl::move(VA7), VA8, VA9,
+                                 TA),                                    // OP
+                       (MovUtl::move(VA1), VA2, VA3,
+                        MovUtl::move(VA4), VA5, VA6,
+                        MovUtl::move(VA7), VA8, VA9)                     // EXP
+                      );
+        TEST_CONSTRUCT(construct(objPtr,
+                                 VA1, MovUtl::move(VA2), VA3,
+                                 VA4, MovUtl::move(VA5), VA6,
+                                 VA7, MovUtl::move(VA8), VA9,
+                                 TA),                                    // OP
+                       (VA1, MovUtl::move(VA2), VA3,
+                        VA4, MovUtl::move(VA5), VA6,
+                        VA7, MovUtl::move(VA8), VA9)                     // EXP
+                      );
+        TEST_CONSTRUCT(construct(objPtr,
+                                 VA1, VA2, MovUtl::move(VA3),
+                                 VA4, VA5, MovUtl::move(VA6),
+                                 VA7, VA8, MovUtl::move(VA9),
+                                 TA),                                     // OP
+                       (VA1, VA2, MovUtl::move(VA3),
+                        VA4, VA5, MovUtl::move(VA6),
+                        VA7, VA8, MovUtl::move(VA9))                      // EXP
+                      );
+
+        TEST_CONSTRUCT(construct(objPtr,
+                                 MovUtl::move(VA1), VA2, VA3,
+                                 MovUtl::move(VA4), VA5, VA6,
+                                 MovUtl::move(VA7), VA8, VA9,
+                                 MovUtl::move(VA10),
+                                 TA),                                    // OP
+                       (MovUtl::move(VA1), VA2, VA3,
+                        MovUtl::move(VA4), VA5, VA6,
+                        MovUtl::move(VA7), VA8, VA9,
+                        MovUtl::move(VA10))                              // EXP
+                      );
+        TEST_CONSTRUCT(construct(objPtr,
+                                 VA1, MovUtl::move(VA2), VA3,
+                                 VA4, MovUtl::move(VA5), VA6,
+                                 VA7, MovUtl::move(VA8), VA9,
+                                 VA10,
+                                 TA),                                    // OP
+                       (VA1, MovUtl::move(VA2), VA3,
+                        VA4, MovUtl::move(VA5), VA6,
+                        VA7, MovUtl::move(VA8), VA9,
+                        VA10)                                            // EXP
+                      );
+        TEST_CONSTRUCT(construct(objPtr,
+                                 VA1, VA2, MovUtl::move(VA3),
+                                 VA4, VA5, MovUtl::move(VA6),
+                                 VA7, VA8, MovUtl::move(VA9),
+                                 VA10,
+                                 TA),                                     // OP
+                       (VA1, VA2, MovUtl::move(VA3),
+                        VA4, VA5, MovUtl::move(VA6),
+                        VA7, VA8, MovUtl::move(VA9),
+                        VA10)                                            // EXP
+                      );
+
+        TEST_CONSTRUCT(construct(objPtr,
+                                 MovUtl::move(VA1), VA2, VA3,
+                                 MovUtl::move(VA4), VA5, VA6,
+                                 MovUtl::move(VA7), VA8, VA9,
+                                 MovUtl::move(VA10), VA11,
+                                 TA),                                    // OP
+                       (MovUtl::move(VA1), VA2, VA3,
+                        MovUtl::move(VA4), VA5, VA6,
+                        MovUtl::move(VA7), VA8, VA9,
+                        MovUtl::move(VA10), VA11)                         // EXP
+                      );
+        TEST_CONSTRUCT(construct(objPtr,
+                                 VA1, MovUtl::move(VA2), VA3,
+                                 VA4, MovUtl::move(VA5), VA6,
+                                 VA7, MovUtl::move(VA8), VA9,
+                                 VA10, MovUtl::move(VA11),
+                                 TA),                                    // OP
+                       (VA1, MovUtl::move(VA2), VA3,
+                        VA4, MovUtl::move(VA5), VA6,
+                        VA7, MovUtl::move(VA8), VA9,
+                        VA10, MovUtl::move(VA11))                        // EXP
+                      );
+        TEST_CONSTRUCT(construct(objPtr,
+                                 VA1, VA2, MovUtl::move(VA3),
+                                 VA4, VA5, MovUtl::move(VA6),
+                                 VA7, VA8, MovUtl::move(VA9),
+                                 VA10, VA11,
+                                 TA),                                     // OP
+                       (VA1, VA2, MovUtl::move(VA3),
+                        VA4, VA5, MovUtl::move(VA6),
+                        VA7, VA8, MovUtl::move(VA9),
+                        VA10, VA11)                                       // EXP
+                      );
+
+
+        TEST_CONSTRUCT(construct(objPtr,
+                                 MovUtl::move(VA1), VA2, VA3,
+                                 MovUtl::move(VA4), VA5, VA6,
+                                 MovUtl::move(VA7), VA8, VA9,
+                                 MovUtl::move(VA10), VA11, VA12,
+                                 TA),                                    // OP
+                       (MovUtl::move(VA1), VA2, VA3,
+                        MovUtl::move(VA4), VA5, VA6,
+                        MovUtl::move(VA7), VA8, VA9,
+                        MovUtl::move(VA10), VA11, VA12)                  // EXP
+                      );
+        TEST_CONSTRUCT(construct(objPtr,
+                                 VA1, MovUtl::move(VA2), VA3,
+                                 VA4, MovUtl::move(VA5), VA6,
+                                 VA7, MovUtl::move(VA8), VA9,
+                                 VA10, MovUtl::move(VA11), VA12,
+                                 TA),                                    // OP
+                       (VA1, MovUtl::move(VA2), VA3,
+                        VA4, MovUtl::move(VA5), VA6,
+                        VA7, MovUtl::move(VA8), VA9,
+                        VA10, MovUtl::move(VA11), VA12)                  // EXP
+                      );
+        TEST_CONSTRUCT(construct(objPtr,
+                                 VA1, VA2, MovUtl::move(VA3),
+                                 VA4, VA5, MovUtl::move(VA6),
+                                 VA7, VA8, MovUtl::move(VA9),
+                                 VA10, VA11, MovUtl::move(VA12),
+                                 TA),                                     // OP
+                       (VA1, VA2, MovUtl::move(VA3),
+                        VA4, VA5, MovUtl::move(VA6),
+                        VA7, VA8, MovUtl::move(VA9),
+                        VA10, VA11, MovUtl::move(VA12))                   // EXP
+                      );
+
+        TEST_CONSTRUCT(construct(objPtr,
+                                 MovUtl::move(VA1), VA2, VA3,
+                                 MovUtl::move(VA4), VA5, VA6,
+                                 MovUtl::move(VA7), VA8, VA9,
+                                 MovUtl::move(VA10), VA11, VA12,
+                                 MovUtl::move(VA13),
+                                 TA),                                    // OP
+                       (MovUtl::move(VA1), VA2, VA3,
+                        MovUtl::move(VA4), VA5, VA6,
+                        MovUtl::move(VA7), VA8, VA9,
+                        MovUtl::move(VA10), VA11, VA12,
+                        MovUtl::move(VA13))                              // EXP
+                      );
+        TEST_CONSTRUCT(construct(objPtr,
+                                 VA1, MovUtl::move(VA2), VA3,
+                                 VA4, MovUtl::move(VA5), VA6,
+                                 VA7, MovUtl::move(VA8), VA9,
+                                 VA10, MovUtl::move(VA11), VA12,
+                                 VA13,
+                                 TA),                                    // OP
+                       (VA1, MovUtl::move(VA2), VA3,
+                        VA4, MovUtl::move(VA5), VA6,
+                        VA7, MovUtl::move(VA8), VA9,
+                        VA10, MovUtl::move(VA11), VA12,
+                        VA13)                                            // EXP
+                      );
+        TEST_CONSTRUCT(construct(objPtr,
+                                 VA1, VA2, MovUtl::move(VA3),
+                                 VA4, VA5, MovUtl::move(VA6),
+                                 VA7, VA8, MovUtl::move(VA9),
+                                 VA10, VA11, MovUtl::move(VA12),
+                                 VA13,
+                                 TA),                                     // OP
+                       (VA1, VA2, MovUtl::move(VA3),
+                        VA4, VA5, MovUtl::move(VA6),
+                        VA7, VA8, MovUtl::move(VA9),
+                        VA10, VA11, MovUtl::move(VA12),
+                        VA13)                                            // EXP
+                      );
+        TEST_CONSTRUCT(construct(objPtr,
+                                 MovUtl::move(VA1), VA2, VA3,
+                                 MovUtl::move(VA4), VA5, VA6,
+                                 MovUtl::move(VA7), VA8, VA9,
+                                 MovUtl::move(VA10), VA11, VA12,
+                                 MovUtl::move(VA13), VA14,
+                                 TA),                                     // OP
+                       (MovUtl::move(VA1), VA2, VA3,
+                        MovUtl::move(VA4), VA5, VA6,
+                        MovUtl::move(VA7), VA8, VA9,
+                        MovUtl::move(VA10), VA11, VA12,
+                        MovUtl::move(VA13), VA14)                         // EXP
+                      );
+        TEST_CONSTRUCT(construct(objPtr,
+                                 VA1, MovUtl::move(VA2), VA3,
+                                 VA4, MovUtl::move(VA5), VA6,
+                                 VA7, MovUtl::move(VA8), VA9,
+                                 VA10, MovUtl::move(VA11), VA12,
+                                 VA13, MovUtl::move(VA14),
+                                 TA),                                     // OP
+                       (VA1, MovUtl::move(VA2), VA3,
+                        VA4, MovUtl::move(VA5), VA6,
+                        VA7, MovUtl::move(VA8), VA9,
+                        VA10, MovUtl::move(VA11), VA12,
+                        VA13, MovUtl::move(VA14))                              // EXP
+                      );
+        TEST_CONSTRUCT(construct(objPtr,
+                                 VA1, VA2, MovUtl::move(VA3),
+                                 VA4, VA5, MovUtl::move(VA6),
+                                 VA7, VA8, MovUtl::move(VA9),
+                                 VA10, VA11, MovUtl::move(VA12),
+                                 VA13, VA14,
+                                 TA),                                     // OP
+                       (VA1, VA2, MovUtl::move(VA3),
+                        VA4, VA5, MovUtl::move(VA6),
+                        VA7, VA8, MovUtl::move(VA9),
+                        VA10, VA11, MovUtl::move(VA12),
+                        VA13, VA14)                                            // EXP
                       );
 
         if (verbose) printf("TEST_CONSTRUCTA (with bslma::Allocator*).\n");
