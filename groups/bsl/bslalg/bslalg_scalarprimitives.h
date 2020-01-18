@@ -818,7 +818,7 @@ struct ScalarPrimitives_Imp {
     template <class TARGET_TYPE, class ARG1>
     static void construct(
                      TARGET_TYPE                                    *address,
-                     BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)            a1,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)         a1,
                      bslma::Allocator                               *allocator,
                      bsl::integral_constant<int, e_BITWISE_COPYABLE_TRAITS> *);
         // Build an object from the specified 'a1' in the uninitialized memory
@@ -1857,7 +1857,9 @@ ScalarPrimitives::construct(TARGET_TYPE                             *address,
     BSLS_ASSERT_SAFE(address);
 
     ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
-                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2), a3, a4);
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
