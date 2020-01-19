@@ -4779,33 +4779,6 @@ int main(int argc, char *argv[])
             ASSERT(0 == rawBuf.d_allocator_p);
             if (veryVerbose) { P_(rawBuf.d_value); PP(rawBuf.d_allocator_p); }
         }
-/*        {
-            my_ClassDef rawBuf;
-            my_ClassFussy *objPtr = (my_ClassFussy *) &rawBuf;
-            memset(&rawBuf, 92, sizeof rawBuf);
-            const int CCI = my_ClassFussy::copyConstructorInvocations;
-            Obj::construct(objPtr, VF, XA);
-            ASSERT(CCI == my_ClassFussy::copyConstructorInvocations);
-            ASSERT(3 == rawBuf.d_value);
-            ASSERT(0 == rawBuf.d_allocator_p);
-            if (veryVerbose) { P_(rawBuf.d_value); PP(rawBuf.d_allocator_p); }
-        }
-
-        {
-            my_ClassDef rawBuf;
-            my_ClassFussy *objPtr = (my_ClassFussy *) &rawBuf;
-            memset(&rawBuf, 92, sizeof rawBuf);
-            const int CCI = my_ClassFussy::copyConstructorInvocations;
-            const int CVI = my_ClassFussy::conversionConstructorInvocations;
-            const int VF  = 3;
-            Obj::construct(objPtr, VF, XA);
-            ASSERT(CCI == my_ClassFussy::copyConstructorInvocations);
-            ASSERT(CVI <  my_ClassFussy::conversionConstructorInvocations);
-            ASSERT(3 == rawBuf.d_value);
-            ASSERT(0 == rawBuf.d_allocator_p);
-            if (veryVerbose) { P_(rawBuf.d_value); PP(rawBuf.d_allocator_p); }
-        }
-*/
       } break;
       case 5: {
         // --------------------------------------------------------------------
