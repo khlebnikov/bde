@@ -2610,6 +2610,34 @@ bool createdAlike(const ConstructTestTypeAllocArgT& lhs,
                            // macros TEST_CONSTRUCT*
                            // ======================
 
+#define TEST_CONSTRUCT_COPY(Type, op, expArgs)                                \
+  {                                                                           \
+    Type EXP expArgs ;                                                        \
+    bsls::ObjectBuffer<Type> rawBuf;                                          \
+    Type  *objPtr =  rawBuf.address();                                        \
+    Type&  mX     = *objPtr;                                                  \
+    const Type& X =  mX;                                                      \
+    memset(static_cast<void *>(&mX), 92, sizeof mX);                          \
+    Obj:: op ;                                                                \
+    ASSERT(EXP == X);                                                         \
+    ASSERT(createdAlike(EXP,X) == true);                                      \
+  }
+#define TEST_CONSTRUCT_COPYA(Type, op, expArgs, alloc)                        \
+  {                                                                           \
+    Type EXP expArgs ;                                                        \
+    bsls::ObjectBuffer<Type> rawBuf;                                          \
+    Type  *objPtr =  rawBuf.address();                                        \
+    Type&  mX     = *objPtr;                                                  \
+    const Type& X =  mX;                                                      \
+    memset(static_cast<void *>(&mX), 92, sizeof mX);                          \
+    Obj:: op ;                                                                \
+    ASSERT(EXP == X);                                                         \
+    ASSERT(alloc == X.d_allocator);                                           \
+    ASSERT(createdAlike(EXP,X) == true);                                      \
+  }
+
+
+
 #define TEST_CONSTRUCT(op, expArgs)                                           \
   {                                                                           \
     ConstructTestTypeNoAlloc EXP expArgs ;                                    \
@@ -2624,18 +2652,6 @@ bool createdAlike(const ConstructTestTypeAllocArgT& lhs,
   }
 
 #define TEST_CONSTRUCTA(op, expArgs1, expArgs2, alloc)                        \
-  {                                                                           \
-    /* Expects allocator at end of argument list */                           \
-    ConstructTestTypeNoAlloc EXP expArgs1;                                    \
-    bsls::ObjectBuffer<ConstructTestTypeNoAlloc> rawBuf;                      \
-    ConstructTestTypeNoAlloc  *objPtr =  rawBuf.address();                    \
-    ConstructTestTypeNoAlloc&  mX     = *objPtr;                              \
-    const ConstructTestTypeNoAlloc& X = *objPtr;                              \
-    memset(static_cast<void *>(&mX), 92, sizeof mX);                          \
-    Obj:: op ;                                                                \
-    ASSERT(EXP == X);                                                         \
-    ASSERT(createdAlike(EXP,X) == true);                                      \
-  }                                                                           \
   {                                                                           \
     /* Expects allocator at end of argument list */                           \
     ConstructTestTypeAlloc EXP expArgs1;                                      \
@@ -4757,6 +4773,32 @@ int main(int argc, char *argv[])
             const int CVI = my_ClassFussy::conversionConstructorInvocations;
             const int VF  = 3;
             Obj::construct(objPtr, VF, (bslma::Allocator*)TA);
+            ASSERT(CCI == my_ClassFussy::copyConstructorInvocations);
+            ASSERT(CVI <  my_ClassFussy::conversionConstructorInvocations);
+            ASSERT(3 == rawBuf.d_value);
+            ASSERT(0 == rawBuf.d_allocator_p);
+            if (veryVerbose) { P_(rawBuf.d_value); PP(rawBuf.d_allocator_p); }
+        }
+        {
+            my_ClassDef rawBuf;
+            my_ClassFussy *objPtr = (my_ClassFussy *) &rawBuf;
+            memset(&rawBuf, 92, sizeof rawBuf);
+            const int CCI = my_ClassFussy::copyConstructorInvocations;
+            Obj::construct(objPtr, VF, XA);
+            ASSERT(CCI == my_ClassFussy::copyConstructorInvocations);
+            ASSERT(3 == rawBuf.d_value);
+            ASSERT(0 == rawBuf.d_allocator_p);
+            if (veryVerbose) { P_(rawBuf.d_value); PP(rawBuf.d_allocator_p); }
+        }
+
+        {
+            my_ClassDef rawBuf;
+            my_ClassFussy *objPtr = (my_ClassFussy *) &rawBuf;
+            memset(&rawBuf, 92, sizeof rawBuf);
+            const int CCI = my_ClassFussy::copyConstructorInvocations;
+            const int CVI = my_ClassFussy::conversionConstructorInvocations;
+            const int VF  = 3;
+            Obj::construct(objPtr, VF, XA);
             ASSERT(CCI == my_ClassFussy::copyConstructorInvocations);
             ASSERT(CVI <  my_ClassFussy::conversionConstructorInvocations);
             ASSERT(3 == rawBuf.d_value);
