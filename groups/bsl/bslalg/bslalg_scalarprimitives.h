@@ -96,6 +96,8 @@ BSLS_IDENT("$Id: $")
 #include <bslmf_istriviallycopyable.h>
 #include <bslmf_istriviallydefaultconstructible.h>
 #include <bslmf_movableref.h>
+#include <bslmf_removecv.h>
+#include <bslmf_removereference.h>
 #include <bslmf_usesallocatorargt.h>
 #include <bslmf_util.h>
 
@@ -220,357 +222,357 @@ struct ScalarPrimitives {
                           void        *allocator);
     template <class TARGET_TYPE, class ARG1>
     static void construct(TARGET_TYPE      *address,
-                          const ARG1&       a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1) a1,
                           bslma::Allocator *allocator);
     template <class TARGET_TYPE, class ARG1>
     static void construct(TARGET_TYPE *address,
-                          const ARG1&  a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1) a1,
                           void        *allocator);
     template <class TARGET_TYPE, class ARG1, class ARG2>
     static void construct(TARGET_TYPE      *address,
-                          const ARG1&       a1,
-                          const ARG2&       a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)       a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)       a2,
                           bslma::Allocator *allocator);
     template <class TARGET_TYPE, class ARG1, class ARG2>
     static void construct(TARGET_TYPE *address,
-                          const ARG1&  a1,
-                          const ARG2&  a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
                           void        *allocator);
     template <class TARGET_TYPE,
               class ARG1, class ARG2, class ARG3>
     static void construct(TARGET_TYPE      *address,
-                          const ARG1&       a1,
-                          const ARG2&       a2,
-                          const ARG3&       a3,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)       a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)       a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)       a3,
                           bslma::Allocator *allocator);
     template <class TARGET_TYPE,
               class ARG1, class ARG2, class ARG3>
     static void construct(TARGET_TYPE *address,
-                          const ARG1&  a1,
-                          const ARG2&  a2,
-                          const ARG3&  a3,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
                           void        *allocator);
     template <class TARGET_TYPE,
               class ARG1, class ARG2, class ARG3, class ARG4>
     static void construct(TARGET_TYPE      *address,
-                          const ARG1&       a1,
-                          const ARG2&       a2,
-                          const ARG3&       a3,
-                          const ARG4&       a4,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)       a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)       a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)       a3,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)       a4,
                           bslma::Allocator *allocator);
     template <class TARGET_TYPE,
               class ARG1, class ARG2, class ARG3, class ARG4>
     static void construct(TARGET_TYPE *address,
-                          const ARG1&  a1,
-                          const ARG2&  a2,
-                          const ARG3&  a3,
-                          const ARG4&  a4,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
                           void        *allocator);
     template <class TARGET_TYPE,
               class ARG1, class ARG2, class ARG3, class ARG4,
               class ARG5>
     static void construct(TARGET_TYPE      *address,
-                          const ARG1&       a1,
-                          const ARG2&       a2,
-                          const ARG3&       a3,
-                          const ARG4&       a4,
-                          const ARG5&       a5,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)       a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)       a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)       a3,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)       a4,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)       a5,
                           bslma::Allocator *allocator);
     template <class TARGET_TYPE,
               class ARG1, class ARG2, class ARG3, class ARG4,
               class ARG5>
-    static void construct(TARGET_TYPE *address,
-                          const ARG1&  a1,
-                          const ARG2&  a2,
-                          const ARG3&  a3,
-                          const ARG4&  a4,
-                          const ARG5&  a5,
-                          void        *allocator);
+    static void construct(TARGET_TYPE                             *address,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                          void                                    *allocator);
     template <class TARGET_TYPE,
               class ARG1, class ARG2, class ARG3, class ARG4,
               class ARG5, class ARG6>
-    static void construct(TARGET_TYPE      *address,
-                          const ARG1&       a1,
-                          const ARG2&       a2,
-                          const ARG3&       a3,
-                          const ARG4&       a4,
-                          const ARG5&       a5,
-                          const ARG6&       a6,
+    static void construct(TARGET_TYPE                                  *address,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)       a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)       a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)       a3,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)       a4,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)       a5,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)       a6,
                           bslma::Allocator *allocator);
     template <class TARGET_TYPE,
               class ARG1, class ARG2, class ARG3, class ARG4,
               class ARG5, class ARG6>
-    static void construct(TARGET_TYPE *address,
-                          const ARG1&  a1,
-                          const ARG2&  a2,
-                          const ARG3&  a3,
-                          const ARG4&  a4,
-                          const ARG5&  a5,
-                          const ARG6&  a6,
+    static void construct(TARGET_TYPE                             *address,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
                           void        *allocator);
     template <class TARGET_TYPE,
               class ARG1, class ARG2, class ARG3, class ARG4,
               class ARG5, class ARG6, class ARG7>
-    static void construct(TARGET_TYPE      *address,
-                          const ARG1&       a1,
-                          const ARG2&       a2,
-                          const ARG3&       a3,
-                          const ARG4&       a4,
-                          const ARG5&       a5,
-                          const ARG6&       a6,
-                          const ARG7&       a7,
+    static void construct(TARGET_TYPE                                  *address,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)       a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)       a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)       a3,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)       a4,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)       a5,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)       a6,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)       a7,
                           bslma::Allocator *allocator);
     template <class TARGET_TYPE,
               class ARG1, class ARG2, class ARG3, class ARG4,
               class ARG5, class ARG6, class ARG7>
-    static void construct(TARGET_TYPE *address,
-                          const ARG1&  a1,
-                          const ARG2&  a2,
-                          const ARG3&  a3,
-                          const ARG4&  a4,
-                          const ARG5&  a5,
-                          const ARG6&  a6,
-                          const ARG7&  a7,
+    static void construct(TARGET_TYPE                             *address,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
                           void        *allocator);
     template <class TARGET_TYPE,
               class ARG1, class ARG2,  class ARG3, class ARG4,
               class ARG5, class ARG6,  class ARG7, class ARG8>
-    static void construct(TARGET_TYPE      *address,
-                          const ARG1&       a1,
-                          const ARG2&       a2,
-                          const ARG3&       a3,
-                          const ARG4&       a4,
-                          const ARG5&       a5,
-                          const ARG6&       a6,
-                          const ARG7&       a7,
-                          const ARG8&       a8,
+    static void construct(TARGET_TYPE                                  *address,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)       a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)       a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)       a3,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)       a4,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)       a5,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)       a6,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)       a7,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)       a8,
                           bslma::Allocator *allocator);
     template <class TARGET_TYPE,
               class ARG1, class ARG2, class ARG3, class ARG4,
               class ARG5, class ARG6, class ARG7, class ARG8>
-    static void construct(TARGET_TYPE *address,
-                          const ARG1&  a1,
-                          const ARG2&  a2,
-                          const ARG3&  a3,
-                          const ARG4&  a4,
-                          const ARG5&  a5,
-                          const ARG6&  a6,
-                          const ARG7&  a7,
-                          const ARG8&  a8,
+    static void construct(TARGET_TYPE                             *address,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
                           void        *allocator);
     template <class TARGET_TYPE,
               class ARG1, class ARG2,  class ARG3, class ARG4,
               class ARG5, class ARG6,  class ARG7, class ARG8,
               class ARG9>
-    static void construct(TARGET_TYPE      *address,
-                          const ARG1&       a1,
-                          const ARG2&       a2,
-                          const ARG3&       a3,
-                          const ARG4&       a4,
-                          const ARG5&       a5,
-                          const ARG6&       a6,
-                          const ARG7&       a7,
-                          const ARG8&       a8,
-                          const ARG9&       a9,
+    static void construct(TARGET_TYPE                                  *address,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)       a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)       a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)       a3,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)       a4,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)       a5,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)       a6,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)       a7,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)       a8,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)       a9,
                           bslma::Allocator *allocator);
     template <class TARGET_TYPE,
               class ARG1, class ARG2,  class ARG3, class ARG4,
               class ARG5, class ARG6,  class ARG7, class ARG8,
               class ARG9>
-    static void construct(TARGET_TYPE *address,
-                          const ARG1&  a1,
-                          const ARG2&  a2,
-                          const ARG3&  a3,
-                          const ARG4&  a4,
-                          const ARG5&  a5,
-                          const ARG6&  a6,
-                          const ARG7&  a7,
-                          const ARG8&  a8,
-                          const ARG9&  a9,
+    static void construct(TARGET_TYPE                             *address,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
                           void        *allocator);
     template <class TARGET_TYPE,
               class ARG1, class ARG2, class ARG3, class ARG4,
               class ARG5, class ARG6, class ARG7, class ARG8,
               class ARG9, class ARG10>
-    static void construct(TARGET_TYPE      *address,
-                          const ARG1&       a1,
-                          const ARG2&       a2,
-                          const ARG3&       a3,
-                          const ARG4&       a4,
-                          const ARG5&       a5,
-                          const ARG6&       a6,
-                          const ARG7&       a7,
-                          const ARG8&       a8,
-                          const ARG9&       a9,
-                          const ARG10&      a10,
+    static void construct(TARGET_TYPE                                  *address,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)       a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)       a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)       a3,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)       a4,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)       a5,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)       a6,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)       a7,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)       a8,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)       a9,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)      a10,
                           bslma::Allocator *allocator);
     template <class TARGET_TYPE,
               class ARG1, class ARG2, class ARG3, class ARG4,
               class ARG5, class ARG6, class ARG7, class ARG8,
               class ARG9, class ARG10>
-    static void construct(TARGET_TYPE  *address,
-                          const ARG1&   a1,
-                          const ARG2&   a2,
-                          const ARG3&   a3,
-                          const ARG4&   a4,
-                          const ARG5&   a5,
-                          const ARG6&   a6,
-                          const ARG7&   a7,
-                          const ARG8&   a8,
-                          const ARG9&   a9,
-                          const ARG10&  a10,
+    static void construct(TARGET_TYPE                              *address,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)   a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)   a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)   a3,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)   a4,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)   a5,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)   a6,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)   a7,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)   a8,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)   a9,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)  a10,
                           void         *allocator);
     template <class TARGET_TYPE,
               class ARG1, class ARG2,  class ARG3, class ARG4,
               class ARG5, class ARG6,  class ARG7, class ARG8,
               class ARG9, class ARG10, class ARG11>
-    static void construct(TARGET_TYPE      *address,
-                          const ARG1&       a1,
-                          const ARG2&       a2,
-                          const ARG3&       a3,
-                          const ARG4&       a4,
-                          const ARG5&       a5,
-                          const ARG6&       a6,
-                          const ARG7&       a7,
-                          const ARG8&       a8,
-                          const ARG9&       a9,
-                          const ARG10&      a10,
-                          const ARG11&      a11,
+    static void construct(TARGET_TYPE                                  *address,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)       a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)       a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)       a3,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)       a4,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)       a5,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)       a6,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)       a7,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)       a8,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)       a9,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)      a10,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)      a11,
                           bslma::Allocator *allocator);
     template <class TARGET_TYPE,
               class ARG1, class ARG2,  class ARG3, class ARG4,
               class ARG5, class ARG6,  class ARG7, class ARG8,
               class ARG9, class ARG10, class ARG11>
-    static void construct(TARGET_TYPE  *address,
-                          const ARG1&   a1,
-                          const ARG2&   a2,
-                          const ARG3&   a3,
-                          const ARG4&   a4,
-                          const ARG5&   a5,
-                          const ARG6&   a6,
-                          const ARG7&   a7,
-                          const ARG8&   a8,
-                          const ARG9&   a9,
-                          const ARG10&  a10,
-                          const ARG11&  a11,
+    static void construct(TARGET_TYPE                              *address,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)   a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)   a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)   a3,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)   a4,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)   a5,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)   a6,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)   a7,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)   a8,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)   a9,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)  a10,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)  a11,
                           void         *allocator);
     template <class TARGET_TYPE,
               class ARG1, class ARG2,  class ARG3,  class ARG4,
               class ARG5, class ARG6,  class ARG7,  class ARG8,
               class ARG9, class ARG10, class ARG11, class ARG12>
-    static void construct(TARGET_TYPE      *address,
-                          const ARG1&       a1,
-                          const ARG2&       a2,
-                          const ARG3&       a3,
-                          const ARG4&       a4,
-                          const ARG5&       a5,
-                          const ARG6&       a6,
-                          const ARG7&       a7,
-                          const ARG8&       a8,
-                          const ARG9&       a9,
-                          const ARG10&      a10,
-                          const ARG11&      a11,
-                          const ARG12&      a12,
+    static void construct(TARGET_TYPE                                  *address,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)       a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)       a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)       a3,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)       a4,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)       a5,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)       a6,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)       a7,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)       a8,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)       a9,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)      a10,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)      a11,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG12)      a12,
                           bslma::Allocator *allocator);
     template <class TARGET_TYPE,
               class ARG1, class ARG2,  class ARG3,  class ARG4,
               class ARG5, class ARG6,  class ARG7,  class ARG8,
               class ARG9, class ARG10, class ARG11, class ARG12>
-    static void construct(TARGET_TYPE  *address,
-                          const ARG1&   a1,
-                          const ARG2&   a2,
-                          const ARG3&   a3,
-                          const ARG4&   a4,
-                          const ARG5&   a5,
-                          const ARG6&   a6,
-                          const ARG7&   a7,
-                          const ARG8&   a8,
-                          const ARG9&   a9,
-                          const ARG10&  a10,
-                          const ARG11&  a11,
-                          const ARG12&  a12,
+    static void construct(TARGET_TYPE                              *address,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)   a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)   a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)   a3,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)   a4,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)   a5,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)   a6,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)   a7,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)   a8,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)   a9,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)  a10,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)  a11,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG12)  a12,
                           void         *allocator);
     template <class TARGET_TYPE,
               class ARG1, class ARG2,  class ARG3,  class ARG4,
               class ARG5, class ARG6,  class ARG7,  class ARG8,
               class ARG9, class ARG10, class ARG11, class ARG12,
               class ARG13>
-    static void construct(TARGET_TYPE      *address,
-                          const ARG1&       a1,
-                          const ARG2&       a2,
-                          const ARG3&       a3,
-                          const ARG4&       a4,
-                          const ARG5&       a5,
-                          const ARG6&       a6,
-                          const ARG7&       a7,
-                          const ARG8&       a8,
-                          const ARG9&       a9,
-                          const ARG10&      a10,
-                          const ARG11&      a11,
-                          const ARG12&      a12,
-                          const ARG13&      a13,
+    static void construct(TARGET_TYPE                                  *address,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)       a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)       a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)       a3,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)       a4,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)       a5,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)       a6,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)       a7,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)       a8,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)       a9,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)      a10,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)      a11,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG12)      a12,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG13)      a13,
                           bslma::Allocator *allocator);
     template <class TARGET_TYPE,
               class ARG1, class ARG2,  class ARG3,  class ARG4,
               class ARG5, class ARG6,  class ARG7,  class ARG8,
               class ARG9, class ARG10, class ARG11, class ARG12,
               class ARG13>
-    static void construct(TARGET_TYPE  *address,
-                          const ARG1&   a1,
-                          const ARG2&   a2,
-                          const ARG3&   a3,
-                          const ARG4&   a4,
-                          const ARG5&   a5,
-                          const ARG6&   a6,
-                          const ARG7&   a7,
-                          const ARG8&   a8,
-                          const ARG9&   a9,
-                          const ARG10&  a10,
-                          const ARG11&  a11,
-                          const ARG12&  a12,
-                          const ARG13&  a13,
+    static void construct(TARGET_TYPE                              *address,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)   a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)   a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)   a3,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)   a4,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)   a5,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)   a6,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)   a7,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)   a8,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)   a9,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)  a10,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)  a11,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG12)  a12,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG13)  a13,
                           void         *allocator);
     template <class TARGET_TYPE,
               class ARG1,  class ARG2,  class ARG3,  class ARG4,
               class ARG5,  class ARG6,  class ARG7,  class ARG8,
               class ARG9,  class ARG10, class ARG11, class ARG12,
               class ARG13, class ARG14>
-    static void construct(TARGET_TYPE      *address,
-                          const ARG1&       a1,
-                          const ARG2&       a2,
-                          const ARG3&       a3,
-                          const ARG4&       a4,
-                          const ARG5&       a5,
-                          const ARG6&       a6,
-                          const ARG7&       a7,
-                          const ARG8&       a8,
-                          const ARG9&       a9,
-                          const ARG10&      a10,
-                          const ARG11&      a11,
-                          const ARG12&      a12,
-                          const ARG13&      a13,
-                          const ARG14&      a14,
+    static void construct(TARGET_TYPE                                  *address,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)       a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)       a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)       a3,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)       a4,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)       a5,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)       a6,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)       a7,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)       a8,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)       a9,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)      a10,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)      a11,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG12)      a12,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG13)      a13,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG14)      a14,
                           bslma::Allocator *allocator);
     template <class TARGET_TYPE,
               class ARG1,  class ARG2,  class ARG3,  class ARG4,
               class ARG5,  class ARG6,  class ARG7,  class ARG8,
               class ARG9,  class ARG10, class ARG11, class ARG12,
               class ARG13, class ARG14>
-    static void construct(TARGET_TYPE  *address,
-                          const ARG1&   a1,
-                          const ARG2&   a2,
-                          const ARG3&   a3,
-                          const ARG4&   a4,
-                          const ARG5&   a5,
-                          const ARG6&   a6,
-                          const ARG7&   a7,
-                          const ARG8&   a8,
-                          const ARG9&   a9,
-                          const ARG10&  a10,
-                          const ARG11&  a11,
-                          const ARG12&  a12,
-                          const ARG13&  a13,
-                          const ARG14&  a14,
+    static void construct(TARGET_TYPE                              *address,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)   a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)   a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)   a3,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)   a4,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)   a5,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)   a6,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)   a7,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)   a8,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)   a9,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)  a10,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)  a11,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG12)  a12,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG13)  a13,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG14)  a14,
                           void         *allocator);
         // Build an object of the parameterized 'TARGET_TYPE' in the
         // uninitialized memory at the specified 'address'.  Use the
@@ -816,7 +818,7 @@ struct ScalarPrimitives_Imp {
     template <class TARGET_TYPE, class ARG1>
     static void construct(
                      TARGET_TYPE                                    *address,
-                     const ARG1&                                     a1,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)         a1,
                      bslma::Allocator                               *allocator,
                      bsl::integral_constant<int, e_BITWISE_COPYABLE_TRAITS> *);
         // Build an object from the specified 'a1' in the uninitialized memory
@@ -835,33 +837,33 @@ struct ScalarPrimitives_Imp {
     template <class TARGET_TYPE, class ARG1>
     static void construct(
                  TARGET_TYPE                                        *address,
-                 const ARG1&                                         a1,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)            a1,
                  bslma::Allocator                                   *allocator,
                  bsl::integral_constant<int, e_USES_ALLOCATOR_ARG_T_TRAITS> *);
     template <class TARGET_TYPE, class ARG1, class ARG2>
     static void construct(
                  TARGET_TYPE                                        *address,
-                 const ARG1&                                         a1,
-                 const ARG2&                                         a2,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)             a1,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)             a2,
                  bslma::Allocator                                   *allocator,
                  bsl::integral_constant<int, e_USES_ALLOCATOR_ARG_T_TRAITS> *);
     template <class TARGET_TYPE,
               class ARG1, class ARG2, class ARG3>
     static void construct(
                  TARGET_TYPE                                        *address,
-                 const ARG1&                                         a1,
-                 const ARG2&                                         a2,
-                 const ARG3&                                         a3,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)             a1,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)             a2,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)             a3,
                  bslma::Allocator                                   *allocator,
                  bsl::integral_constant<int, e_USES_ALLOCATOR_ARG_T_TRAITS> *);
     template <class TARGET_TYPE,
               class ARG1, class ARG2, class ARG3, class ARG4>
     static void construct(
                  TARGET_TYPE                                        *address,
-                 const ARG1&                                         a1,
-                 const ARG2&                                         a2,
-                 const ARG3&                                         a3,
-                 const ARG4&                                         a4,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)             a1,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)             a2,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)             a3,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)             a4,
                  bslma::Allocator                                   *allocator,
                  bsl::integral_constant<int, e_USES_ALLOCATOR_ARG_T_TRAITS> *);
     template <class TARGET_TYPE,
@@ -869,11 +871,11 @@ struct ScalarPrimitives_Imp {
               class ARG5>
     static void construct(
                  TARGET_TYPE                                        *address,
-                 const ARG1&                                         a1,
-                 const ARG2&                                         a2,
-                 const ARG3&                                         a3,
-                 const ARG4&                                         a4,
-                 const ARG5&                                         a5,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)             a1,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)             a2,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)             a3,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)             a4,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)             a5,
                  bslma::Allocator                                   *allocator,
                  bsl::integral_constant<int, e_USES_ALLOCATOR_ARG_T_TRAITS> *);
     template <class TARGET_TYPE,
@@ -881,12 +883,12 @@ struct ScalarPrimitives_Imp {
               class ARG5, class ARG6>
     static void construct(
                  TARGET_TYPE                                        *address,
-                 const ARG1&                                         a1,
-                 const ARG2&                                         a2,
-                 const ARG3&                                         a3,
-                 const ARG4&                                         a4,
-                 const ARG5&                                         a5,
-                 const ARG6&                                         a6,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)             a1,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)             a2,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)             a3,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)             a4,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)             a5,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)             a6,
                  bslma::Allocator                                   *allocator,
                  bsl::integral_constant<int, e_USES_ALLOCATOR_ARG_T_TRAITS> *);
     template <class TARGET_TYPE,
@@ -894,13 +896,13 @@ struct ScalarPrimitives_Imp {
               class ARG5, class ARG6, class ARG7>
     static void construct(
                  TARGET_TYPE                                        *address,
-                 const ARG1&                                         a1,
-                 const ARG2&                                         a2,
-                 const ARG3&                                         a3,
-                 const ARG4&                                         a4,
-                 const ARG5&                                         a5,
-                 const ARG6&                                         a6,
-                 const ARG7&                                         a7,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)             a1,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)             a2,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)             a3,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)             a4,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)             a5,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)             a6,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)             a7,
                  bslma::Allocator                                   *allocator,
                  bsl::integral_constant<int, e_USES_ALLOCATOR_ARG_T_TRAITS> *);
     template <class TARGET_TYPE,
@@ -908,14 +910,14 @@ struct ScalarPrimitives_Imp {
               class ARG5, class ARG6,  class ARG7, class ARG8>
     static void construct(
                  TARGET_TYPE                                        *address,
-                 const ARG1&                                         a1,
-                 const ARG2&                                         a2,
-                 const ARG3&                                         a3,
-                 const ARG4&                                         a4,
-                 const ARG5&                                         a5,
-                 const ARG6&                                         a6,
-                 const ARG7&                                         a7,
-                 const ARG8&                                         a8,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)             a1,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)             a2,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)             a3,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)             a4,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)             a5,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)             a6,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)             a7,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)             a8,
                  bslma::Allocator                                   *allocator,
                  bsl::integral_constant<int, e_USES_ALLOCATOR_ARG_T_TRAITS> *);
     template <class TARGET_TYPE,
@@ -924,15 +926,15 @@ struct ScalarPrimitives_Imp {
               class ARG9>
     static void construct(
                  TARGET_TYPE                                        *address,
-                 const ARG1&                                         a1,
-                 const ARG2&                                         a2,
-                 const ARG3&                                         a3,
-                 const ARG4&                                         a4,
-                 const ARG5&                                         a5,
-                 const ARG6&                                         a6,
-                 const ARG7&                                         a7,
-                 const ARG8&                                         a8,
-                 const ARG9&                                         a9,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)             a1,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)             a2,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)             a3,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)             a4,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)             a5,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)             a6,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)             a7,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)             a8,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)             a9,
                  bslma::Allocator                                   *allocator,
                  bsl::integral_constant<int, e_USES_ALLOCATOR_ARG_T_TRAITS> *);
     template <class TARGET_TYPE,
@@ -941,16 +943,16 @@ struct ScalarPrimitives_Imp {
               class ARG9, class ARG10>
     static void construct(
                  TARGET_TYPE                                        *address,
-                 const ARG1&                                         a1,
-                 const ARG2&                                         a2,
-                 const ARG3&                                         a3,
-                 const ARG4&                                         a4,
-                 const ARG5&                                         a5,
-                 const ARG6&                                         a6,
-                 const ARG7&                                         a7,
-                 const ARG8&                                         a8,
-                 const ARG9&                                         a9,
-                 const ARG10&                                        a10,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)             a1,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)             a2,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)             a3,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)             a4,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)             a5,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)             a6,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)             a7,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)             a8,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)             a9,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)            a10,
                  bslma::Allocator                                   *allocator,
                  bsl::integral_constant<int, e_USES_ALLOCATOR_ARG_T_TRAITS> *);
     template <class TARGET_TYPE,
@@ -959,17 +961,17 @@ struct ScalarPrimitives_Imp {
               class ARG9, class ARG10, class ARG11>
     static void construct(
                  TARGET_TYPE                                        *address,
-                 const ARG1&                                         a1,
-                 const ARG2&                                         a2,
-                 const ARG3&                                         a3,
-                 const ARG4&                                         a4,
-                 const ARG5&                                         a5,
-                 const ARG6&                                         a6,
-                 const ARG7&                                         a7,
-                 const ARG8&                                         a8,
-                 const ARG9&                                         a9,
-                 const ARG10&                                        a10,
-                 const ARG11&                                        a11,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)             a1,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)             a2,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)             a3,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)             a4,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)             a5,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)             a6,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)             a7,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)             a8,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)             a9,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)            a10,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)            a11,
                  bslma::Allocator                                   *allocator,
                  bsl::integral_constant<int, e_USES_ALLOCATOR_ARG_T_TRAITS> *);
     template <class TARGET_TYPE,
@@ -978,18 +980,18 @@ struct ScalarPrimitives_Imp {
               class ARG9, class ARG10, class ARG11, class ARG12>
     static void construct(
                  TARGET_TYPE                                        *address,
-                 const ARG1&                                         a1,
-                 const ARG2&                                         a2,
-                 const ARG3&                                         a3,
-                 const ARG4&                                         a4,
-                 const ARG5&                                         a5,
-                 const ARG6&                                         a6,
-                 const ARG7&                                         a7,
-                 const ARG8&                                         a8,
-                 const ARG9&                                         a9,
-                 const ARG10&                                        a10,
-                 const ARG11&                                        a11,
-                 const ARG12&                                        a12,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)             a1,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)             a2,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)             a3,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)             a4,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)             a5,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)             a6,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)             a7,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)             a8,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)             a9,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)            a10,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)            a11,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG12)            a12,
                  bslma::Allocator                                   *allocator,
                  bsl::integral_constant<int, e_USES_ALLOCATOR_ARG_T_TRAITS> *);
     template <class TARGET_TYPE,
@@ -999,19 +1001,19 @@ struct ScalarPrimitives_Imp {
               class ARG13>
     static void construct(
                  TARGET_TYPE                                        *address,
-                 const ARG1&                                         a1,
-                 const ARG2&                                         a2,
-                 const ARG3&                                         a3,
-                 const ARG4&                                         a4,
-                 const ARG5&                                         a5,
-                 const ARG6&                                         a6,
-                 const ARG7&                                         a7,
-                 const ARG8&                                         a8,
-                 const ARG9&                                         a9,
-                 const ARG10&                                        a10,
-                 const ARG11&                                        a11,
-                 const ARG12&                                        a12,
-                 const ARG13&                                        a13,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)             a1,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)             a2,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)             a3,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)             a4,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)             a5,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)             a6,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)             a7,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)             a8,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)             a9,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)            a10,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)            a11,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG12)            a12,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG13)            a13,
                  bslma::Allocator                                   *allocator,
                  bsl::integral_constant<int, e_USES_ALLOCATOR_ARG_T_TRAITS> *);
     template <class TARGET_TYPE,
@@ -1021,20 +1023,20 @@ struct ScalarPrimitives_Imp {
               class ARG13, class ARG14>
     static void construct(
                  TARGET_TYPE                                        *address,
-                 const ARG1&                                         a1,
-                 const ARG2&                                         a2,
-                 const ARG3&                                         a3,
-                 const ARG4&                                         a4,
-                 const ARG5&                                         a5,
-                 const ARG6&                                         a6,
-                 const ARG7&                                         a7,
-                 const ARG8&                                         a8,
-                 const ARG9&                                         a9,
-                 const ARG10&                                        a10,
-                 const ARG11&                                        a11,
-                 const ARG12&                                        a12,
-                 const ARG13&                                        a13,
-                 const ARG14&                                        a14,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)             a1,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)             a2,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)             a3,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)             a4,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)             a5,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)             a6,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)             a7,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)             a8,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)             a9,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)            a10,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)            a11,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG12)            a12,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG13)            a13,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG14)            a14,
                  bslma::Allocator                                   *allocator,
                  bsl::integral_constant<int, e_USES_ALLOCATOR_ARG_T_TRAITS> *);
         // Build an object of the parameterized 'TARGET_TYPE' in the
@@ -1054,33 +1056,33 @@ struct ScalarPrimitives_Imp {
     template <class TARGET_TYPE, class ARG1>
     static void construct(
                  TARGET_TYPE                                        *address,
-                 const ARG1&                                         a1,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)            a1,
                  bslma::Allocator                                   *allocator,
                  bsl::integral_constant<int, e_USES_BSLMA_ALLOCATOR_TRAITS> *);
     template <class TARGET_TYPE, class ARG1, class ARG2>
     static void construct(
                  TARGET_TYPE                                        *address,
-                 const ARG1&                                         a1,
-                 const ARG2&                                         a2,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)             a1,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)             a2,
                  bslma::Allocator                                   *allocator,
                  bsl::integral_constant<int, e_USES_BSLMA_ALLOCATOR_TRAITS> *);
     template <class TARGET_TYPE,
               class ARG1, class ARG2, class ARG3>
     static void construct(
                  TARGET_TYPE                                        *address,
-                 const ARG1&                                         a1,
-                 const ARG2&                                         a2,
-                 const ARG3&                                         a3,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)             a1,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)             a2,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)             a3,
                  bslma::Allocator                                   *allocator,
                  bsl::integral_constant<int, e_USES_BSLMA_ALLOCATOR_TRAITS> *);
     template <class TARGET_TYPE,
               class ARG1, class ARG2, class ARG3, class ARG4>
     static void construct(
                  TARGET_TYPE                                        *address,
-                 const ARG1&                                         a1,
-                 const ARG2&                                         a2,
-                 const ARG3&                                         a3,
-                 const ARG4&                                         a4,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)             a1,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)             a2,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)             a3,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)             a4,
                  bslma::Allocator                                   *allocator,
                  bsl::integral_constant<int, e_USES_BSLMA_ALLOCATOR_TRAITS> *);
     template <class TARGET_TYPE,
@@ -1088,11 +1090,11 @@ struct ScalarPrimitives_Imp {
               class ARG5>
     static void construct(
                  TARGET_TYPE                                        *address,
-                 const ARG1&                                         a1,
-                 const ARG2&                                         a2,
-                 const ARG3&                                         a3,
-                 const ARG4&                                         a4,
-                 const ARG5&                                         a5,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)             a1,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)             a2,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)             a3,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)             a4,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)             a5,
                  bslma::Allocator                                   *allocator,
                  bsl::integral_constant<int, e_USES_BSLMA_ALLOCATOR_TRAITS> *);
     template <class TARGET_TYPE,
@@ -1100,12 +1102,12 @@ struct ScalarPrimitives_Imp {
               class ARG5, class ARG6>
     static void construct(
                  TARGET_TYPE                                        *address,
-                 const ARG1&                                         a1,
-                 const ARG2&                                         a2,
-                 const ARG3&                                         a3,
-                 const ARG4&                                         a4,
-                 const ARG5&                                         a5,
-                 const ARG6&                                         a6,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)             a1,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)             a2,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)             a3,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)             a4,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)             a5,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)             a6,
                  bslma::Allocator                                   *allocator,
                  bsl::integral_constant<int, e_USES_BSLMA_ALLOCATOR_TRAITS> *);
     template <class TARGET_TYPE,
@@ -1113,13 +1115,13 @@ struct ScalarPrimitives_Imp {
               class ARG5, class ARG6, class ARG7>
     static void construct(
                  TARGET_TYPE                                        *address,
-                 const ARG1&                                         a1,
-                 const ARG2&                                         a2,
-                 const ARG3&                                         a3,
-                 const ARG4&                                         a4,
-                 const ARG5&                                         a5,
-                 const ARG6&                                         a6,
-                 const ARG7&                                         a7,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)             a1,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)             a2,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)             a3,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)             a4,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)             a5,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)             a6,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)             a7,
                  bslma::Allocator                                   *allocator,
                  bsl::integral_constant<int, e_USES_BSLMA_ALLOCATOR_TRAITS> *);
     template <class TARGET_TYPE,
@@ -1127,14 +1129,14 @@ struct ScalarPrimitives_Imp {
               class ARG5, class ARG6,  class ARG7, class ARG8>
     static void construct(
                  TARGET_TYPE                                        *address,
-                 const ARG1&                                         a1,
-                 const ARG2&                                         a2,
-                 const ARG3&                                         a3,
-                 const ARG4&                                         a4,
-                 const ARG5&                                         a5,
-                 const ARG6&                                         a6,
-                 const ARG7&                                         a7,
-                 const ARG8&                                         a8,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)             a1,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)             a2,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)             a3,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)             a4,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)             a5,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)             a6,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)             a7,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)             a8,
                  bslma::Allocator                                   *allocator,
                  bsl::integral_constant<int, e_USES_BSLMA_ALLOCATOR_TRAITS> *);
     template <class TARGET_TYPE,
@@ -1143,15 +1145,15 @@ struct ScalarPrimitives_Imp {
               class ARG9>
     static void construct(
                  TARGET_TYPE                                        *address,
-                 const ARG1&                                         a1,
-                 const ARG2&                                         a2,
-                 const ARG3&                                         a3,
-                 const ARG4&                                         a4,
-                 const ARG5&                                         a5,
-                 const ARG6&                                         a6,
-                 const ARG7&                                         a7,
-                 const ARG8&                                         a8,
-                 const ARG9&                                         a9,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)             a1,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)             a2,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)             a3,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)             a4,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)             a5,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)             a6,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)             a7,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)             a8,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)             a9,
                  bslma::Allocator                                   *allocator,
                  bsl::integral_constant<int, e_USES_BSLMA_ALLOCATOR_TRAITS> *);
     template <class TARGET_TYPE,
@@ -1160,16 +1162,16 @@ struct ScalarPrimitives_Imp {
               class ARG9, class ARG10>
     static void construct(
                  TARGET_TYPE                                        *address,
-                 const ARG1&                                         a1,
-                 const ARG2&                                         a2,
-                 const ARG3&                                         a3,
-                 const ARG4&                                         a4,
-                 const ARG5&                                         a5,
-                 const ARG6&                                         a6,
-                 const ARG7&                                         a7,
-                 const ARG8&                                         a8,
-                 const ARG9&                                         a9,
-                 const ARG10&                                        a10,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)             a1,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)             a2,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)             a3,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)             a4,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)             a5,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)             a6,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)             a7,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)             a8,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)             a9,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)            a10,
                  bslma::Allocator                                   *allocator,
                  bsl::integral_constant<int, e_USES_BSLMA_ALLOCATOR_TRAITS> *);
     template <class TARGET_TYPE,
@@ -1178,17 +1180,17 @@ struct ScalarPrimitives_Imp {
               class ARG9, class ARG10, class ARG11>
     static void construct(
                  TARGET_TYPE                                        *address,
-                 const ARG1&                                         a1,
-                 const ARG2&                                         a2,
-                 const ARG3&                                         a3,
-                 const ARG4&                                         a4,
-                 const ARG5&                                         a5,
-                 const ARG6&                                         a6,
-                 const ARG7&                                         a7,
-                 const ARG8&                                         a8,
-                 const ARG9&                                         a9,
-                 const ARG10&                                        a10,
-                 const ARG11&                                        a11,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)             a1,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)             a2,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)             a3,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)             a4,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)             a5,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)             a6,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)             a7,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)             a8,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)             a9,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)            a10,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)            a11,
                  bslma::Allocator                                   *allocator,
                  bsl::integral_constant<int, e_USES_BSLMA_ALLOCATOR_TRAITS> *);
     template <class TARGET_TYPE,
@@ -1197,18 +1199,18 @@ struct ScalarPrimitives_Imp {
               class ARG9, class ARG10, class ARG11, class ARG12>
     static void construct(
                  TARGET_TYPE                                        *address,
-                 const ARG1&                                         a1,
-                 const ARG2&                                         a2,
-                 const ARG3&                                         a3,
-                 const ARG4&                                         a4,
-                 const ARG5&                                         a5,
-                 const ARG6&                                         a6,
-                 const ARG7&                                         a7,
-                 const ARG8&                                         a8,
-                 const ARG9&                                         a9,
-                 const ARG10&                                        a10,
-                 const ARG11&                                        a11,
-                 const ARG12&                                        a12,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)             a1,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)             a2,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)             a3,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)             a4,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)             a5,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)             a6,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)             a7,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)             a8,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)             a9,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)            a10,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)            a11,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG12)            a12,
                  bslma::Allocator                                   *allocator,
                  bsl::integral_constant<int, e_USES_BSLMA_ALLOCATOR_TRAITS> *);
     template <class TARGET_TYPE,
@@ -1218,19 +1220,19 @@ struct ScalarPrimitives_Imp {
               class ARG13>
     static void construct(
                  TARGET_TYPE                                        *address,
-                 const ARG1&                                         a1,
-                 const ARG2&                                         a2,
-                 const ARG3&                                         a3,
-                 const ARG4&                                         a4,
-                 const ARG5&                                         a5,
-                 const ARG6&                                         a6,
-                 const ARG7&                                         a7,
-                 const ARG8&                                         a8,
-                 const ARG9&                                         a9,
-                 const ARG10&                                        a10,
-                 const ARG11&                                        a11,
-                 const ARG12&                                        a12,
-                 const ARG13&                                        a13,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)             a1,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)             a2,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)             a3,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)             a4,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)             a5,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)             a6,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)             a7,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)             a8,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)             a9,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)            a10,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)            a11,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG12)            a12,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG13)            a13,
                  bslma::Allocator                                   *allocator,
                  bsl::integral_constant<int, e_USES_BSLMA_ALLOCATOR_TRAITS> *);
     template <class TARGET_TYPE,
@@ -1240,20 +1242,20 @@ struct ScalarPrimitives_Imp {
               class ARG13, class ARG14>
     static void construct(
                  TARGET_TYPE                                        *address,
-                 const ARG1&                                         a1,
-                 const ARG2&                                         a2,
-                 const ARG3&                                         a3,
-                 const ARG4&                                         a4,
-                 const ARG5&                                         a5,
-                 const ARG6&                                         a6,
-                 const ARG7&                                         a7,
-                 const ARG8&                                         a8,
-                 const ARG9&                                         a9,
-                 const ARG10&                                        a10,
-                 const ARG11&                                        a11,
-                 const ARG12&                                        a12,
-                 const ARG13&                                        a13,
-                 const ARG14&                                        a14,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)             a1,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)             a2,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)             a3,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)             a4,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)             a5,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)             a6,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)             a7,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)             a8,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)             a9,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)            a10,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)            a11,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG12)            a12,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG13)            a13,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG14)            a14,
                  bslma::Allocator                                   *allocator,
                  bsl::integral_constant<int, e_USES_BSLMA_ALLOCATOR_TRAITS> *);
         // Build an object of the parameterized 'TARGET_TYPE' in the
@@ -1271,80 +1273,80 @@ struct ScalarPrimitives_Imp {
                           bsl::integral_constant<int, e_NIL_TRAITS> *);
     template <class TARGET_TYPE, class ARG1>
     static void construct(TARGET_TYPE                               *address,
-                          const ARG1&                                a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)   a1,
                           bslma::Allocator                          *allocator,
                           bsl::integral_constant<int, e_NIL_TRAITS> *);
     template <class TARGET_TYPE, class ARG1, class ARG2>
     static void construct(TARGET_TYPE                               *address,
-                          const ARG1&                                a1,
-                          const ARG2&                                a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)    a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)    a2,
                           bslma::Allocator                          *allocator,
                           bsl::integral_constant<int, e_NIL_TRAITS> *);
     template <class TARGET_TYPE,
               class ARG1, class ARG2, class ARG3>
     static void construct(TARGET_TYPE                               *address,
-                          const ARG1&                                a1,
-                          const ARG2&                                a2,
-                          const ARG3&                                a3,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)    a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)    a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)    a3,
                           bslma::Allocator                          *allocator,
                           bsl::integral_constant<int, e_NIL_TRAITS> *);
     template <class TARGET_TYPE,
               class ARG1, class ARG2, class ARG3, class ARG4>
     static void construct(TARGET_TYPE                               *address,
-                          const ARG1&                                a1,
-                          const ARG2&                                a2,
-                          const ARG3&                                a3,
-                          const ARG4&                                a4,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)    a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)    a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)    a3,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)    a4,
                           bslma::Allocator                          *allocator,
                           bsl::integral_constant<int, e_NIL_TRAITS> *);
     template <class TARGET_TYPE,
               class ARG1, class ARG2, class ARG3, class ARG4,
               class ARG5>
     static void construct(TARGET_TYPE                               *address,
-                          const ARG1&                                a1,
-                          const ARG2&                                a2,
-                          const ARG3&                                a3,
-                          const ARG4&                                a4,
-                          const ARG5&                                a5,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)    a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)    a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)    a3,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)    a4,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)    a5,
                           bslma::Allocator                          *allocator,
                           bsl::integral_constant<int, e_NIL_TRAITS> *);
     template <class TARGET_TYPE,
               class ARG1, class ARG2, class ARG3, class ARG4,
               class ARG5, class ARG6>
     static void construct(TARGET_TYPE                               *address,
-                          const ARG1&                                a1,
-                          const ARG2&                                a2,
-                          const ARG3&                                a3,
-                          const ARG4&                                a4,
-                          const ARG5&                                a5,
-                          const ARG6&                                a6,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)    a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)    a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)    a3,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)    a4,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)    a5,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)    a6,
                           bslma::Allocator                          *allocator,
                           bsl::integral_constant<int, e_NIL_TRAITS> *);
     template <class TARGET_TYPE,
               class ARG1, class ARG2, class ARG3, class ARG4,
               class ARG5, class ARG6, class ARG7>
     static void construct(TARGET_TYPE                               *address,
-                          const ARG1&                                a1,
-                          const ARG2&                                a2,
-                          const ARG3&                                a3,
-                          const ARG4&                                a4,
-                          const ARG5&                                a5,
-                          const ARG6&                                a6,
-                          const ARG7&                                a7,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)    a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)    a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)    a3,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)    a4,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)    a5,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)    a6,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)    a7,
                           bslma::Allocator                          *allocator,
                           bsl::integral_constant<int, e_NIL_TRAITS> *);
     template <class TARGET_TYPE,
               class ARG1, class ARG2,  class ARG3, class ARG4,
               class ARG5, class ARG6,  class ARG7, class ARG8>
     static void construct(TARGET_TYPE                               *address,
-                          const ARG1&                                a1,
-                          const ARG2&                                a2,
-                          const ARG3&                                a3,
-                          const ARG4&                                a4,
-                          const ARG5&                                a5,
-                          const ARG6&                                a6,
-                          const ARG7&                                a7,
-                          const ARG8&                                a8,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)    a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)    a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)    a3,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)    a4,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)    a5,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)    a6,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)    a7,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)    a8,
                           bslma::Allocator                          *allocator,
                           bsl::integral_constant<int, e_NIL_TRAITS> *);
     template <class TARGET_TYPE,
@@ -1352,15 +1354,15 @@ struct ScalarPrimitives_Imp {
               class ARG5, class ARG6,  class ARG7, class ARG8,
               class ARG9>
     static void construct(TARGET_TYPE                               *address,
-                          const ARG1&                                a1,
-                          const ARG2&                                a2,
-                          const ARG3&                                a3,
-                          const ARG4&                                a4,
-                          const ARG5&                                a5,
-                          const ARG6&                                a6,
-                          const ARG7&                                a7,
-                          const ARG8&                                a8,
-                          const ARG9&                                a9,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)    a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)    a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)    a3,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)    a4,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)    a5,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)    a6,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)    a7,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)    a8,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)    a9,
                           bslma::Allocator                          *allocator,
                           bsl::integral_constant<int, e_NIL_TRAITS> *);
     template <class TARGET_TYPE,
@@ -1368,16 +1370,16 @@ struct ScalarPrimitives_Imp {
               class ARG5, class ARG6,  class ARG7, class ARG8,
               class ARG9, class ARG10>
     static void construct(TARGET_TYPE                               *address,
-                          const ARG1&                                a1,
-                          const ARG2&                                a2,
-                          const ARG3&                                a3,
-                          const ARG4&                                a4,
-                          const ARG5&                                a5,
-                          const ARG6&                                a6,
-                          const ARG7&                                a7,
-                          const ARG8&                                a8,
-                          const ARG9&                                a9,
-                          const ARG10&                               a10,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)    a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)    a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)    a3,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)    a4,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)    a5,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)    a6,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)    a7,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)    a8,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)    a9,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)   a10,
                           bslma::Allocator                          *allocator,
                           bsl::integral_constant<int, e_NIL_TRAITS> *);
     template <class TARGET_TYPE,
@@ -1385,17 +1387,17 @@ struct ScalarPrimitives_Imp {
               class ARG5, class ARG6,  class ARG7, class ARG8,
               class ARG9, class ARG10, class ARG11>
     static void construct(TARGET_TYPE                               *address,
-                          const ARG1&                                a1,
-                          const ARG2&                                a2,
-                          const ARG3&                                a3,
-                          const ARG4&                                a4,
-                          const ARG5&                                a5,
-                          const ARG6&                                a6,
-                          const ARG7&                                a7,
-                          const ARG8&                                a8,
-                          const ARG9&                                a9,
-                          const ARG10&                               a10,
-                          const ARG11&                               a11,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)    a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)    a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)    a3,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)    a4,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)    a5,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)    a6,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)    a7,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)    a8,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)    a9,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)   a10,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)   a11,
                           bslma::Allocator                          *allocator,
                           bsl::integral_constant<int, e_NIL_TRAITS> *);
     template <class TARGET_TYPE,
@@ -1403,18 +1405,18 @@ struct ScalarPrimitives_Imp {
               class ARG5, class ARG6,  class ARG7,  class ARG8,
               class ARG9, class ARG10, class ARG11, class ARG12>
     static void construct(TARGET_TYPE                               *address,
-                          const ARG1&                                a1,
-                          const ARG2&                                a2,
-                          const ARG3&                                a3,
-                          const ARG4&                                a4,
-                          const ARG5&                                a5,
-                          const ARG6&                                a6,
-                          const ARG7&                                a7,
-                          const ARG8&                                a8,
-                          const ARG9&                                a9,
-                          const ARG10&                               a10,
-                          const ARG11&                               a11,
-                          const ARG12&                               a12,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)    a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)    a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)    a3,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)    a4,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)    a5,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)    a6,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)    a7,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)    a8,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)    a9,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)   a10,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)   a11,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG12)   a12,
                           bslma::Allocator                          *allocator,
                           bsl::integral_constant<int, e_NIL_TRAITS> *);
     template <class TARGET_TYPE,
@@ -1423,19 +1425,19 @@ struct ScalarPrimitives_Imp {
               class ARG9, class ARG10, class ARG11, class ARG12,
               class ARG13>
     static void construct(TARGET_TYPE                               *address,
-                          const ARG1&                                a1,
-                          const ARG2&                                a2,
-                          const ARG3&                                a3,
-                          const ARG4&                                a4,
-                          const ARG5&                                a5,
-                          const ARG6&                                a6,
-                          const ARG7&                                a7,
-                          const ARG8&                                a8,
-                          const ARG9&                                a9,
-                          const ARG10&                               a10,
-                          const ARG11&                               a11,
-                          const ARG12&                               a12,
-                          const ARG13&                               a13,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)    a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)    a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)    a3,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)    a4,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)    a5,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)    a6,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)    a7,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)    a8,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)    a9,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)   a10,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)   a11,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG12)   a12,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG13)   a13,
                           bslma::Allocator                          *allocator,
                           bsl::integral_constant<int, e_NIL_TRAITS> *);
     template <class TARGET_TYPE,
@@ -1444,20 +1446,20 @@ struct ScalarPrimitives_Imp {
               class ARG9,  class ARG10, class ARG11, class ARG12,
               class ARG13, class ARG14>
     static void construct(TARGET_TYPE                               *address,
-                          const ARG1&                                a1,
-                          const ARG2&                                a2,
-                          const ARG3&                                a3,
-                          const ARG4&                                a4,
-                          const ARG5&                                a5,
-                          const ARG6&                                a6,
-                          const ARG7&                                a7,
-                          const ARG8&                                a8,
-                          const ARG9&                                a9,
-                          const ARG10&                               a10,
-                          const ARG11&                               a11,
-                          const ARG12&                               a12,
-                          const ARG13&                               a13,
-                          const ARG14&                               a14,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)    a1,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)    a2,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)    a3,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)    a4,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)    a5,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)    a6,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)    a7,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)    a8,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)    a9,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)   a10,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)   a11,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG12)   a12,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG13)   a13,
+                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG14)   a14,
                           bslma::Allocator                          *allocator,
                           bsl::integral_constant<int, e_NIL_TRAITS> *);
         // Build an object of the parameterized 'TARGET_TYPE' in the
@@ -1696,7 +1698,7 @@ template <class TARGET_TYPE, class ARG1>
 inline
 void
 ScalarPrimitives::construct(TARGET_TYPE      *address,
-                            const ARG1&       a1,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
                             bslma::Allocator *allocator)
 {
     BSLS_ASSERT_SAFE(address);
@@ -1706,71 +1708,38 @@ ScalarPrimitives::construct(TARGET_TYPE      *address,
               ? (bslmf::UsesAllocatorArgT<TARGET_TYPE>::value
                  ? Imp::e_USES_ALLOCATOR_ARG_T_TRAITS
                  : Imp::e_USES_BSLMA_ALLOCATOR_TRAITS)
-              : bsl::is_same<ARG1, TARGET_TYPE>::value
+              : bsl::is_same<typename bsl::remove_cv<
+                                 typename bsl::remove_reference<
+                                   ARG1>::type >::type,
+                             TARGET_TYPE>::value
                 && bsl::is_trivially_copyable<TARGET_TYPE>::value
                   ? Imp::e_BITWISE_COPYABLE_TRAITS
                   : Imp::e_NIL_TRAITS
     };
-    Imp::construct(address, a1, allocator,
-                   (bsl::integral_constant<int, k_VALUE>*)0);
+    Imp::construct(address, BSLS_COMPILERFEATURES_FORWARD(ARG1,a1),
+                  allocator,(bsl::integral_constant<int, k_VALUE>*)0);
 }
 
 template <class TARGET_TYPE, class ARG1>
 inline
 void
 ScalarPrimitives::construct(TARGET_TYPE *address,
-                            const ARG1&  a1,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
                             void        *)
 {
     BSLS_ASSERT_SAFE(address);
 
-    ::new (address) TARGET_TYPE(a1);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1,a1));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
 template <class TARGET_TYPE, class ARG1, class ARG2>
 inline
 void
-ScalarPrimitives::construct(TARGET_TYPE      *address,
-                            const ARG1&       a1,
-                            const ARG2&       a2,
-                            bslma::Allocator *allocator)
-{
-    BSLS_ASSERT_SAFE(address);
-
-    enum {
-        k_VALUE = bslma::UsesBslmaAllocator<TARGET_TYPE>::value
-              ? (bslmf::UsesAllocatorArgT<TARGET_TYPE>::value
-                 ? Imp::e_USES_ALLOCATOR_ARG_T_TRAITS
-                 : Imp::e_USES_BSLMA_ALLOCATOR_TRAITS)
-              : Imp::e_NIL_TRAITS
-    };
-    Imp::construct(address, a1, a2, allocator,
-                   (bsl::integral_constant<int, k_VALUE>*)0);
-}
-
-template <class TARGET_TYPE, class ARG1, class ARG2>
-inline
-void
-ScalarPrimitives::construct(TARGET_TYPE *address,
-                            const ARG1&  a1,
-                            const ARG2&  a2,
-                            void        *)
-{
-    BSLS_ASSERT_SAFE(address);
-
-    ::new (address) TARGET_TYPE(a1, a2);
-    BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
-}
-
-template <class TARGET_TYPE, class ARG1, class ARG2, class ARG3>
-inline
-void
-ScalarPrimitives::construct(TARGET_TYPE      *address,
-                            const ARG1&       a1,
-                            const ARG2&       a2,
-                            const ARG3&       a3,
-                            bslma::Allocator *allocator)
+ScalarPrimitives::construct(TARGET_TYPE                                  *address,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)       a1,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)       a2,
+                            bslma::Allocator                             *allocator)
 {
     BSLS_ASSERT_SAFE(address);
 
@@ -1782,7 +1751,48 @@ ScalarPrimitives::construct(TARGET_TYPE      *address,
               : Imp::e_NIL_TRAITS
     };
     Imp::construct(address,
-                   a1, a2, a3,
+                   BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG2, a2), allocator,
+                   (bsl::integral_constant<int, k_VALUE>*)0);
+}
+
+template <class TARGET_TYPE, class ARG1, class ARG2>
+inline
+void
+ScalarPrimitives::construct(TARGET_TYPE                             *address,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                            void                                    *)
+{
+    BSLS_ASSERT_SAFE(address);
+
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2));
+    BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
+}
+
+template <class TARGET_TYPE, class ARG1, class ARG2, class ARG3>
+inline
+void
+ScalarPrimitives::construct(TARGET_TYPE                                  *address,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)       a1,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)       a2,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)       a3,
+                            bslma::Allocator                             *allocator)
+{
+    BSLS_ASSERT_SAFE(address);
+
+    enum {
+        k_VALUE = bslma::UsesBslmaAllocator<TARGET_TYPE>::value
+              ? (bslmf::UsesAllocatorArgT<TARGET_TYPE>::value
+                 ? Imp::e_USES_ALLOCATOR_ARG_T_TRAITS
+                 : Imp::e_USES_BSLMA_ALLOCATOR_TRAITS)
+              : Imp::e_NIL_TRAITS
+    };
+    Imp::construct(address,
+                   BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
                    allocator,
                    (bsl::integral_constant<int, k_VALUE>*)0);
 }
@@ -1790,15 +1800,17 @@ ScalarPrimitives::construct(TARGET_TYPE      *address,
 template <class TARGET_TYPE, class ARG1, class ARG2, class ARG3>
 inline
 void
-ScalarPrimitives::construct(TARGET_TYPE *address,
-                            const ARG1&  a1,
-                            const ARG2&  a2,
-                            const ARG3&  a3,
-                            void        *)
+ScalarPrimitives::construct(TARGET_TYPE                             *address,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                            void                                    *)
 {
     BSLS_ASSERT_SAFE(address);
 
-    ::new (address) TARGET_TYPE(a1, a2, a3);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -1806,12 +1818,12 @@ template <class TARGET_TYPE, class ARG1, class ARG2, class ARG3,
           class ARG4>
 inline
 void
-ScalarPrimitives::construct(TARGET_TYPE      *address,
-                            const ARG1&       a1,
-                            const ARG2&       a2,
-                            const ARG3&       a3,
-                            const ARG4&       a4,
-                            bslma::Allocator *allocator)
+ScalarPrimitives::construct(TARGET_TYPE                                  *address,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)       a1,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)       a2,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)       a3,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)       a4,
+                            bslma::Allocator                             *allocator)
 {
     BSLS_ASSERT_SAFE(address);
 
@@ -1823,7 +1835,10 @@ ScalarPrimitives::construct(TARGET_TYPE      *address,
               : Imp::e_NIL_TRAITS
     };
     Imp::construct(address,
-                   a1, a2, a3, a4,
+                   BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
                    allocator,
                    (bsl::integral_constant<int, k_VALUE>*)0);
 }
@@ -1832,16 +1847,19 @@ template <class TARGET_TYPE, class ARG1, class ARG2, class ARG3,
           class ARG4>
 inline
 void
-ScalarPrimitives::construct(TARGET_TYPE *address,
-                            const ARG1&  a1,
-                            const ARG2&  a2,
-                            const ARG3&  a3,
-                            const ARG4&  a4,
-                            void        *)
+ScalarPrimitives::construct(TARGET_TYPE                             *address,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                            void                                    *)
 {
     BSLS_ASSERT_SAFE(address);
 
-    ::new (address) TARGET_TYPE(a1, a2, a3, a4);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -1849,13 +1867,13 @@ template <class TARGET_TYPE, class ARG1, class ARG2, class ARG3,
           class ARG4, class ARG5>
 inline
 void
-ScalarPrimitives::construct(TARGET_TYPE      *address,
-                            const ARG1&       a1,
-                            const ARG2&       a2,
-                            const ARG3&       a3,
-                            const ARG4&       a4,
-                            const ARG5&       a5,
-                            bslma::Allocator *allocator)
+ScalarPrimitives::construct(TARGET_TYPE                                  *address,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)       a1,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)       a2,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)       a3,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)       a4,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)       a5,
+                            bslma::Allocator                             *allocator)
 {
     BSLS_ASSERT_SAFE(address);
 
@@ -1867,7 +1885,11 @@ ScalarPrimitives::construct(TARGET_TYPE      *address,
               : Imp::e_NIL_TRAITS
     };
     Imp::construct(address,
-                   a1, a2, a3, a4, a5,
+                   BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
                    allocator,
                    (bsl::integral_constant<int, k_VALUE>*)0);
 }
@@ -1876,17 +1898,21 @@ template <class TARGET_TYPE, class ARG1, class ARG2, class ARG3,
           class ARG4, class ARG5>
 inline
 void
-ScalarPrimitives::construct(TARGET_TYPE *address,
-                            const ARG1&  a1,
-                            const ARG2&  a2,
-                            const ARG3&  a3,
-                            const ARG4&  a4,
-                            const ARG5&  a5,
-                            void        *)
+ScalarPrimitives::construct(TARGET_TYPE                             *address,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                            void                                    *)
 {
     BSLS_ASSERT_SAFE(address);
 
-    ::new (address) TARGET_TYPE(a1, a2, a3, a4, a5);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -1894,14 +1920,14 @@ template <class TARGET_TYPE, class ARG1, class ARG2, class ARG3,
           class ARG4, class ARG5, class ARG6>
 inline
 void
-ScalarPrimitives::construct(TARGET_TYPE      *address,
-                            const ARG1&       a1,
-                            const ARG2&       a2,
-                            const ARG3&       a3,
-                            const ARG4&       a4,
-                            const ARG5&       a5,
-                            const ARG6&       a6,
-                            bslma::Allocator *allocator)
+ScalarPrimitives::construct(TARGET_TYPE                                  *address,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)       a1,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)       a2,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)       a3,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)       a4,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)       a5,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)       a6,
+                            bslma::Allocator                             *allocator)
 {
     BSLS_ASSERT_SAFE(address);
 
@@ -1913,7 +1939,12 @@ ScalarPrimitives::construct(TARGET_TYPE      *address,
               : Imp::e_NIL_TRAITS
     };
     Imp::construct(address,
-                   a1, a2, a3, a4, a5, a6,
+                   BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
                    allocator,
                    (bsl::integral_constant<int, k_VALUE>*)0);
 }
@@ -1922,18 +1953,23 @@ template <class TARGET_TYPE, class ARG1, class ARG2, class ARG3,
           class ARG4, class ARG5, class ARG6>
 inline
 void
-ScalarPrimitives::construct(TARGET_TYPE *address,
-                            const ARG1&  a1,
-                            const ARG2&  a2,
-                            const ARG3&  a3,
-                            const ARG4&  a4,
-                            const ARG5&  a5,
-                            const ARG6&  a6,
-                            void        *)
+ScalarPrimitives::construct(TARGET_TYPE                             *address,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                            void                                    *)
 {
     BSLS_ASSERT_SAFE(address);
 
-    ::new (address) TARGET_TYPE(a1, a2, a3, a4, a5, a6);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG6, a6));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -1941,15 +1977,15 @@ template <class TARGET_TYPE, class ARG1, class ARG2, class ARG3,
           class ARG4, class ARG5, class ARG6, class ARG7>
 inline
 void
-ScalarPrimitives::construct(TARGET_TYPE      *address,
-                            const ARG1&       a1,
-                            const ARG2&       a2,
-                            const ARG3&       a3,
-                            const ARG4&       a4,
-                            const ARG5&       a5,
-                            const ARG6&       a6,
-                            const ARG7&       a7,
-                            bslma::Allocator *allocator)
+ScalarPrimitives::construct(TARGET_TYPE                                  *address,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)       a1,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)       a2,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)       a3,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)       a4,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)       a5,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)       a6,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)       a7,
+                            bslma::Allocator                             *allocator)
 {
     BSLS_ASSERT_SAFE(address);
 
@@ -1961,7 +1997,13 @@ ScalarPrimitives::construct(TARGET_TYPE      *address,
               : Imp::e_NIL_TRAITS
     };
     Imp::construct(address,
-                   a1, a2, a3, a4, a5, a6, a7,
+                   BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
                    allocator,
                    (bsl::integral_constant<int, k_VALUE>*)0);
 }
@@ -1970,19 +2012,25 @@ template <class TARGET_TYPE, class ARG1, class ARG2, class ARG3,
           class ARG4, class ARG5, class ARG6, class ARG7>
 inline
 void
-ScalarPrimitives::construct(TARGET_TYPE *address,
-                            const ARG1&  a1,
-                            const ARG2&  a2,
-                            const ARG3&  a3,
-                            const ARG4&  a4,
-                            const ARG5&  a5,
-                            const ARG6&  a6,
-                            const ARG7&  a7,
-                            void        *)
+ScalarPrimitives::construct(TARGET_TYPE                             *address,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                            void                                    *)
 {
     BSLS_ASSERT_SAFE(address);
 
-    ::new (address) TARGET_TYPE(a1, a2, a3, a4, a5, a6, a7);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG7, a7));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -1991,15 +2039,15 @@ template <class TARGET_TYPE, class ARG1, class ARG2,  class ARG3,
           class ARG8>
 inline
 void
-ScalarPrimitives::construct(TARGET_TYPE      *address,
-                            const ARG1&       a1,
-                            const ARG2&       a2,
-                            const ARG3&       a3,
-                            const ARG4&       a4,
-                            const ARG5&       a5,
-                            const ARG6&       a6,
-                            const ARG7&       a7,
-                            const ARG8&       a8,
+ScalarPrimitives::construct(TARGET_TYPE                                  *address,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)       a1,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)       a2,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)       a3,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)       a4,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)       a5,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)       a6,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)       a7,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)       a8,
                             bslma::Allocator *allocator)
 {
     BSLS_ASSERT_SAFE(address);
@@ -2012,7 +2060,14 @@ ScalarPrimitives::construct(TARGET_TYPE      *address,
               : Imp::e_NIL_TRAITS
     };
     Imp::construct(address,
-                   a1, a2, a3, a4, a5, a6, a7, a8,
+                   BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG8, a8),
                    allocator,
                    (bsl::integral_constant<int, k_VALUE>*)0);
 }
@@ -2022,20 +2077,27 @@ template <class TARGET_TYPE, class ARG1, class ARG2,  class ARG3,
           class ARG8>
 inline
 void
-ScalarPrimitives::construct(TARGET_TYPE *address,
-                            const ARG1&  a1,
-                            const ARG2&  a2,
-                            const ARG3&  a3,
-                            const ARG4&  a4,
-                            const ARG5&  a5,
-                            const ARG6&  a6,
-                            const ARG7&  a7,
-                            const ARG8&  a8,
+ScalarPrimitives::construct(TARGET_TYPE                             *address,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
                             void        *)
 {
     BSLS_ASSERT_SAFE(address);
 
-    ::new (address) TARGET_TYPE(a1, a2, a3, a4, a5, a6, a7, a8);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG8, a8));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -2044,16 +2106,16 @@ template <class TARGET_TYPE, class ARG1, class ARG2,  class ARG3,
           class ARG8, class ARG9>
 inline
 void
-ScalarPrimitives::construct(TARGET_TYPE      *address,
-                            const ARG1&       a1,
-                            const ARG2&       a2,
-                            const ARG3&       a3,
-                            const ARG4&       a4,
-                            const ARG5&       a5,
-                            const ARG6&       a6,
-                            const ARG7&       a7,
-                            const ARG8&       a8,
-                            const ARG9&       a9,
+ScalarPrimitives::construct(TARGET_TYPE                                  *address,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)       a1,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)       a2,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)       a3,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)       a4,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)       a5,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)       a6,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)       a7,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)       a8,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)       a9,
                             bslma::Allocator *allocator)
 {
     BSLS_ASSERT_SAFE(address);
@@ -2066,7 +2128,15 @@ ScalarPrimitives::construct(TARGET_TYPE      *address,
               : Imp::e_NIL_TRAITS
     };
     Imp::construct(address,
-                   a1, a2, a3, a4, a5, a6, a7, a8, a9,
+                   BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG8, a8),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG9, a9),
                    allocator,
                    (bsl::integral_constant<int, k_VALUE>*)0);
 }
@@ -2076,21 +2146,29 @@ template <class TARGET_TYPE, class ARG1, class ARG2,  class ARG3,
           class ARG8, class ARG9>
 inline
 void
-ScalarPrimitives::construct(TARGET_TYPE *address,
-                            const ARG1&  a1,
-                            const ARG2&  a2,
-                            const ARG3&  a3,
-                            const ARG4&  a4,
-                            const ARG5&  a5,
-                            const ARG6&  a6,
-                            const ARG7&  a7,
-                            const ARG8&  a8,
-                            const ARG9&  a9,
+ScalarPrimitives::construct(TARGET_TYPE                             *address,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
                             void        *)
 {
     BSLS_ASSERT_SAFE(address);
 
-    ::new (address) TARGET_TYPE(a1, a2, a3, a4, a5, a6, a7, a8, a9);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG8, a8),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG9, a9));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -2099,17 +2177,17 @@ template <class TARGET_TYPE, class ARG1, class ARG2,  class ARG3,
           class ARG8, class ARG9, class ARG10>
 inline
 void
-ScalarPrimitives::construct(TARGET_TYPE      *address,
-                            const ARG1&       a1,
-                            const ARG2&       a2,
-                            const ARG3&       a3,
-                            const ARG4&       a4,
-                            const ARG5&       a5,
-                            const ARG6&       a6,
-                            const ARG7&       a7,
-                            const ARG8&       a8,
-                            const ARG9&       a9,
-                            const ARG10&      a10,
+ScalarPrimitives::construct(TARGET_TYPE                                  *address,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)       a1,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)       a2,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)       a3,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)       a4,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)       a5,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)       a6,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)       a7,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)       a8,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)       a9,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)      a10,
                             bslma::Allocator *allocator)
 {
     BSLS_ASSERT_SAFE(address);
@@ -2122,7 +2200,16 @@ ScalarPrimitives::construct(TARGET_TYPE      *address,
               : Imp::e_NIL_TRAITS
     };
     Imp::construct(address,
-                   a1, a2, a3, a4, a5, a6, a7, a8, a9, a10,
+                   BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG8, a8),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG9, a9),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG10, a10),
                    allocator,
                    (bsl::integral_constant<int, k_VALUE>*)0);
 }
@@ -2132,22 +2219,31 @@ template <class TARGET_TYPE, class ARG1, class ARG2,  class ARG3,
           class ARG8, class ARG9, class ARG10>
 inline
 void
-ScalarPrimitives::construct(TARGET_TYPE  *address,
-                            const ARG1&   a1,
-                            const ARG2&   a2,
-                            const ARG3&   a3,
-                            const ARG4&   a4,
-                            const ARG5&   a5,
-                            const ARG6&   a6,
-                            const ARG7&   a7,
-                            const ARG8&   a8,
-                            const ARG9&   a9,
-                            const ARG10&  a10,
+ScalarPrimitives::construct(TARGET_TYPE                              *address,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)   a1,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)   a2,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)   a3,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)   a4,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)   a5,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)   a6,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)   a7,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)   a8,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)   a9,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)  a10,
                             void         *)
 {
     BSLS_ASSERT_SAFE(address);
 
-    ::new (address) TARGET_TYPE(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG8, a8),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG9, a9),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG10, a10));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -2156,18 +2252,18 @@ template <class TARGET_TYPE, class ARG1, class ARG2,  class ARG3,
           class ARG8, class ARG9, class ARG10, class ARG11>
 inline
 void
-ScalarPrimitives::construct(TARGET_TYPE      *address,
-                            const ARG1&       a1,
-                            const ARG2&       a2,
-                            const ARG3&       a3,
-                            const ARG4&       a4,
-                            const ARG5&       a5,
-                            const ARG6&       a6,
-                            const ARG7&       a7,
-                            const ARG8&       a8,
-                            const ARG9&       a9,
-                            const ARG10&      a10,
-                            const ARG11&      a11,
+ScalarPrimitives::construct(TARGET_TYPE                                  *address,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)       a1,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)       a2,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)       a3,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)       a4,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)       a5,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)       a6,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)       a7,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)       a8,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)       a9,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)      a10,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)      a11,
                             bslma::Allocator *allocator)
 {
     BSLS_ASSERT_SAFE(address);
@@ -2180,7 +2276,17 @@ ScalarPrimitives::construct(TARGET_TYPE      *address,
               : Imp::e_NIL_TRAITS
     };
     Imp::construct(address,
-                   a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11,
+                   BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG8, a8),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG9, a9),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG10, a10),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG11, a11),
                    allocator,
                    (bsl::integral_constant<int, k_VALUE>*)0);
 }
@@ -2190,23 +2296,33 @@ template <class TARGET_TYPE, class ARG1, class ARG2,  class ARG3,
           class ARG8, class ARG9, class ARG10, class ARG11>
 inline
 void
-ScalarPrimitives::construct(TARGET_TYPE  *address,
-                            const ARG1&   a1,
-                            const ARG2&   a2,
-                            const ARG3&   a3,
-                            const ARG4&   a4,
-                            const ARG5&   a5,
-                            const ARG6&   a6,
-                            const ARG7&   a7,
-                            const ARG8&   a8,
-                            const ARG9&   a9,
-                            const ARG10&  a10,
-                            const ARG11&  a11,
-                            void         *)
+ScalarPrimitives::construct(TARGET_TYPE                              *address,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)   a1,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)   a2,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)   a3,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)   a4,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)   a5,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)   a6,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)   a7,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)   a8,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)   a9,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)  a10,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)  a11,
+                            void                                     *)
 {
     BSLS_ASSERT_SAFE(address);
 
-    ::new (address) TARGET_TYPE(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG8, a8),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG9, a9),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG10, a10),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG11, a11));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -2216,20 +2332,20 @@ template <class TARGET_TYPE, class ARG1, class ARG2,  class ARG3,
           class ARG12>
 inline
 void
-ScalarPrimitives::construct(TARGET_TYPE      *address,
-                            const ARG1&       a1,
-                            const ARG2&       a2,
-                            const ARG3&       a3,
-                            const ARG4&       a4,
-                            const ARG5&       a5,
-                            const ARG6&       a6,
-                            const ARG7&       a7,
-                            const ARG8&       a8,
-                            const ARG9&       a9,
-                            const ARG10&      a10,
-                            const ARG11&      a11,
-                            const ARG12&      a12,
-                            bslma::Allocator *allocator)
+ScalarPrimitives::construct(TARGET_TYPE                               *address,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)    a1,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)    a2,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)    a3,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)    a4,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)    a5,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)    a6,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)    a7,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)    a8,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)    a9,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)   a10,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)   a11,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG12)   a12,
+                            bslma::Allocator                        *allocator)
 {
     BSLS_ASSERT_SAFE(address);
 
@@ -2241,7 +2357,18 @@ ScalarPrimitives::construct(TARGET_TYPE      *address,
               : Imp::e_NIL_TRAITS
     };
     Imp::construct(address,
-                   a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12,
+                   BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG8, a8),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG9, a9),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG10, a10),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG11, a11),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG12, a12),
                    allocator,
                    (bsl::integral_constant<int, k_VALUE>*)0);
 }
@@ -2252,25 +2379,35 @@ template <class TARGET_TYPE, class ARG1, class ARG2,  class ARG3,
           class ARG12>
 inline
 void
-ScalarPrimitives::construct(TARGET_TYPE  *address,
-                            const ARG1&   a1,
-                            const ARG2&   a2,
-                            const ARG3&   a3,
-                            const ARG4&   a4,
-                            const ARG5&   a5,
-                            const ARG6&   a6,
-                            const ARG7&   a7,
-                            const ARG8&   a8,
-                            const ARG9&   a9,
-                            const ARG10&  a10,
-                            const ARG11&  a11,
-                            const ARG12&  a12,
-                            void         *)
+ScalarPrimitives::construct(TARGET_TYPE                              *address,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)   a1,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)   a2,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)   a3,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)   a4,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)   a5,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)   a6,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)   a7,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)   a8,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)   a9,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)  a10,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)  a11,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG12)  a12,
+                            void                                     *)
 {
     BSLS_ASSERT_SAFE(address);
 
-    ::new (address) TARGET_TYPE(a1,  a2,  a3, a4, a5, a6, a7, a8, a9,
-                                a10, a11, a12);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG8, a8),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG9, a9),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG10, a10),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG11, a11),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG12, a12));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -2280,20 +2417,20 @@ template <class TARGET_TYPE,  class ARG1, class ARG2,  class ARG3,
           class ARG12, class ARG13>
 inline
 void
-ScalarPrimitives::construct(TARGET_TYPE      *address,
-                            const ARG1&       a1,
-                            const ARG2&       a2,
-                            const ARG3&       a3,
-                            const ARG4&       a4,
-                            const ARG5&       a5,
-                            const ARG6&       a6,
-                            const ARG7&       a7,
-                            const ARG8&       a8,
-                            const ARG9&       a9,
-                            const ARG10&      a10,
-                            const ARG11&      a11,
-                            const ARG12&      a12,
-                            const ARG13&      a13,
+ScalarPrimitives::construct(TARGET_TYPE                                  *address,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)       a1,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)       a2,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)       a3,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)       a4,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)       a5,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)       a6,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)       a7,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)       a8,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)       a9,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)      a10,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)      a11,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG12)      a12,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG13)      a13,
                             bslma::Allocator *allocator)
 {
     BSLS_ASSERT_SAFE(address);
@@ -2306,7 +2443,19 @@ ScalarPrimitives::construct(TARGET_TYPE      *address,
               : Imp::e_NIL_TRAITS
     };
     Imp::construct(address,
-                   a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13,
+                   BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG8, a8),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG9, a9),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG10, a10),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG11, a11),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG12, a12),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG13, a13),
                    allocator,
                    (bsl::integral_constant<int, k_VALUE>*)0);
 }
@@ -2317,26 +2466,37 @@ template <class TARGET_TYPE,  class ARG1, class ARG2,  class ARG3,
           class ARG12, class ARG13>
 inline
 void
-ScalarPrimitives::construct(TARGET_TYPE  *address,
-                            const ARG1&   a1,
-                            const ARG2&   a2,
-                            const ARG3&   a3,
-                            const ARG4&   a4,
-                            const ARG5&   a5,
-                            const ARG6&   a6,
-                            const ARG7&   a7,
-                            const ARG8&   a8,
-                            const ARG9&   a9,
-                            const ARG10&  a10,
-                            const ARG11&  a11,
-                            const ARG12&  a12,
-                            const ARG13&  a13,
+ScalarPrimitives::construct(TARGET_TYPE                              *address,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)   a1,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)   a2,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)   a3,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)   a4,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)   a5,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)   a6,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)   a7,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)   a8,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)   a9,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)  a10,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)  a11,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG12)  a12,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG13)  a13,
                             void         *)
 {
     BSLS_ASSERT_SAFE(address);
 
-    ::new (address) TARGET_TYPE(
-                       a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG8, a8),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG9, a9),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG10, a10),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG11, a11),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG12, a12),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG13, a13));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -2346,21 +2506,21 @@ template <class TARGET_TYPE,  class ARG1,  class ARG2,  class ARG3,
           class ARG12, class ARG13, class ARG14>
 inline
 void
-ScalarPrimitives::construct(TARGET_TYPE      *address,
-                            const ARG1&       a1,
-                            const ARG2&       a2,
-                            const ARG3&       a3,
-                            const ARG4&       a4,
-                            const ARG5&       a5,
-                            const ARG6&       a6,
-                            const ARG7&       a7,
-                            const ARG8&       a8,
-                            const ARG9&       a9,
-                            const ARG10&      a10,
-                            const ARG11&      a11,
-                            const ARG12&      a12,
-                            const ARG13&      a13,
-                            const ARG14&      a14,
+ScalarPrimitives::construct(TARGET_TYPE                                  *address,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)       a1,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)       a2,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)       a3,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)       a4,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)       a5,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)       a6,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)       a7,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)       a8,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)       a9,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)      a10,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)      a11,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG12)      a12,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG13)      a13,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG14)      a14,
                             bslma::Allocator *allocator)
 {
     BSLS_ASSERT_SAFE(address);
@@ -2373,7 +2533,20 @@ ScalarPrimitives::construct(TARGET_TYPE      *address,
               : Imp::e_NIL_TRAITS
     };
     Imp::construct(address,
-                   a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14,
+                   BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG8, a8),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG9, a9),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG10, a10),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG11, a11),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG12, a12),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG13, a13),
+                   BSLS_COMPILERFEATURES_FORWARD(ARG14, a14),
                    allocator,
                    (bsl::integral_constant<int, k_VALUE>*)0);
 }
@@ -2384,27 +2557,39 @@ template <class TARGET_TYPE,  class ARG1,  class ARG2,  class ARG3,
           class ARG12, class ARG13, class ARG14>
 inline
 void
-ScalarPrimitives::construct(TARGET_TYPE  *address,
-                            const ARG1&   a1,
-                            const ARG2&   a2,
-                            const ARG3&   a3,
-                            const ARG4&   a4,
-                            const ARG5&   a5,
-                            const ARG6&   a6,
-                            const ARG7&   a7,
-                            const ARG8&   a8,
-                            const ARG9&   a9,
-                            const ARG10&  a10,
-                            const ARG11&  a11,
-                            const ARG12&  a12,
-                            const ARG13&  a13,
-                            const ARG14&  a14,
-                            void         *)
+ScalarPrimitives::construct(TARGET_TYPE                              *address,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)   a1,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)   a2,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)   a3,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)   a4,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)   a5,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)   a6,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)   a7,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)   a8,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)   a9,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)  a10,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)  a11,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG12)  a12,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG13)  a13,
+                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG14)  a14,
+                            void                                     *)
 {
     BSLS_ASSERT_SAFE(address);
 
-    ::new (address) TARGET_TYPE(
-                  a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG8, a8),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG9, a9),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG10, a10),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG11, a11),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG12, a12),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG13, a13),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG14, a14));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -2827,7 +3012,7 @@ inline
 void
 ScalarPrimitives_Imp::construct(
                       TARGET_TYPE                                     *address,
-                      const ARG1&                                      a1,
+                      BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)         a1,
                       bslma::Allocator                                *,
                       bsl::integral_constant<int, e_BITWISE_COPYABLE_TRAITS> *)
 {
@@ -2839,7 +3024,7 @@ ScalarPrimitives_Imp::construct(
         // likely produce equivalent code) can't be used, in case 'TARGET_TYPE'
         // is 'const'-qualified.
 
-        ::new (address) TARGET_TYPE(a1);
+        ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1,a1));
         BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
     } else {
         BSLMF_ASSERT(sizeof (TARGET_TYPE) == sizeof(a1));
@@ -2888,11 +3073,12 @@ inline
 void
 ScalarPrimitives_Imp::construct(
                  TARGET_TYPE                                        *address,
-                 const ARG1&                                         a1,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)            a1,
                  bslma::Allocator                                   *allocator,
                  bsl::integral_constant<int, e_USES_ALLOCATOR_ARG_T_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(bsl::allocator_arg, allocator, a1);
+    ::new (address) TARGET_TYPE(bsl::allocator_arg, allocator,
+                                BSLS_COMPILERFEATURES_FORWARD(ARG1,a1));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -2901,11 +3087,12 @@ inline
 void
 ScalarPrimitives_Imp::construct(
                  TARGET_TYPE                                        *address,
-                 const ARG1&                                         a1,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)            a1,
                  bslma::Allocator                                   *allocator,
                  bsl::integral_constant<int, e_USES_BSLMA_ALLOCATOR_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(a1, allocator);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1,a1),
+                                allocator);
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -2913,11 +3100,11 @@ template <class TARGET_TYPE, class ARG1>
 inline
 void
 ScalarPrimitives_Imp::construct(TARGET_TYPE                           *address,
-                                const ARG1&                            a1,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG1) a1,
                                 bslma::Allocator                      *,
                                 bsl::integral_constant<int, e_NIL_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(a1);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1,a1));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -2926,12 +3113,14 @@ inline
 void
 ScalarPrimitives_Imp::construct(
                  TARGET_TYPE                                        *address,
-                 const ARG1&                                         a1,
-                 const ARG2&                                         a2,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)             a1,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)             a2,
                  bslma::Allocator                                   *allocator,
                  bsl::integral_constant<int, e_USES_ALLOCATOR_ARG_T_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(bsl::allocator_arg, allocator, a1, a2);
+    ::new (address) TARGET_TYPE(bsl::allocator_arg, allocator,
+                                BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -2940,12 +3129,14 @@ inline
 void
 ScalarPrimitives_Imp::construct(
                  TARGET_TYPE                                        *address,
-                 const ARG1&                                         a1,
-                 const ARG2&                                         a2,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)             a1,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)             a2,
                  bslma::Allocator                                   *allocator,
                  bsl::integral_constant<int, e_USES_BSLMA_ALLOCATOR_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(a1, a2, allocator);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                allocator);
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -2953,12 +3144,13 @@ template <class TARGET_TYPE, class ARG1, class ARG2>
 inline
 void
 ScalarPrimitives_Imp::construct(TARGET_TYPE                           *address,
-                                const ARG1&                            a1,
-                                const ARG2&                            a2,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)                            a1,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)a2,
                                 bslma::Allocator                      *,
                                 bsl::integral_constant<int, e_NIL_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(a1, a2);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -2967,13 +3159,16 @@ inline
 void
 ScalarPrimitives_Imp::construct(
                  TARGET_TYPE                                        *address,
-                 const ARG1&                                         a1,
-                 const ARG2&                                         a2,
-                 const ARG3&                                         a3,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)             a1,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)             a2,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)             a3,
                  bslma::Allocator                                   *allocator,
                  bsl::integral_constant<int, e_USES_ALLOCATOR_ARG_T_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(bsl::allocator_arg, allocator, a1, a2, a3);
+    ::new (address) TARGET_TYPE(bsl::allocator_arg, allocator,
+                                BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -2982,27 +3177,31 @@ inline
 void
 ScalarPrimitives_Imp::construct(
                  TARGET_TYPE                                        *address,
-                 const ARG1&                                         a1,
-                 const ARG2&                                         a2,
-                 const ARG3&                                         a3,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)             a1,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)             a2,
+                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)             a3,
                  bslma::Allocator                                   *allocator,
                  bsl::integral_constant<int, e_USES_BSLMA_ALLOCATOR_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(a1, a2, a3, allocator);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3), allocator);
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
 template <class TARGET_TYPE, class ARG1, class ARG2, class ARG3>
 inline
 void
-ScalarPrimitives_Imp::construct(TARGET_TYPE                           *address,
-                                const ARG1&                            a1,
-                                const ARG2&                            a2,
-                                const ARG3&                            a3,
+ScalarPrimitives_Imp::construct(TARGET_TYPE                             *address,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG1) a1,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG2) a2,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG3) a3,
                                 bslma::Allocator                      *,
                                 bsl::integral_constant<int, e_NIL_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(a1, a2, a3);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -3012,14 +3211,18 @@ inline
 void
 ScalarPrimitives_Imp::construct(
                   TARGET_TYPE                                       *address,
-                  const ARG1&                                        a1,
-                  const ARG2&                                        a2,
-                  const ARG3&                                        a3,
-                  const ARG4&                                        a4,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)            a1,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)            a2,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)            a3,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)            a4,
                   bslma::Allocator                                  *allocator,
                   bsl::integral_constant<int, e_USES_ALLOCATOR_ARG_T_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(bsl::allocator_arg, allocator, a1, a2, a3, a4);
+    ::new (address) TARGET_TYPE(bsl::allocator_arg, allocator,
+                                BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -3029,14 +3232,17 @@ inline
 void
 ScalarPrimitives_Imp::construct(
                   TARGET_TYPE                                       *address,
-                  const ARG1&                                        a1,
-                  const ARG2&                                        a2,
-                  const ARG3&                                        a3,
-                  const ARG4&                                        a4,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)            a1,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)            a2,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)            a3,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)            a4,
                   bslma::Allocator                                  *allocator,
                   bsl::integral_constant<int, e_USES_BSLMA_ALLOCATOR_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(a1, a2, a3, a4, allocator);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4), allocator);
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -3044,15 +3250,18 @@ template <class TARGET_TYPE, class ARG1, class ARG2, class ARG3,
           class ARG4>
 inline
 void
-ScalarPrimitives_Imp::construct(TARGET_TYPE                           *address,
-                                const ARG1&                            a1,
-                                const ARG2&                            a2,
-                                const ARG3&                            a3,
-                                const ARG4&                            a4,
-                                bslma::Allocator                      *,
+ScalarPrimitives_Imp::construct(TARGET_TYPE                          *address,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                                bslma::Allocator                         *,
                                 bsl::integral_constant<int, e_NIL_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(a1, a2, a3, a4);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -3062,16 +3271,20 @@ inline
 void
 ScalarPrimitives_Imp::construct(
                   TARGET_TYPE                                       *address,
-                  const ARG1&                                        a1,
-                  const ARG2&                                        a2,
-                  const ARG3&                                        a3,
-                  const ARG4&                                        a4,
-                  const ARG5&                                        a5,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)            a1,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)            a2,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)            a3,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)            a4,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)            a5,
                   bslma::Allocator                                  *allocator,
                   bsl::integral_constant<int, e_USES_ALLOCATOR_ARG_T_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(bsl::allocator_arg, allocator, a1, a2, a3, a4,
-                                a5);
+    ::new (address) TARGET_TYPE(bsl::allocator_arg, allocator,
+                                BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -3081,15 +3294,19 @@ inline
 void
 ScalarPrimitives_Imp::construct(
                   TARGET_TYPE                                       *address,
-                  const ARG1&                                        a1,
-                  const ARG2&                                        a2,
-                  const ARG3&                                        a3,
-                  const ARG4&                                        a4,
-                  const ARG5&                                        a5,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)            a1,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)            a2,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)            a3,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)            a4,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)            a5,
                   bslma::Allocator                                  *allocator,
                   bsl::integral_constant<int, e_USES_BSLMA_ALLOCATOR_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(a1, a2, a3, a4, a5, allocator);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5), allocator);
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -3097,16 +3314,20 @@ template <class TARGET_TYPE, class ARG1, class ARG2, class ARG3,
           class ARG4, class ARG5>
 inline
 void
-ScalarPrimitives_Imp::construct(TARGET_TYPE                           *address,
-                                const ARG1&                            a1,
-                                const ARG2&                            a2,
-                                const ARG3&                            a3,
-                                const ARG4&                            a4,
-                                const ARG5&                            a5,
+ScalarPrimitives_Imp::construct(TARGET_TYPE                             *address,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)   a5,
                                 bslma::Allocator                      *,
                                 bsl::integral_constant<int, e_NIL_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(a1, a2, a3, a4, a5);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -3116,17 +3337,22 @@ inline
 void
 ScalarPrimitives_Imp::construct(
                   TARGET_TYPE                                       *address,
-                  const ARG1&                                        a1,
-                  const ARG2&                                        a2,
-                  const ARG3&                                        a3,
-                  const ARG4&                                        a4,
-                  const ARG5&                                        a5,
-                  const ARG6&                                        a6,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)            a1,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)            a2,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)            a3,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)            a4,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)            a5,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)            a6,
                   bslma::Allocator                                  *allocator,
                   bsl::integral_constant<int, e_USES_ALLOCATOR_ARG_T_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(bsl::allocator_arg, allocator, a1, a2, a3, a4,
-                                a5, a6);
+    ::new (address) TARGET_TYPE(bsl::allocator_arg, allocator,
+                                BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG6, a6));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -3136,16 +3362,22 @@ inline
 void
 ScalarPrimitives_Imp::construct(
                   TARGET_TYPE                                       *address,
-                  const ARG1&                                        a1,
-                  const ARG2&                                        a2,
-                  const ARG3&                                        a3,
-                  const ARG4&                                        a4,
-                  const ARG5&                                        a5,
-                  const ARG6&                                        a6,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)            a1,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)            a2,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)            a3,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)            a4,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)            a5,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)            a6,
                   bslma::Allocator                                  *allocator,
                   bsl::integral_constant<int, e_USES_BSLMA_ALLOCATOR_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(a1, a2, a3, a4, a5, a6, allocator);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                                allocator);
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -3153,17 +3385,22 @@ template <class TARGET_TYPE, class ARG1, class ARG2, class ARG3,
           class ARG4, class ARG5, class ARG6>
 inline
 void
-ScalarPrimitives_Imp::construct(TARGET_TYPE                           *address,
-                                const ARG1&                            a1,
-                                const ARG2&                            a2,
-                                const ARG3&                            a3,
-                                const ARG4&                            a4,
-                                const ARG5&                            a5,
-                                const ARG6&                            a6,
+ScalarPrimitives_Imp::construct(TARGET_TYPE                                *address,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG1) a1,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG2) a2,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG3) a3,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG4) a4,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)   a5,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)a6,
                                 bslma::Allocator                      *,
                                 bsl::integral_constant<int, e_NIL_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(a1, a2, a3, a4, a5, a6);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG6, a6));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -3173,18 +3410,24 @@ inline
 void
 ScalarPrimitives_Imp::construct(
                   TARGET_TYPE                                       *address,
-                  const ARG1&                                        a1,
-                  const ARG2&                                        a2,
-                  const ARG3&                                        a3,
-                  const ARG4&                                        a4,
-                  const ARG5&                                        a5,
-                  const ARG6&                                        a6,
-                  const ARG7&                                        a7,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)            a1,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)            a2,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)            a3,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)            a4,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)            a5,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)            a6,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)            a7,
                   bslma::Allocator                                  *allocator,
                   bsl::integral_constant<int, e_USES_ALLOCATOR_ARG_T_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(bsl::allocator_arg, allocator, a1, a2, a3, a4,
-                                a5, a6, a7);
+    ::new (address) TARGET_TYPE(bsl::allocator_arg, allocator,
+                                BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG7, a7));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -3194,17 +3437,24 @@ inline
 void
 ScalarPrimitives_Imp::construct(
                   TARGET_TYPE                                       *address,
-                  const ARG1&                                        a1,
-                  const ARG2&                                        a2,
-                  const ARG3&                                        a3,
-                  const ARG4&                                        a4,
-                  const ARG5&                                        a5,
-                  const ARG6&                                        a6,
-                  const ARG7&                                        a7,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)            a1,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)            a2,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)            a3,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)            a4,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)            a5,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)            a6,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)            a7,
                   bslma::Allocator                                  *allocator,
                   bsl::integral_constant<int, e_USES_BSLMA_ALLOCATOR_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(a1, a2, a3, a4, a5, a6, a7, allocator);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
+                                allocator);
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -3213,17 +3463,23 @@ template <class TARGET_TYPE, class ARG1, class ARG2, class ARG3,
 inline
 void
 ScalarPrimitives_Imp::construct(TARGET_TYPE                           *address,
-                                const ARG1&                            a1,
-                                const ARG2&                            a2,
-                                const ARG3&                            a3,
-                                const ARG4&                            a4,
-                                const ARG5&                            a5,
-                                const ARG6&                            a6,
-                                const ARG7&                            a7,
-                                bslma::Allocator                      *,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)    a1,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)    a2,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)    a3,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)    a4,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)    a5,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)    a6,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)    a7,
+                                bslma::Allocator                          *,
                                 bsl::integral_constant<int, e_NIL_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(a1, a2, a3, a4, a5, a6, a7);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG7, a7));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -3234,19 +3490,26 @@ inline
 void
 ScalarPrimitives_Imp::construct(
                   TARGET_TYPE                                       *address,
-                  const ARG1&                                        a1,
-                  const ARG2&                                        a2,
-                  const ARG3&                                        a3,
-                  const ARG4&                                        a4,
-                  const ARG5&                                        a5,
-                  const ARG6&                                        a6,
-                  const ARG7&                                        a7,
-                  const ARG8&                                        a8,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)            a1,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)            a2,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)            a3,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)            a4,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)            a5,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)            a6,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)            a7,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)            a8,
                   bslma::Allocator                                  *allocator,
                   bsl::integral_constant<int, e_USES_ALLOCATOR_ARG_T_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(bsl::allocator_arg, allocator, a1, a2, a3, a4,
-                                a5, a6, a7, a8);
+    ::new (address) TARGET_TYPE(bsl::allocator_arg, allocator,
+                                BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG8, a8));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -3257,18 +3520,26 @@ inline
 void
 ScalarPrimitives_Imp::construct(
                   TARGET_TYPE                                       *address,
-                  const ARG1&                                        a1,
-                  const ARG2&                                        a2,
-                  const ARG3&                                        a3,
-                  const ARG4&                                        a4,
-                  const ARG5&                                        a5,
-                  const ARG6&                                        a6,
-                  const ARG7&                                        a7,
-                  const ARG8&                                        a8,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)            a1,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)            a2,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)            a3,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)            a4,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)            a5,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)            a6,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)            a7,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)            a8,
                   bslma::Allocator                                  *allocator,
                   bsl::integral_constant<int, e_USES_BSLMA_ALLOCATOR_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(a1, a2, a3, a4, a5, a6, a7, a8, allocator);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG8, a8),
+                                allocator);
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -3278,18 +3549,25 @@ template <class TARGET_TYPE, class ARG1, class ARG2,  class ARG3,
 inline
 void
 ScalarPrimitives_Imp::construct(TARGET_TYPE                           *address,
-                                const ARG1&                            a1,
-                                const ARG2&                            a2,
-                                const ARG3&                            a3,
-                                const ARG4&                            a4,
-                                const ARG5&                            a5,
-                                const ARG6&                            a6,
-                                const ARG7&                            a7,
-                                const ARG8&                            a8,
-                                bslma::Allocator                      *,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG1) a1,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG2) a2,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG3) a3,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG4) a4,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG5) a5,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG6) a6,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG7) a7,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG8) a8,
+                                bslma::Allocator                        *,
                                 bsl::integral_constant<int, e_NIL_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(a1, a2, a3, a4, a5, a6, a7, a8);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG8, a8));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -3300,20 +3578,28 @@ inline
 void
 ScalarPrimitives_Imp::construct(
                   TARGET_TYPE                                       *address,
-                  const ARG1&                                        a1,
-                  const ARG2&                                        a2,
-                  const ARG3&                                        a3,
-                  const ARG4&                                        a4,
-                  const ARG5&                                        a5,
-                  const ARG6&                                        a6,
-                  const ARG7&                                        a7,
-                  const ARG8&                                        a8,
-                  const ARG9&                                        a9,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)            a1,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)            a2,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)            a3,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)            a4,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)            a5,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)            a6,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)            a7,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)            a8,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)            a9,
                   bslma::Allocator                                  *allocator,
                   bsl::integral_constant<int, e_USES_ALLOCATOR_ARG_T_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(bsl::allocator_arg, allocator, a1, a2, a3, a4,
-                                a5, a6, a7, a8, a9);
+    ::new (address) TARGET_TYPE(bsl::allocator_arg, allocator,
+                                BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG8, a8),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG9, a9));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -3324,19 +3610,28 @@ inline
 void
 ScalarPrimitives_Imp::construct(
                   TARGET_TYPE                                       *address,
-                  const ARG1&                                        a1,
-                  const ARG2&                                        a2,
-                  const ARG3&                                        a3,
-                  const ARG4&                                        a4,
-                  const ARG5&                                        a5,
-                  const ARG6&                                        a6,
-                  const ARG7&                                        a7,
-                  const ARG8&                                        a8,
-                  const ARG9&                                        a9,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)            a1,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)            a2,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)            a3,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)            a4,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)            a5,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)            a6,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)            a7,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)            a8,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)            a9,
                   bslma::Allocator                                  *allocator,
                   bsl::integral_constant<int, e_USES_BSLMA_ALLOCATOR_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(a1, a2, a3, a4, a5, a6, a7, a8, a9, allocator);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG8, a8),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG9, a9),
+                                allocator);
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -3346,19 +3641,27 @@ template <class TARGET_TYPE, class ARG1, class ARG2,  class ARG3,
 inline
 void
 ScalarPrimitives_Imp::construct(TARGET_TYPE                           *address,
-                                const ARG1&                            a1,
-                                const ARG2&                            a2,
-                                const ARG3&                            a3,
-                                const ARG4&                            a4,
-                                const ARG5&                            a5,
-                                const ARG6&                            a6,
-                                const ARG7&                            a7,
-                                const ARG8&                            a8,
-                                const ARG9&                            a9,
-                                bslma::Allocator                      *,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG1) a1,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG2) a2,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG3) a3,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG4) a4,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG5) a5,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG6) a6,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG7) a7,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG8) a8,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG9) a9,
+                                bslma::Allocator                       *,
                                 bsl::integral_constant<int, e_NIL_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(a1, a2, a3, a4, a5, a6, a7, a8, a9);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG8, a8),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG9, a9));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -3369,21 +3672,30 @@ inline
 void
 ScalarPrimitives_Imp::construct(
                   TARGET_TYPE                                       *address,
-                  const ARG1&                                        a1,
-                  const ARG2&                                        a2,
-                  const ARG3&                                        a3,
-                  const ARG4&                                        a4,
-                  const ARG5&                                        a5,
-                  const ARG6&                                        a6,
-                  const ARG7&                                        a7,
-                  const ARG8&                                        a8,
-                  const ARG9&                                        a9,
-                  const ARG10&                                       a10,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)            a1,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)            a2,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)            a3,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)            a4,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)            a5,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)            a6,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)            a7,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)            a8,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)            a9,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)           a10,
                   bslma::Allocator                                  *allocator,
                   bsl::integral_constant<int, e_USES_ALLOCATOR_ARG_T_TRAITS> *)
 {
-     ::new (address) TARGET_TYPE(bsl::allocator_arg, allocator, a1, a2, a3, a4,
-                                 a5, a6, a7, a8, a9, a10);
+     ::new (address) TARGET_TYPE(bsl::allocator_arg, allocator,
+                                 BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                 BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                 BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                 BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                 BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                                 BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                                 BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
+                                 BSLS_COMPILERFEATURES_FORWARD(ARG8, a8),
+                                 BSLS_COMPILERFEATURES_FORWARD(ARG9, a9),
+                                 BSLS_COMPILERFEATURES_FORWARD(ARG10, a10));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -3394,20 +3706,29 @@ inline
 void
 ScalarPrimitives_Imp::construct(
                   TARGET_TYPE                                       *address,
-                  const ARG1&                                        a1,
-                  const ARG2&                                        a2,
-                  const ARG3&                                        a3,
-                  const ARG4&                                        a4,
-                  const ARG5&                                        a5,
-                  const ARG6&                                        a6,
-                  const ARG7&                                        a7,
-                  const ARG8&                                        a8,
-                  const ARG9&                                        a9,
-                  const ARG10&                                       a10,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)            a1,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)            a2,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)            a3,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)            a4,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)            a5,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)            a6,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)            a7,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)            a8,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)            a9,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)           a10,
                   bslma::Allocator                                  *allocator,
                   bsl::integral_constant<int, e_USES_BSLMA_ALLOCATOR_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10,
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG8, a8),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG9, a9),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG10, a10),
                                 allocator);
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
@@ -3418,20 +3739,29 @@ template <class TARGET_TYPE, class ARG1, class ARG2,  class ARG3,
 inline
 void
 ScalarPrimitives_Imp::construct(TARGET_TYPE                           *address,
-                                const ARG1&                            a1,
-                                const ARG2&                            a2,
-                                const ARG3&                            a3,
-                                const ARG4&                            a4,
-                                const ARG5&                            a5,
-                                const ARG6&                            a6,
-                                const ARG7&                            a7,
-                                const ARG8&                            a8,
-                                const ARG9&                            a9,
-                                const ARG10&                           a10,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG1) a1,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG2) a2,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG3) a3,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG4) a4,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG5) a5,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG6) a6,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG7) a7,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG8) a8,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG9) a9,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
                                 bslma::Allocator                      *,
                                 bsl::integral_constant<int, e_NIL_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG8, a8),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG9, a9),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG10, a10));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -3442,22 +3772,32 @@ inline
 void
 ScalarPrimitives_Imp::construct(
                   TARGET_TYPE                                       *address,
-                  const ARG1&                                        a1,
-                  const ARG2&                                        a2,
-                  const ARG3&                                        a3,
-                  const ARG4&                                        a4,
-                  const ARG5&                                        a5,
-                  const ARG6&                                        a6,
-                  const ARG7&                                        a7,
-                  const ARG8&                                        a8,
-                  const ARG9&                                        a9,
-                  const ARG10&                                       a10,
-                  const ARG11&                                       a11,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)            a1,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)            a2,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)            a3,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)            a4,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)            a5,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)            a6,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)            a7,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)            a8,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)            a9,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)           a10,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)           a11,
                   bslma::Allocator                                  *allocator,
                   bsl::integral_constant<int, e_USES_ALLOCATOR_ARG_T_TRAITS> *)
 {
-     ::new (address) TARGET_TYPE(bsl::allocator_arg, allocator, a1, a2, a3, a4,
-                                 a5, a6, a7, a8, a9, a10, a11);
+     ::new (address) TARGET_TYPE(bsl::allocator_arg, allocator,
+                                 BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                 BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                 BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                 BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                 BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                                 BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                                 BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
+                                 BSLS_COMPILERFEATURES_FORWARD(ARG8, a8),
+                                 BSLS_COMPILERFEATURES_FORWARD(ARG9, a9),
+                                 BSLS_COMPILERFEATURES_FORWARD(ARG10, a10),
+                                 BSLS_COMPILERFEATURES_FORWARD(ARG11, a11));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -3468,21 +3808,31 @@ inline
 void
 ScalarPrimitives_Imp::construct(
                   TARGET_TYPE                                       *address,
-                  const ARG1&                                        a1,
-                  const ARG2&                                        a2,
-                  const ARG3&                                        a3,
-                  const ARG4&                                        a4,
-                  const ARG5&                                        a5,
-                  const ARG6&                                        a6,
-                  const ARG7&                                        a7,
-                  const ARG8&                                        a8,
-                  const ARG9&                                        a9,
-                  const ARG10&                                       a10,
-                  const ARG11&                                       a11,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)            a1,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)            a2,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)            a3,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)            a4,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)            a5,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)            a6,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)            a7,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)            a8,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)            a9,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)           a10,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)           a11,
                   bslma::Allocator                                  *allocator,
                   bsl::integral_constant<int, e_USES_BSLMA_ALLOCATOR_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11,
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG8, a8),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG9, a9),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG10, a10),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG11, a11),
                                 allocator);
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
@@ -3493,21 +3843,31 @@ template <class TARGET_TYPE, class ARG1, class ARG2,  class ARG3,
 inline
 void
 ScalarPrimitives_Imp::construct(TARGET_TYPE                           *address,
-                                const ARG1&                            a1,
-                                const ARG2&                            a2,
-                                const ARG3&                            a3,
-                                const ARG4&                            a4,
-                                const ARG5&                            a5,
-                                const ARG6&                            a6,
-                                const ARG7&                            a7,
-                                const ARG8&                            a8,
-                                const ARG9&                            a9,
-                                const ARG10&                           a10,
-                                const ARG11&                           a11,
-                                bslma::Allocator                      *,
-                                bsl::integral_constant<int, e_NIL_TRAITS> *)
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG1) a1,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG2) a2,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG3) a3,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG4) a4,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG5) a5,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG6) a6,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG7) a7,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG8) a8,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG9) a9,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11,
+                                bslma::Allocator                           *,
+                                bsl::integral_constant<int, e_NIL_TRAITS>  *)
 {
-    ::new (address) TARGET_TYPE(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG8, a8),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG9, a9),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG10, a10),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG11, a11));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -3519,23 +3879,34 @@ inline
 void
 ScalarPrimitives_Imp::construct(
                   TARGET_TYPE                                       *address,
-                  const ARG1&                                        a1,
-                  const ARG2&                                        a2,
-                  const ARG3&                                        a3,
-                  const ARG4&                                        a4,
-                  const ARG5&                                        a5,
-                  const ARG6&                                        a6,
-                  const ARG7&                                        a7,
-                  const ARG8&                                        a8,
-                  const ARG9&                                        a9,
-                  const ARG10&                                       a10,
-                  const ARG11&                                       a11,
-                  const ARG12&                                       a12,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)            a1,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)            a2,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)            a3,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)            a4,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)            a5,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)            a6,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)            a7,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)            a8,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)            a9,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)           a10,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)           a11,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG12)           a12,
                   bslma::Allocator                                  *allocator,
                   bsl::integral_constant<int, e_USES_ALLOCATOR_ARG_T_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(bsl::allocator_arg, allocator, a1, a2, a3, a4,
-                                a5, a6, a7, a8, a9, a10, a11, a12);
+    ::new (address) TARGET_TYPE(bsl::allocator_arg, allocator,
+                                BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG8, a8),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG9, a9),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG10, a10),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG11, a11),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG12, a12));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -3547,24 +3918,34 @@ inline
 void
 ScalarPrimitives_Imp::construct(
                   TARGET_TYPE                                       *address,
-                  const ARG1&                                        a1,
-                  const ARG2&                                        a2,
-                  const ARG3&                                        a3,
-                  const ARG4&                                        a4,
-                  const ARG5&                                        a5,
-                  const ARG6&                                        a6,
-                  const ARG7&                                        a7,
-                  const ARG8&                                        a8,
-                  const ARG9&                                        a9,
-                  const ARG10&                                       a10,
-                  const ARG11&                                       a11,
-                  const ARG12&                                       a12,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)            a1,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)            a2,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)            a3,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)            a4,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)            a5,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)            a6,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)            a7,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)            a8,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)            a9,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)           a10,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)           a11,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG12)           a12,
                   bslma::Allocator                                  *allocator,
                   bsl::integral_constant<int, e_USES_BSLMA_ALLOCATOR_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(
-                             a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12,
-                             allocator);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG8, a8),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG9, a9),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG10, a10),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG11, a11),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG12, a12),
+                                allocator);
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -3574,24 +3955,34 @@ template <class TARGET_TYPE, class ARG1, class ARG2,  class ARG3,
           class ARG12>
 inline
 void
-ScalarPrimitives_Imp::construct(TARGET_TYPE                           *address,
-                                const ARG1&                            a1,
-                                const ARG2&                            a2,
-                                const ARG3&                            a3,
-                                const ARG4&                            a4,
-                                const ARG5&                            a5,
-                                const ARG6&                            a6,
-                                const ARG7&                            a7,
-                                const ARG8&                            a8,
-                                const ARG9&                            a9,
-                                const ARG10&                           a10,
-                                const ARG11&                           a11,
-                                const ARG12&                           a12,
+ScalarPrimitives_Imp::construct(TARGET_TYPE                                 *address,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG1) a1,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG2) a2,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG3) a3,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG4) a4,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)   a5,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)a6,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)a7,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)a8,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)a9,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)                           a10,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)                           a11,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG12)                           a12,
                                 bslma::Allocator                      *,
                                 bsl::integral_constant<int, e_NIL_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(
-                            a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG8, a8),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG9, a9),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG10, a10),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG11, a11),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG12, a12));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -3603,24 +3994,36 @@ inline
 void
 ScalarPrimitives_Imp::construct(
                   TARGET_TYPE                                       *address,
-                  const ARG1&                                        a1,
-                  const ARG2&                                        a2,
-                  const ARG3&                                        a3,
-                  const ARG4&                                        a4,
-                  const ARG5&                                        a5,
-                  const ARG6&                                        a6,
-                  const ARG7&                                        a7,
-                  const ARG8&                                        a8,
-                  const ARG9&                                        a9,
-                  const ARG10&                                       a10,
-                  const ARG11&                                       a11,
-                  const ARG12&                                       a12,
-                  const ARG13&                                       a13,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)            a1,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)            a2,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)            a3,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)            a4,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)            a5,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)            a6,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)            a7,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)            a8,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)            a9,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)           a10,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)           a11,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG12)           a12,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG13)           a13,
                   bslma::Allocator                                  *allocator,
                   bsl::integral_constant<int, e_USES_ALLOCATOR_ARG_T_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(bsl::allocator_arg, allocator, a1, a2, a3, a4,
-                                a5, a6, a7, a8, a9, a10, a11, a12, a13);
+    ::new (address) TARGET_TYPE(bsl::allocator_arg, allocator,
+                                BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG8, a8),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG9, a9),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG10, a10),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG11, a11),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG12, a12),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG13, a13));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -3632,25 +4035,36 @@ inline
 void
 ScalarPrimitives_Imp::construct(
                   TARGET_TYPE                                       *address,
-                  const ARG1&                                        a1,
-                  const ARG2&                                        a2,
-                  const ARG3&                                        a3,
-                  const ARG4&                                        a4,
-                  const ARG5&                                        a5,
-                  const ARG6&                                        a6,
-                  const ARG7&                                        a7,
-                  const ARG8&                                        a8,
-                  const ARG9&                                        a9,
-                  const ARG10&                                       a10,
-                  const ARG11&                                       a11,
-                  const ARG12&                                       a12,
-                  const ARG13&                                       a13,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)            a1,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)            a2,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)            a3,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)            a4,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)            a5,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)            a6,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)            a7,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)            a8,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)            a9,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)           a10,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)           a11,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG12)           a12,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG13)           a13,
                   bslma::Allocator                                  *allocator,
                   bsl::integral_constant<int, e_USES_BSLMA_ALLOCATOR_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(
-                        a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13,
-                        allocator);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG8, a8),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG9, a9),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG10, a10),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG11, a11),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG12, a12),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG13, a13),
+                                allocator);
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -3660,25 +4074,36 @@ template <class TARGET_TYPE,  class ARG1, class ARG2,  class ARG3,
           class ARG12, class ARG13>
 inline
 void
-ScalarPrimitives_Imp::construct(TARGET_TYPE                           *address,
-                                const ARG1&                            a1,
-                                const ARG2&                            a2,
-                                const ARG3&                            a3,
-                                const ARG4&                            a4,
-                                const ARG5&                            a5,
-                                const ARG6&                            a6,
-                                const ARG7&                            a7,
-                                const ARG8&                            a8,
-                                const ARG9&                            a9,
-                                const ARG10&                           a10,
-                                const ARG11&                           a11,
-                                const ARG12&                           a12,
-                                const ARG13&                           a13,
+ScalarPrimitives_Imp::construct(TARGET_TYPE                                *address,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG1) a1,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG2) a2,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG3) a3,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG4) a4,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)   a5,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)a6,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)a7,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)a8,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)a9,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)                           a10,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)                           a11,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG12)                           a12,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG13)                           a13,
                                 bslma::Allocator                      *,
                                 bsl::integral_constant<int, e_NIL_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(
-                       a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG8, a8),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG9, a9),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG10, a10),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG11, a11),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG12, a12),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG13, a13));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -3690,25 +4115,38 @@ inline
 void
 ScalarPrimitives_Imp::construct(
                   TARGET_TYPE                                       *address,
-                  const ARG1&                                        a1,
-                  const ARG2&                                        a2,
-                  const ARG3&                                        a3,
-                  const ARG4&                                        a4,
-                  const ARG5&                                        a5,
-                  const ARG6&                                        a6,
-                  const ARG7&                                        a7,
-                  const ARG8&                                        a8,
-                  const ARG9&                                        a9,
-                  const ARG10&                                       a10,
-                  const ARG11&                                       a11,
-                  const ARG12&                                       a12,
-                  const ARG13&                                       a13,
-                  const ARG14&                                       a14,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)            a1,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)            a2,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)            a3,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)            a4,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)            a5,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)            a6,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)            a7,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)            a8,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)            a9,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)           a10,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)           a11,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG12)           a12,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG13)           a13,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG14)           a14,
                   bslma::Allocator                                  *allocator,
                   bsl::integral_constant<int, e_USES_ALLOCATOR_ARG_T_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(bsl::allocator_arg, allocator, a1, a2, a3, a4,
-                                a5, a6, a7, a8, a9, a10, a11, a12, a13, a14);
+    ::new (address) TARGET_TYPE(bsl::allocator_arg, allocator,
+                                BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG8, a8),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG9, a9),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG10, a10),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG11, a11),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG12, a12),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG13, a13),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG14, a14));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -3720,26 +4158,38 @@ inline
 void
 ScalarPrimitives_Imp::construct(
                   TARGET_TYPE                                       *address,
-                  const ARG1&                                        a1,
-                  const ARG2&                                        a2,
-                  const ARG3&                                        a3,
-                  const ARG4&                                        a4,
-                  const ARG5&                                        a5,
-                  const ARG6&                                        a6,
-                  const ARG7&                                        a7,
-                  const ARG8&                                        a8,
-                  const ARG9&                                        a9,
-                  const ARG10&                                       a10,
-                  const ARG11&                                       a11,
-                  const ARG12&                                       a12,
-                  const ARG13&                                       a13,
-                  const ARG14&                                       a14,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)             a1,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)            a2,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)            a3,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)            a4,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)            a5,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)            a6,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)            a7,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)            a8,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)            a9,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG10)           a10,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG11)           a11,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG12)           a12,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG13)           a13,
+                  BSLS_COMPILERFEATURES_FORWARD_REF(ARG14)           a14,
                   bslma::Allocator                                  *allocator,
                   bsl::integral_constant<int, e_USES_BSLMA_ALLOCATOR_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(
-                   a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14,
-                   allocator);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG8, a8),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG9, a9),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG10, a10),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG11, a11),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG12, a12),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG13, a13),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG14, a14),
+                                allocator);
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
@@ -3749,26 +4199,38 @@ template <class TARGET_TYPE,  class ARG1,  class ARG2,  class ARG3,
           class ARG12, class ARG13, class ARG14>
 inline
 void
-ScalarPrimitives_Imp::construct(TARGET_TYPE                           *address,
-                                const ARG1&                            a1,
-                                const ARG2&                            a2,
-                                const ARG3&                            a3,
-                                const ARG4&                            a4,
-                                const ARG5&                            a5,
-                                const ARG6&                            a6,
-                                const ARG7&                            a7,
-                                const ARG8&                            a8,
-                                const ARG9&                            a9,
-                                const ARG10&                           a10,
-                                const ARG11&                           a11,
-                                const ARG12&                           a12,
-                                const ARG13&                           a13,
-                                const ARG14&                           a14,
+ScalarPrimitives_Imp::construct(TARGET_TYPE                                *address,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG1) a1,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG2) a2,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG3) a3,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG4) a4,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG5) a5,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG6) a6,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG7) a7,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG8) a8,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG9) a9,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG12) a12,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG13) a13,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG14) a14,
                                 bslma::Allocator                      *,
                                 bsl::integral_constant<int, e_NIL_TRAITS> *)
 {
-    ::new (address) TARGET_TYPE(
-                  a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14);
+    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG2, a2),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG3, a3),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG4, a4),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG5, a5),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG6, a6),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG7, a7),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG8, a8),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG9, a9),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG10, a10),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG11, a11),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG12, a12),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG13, a13),
+                                BSLS_COMPILERFEATURES_FORWARD(ARG14, a14));
     BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
 }
 
