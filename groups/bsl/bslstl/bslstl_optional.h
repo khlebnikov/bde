@@ -150,80 +150,14 @@ BSLS_IDENT("$Id: $")
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
 #include <initializer_list>
 #endif
-/*
-//todo  - check includes
-
-#ifndef INCLUDED_BSLALG_SWAPUTIL
-#include <bslalg_swaputil.h>
-#endif
-
-
-#ifndef INCLUDED_BSLMF_ENABLEIF
-#include <bslmf_enableif.h>
-#endif
-
-
-#ifndef INCLUDED_BSLMF_ISCONVERTIBLE
-#include <bslmf_isconvertible.h>
-#endif
-
-#ifndef INCLUDED_BSLMF_ISTRIVIALLYCOPYABLE
-#include <bslmf_istriviallycopyable.h>
-#endif
-
-
-#ifndef INCLUDED_BSLS_ASSERT
-#include <bsls_assert.h>
-#endif
-
-
-
-#ifndef INCLUDED_BSLS_DEPRECATE
-#include <bsls_deprecate.h>
-#endif
-
-
-
-#ifndef INCLUDED_BSLX_INSTREAMFUNCTIONS
-#include <bslx_instreamfunctions.h>
-#endif
-
-#ifndef INCLUDED_BSLX_OUTSTREAMFUNCTIONS
-#include <bslx_outstreamfunctions.h>
-#endif
-
-#ifndef INCLUDED_BSLX_VERSIONFUNCTIONS
-#include <bslx_versionfunctions.h>
-#endif
-
-#ifndef INCLUDED_BSL_ALGORITHM
-#include <bsl_algorithm.h>
-#endif
-
-#ifndef INCLUDED_BSL_IOSFWD
-#include <bsl_iosfwd.h>
-#endif
-
-#ifndef INCLUDED_BSL_NEW
-#include <bsl_new.h>
-#endif
-
-#ifndef BDE_DONT_ALLOW_TRANSITIVE_INCLUDES
-
-#ifndef INCLUDED_BSLALG_TYPETRAITS
-#include <bslalg_typetraits.h>
-#endif
-
-#endif // BDE_DONT_ALLOW_TRANSITIVE_INCLUDES
-*/
 
 //todo move these macros somewhere more appropriate
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
-#define BSLS_COMPILER_FEATURES_LVREF_QUAL &
-#define BSLS_COMPILER_FEATURES_RVREF_QUAL &&
+#define BSLS_KEYWORD_LVREF_QUAL &
+#define BSLS_KEYWORD_RVREF_QUAL &&
 #else
-#define BSLS_COMPILER_FEATURES_LVREF_QUAL
-//#define BSLS_COMPILER_FEATURES_RVREF_QUAL //deliberately not defined as no C++03 functions should have
+#define BSLS_KEYWORD_LVREF_QUAL
+//#define BSLS_KEYWORD_RVREF_QUAL //deliberately not defined as no C++03 functions should have
 // this qualifier in C++11
 #endif
 
@@ -358,11 +292,11 @@ struct optional_data_imp {
     void reset() BSLS_KEYWORD_NOEXCEPT;
 
   //ACCESSORS
-    TYPE& value() BSLS_COMPILER_FEATURES_LVREF_QUAL;
-    const TYPE& value() const BSLS_COMPILER_FEATURES_LVREF_QUAL;
+    TYPE& value() BSLS_KEYWORD_LVREF_QUAL;
+    const TYPE& value() const BSLS_KEYWORD_LVREF_QUAL;
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
-    TYPE&& value() BSLS_COMPILER_FEATURES_RVREF_QUAL;
-    const TYPE&& value() const BSLS_COMPILER_FEATURES_RVREF_QUAL;
+    TYPE&& value() BSLS_KEYWORD_RVREF_QUAL;
+    const TYPE&& value() const BSLS_KEYWORD_RVREF_QUAL;
 #endif // BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS
     bool has_value() const BSLS_KEYWORD_NOEXCEPT;
 
@@ -403,11 +337,11 @@ struct optional_data_imp<TYPE, false> {
     void reset() BSLS_KEYWORD_NOEXCEPT;
 
   //ACCESSORS
-    TYPE& value() BSLS_COMPILER_FEATURES_LVREF_QUAL;
-    const TYPE& value() const BSLS_COMPILER_FEATURES_LVREF_QUAL;
+    TYPE& value() BSLS_KEYWORD_LVREF_QUAL;
+    const TYPE& value() const BSLS_KEYWORD_LVREF_QUAL;
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
-    TYPE&& value() BSLS_COMPILER_FEATURES_RVREF_QUAL;
-    const TYPE&& value() const BSLS_COMPILER_FEATURES_RVREF_QUAL;
+    TYPE&& value() BSLS_KEYWORD_RVREF_QUAL;
+    const TYPE&& value() const BSLS_KEYWORD_RVREF_QUAL;
 #endif // BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS
     bool has_value() const BSLS_KEYWORD_NOEXCEPT;
 
@@ -495,7 +429,7 @@ bool optional_data_imp<TYPE,UsesBslmaAllocator>::has_value() const BSLS_KEYWORD_
 }
 template <class TYPE, bool UsesBslmaAllocator>
 TYPE& optional_data_imp<TYPE,UsesBslmaAllocator>::value()
-BSLS_COMPILER_FEATURES_LVREF_QUAL
+BSLS_KEYWORD_LVREF_QUAL
 {
     BSLS_ASSERT_SAFE(d_hasValue);
 
@@ -503,7 +437,7 @@ BSLS_COMPILER_FEATURES_LVREF_QUAL
 }
 template <class TYPE, bool UsesBslmaAllocator>
 const TYPE& optional_data_imp<TYPE,UsesBslmaAllocator>::value() const
-BSLS_COMPILER_FEATURES_LVREF_QUAL
+BSLS_KEYWORD_LVREF_QUAL
 {
     BSLS_ASSERT_SAFE(d_hasValue);
 
@@ -512,7 +446,7 @@ BSLS_COMPILER_FEATURES_LVREF_QUAL
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
 template <class TYPE, bool UsesBslmaAllocator>
 TYPE&& optional_data_imp<TYPE,UsesBslmaAllocator>::value()
-BSLS_COMPILER_FEATURES_RVREF_QUAL
+BSLS_KEYWORD_RVREF_QUAL
 {
     BSLS_ASSERT_SAFE(d_hasValue);
 
@@ -520,7 +454,7 @@ BSLS_COMPILER_FEATURES_RVREF_QUAL
 }
 template <class TYPE, bool UsesBslmaAllocator>
 const TYPE&& optional_data_imp<TYPE,UsesBslmaAllocator>::value() const
-BSLS_COMPILER_FEATURES_RVREF_QUAL
+BSLS_KEYWORD_RVREF_QUAL
 {
     BSLS_ASSERT_SAFE(d_hasValue);
 
@@ -601,14 +535,14 @@ bool optional_data_imp<TYPE,false>::has_value() const BSLS_KEYWORD_NOEXCEPT
     return false;
 }
 template <class TYPE>
-TYPE& optional_data_imp<TYPE, false>::value() BSLS_COMPILER_FEATURES_LVREF_QUAL
+TYPE& optional_data_imp<TYPE, false>::value() BSLS_KEYWORD_LVREF_QUAL
 {
     BSLS_ASSERT_SAFE(d_hasValue);
 
     return d_buffer.object();
 }
 template <class TYPE>
-const TYPE& optional_data_imp<TYPE, false>::value() const BSLS_COMPILER_FEATURES_LVREF_QUAL
+const TYPE& optional_data_imp<TYPE, false>::value() const BSLS_KEYWORD_LVREF_QUAL
 {
     BSLS_ASSERT_SAFE(d_hasValue);
 
@@ -616,14 +550,14 @@ const TYPE& optional_data_imp<TYPE, false>::value() const BSLS_COMPILER_FEATURES
 }
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
 template <class TYPE>
-TYPE&& optional_data_imp<TYPE, false>::value() BSLS_COMPILER_FEATURES_RVREF_QUAL
+TYPE&& optional_data_imp<TYPE, false>::value() BSLS_KEYWORD_RVREF_QUAL
 {
     BSLS_ASSERT_SAFE(d_hasValue);
 
     return std::move(d_buffer.object());
 }
 template <class TYPE>
-const TYPE&& optional_data_imp<TYPE, false>::value() const  BSLS_COMPILER_FEATURES_RVREF_QUAL
+const TYPE&& optional_data_imp<TYPE, false>::value() const  BSLS_KEYWORD_RVREF_QUAL
 {
     BSLS_ASSERT_SAFE(d_hasValue);
 
@@ -939,16 +873,16 @@ class optional {
         // the null value).
     //OBSERVERS
 
-    TYPE& value() BSLS_COMPILER_FEATURES_LVREF_QUAL;
+    TYPE& value() BSLS_KEYWORD_LVREF_QUAL;
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
-    TYPE&& value() BSLS_COMPILER_FEATURES_RVREF_QUAL;
+    TYPE&& value() BSLS_KEYWORD_RVREF_QUAL;
 #endif
         // Return a reference providing modifiable access to the underlying
         // 'TYPE' object. Throws a bsl::bad_optional_access if the optional
         // object is disengaged.
-    const TYPE& value() const BSLS_COMPILER_FEATURES_LVREF_QUAL;
+    const TYPE& value() const BSLS_KEYWORD_LVREF_QUAL;
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
-    const TYPE&& value() const BSLS_COMPILER_FEATURES_RVREF_QUAL;
+    const TYPE&& value() const BSLS_KEYWORD_RVREF_QUAL;
 #endif
             // Return a reference providing non-modifiable access to the underlying
             // 'TYPE' object. Throws a bsl::bad_optional_access if the optional
@@ -1032,15 +966,15 @@ class optional {
             // The behaviour is undefined if the optional object is disengaged.
 
 
-    TYPE& operator*() BSLS_COMPILER_FEATURES_LVREF_QUAL;
+    TYPE& operator*() BSLS_KEYWORD_LVREF_QUAL;
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
-    TYPE&& operator*() BSLS_COMPILER_FEATURES_RVREF_QUAL;
+    TYPE&& operator*() BSLS_KEYWORD_RVREF_QUAL;
 #endif
             // Return a reference to the current, modifiable element.  The behavior
             // is undefined if the optional object is disengaged.
-    const TYPE& operator*() const BSLS_COMPILER_FEATURES_LVREF_QUAL;
+    const TYPE& operator*() const BSLS_KEYWORD_LVREF_QUAL;
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
-    const TYPE&& operator*() const BSLS_COMPILER_FEATURES_RVREF_QUAL;
+    const TYPE&& operator*() const BSLS_KEYWORD_RVREF_QUAL;
 #endif
             // Return a reference providing non-modifiable access to the underlying
             // 'TYPE' object. The behavior is undefined if if the optional object
@@ -1058,22 +992,22 @@ class optional {
             // Return 'true' if this object is disengaged, and 'false' Otherwise.
 
     template<class ANY_TYPE>
-    TYPE value_or(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE)) const BSLS_COMPILER_FEATURES_LVREF_QUAL;
+    TYPE value_or(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE)) const BSLS_KEYWORD_LVREF_QUAL;
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
     template<class ANY_TYPE>
-    TYPE value_or(ANY_TYPE&& rhs) BSLS_COMPILER_FEATURES_RVREF_QUAL;
+    TYPE value_or(ANY_TYPE&& rhs) BSLS_KEYWORD_RVREF_QUAL;
 #endif
 
 
     template<class ANY_TYPE>
     TYPE value_or(bsl::allocator_arg_t, allocator_type,
         BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE)
-        ) const BSLS_COMPILER_FEATURES_LVREF_QUAL;
+        ) const BSLS_KEYWORD_LVREF_QUAL;
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
     template<class ANY_TYPE>
     TYPE value_or(bsl::allocator_arg_t,
         allocator_type,
-        ANY_TYPE&&) BSLS_COMPILER_FEATURES_RVREF_QUAL;
+        ANY_TYPE&&) BSLS_KEYWORD_RVREF_QUAL;
 #endif
 
     void swap(optional& other);
@@ -1245,16 +1179,16 @@ class optional<TYPE, false> {
   // the null value).
   //OBSERVERS
 
-  TYPE& value() BSLS_COMPILER_FEATURES_LVREF_QUAL;
+  TYPE& value() BSLS_KEYWORD_LVREF_QUAL;
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
-  TYPE&& value() BSLS_COMPILER_FEATURES_RVREF_QUAL;
+  TYPE&& value() BSLS_KEYWORD_RVREF_QUAL;
 #endif
           // Return a reference providing modifiable access to the underlying
           // 'TYPE' object. Throws a bsl::bad_optional_access if the optional
           // object is disengaged.
-  const TYPE& value() const BSLS_COMPILER_FEATURES_LVREF_QUAL;
+  const TYPE& value() const BSLS_KEYWORD_LVREF_QUAL;
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
-  const TYPE&& value() const BSLS_COMPILER_FEATURES_RVREF_QUAL;
+  const TYPE&& value() const BSLS_KEYWORD_RVREF_QUAL;
 #endif
           // Return a reference providing non-modifiable access to the underlying
           // 'TYPE' object. Throws a bsl::bad_optional_access if the optional
@@ -1330,16 +1264,16 @@ class optional<TYPE, false> {
           // Return a pointer to the current non-modifiable underlying 'TYPE' object.
           // The behaviour is undefined if the optional object is disengaged.
 
-  TYPE& operator*() BSLS_COMPILER_FEATURES_LVREF_QUAL;
+  TYPE& operator*() BSLS_KEYWORD_LVREF_QUAL;
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
-  TYPE&& operator*() BSLS_COMPILER_FEATURES_RVREF_QUAL;
+  TYPE&& operator*() BSLS_KEYWORD_RVREF_QUAL;
 #endif
           // Return a reference to the current, modifiable element.  The behavior
           // is undefined if the optional object is disengaged.
 
-  const TYPE& operator*() const BSLS_COMPILER_FEATURES_LVREF_QUAL;
+  const TYPE& operator*() const BSLS_KEYWORD_LVREF_QUAL;
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
-  const TYPE&& operator*() const BSLS_COMPILER_FEATURES_RVREF_QUAL;
+  const TYPE&& operator*() const BSLS_KEYWORD_RVREF_QUAL;
 #endif
           // Return a reference providing non-modifiable access to the underlying
           // 'TYPE' object. The behavior is undefined if if the optional object
@@ -1353,10 +1287,10 @@ class optional<TYPE, false> {
   // Return 'true' if this object is disengaged, and 'false' Otherwise.
 
   template<class ANY_TYPE>
-    TYPE value_or(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE)) const BSLS_COMPILER_FEATURES_LVREF_QUAL;
+    TYPE value_or(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE)) const BSLS_KEYWORD_LVREF_QUAL;
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
   template<class ANY_TYPE>
-    TYPE value_or(ANY_TYPE&&) BSLS_COMPILER_FEATURES_RVREF_QUAL;
+    TYPE value_or(ANY_TYPE&&) BSLS_KEYWORD_RVREF_QUAL;
 #endif
 
     void swap(optional& other);
@@ -2035,7 +1969,7 @@ void optional<TYPE, UsesBslmaAllocator>::reset() BSLS_KEYWORD_NOEXCEPT
 //OBSERVERS
 template <class TYPE, bool UsesBslmaAllocator>
 inline
-TYPE& optional<TYPE, UsesBslmaAllocator>::value() BSLS_COMPILER_FEATURES_LVREF_QUAL
+TYPE& optional<TYPE, UsesBslmaAllocator>::value() BSLS_KEYWORD_LVREF_QUAL
 {
     if (!has_value()) BSLS_THROW(bsl::bad_optional_access());
 
@@ -2044,7 +1978,7 @@ TYPE& optional<TYPE, UsesBslmaAllocator>::value() BSLS_COMPILER_FEATURES_LVREF_Q
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
 template <class TYPE, bool UsesBslmaAllocator>
 inline
-TYPE&& optional<TYPE, UsesBslmaAllocator>::value() BSLS_COMPILER_FEATURES_RVREF_QUAL
+TYPE&& optional<TYPE, UsesBslmaAllocator>::value() BSLS_KEYWORD_RVREF_QUAL
 {
     if (!has_value()) BSLS_THROW(bsl::bad_optional_access());
 
@@ -2052,7 +1986,7 @@ TYPE&& optional<TYPE, UsesBslmaAllocator>::value() BSLS_COMPILER_FEATURES_RVREF_
 }
 template <class TYPE, bool UsesBslmaAllocator>
 inline
-const TYPE&& optional<TYPE, UsesBslmaAllocator>::value() const BSLS_COMPILER_FEATURES_RVREF_QUAL
+const TYPE&& optional<TYPE, UsesBslmaAllocator>::value() const BSLS_KEYWORD_RVREF_QUAL
 {
     if (!has_value()) BSLS_THROW(bsl::bad_optional_access());
 
@@ -2061,7 +1995,7 @@ const TYPE&& optional<TYPE, UsesBslmaAllocator>::value() const BSLS_COMPILER_FEA
 #endif
 template <class TYPE, bool UsesBslmaAllocator>
 inline
-const TYPE& optional<TYPE, UsesBslmaAllocator>::value() const BSLS_COMPILER_FEATURES_LVREF_QUAL
+const TYPE& optional<TYPE, UsesBslmaAllocator>::value() const BSLS_KEYWORD_LVREF_QUAL
 {
     if (!has_value()) BSLS_THROW(bsl::bad_optional_access());
 
@@ -2073,7 +2007,7 @@ template <class ANY_TYPE>
 inline
 TYPE
 optional<TYPE, UsesBslmaAllocator>::value_or(
-            BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) rhs) const BSLS_COMPILER_FEATURES_LVREF_QUAL
+            BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) rhs) const BSLS_KEYWORD_LVREF_QUAL
 {
     if (this->has_value())
       return BloombergLP::bslalg::AllocatorUtil<TYPE>::construct(
@@ -2091,7 +2025,7 @@ inline
 TYPE
 optional<TYPE, UsesBslmaAllocator>::value_or(bsl::allocator_arg_t,
     allocator_type allocator,
-    BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) rhs) const BSLS_COMPILER_FEATURES_LVREF_QUAL
+    BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) rhs) const BSLS_KEYWORD_LVREF_QUAL
 {
     if (has_value())
       return BloombergLP::bslalg::AllocatorUtil<TYPE>::construct(
@@ -2108,7 +2042,7 @@ template <class TYPE, bool UsesBslmaAllocator>
 template <class ANY_TYPE>
 inline
 TYPE
-optional<TYPE, UsesBslmaAllocator>::value_or(ANY_TYPE&& rhs) BSLS_COMPILER_FEATURES_RVREF_QUAL
+optional<TYPE, UsesBslmaAllocator>::value_or(ANY_TYPE&& rhs) BSLS_KEYWORD_RVREF_QUAL
 {
     if (has_value())
         return BloombergLP::bslalg::AllocatorUtil<TYPE>::construct(
@@ -2125,7 +2059,7 @@ inline
 TYPE
 optional<TYPE, UsesBslmaAllocator>::value_or(bsl::allocator_arg_t,
     allocator_type allocator,
-    ANY_TYPE&& rhs) BSLS_COMPILER_FEATURES_RVREF_QUAL
+    ANY_TYPE&& rhs) BSLS_KEYWORD_RVREF_QUAL
 {
     if (has_value())
       return BloombergLP::bslalg::AllocatorUtil<TYPE>::construct(
@@ -2272,7 +2206,7 @@ optional<TYPE, UsesBslmaAllocator>::operator=(optional<ANY_TYPE>&& rhs)
 
 template <class TYPE, bool UsesBslmaAllocator>
 inline
-TYPE& optional<TYPE, UsesBslmaAllocator>::operator*() BSLS_COMPILER_FEATURES_LVREF_QUAL
+TYPE& optional<TYPE, UsesBslmaAllocator>::operator*() BSLS_KEYWORD_LVREF_QUAL
 {
     BSLS_ASSERT_SAFE(d_hasValue);
 
@@ -2280,7 +2214,7 @@ TYPE& optional<TYPE, UsesBslmaAllocator>::operator*() BSLS_COMPILER_FEATURES_LVR
 }
 template <class TYPE, bool UsesBslmaAllocator>
 inline
-const TYPE& optional<TYPE, UsesBslmaAllocator>::operator*() const BSLS_COMPILER_FEATURES_LVREF_QUAL
+const TYPE& optional<TYPE, UsesBslmaAllocator>::operator*() const BSLS_KEYWORD_LVREF_QUAL
 {
     BSLS_ASSERT_SAFE(d_hasValue);
     return this->value();
@@ -2549,7 +2483,7 @@ void optional<TYPE, false>::reset() BSLS_KEYWORD_NOEXCEPT
 //OBSERVERS
 template <class TYPE>
 inline
-TYPE& optional<TYPE, false>::value() BSLS_COMPILER_FEATURES_LVREF_QUAL
+TYPE& optional<TYPE, false>::value() BSLS_KEYWORD_LVREF_QUAL
 {
     if (!has_value()) BSLS_THROW(bsl::bad_optional_access());
 
@@ -2557,7 +2491,7 @@ TYPE& optional<TYPE, false>::value() BSLS_COMPILER_FEATURES_LVREF_QUAL
 }
 template <class TYPE>
 inline
-const TYPE& optional<TYPE, false>::value() const BSLS_COMPILER_FEATURES_LVREF_QUAL
+const TYPE& optional<TYPE, false>::value() const BSLS_KEYWORD_LVREF_QUAL
 {
     if (!has_value()) BSLS_THROW(bsl::bad_optional_access());
 
@@ -2566,7 +2500,7 @@ const TYPE& optional<TYPE, false>::value() const BSLS_COMPILER_FEATURES_LVREF_QU
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
 template <class TYPE>
 inline
-TYPE&& optional<TYPE, false>::value() BSLS_COMPILER_FEATURES_RVREF_QUAL
+TYPE&& optional<TYPE, false>::value() BSLS_KEYWORD_RVREF_QUAL
 {
     if (!has_value()) BSLS_THROW(bsl::bad_optional_access());
 
@@ -2574,7 +2508,7 @@ TYPE&& optional<TYPE, false>::value() BSLS_COMPILER_FEATURES_RVREF_QUAL
 }
 template <class TYPE>
 inline
-const TYPE&& optional<TYPE, false>::value() const BSLS_COMPILER_FEATURES_RVREF_QUAL
+const TYPE&& optional<TYPE, false>::value() const BSLS_KEYWORD_RVREF_QUAL
 {
     if (!has_value()) BSLS_THROW(bsl::bad_optional_access());
 
@@ -2586,7 +2520,7 @@ template <class ANY_TYPE>
 inline
 TYPE
 optional<TYPE, false>::value_or(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) rhs)
-          const BSLS_COMPILER_FEATURES_LVREF_QUAL
+          const BSLS_KEYWORD_LVREF_QUAL
 {
     if (has_value())
       return BloombergLP::bslalg::AllocatorUtil<TYPE>::construct(
@@ -2603,7 +2537,7 @@ template <class TYPE>
 template <class ANY_TYPE>
 inline
 TYPE
-optional<TYPE, false>::value_or(ANY_TYPE&& rhs) BSLS_COMPILER_FEATURES_RVREF_QUAL
+optional<TYPE, false>::value_or(ANY_TYPE&& rhs) BSLS_KEYWORD_RVREF_QUAL
 {
     if (has_value())
         return BloombergLP::bslalg::AllocatorUtil<TYPE>::construct(
@@ -2751,7 +2685,7 @@ optional<TYPE, false>::operator=(
 }
 template <class TYPE>
 inline
-TYPE& optional<TYPE, false>::operator*() BSLS_COMPILER_FEATURES_LVREF_QUAL
+TYPE& optional<TYPE, false>::operator*() BSLS_KEYWORD_LVREF_QUAL
 {
     BSLS_ASSERT_SAFE(has_value());
 
@@ -2759,7 +2693,7 @@ TYPE& optional<TYPE, false>::operator*() BSLS_COMPILER_FEATURES_LVREF_QUAL
 }
 template <class TYPE>
 inline
-const TYPE& optional<TYPE, false>::operator*() const BSLS_COMPILER_FEATURES_LVREF_QUAL
+const TYPE& optional<TYPE, false>::operator*() const BSLS_KEYWORD_LVREF_QUAL
 {
     BSLS_ASSERT_SAFE(has_value());
 
