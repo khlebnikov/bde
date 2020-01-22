@@ -1078,6 +1078,97 @@ bool operator==(const my_Class2& lhs,
     return (lhs.value()==rhs.value());
 }
 
+bool operator==(const int& lhs,
+                const my_Class2& rhs)
+{
+    return (lhs==rhs.value());
+}
+bool operator==(const my_Class2& lhs,
+                const int& rhs)
+{
+    return (lhs.value()==rhs);
+}
+bool operator!=(const my_Class2& lhs,
+                const my_Class2& rhs)
+{
+    return !(lhs ==rhs);
+}
+
+bool operator!=(const int& lhs,
+                const my_Class2& rhs)
+{
+    return !(lhs ==rhs);
+}
+bool operator!=(const my_Class2& lhs,
+                const int& rhs)
+{
+    return !(lhs ==rhs);
+}
+bool operator<(const my_Class2& lhs,
+                const my_Class2& rhs)
+{
+    return (lhs.value()<rhs.value());
+}
+
+bool operator<(const int& lhs,
+                const my_Class2& rhs)
+{
+    return (lhs<rhs.value());
+}
+bool operator<(const my_Class2& lhs,
+                const int& rhs)
+{
+    return (lhs.value()<rhs);
+}
+bool operator>(const my_Class2& lhs,
+                const my_Class2& rhs)
+{
+    return (lhs.value()>rhs.value());
+}
+
+bool operator>(const int& lhs,
+                const my_Class2& rhs)
+{
+    return (lhs>rhs.value());
+}
+bool operator>(const my_Class2& lhs,
+                const int& rhs)
+{
+    return (lhs.value()>rhs);
+}
+bool operator<=(const my_Class2& lhs,
+                const my_Class2& rhs)
+{
+    return (lhs.value()<=rhs.value());
+}
+
+bool operator<=(const int& lhs,
+                const my_Class2& rhs)
+{
+    return (lhs<=rhs.value());
+}
+bool operator<=(const my_Class2& lhs,
+                const int& rhs)
+{
+    return (lhs.value()<=rhs);
+}
+bool operator>=(const my_Class2& lhs,
+                const my_Class2& rhs)
+{
+    return (lhs.value()>=rhs.value());
+}
+
+bool operator>=(const int& lhs,
+                const my_Class2& rhs)
+{
+    return (lhs>=rhs.value());
+}
+bool operator>=(const my_Class2& lhs,
+                const int& rhs)
+{
+    return (lhs.value()>=rhs);
+}
+
 // TRAITS
 namespace BloombergLP {
 namespace bslma {
@@ -9566,7 +9657,199 @@ void bslstl_optional_test27()
         ASSERT(nonNullObjCopy == nonNullObj);
         ASSERT(!nullObj.has_value());
     }
+}
+void bslstl_optional_test28()
+{
+    // --------------------------------------------------------------------
+    // TESTING RELATIONAL OPERATORS
+    //
+    // Concerns:
+    //: 1 We can compare two optional objects if their value types are
+    //    comparable. The result depends on whether the objects are engaged
+    //    or not
+    //:
+    //: 2 We can compare an optional object of value type V and a non optional
+    //    object of type U if U and V are comparable types. The result depends
+    //    on whether the optional object is engaged or not.
+    //:
+    //: 3 We can compare any optional object with nulllopt_t. The result depends
+    //    on whether the optional object is engaged or not.
+    //:
+    //
+    // Plan:
+    //: 1 Execute tests for int( doesn't use allocator) and my_class2 (uses
+    //    allocator).
+    //  2 For each relation operator, execute a combination of comparing:
+    //      - two optional objects of different types
+    //      - optional object with an object of a different type
+    //      - optional object with nullopt_t
+    //
+    //   For each comparison, execute tests for both engaged and disengaged
+    //   optional objects
+    //
+    // Testing:
+    //   bool operator==(const optional<LHS>&, const optional<RHS>&)
+    //   bool operator==(const optional<LHS>&, const RHS&)
+    //   bool operator==(const LHS&, const optional<RHS>&)
+    //   bool operator==(const optional<LHS>&, bsl::nullopt_t)
+    //   bool operator==(bsl::nullopt_t,         const optional<RHS>&)
+    //   bool operator!=(const optional<LHS>&, const optional<RHS>&)
+    //   bool operator!=(const optional<LHS>&, const RHS&)
+    //   bool operator!=(const LHS&, const optional<RHS>&)
+    //   bool operator!=(const optional<LHS>&, bsl::nullopt_t)
+    //   bool operator!=(bsl::nullopt_t,         const optional<RHS>&)
+    //   bool operator<=(const optional<LHS>&, const optional<RHS>&)
+    //   bool operator<=(const optional<LHS>&, const RHS&)
+    //   bool operator<=(const LHS&, const optional<RHS>&)
+    //   bool operator<=(const optional<LHS>&, bsl::nullopt_t)
+    //   bool operator<=(bsl::nullopt_t,         const optional<RHS>&)
+    //   bool operator>=(const optional<LHS>&, const optional<RHS>&)
+    //   bool operator>=(const optional<LHS>&, const RHS&)
+    //   bool operator>=(const LHS&, const optional<RHS>&)
+    //   bool operator>=(const optional<LHS>&, bsl::nullopt_t)
+    //   bool operator>=(bsl::nullopt_t,         const optional<RHS>&)
+    //   bool operator< (const optional<LHS>&, const optional<RHS>&)
+    //   bool operator< (const optional<LHS>&, const RHS&)
+    //   bool operator< (const LHS&, const optional<RHS>&)
+    //   bool operator< (const optional<LHS>&, bsl::nullopt_t)
+    //   bool operator< (bsl::nullopt_t,         const optional<RHS>&)
+    //   bool operator> (const optional<LHS>&, const optional<RHS>&)
+    //   bool operator> (const optional<LHS>&, const RHS&)
+    //   bool operator> (const LHS&, const optional<RHS>&)
+    //   bool operator> (const optional<LHS>&, bsl::nullopt_t)
+    //   bool operator> (bsl::nullopt_t,         const optional<RHS>&)
 
+
+    if (verbose) printf("\nTESTING RELATIONAL OPERATORS"
+                        "\n============================\n");
+    if (verbose) printf( "\nComparison with an optional.\n");
+    {
+        typedef bsl::optional<int>                    OptT;
+        typedef bsl::optional<my_Class2>              OptV;
+
+        OptT X;
+        OptV Y;
+
+        //comparing two disengaged optionals
+        ASSERT(  X == Y  ); // If bool(x) != bool(y), false;
+        ASSERT(!(X != Y) ); // If bool(x) != bool(y), true;
+                            // otherwise, if bool(x) == false, false;
+        ASSERT(!(X <  Y) ); // If !y, false;
+        ASSERT(!(X >  Y) ); // If !x, false;
+        ASSERT(  X <= Y  ); // If !x, true;
+        ASSERT(  X >= Y  ); // If !y, true;
+
+        //rhs disengaged, lhs engaged
+        Y.emplace(3);
+        ASSERT(!(X == Y) ); // If bool(x) != bool(y), false;
+        ASSERT( (X != Y) ); // If bool(x) != bool(y), true;
+                            // otherwise, if bool(x) == false, false;
+        ASSERT( (X <  Y) ); // If !y, false; otherwise, if !x, true;
+        ASSERT(!(X >  Y) ); // If !x, false;
+        ASSERT(  X <= Y  ); // If !x, true;
+        ASSERT(!(X >= Y) ); // If !y, true; otherwise, if !x, false;
+
+        //rhs engaged, lhs disengaged
+        X.emplace(5);
+        Y.reset();
+        ASSERT(!(X == Y) ); // If bool(x) != bool(y), false;
+        ASSERT( (X != Y) ); // If bool(x) != bool(y), true;
+                            // otherwise, if bool(x) == false, false;
+        ASSERT(!(X <  Y) ); // If !y, false; otherwise, if !x, true;
+        ASSERT( (X >  Y) ); // If !x, false; otherwise, if !y, true;
+        ASSERT(!(X <= Y) ); // If !x, true; otherwise, if !y, false;
+        ASSERT( (X >= Y) ); // If !y, true; otherwise, if !x, false;
+
+        //both engaged, compare the values
+        X.emplace(1);
+        Y.emplace(3);
+        ASSERT(!(X == Y) ); // If bool(x) != bool(y), false;
+        ASSERT( (X != Y) ); // If bool(x) != bool(y), true;
+                            // otherwise, if bool(x) == false, false;
+        ASSERT( (X <  Y) ); // If !y, false; otherwise, if !x, true;
+        ASSERT(!(X >  Y) ); // If !x, false; otherwise, if !y, true;
+        ASSERT( (X <= Y) ); // If !x, true; otherwise, if !y, false;
+        ASSERT(!(X >= Y) ); // If !y, true; otherwise, if !x, false;
+    }
+    if (verbose) printf( "\nComparison with a non optional .\n");
+    {
+        typedef bsl::optional<my_Class2>              OptV;
+
+        OptV X;
+        int Y = 3;
+
+        //comparison with a disengaged optional on rhs
+        ASSERT(!(X == Y) ); // return bool(x) ? *x == v : false;
+        ASSERT( (X != Y) ); // return bool(x) ? *x != v : true;
+        ASSERT( (X <  Y) ); // return bool(x) ? *x < v : true;
+        ASSERT(!(X >  Y) ); // return bool(x) ? *x > v : false;
+        ASSERT( (X <= Y) ); // return bool(x) ? *x <= v : true;
+        ASSERT(!(X >= Y) ); // return bool(x) ? *x >= v : false;
+
+        //comparison with a disengaged optional on lhs
+        ASSERT(!(Y == X) ); // return bool(x) ? v == *x : false;
+        ASSERT( (Y != X) ); // return bool(x) ? v != *x : true;
+        ASSERT(!(Y <  X) ); // return bool(x) ? v < *x : false;
+        ASSERT( (Y >  X) ); // return bool(x) ? v > *x : true;
+        ASSERT(!(Y <= X) ); // return bool(x) ? v <= *x : false;
+        ASSERT( (Y >= X) ); // return bool(x) ? v >= *x : true;
+
+        //comparison with an engaged optional on rhs
+        X.emplace(7);
+        ASSERT(!(X == Y) ); // If bool(x) != bool(y), false;
+        ASSERT( (X != Y) ); // If bool(x) != bool(y), true;
+                            // otherwise, if bool(x) == false, false;
+        ASSERT(!(X <  Y) ); // If !y, false; otherwise, if !x, true;
+        ASSERT( (X >  Y) ); // If !x, false;
+        ASSERT(!(X <= Y) ); // If !x, true;
+        ASSERT( (X >= Y) ); // If !y, true; otherwise, if !x, false;
+
+        //comparison with an engaged optional on lhs
+        ASSERT(!(Y == X) ); // If bool(x) != bool(y), false;
+        ASSERT( (Y != X) ); // If bool(x) != bool(y), true;
+                            // otherwise, if bool(x) == false, false;
+        ASSERT( (Y <  X) ); // If !y, false; otherwise, if !x, true;
+        ASSERT(!(Y >  X) ); // If !x, false;
+        ASSERT( (Y <= X) ); // If !x, true;
+        ASSERT(!(Y >= X) ); // If !y, true; otherwise, if !x, false;
+    }
+    if (verbose) printf( "\nComparison with a nullopt_t .\n");
+    {
+        bsl::optional<my_Class2> X;
+
+        //comparison with a disengaged optional on rhs
+        ASSERT( (X == bsl::nullopt) ); // !x
+        ASSERT(!(X != bsl::nullopt) ); // bool(x)
+        ASSERT(!(X <  bsl::nullopt) ); // false
+        ASSERT(!(X >  bsl::nullopt) ); // bool(x)
+        ASSERT( (X <= bsl::nullopt) ); // !x
+        ASSERT( (X >= bsl::nullopt) ); // true
+
+        //comparison with a disengaged optional on lhs
+        ASSERT( (bsl::nullopt == X) ); // !x
+        ASSERT(!(bsl::nullopt != X) ); // bool(x)
+        ASSERT(!(bsl::nullopt <  X) ); // bool(x)
+        ASSERT(!(bsl::nullopt >  X) ); // false
+        ASSERT( (bsl::nullopt <= X) ); // true
+        ASSERT( (bsl::nullopt >= X) ); // !x
+
+        //comparison with an engaged optional on rhs
+        X.emplace(7);
+        ASSERT(!(X == bsl::nullopt) ); // !x
+        ASSERT( (X != bsl::nullopt) ); // bool(x)
+        ASSERT(!(X <  bsl::nullopt) ); // false
+        ASSERT( (X >  bsl::nullopt) ); // bool(x)
+        ASSERT(!(X <= bsl::nullopt) ); // !x
+        ASSERT( (X >= bsl::nullopt) ); // true
+
+        //comparison with an engaged optional on lhs
+        ASSERT(!(bsl::nullopt == X) ); // !x
+        ASSERT( (bsl::nullopt != X) ); // bool(x)
+        ASSERT( (bsl::nullopt <  X) ); // bool(x)
+        ASSERT(!(bsl::nullopt >  X) ); // false
+        ASSERT( (bsl::nullopt <= X) ); // true
+        ASSERT(!(bsl::nullopt >= X) ); // !x
+    }
 }
 int main(int argc, char **argv)
 {
@@ -9591,6 +9874,9 @@ int main(int argc, char **argv)
     bslma::Default::setGlobalAllocator(&globalAllocator);
 
     switch (test) { case 0:
+      case 28:
+        bslstl_optional_test28();
+        break;
       case 27:
         bslstl_optional_test27();
         break;

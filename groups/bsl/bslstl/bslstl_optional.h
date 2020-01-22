@@ -102,18 +102,18 @@ BSLS_IDENT("$Id: $")
 // First, create a nullable 'int' object:
 //..
 //  bslstl::optional<int> nullableInt;
-//  assert( !nullableInt.hasValue());
+//  assert( !nullableInt.has_value());
 //..
 // Next, give the 'int' object the value 123 (making it non-null):
 //..
 //  nullableInt.makeValue(123);
-//  assert(nullableInt.hasValue());
+//  assert(nullableInt.has_value());
 //  assert(123 == nullableInt.value());
 //..
 // Finally, reset the object to its default constructed state (i.e., null):
 //..
 //  nullableInt.reset();
-//  assert( !nullableInt.hasValue());
+//  assert( !nullableInt.has_value());
 //..
 
 #include <bslalg_constructusingallocator.h>
@@ -1310,25 +1310,119 @@ void swap(bsl::optional<TYPE>& lhs,
     // specified 'rhs' optional.
 
 // FREE OPERATORS
+// comparison with optional
 template <class LHS_TYPE, class RHS_TYPE>
 bool operator==(const optional<LHS_TYPE>& lhs,
                 const optional<RHS_TYPE>& rhs);
-    // Return 'true' if the specified 'lhs' and 'rhs' optional objects have the
-    // same value, and 'false' otherwise.  Two optional objects have the same
-    // value if both are null, or if both are non-null and the values of their
-    // underlying objects compare equal.  Note that this function will fail to
-    // compile if 'LHS_TYPE' and 'RHS_TYPE' are not compatible.
+    // If bool(x) != bool(y), false; otherwise if bool(x) == false, true;
+    // otherwise *x == *y. Note that this function will fail to compile if
+    // 'LHS_TYPE' and 'RHS_TYPE' are not compatible.
 
 template <class LHS_TYPE, class RHS_TYPE>
 bool operator!=(const optional<LHS_TYPE>& lhs,
                 const optional<RHS_TYPE>& rhs);
-    // Return 'true' if the specified 'lhs' and 'rhs' optional objects do not
-    // have the same value, and 'false' otherwise.  Two optional objects do not
-    // have the same value if one is null and the other is non-null, or if both
-    // are non-null and the values of their underlying objects do not compare
-    // equal.  Note that this function will fail to compile if 'LHS_TYPE' and
-    // 'RHS_TYPE' are not compatible.
+    // If bool(x) != bool(y), true; otherwise, if bool(x) == false, false;
+    // otherwise *x != *y.  Note that this function will fail to compile if
+    // 'LHS_TYPE' and 'RHS_TYPE' are not compatible.
 
+template <class LHS_TYPE, class RHS_TYPE>
+bool operator<(const optional<LHS_TYPE>& lhs,
+               const optional<RHS_TYPE>& rhs);
+    // If !y, false; otherwise, if !x, true; otherwise *x < *y.  Note that
+    // this function will fail to compile if 'LHS_TYPE' and 'RHS_TYPE' are
+    // not compatible.
+
+template <class LHS_TYPE, class RHS_TYPE>
+bool operator>(const optional<LHS_TYPE>& lhs,
+               const optional<RHS_TYPE>& rhs);
+    // If !x, false; otherwise, if !y, true; otherwise *x > *y. note that this
+    // function will fail to compile if 'LHS_TYPE' and 'RHS_TYPE' are not
+    // compatible.
+
+template <class LHS_TYPE, class RHS_TYPE>
+bool operator<=(const optional<LHS_TYPE>& lhs,
+                const optional<RHS_TYPE>& rhs);
+    // If !x, true; otherwise, if !y, false; otherwise *x <= *y. Note that this
+    // function will fail to compile if 'LHS_TYPE' and 'RHS_TYPE' are not
+    // compatible.
+
+template <class LHS_TYPE, class RHS_TYPE>
+bool operator>=(const optional<LHS_TYPE>& lhs,
+                const optional<RHS_TYPE>& rhs);
+    // If !y, true; otherwise, if !x, false; otherwise *x >= *y. Note that this
+    // function will fail to compile if 'LHS_TYPE' and 'RHS_TYPE' are not
+    // compatible.
+
+// comparison with nullopt_t
+template <class TYPE>
+BSLS_KEYWORD_CONSTEXPR
+bool operator==(const optional<TYPE>& value,
+                const nullopt_t&         ) BSLS_KEYWORD_NOEXCEPT;
+template <class TYPE>
+BSLS_KEYWORD_CONSTEXPR
+bool operator==(const nullopt_t&         ,
+                const optional<TYPE>& value) BSLS_KEYWORD_NOEXCEPT;
+    // Return 'true' if 'value' is disengaged, and 'false' otherwise.
+
+template <class TYPE>
+BSLS_KEYWORD_CONSTEXPR
+bool operator!=(const optional<TYPE>& value,
+                const nullopt_t&         ) BSLS_KEYWORD_NOEXCEPT;
+template <class TYPE>
+BSLS_KEYWORD_CONSTEXPR
+bool operator!=(const nullopt_t&         ,
+                const optional<TYPE>& value) BSLS_KEYWORD_NOEXCEPT;
+    // Return 'true' if 'value' is engaged, and 'false' otherwise.
+
+template <class TYPE>
+BSLS_KEYWORD_CONSTEXPR
+bool operator<(const optional<TYPE>&,
+               const nullopt_t&        ) BSLS_KEYWORD_NOEXCEPT;
+    // Return 'false'.
+
+template <class TYPE>
+BSLS_KEYWORD_CONSTEXPR
+bool operator<(const nullopt_t&         ,
+               const optional<TYPE>& value) BSLS_KEYWORD_NOEXCEPT;
+    // Return 'true' if 'value' is engaged, and 'false' otherwise.
+
+template <class TYPE>
+BSLS_KEYWORD_CONSTEXPR
+bool operator>(const optional<TYPE>& value,
+               const nullopt_t&         ) BSLS_KEYWORD_NOEXCEPT;
+    // Return 'true' if 'value' is engaged, and 'false' otherwise.
+
+template <class TYPE>
+BSLS_KEYWORD_CONSTEXPR
+bool operator>(const nullopt_t&         ,
+               const optional<TYPE>& value) BSLS_KEYWORD_NOEXCEPT;
+    // Return 'false'.
+
+template <class TYPE>
+BSLS_KEYWORD_CONSTEXPR
+bool operator<=(const optional<TYPE>& value,
+                const nullopt_t&         ) BSLS_KEYWORD_NOEXCEPT;
+    // Return 'true' if 'value' is disengaged, and 'false' otherwise.
+
+template <class TYPE>
+BSLS_KEYWORD_CONSTEXPR
+bool operator<=(const nullopt_t&         ,
+                const optional<TYPE>& value) BSLS_KEYWORD_NOEXCEPT;
+    // Return 'true'.
+
+template <class TYPE>
+BSLS_KEYWORD_CONSTEXPR
+bool operator>=(const optional<TYPE>& value,
+                const nullopt_t&         ) BSLS_KEYWORD_NOEXCEPT;
+    // Return 'true'.
+
+template <class TYPE>
+BSLS_KEYWORD_CONSTEXPR
+bool operator>=(const nullopt_t&         ,
+                const optional<TYPE>& value) BSLS_KEYWORD_NOEXCEPT;
+    /// Return 'true' if 'value' is disengaged, and 'false' otherwise.
+
+// comparison with T
 template <class LHS_TYPE, class RHS_TYPE>
 bool operator!=(const optional<LHS_TYPE>& lhs,
                 const RHS_TYPE&                rhs);
@@ -1355,15 +1449,6 @@ bool operator==(const LHS_TYPE&                lhs,
     // function will fail to compile if 'LHS_TYPE' and 'RHS_TYPE' are not
     // compatible.
 
-template <class LHS_TYPE, class RHS_TYPE>
-bool operator<(const optional<LHS_TYPE>& lhs,
-               const optional<RHS_TYPE>& rhs);
-    // Return 'true' if the specified 'lhs' optional object is ordered before
-    // the specified 'rhs' optional object, and 'false' otherwise.  'lhs' is
-    // ordered before 'rhs' if 'lhs' is null and 'rhs' is non-null or if both
-    // are non-null and 'lhs.value()' is ordered before 'rhs.value()'.  Note
-    // that this function will fail to compile if 'LHS_TYPE' and 'RHS_TYPE' are
-    // not compatible.
 
 template <class LHS_TYPE, class RHS_TYPE>
 bool operator<(const optional<LHS_TYPE>& lhs,
@@ -1379,15 +1464,6 @@ bool operator<(const LHS_TYPE&                lhs,
     // 'rhs' optional object, and 'false' otherwise.  'lhs' is ordered before
     // 'rhs' if 'rhs' is not null and 'lhs' is ordered before 'rhs.value()'.
 
-template <class LHS_TYPE, class RHS_TYPE>
-bool operator>(const optional<LHS_TYPE>& lhs,
-               const optional<RHS_TYPE>& rhs);
-    // Return 'true' if the specified 'lhs' optional object is ordered after
-    // the specified 'rhs' optional object, and 'false' otherwise.  'lhs' is
-    // ordered after 'rhs' if 'lhs' is non-null and 'rhs' is null or if both
-    // are non-null and 'lhs.value()' is ordered after 'rhs.value()'.  Note
-    // that this operator returns 'rhs < lhs'.  Also note that this function
-    // will fail to compile if 'LHS_TYPE' and 'RHS_TYPE' are not compatible.
 
 template <class LHS_TYPE, class RHS_TYPE>
 bool operator>(const optional<LHS_TYPE>& lhs,
@@ -1405,15 +1481,6 @@ bool operator>(const LHS_TYPE&                lhs,
     // 'rhs' if 'rhs' is null or 'lhs' is ordered after 'rhs.value()'.  Note
     // that this operator returns 'rhs < lhs'.
 
-
-template <class LHS_TYPE, class RHS_TYPE>
-bool operator<=(const optional<LHS_TYPE>& lhs,
-                const optional<RHS_TYPE>& rhs);
-    // Return 'true' if the specified 'lhs' optional object is ordered before
-    // the specified 'rhs' optional object or 'lhs' and 'rhs' have the same
-    // value, and 'false' otherwise.  (See 'operator<' and 'operator=='.)  Note
-    // that this operator returns '!(rhs < lhs)'.  Also note that this function
-    // will fail to compile if 'LHS_TYPE' and 'RHS_TYPE' are not compatible.
 
 template <class LHS_TYPE, class RHS_TYPE>
 bool operator<=(const optional<LHS_TYPE>& lhs,
@@ -1455,81 +1522,6 @@ bool operator>=(const LHS_TYPE&                lhs,
     // 'rhs' optional object or 'lhs' and 'rhs' have the same value, and
     // 'false' otherwise.  (See 'operator>' and 'operator=='.)  Note that this
     // operator returns '!(lhs < rhs)'.
-
-template <class TYPE>
-BSLS_KEYWORD_CONSTEXPR
-bool operator==(const optional<TYPE>& value,
-                const nullopt_t&         ) BSLS_KEYWORD_NOEXCEPT;
-template <class TYPE>
-BSLS_KEYWORD_CONSTEXPR
-bool operator==(const nullopt_t&         ,
-                const optional<TYPE>& value) BSLS_KEYWORD_NOEXCEPT;
-    // Return 'true' if the specified 'value' is null, and 'false' otherwise.
-
-template <class TYPE>
-BSLS_KEYWORD_CONSTEXPR
-bool operator!=(const optional<TYPE>& value,
-                const nullopt_t&         ) BSLS_KEYWORD_NOEXCEPT;
-template <class TYPE>
-BSLS_KEYWORD_CONSTEXPR
-bool operator!=(const nullopt_t&         ,
-                const optional<TYPE>& value) BSLS_KEYWORD_NOEXCEPT;
-    // Return 'true' if the specified 'value' is not null, and 'false'
-    // otherwise.
-
-template <class TYPE>
-BSLS_KEYWORD_CONSTEXPR
-bool operator<(const optional<TYPE>&,
-               const nullopt_t&        ) BSLS_KEYWORD_NOEXCEPT;
-    // Return 'false'.  Note that 'bdlb::nullOpt' never orders before a
-    // 'optional'.
-
-template <class TYPE>
-BSLS_KEYWORD_CONSTEXPR
-bool operator<(const nullopt_t&         ,
-               const optional<TYPE>& value) BSLS_KEYWORD_NOEXCEPT;
-    // Return 'true' if the specified 'value' is not null, and 'false'
-    // otherwise.  Note that 'bdlb::nullOpt' sorts before any 'optional'
-    // that is not null.
-
-template <class TYPE>
-BSLS_KEYWORD_CONSTEXPR
-bool operator>(const optional<TYPE>& value,
-               const nullopt_t&         ) BSLS_KEYWORD_NOEXCEPT;
-    // Return 'true' if the specified 'value' is not null, and 'false'
-    // otherwise.
-
-template <class TYPE>
-BSLS_KEYWORD_CONSTEXPR
-bool operator>(const nullopt_t&         ,
-               const optional<TYPE>& value) BSLS_KEYWORD_NOEXCEPT;
-    // Return 'false'.  Note that 'bdlb::nullOpt' never orders after a
-    // 'optional'.
-
-template <class TYPE>
-BSLS_KEYWORD_CONSTEXPR
-bool operator<=(const optional<TYPE>& value,
-                const nullopt_t&         ) BSLS_KEYWORD_NOEXCEPT;
-    // Return 'true' if the specified 'value' is null, and 'false'
-    // otherwise.
-
-template <class TYPE>
-BSLS_KEYWORD_CONSTEXPR
-bool operator<=(const nullopt_t&         ,
-                const optional<TYPE>& value) BSLS_KEYWORD_NOEXCEPT;
-    // Return 'true'.
-
-template <class TYPE>
-BSLS_KEYWORD_CONSTEXPR
-bool operator>=(const optional<TYPE>& value,
-                const nullopt_t&         ) BSLS_KEYWORD_NOEXCEPT;
-    // Return 'true'.
-
-template <class TYPE>
-BSLS_KEYWORD_CONSTEXPR
-bool operator>=(const nullopt_t&         ,
-                const optional<TYPE>& value) BSLS_KEYWORD_NOEXCEPT;
-    // Return 'true' if the specified 'value' is null, and 'false' otherwise.
 
 
 template<class TYPE>
@@ -2915,7 +2907,7 @@ inline BSLS_KEYWORD_CONSTEXPR
 bool operator==(const optional<TYPE>& value,
                       const nullopt_t&         ) BSLS_KEYWORD_NOEXCEPT
 {
-    return value.isNull();
+    return !value.has_value();
 }
 
 template <class TYPE>
@@ -2923,7 +2915,7 @@ inline BSLS_KEYWORD_CONSTEXPR
 bool operator==(const nullopt_t&         ,
                       const optional<TYPE>& value) BSLS_KEYWORD_NOEXCEPT
 {
-    return value.isNull();
+    return !value.has_value();
 }
 
 template <class TYPE>
@@ -2931,7 +2923,7 @@ inline BSLS_KEYWORD_CONSTEXPR
 bool operator!=(const optional<TYPE>& value,
                       const nullopt_t&         ) BSLS_KEYWORD_NOEXCEPT
 {
-    return !value.isNull();
+    return value.has_value();
 }
 
 template <class TYPE>
@@ -2939,7 +2931,7 @@ inline BSLS_KEYWORD_CONSTEXPR
 bool operator!=(const nullopt_t&         ,
                       const optional<TYPE>& value) BSLS_KEYWORD_NOEXCEPT
 {
-    return !value.isNull();
+    return value.has_value();
 }
 
 template <class TYPE>
@@ -2955,7 +2947,7 @@ inline BSLS_KEYWORD_CONSTEXPR
 bool operator<(const nullopt_t&         ,
                      const optional<TYPE>& value) BSLS_KEYWORD_NOEXCEPT
 {
-    return !value.isNull();
+    return value.has_value();
 }
 
 template <class TYPE>
@@ -2963,7 +2955,7 @@ inline BSLS_KEYWORD_CONSTEXPR
 bool operator>(const optional<TYPE>& value,
                      const nullopt_t&         ) BSLS_KEYWORD_NOEXCEPT
 {
-    return !value.isNull();
+    return value.has_value();
 }
 
 template <class TYPE>
@@ -2979,7 +2971,7 @@ inline BSLS_KEYWORD_CONSTEXPR
 bool operator<=(const optional<TYPE>& value,
                       const nullopt_t&         ) BSLS_KEYWORD_NOEXCEPT
 {
-    return value.isNull();
+    return !value.has_value();
 }
 
 template <class TYPE>
@@ -3003,7 +2995,7 @@ inline BSLS_KEYWORD_CONSTEXPR
 bool operator>=(const nullopt_t&  ,
                       const optional<TYPE>& value) BSLS_KEYWORD_NOEXCEPT
 {
-    return value.isNull();
+    return !value.has_value();
 }
 
 
