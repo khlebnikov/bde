@@ -38,11 +38,18 @@
 //      BloombergLP::bslalg::ScalarPrimitives::construct to correctly
 //      support move semantics in bsl:optional.
 //
+//BSLSTL_OPTIONAL_TEST_BAD_VALUE
+//      Tests in this group check that value categorie and cv qualification
+//      of the return value from value() member function is correct.
 //
 //BSLSTL_OPTIONAL_TEST_BAD_EQUAL_NONOPT
 //      Tests in this group check that assignments is not possible if the
 //      value type is not both assignable and constructible from the source
 //      type.
+//
+//BSLSTL_OPTIONAL_TEST_BAD_IL_EMPLACE
+//      Tests in this group check that emplace is not possible for const
+//      optional types.
 //
 //BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST
 //      Tests in this group check that assignments is not possible to
@@ -192,10 +199,14 @@ class my_Class1 {
     // 'd_allocator_p' pointer is always initialized to a null pointer, while
     // the 'd_data_p' pointer is never initialized
 
+
  public:
 
     // DATA
     my_ClassDef d_def;
+
+    static int copyConstructorInvocations;
+    static int moveConstructorInvocations;
 
     // CREATORS
     explicit
@@ -206,6 +217,7 @@ class my_Class1 {
     my_Class1(const my_Class1& rhs) {
         d_def.d_value = rhs.d_def.d_value;
         d_def.d_allocator_p = 0;
+        ++copyConstructorInvocations;
     }
 
     my_Class1(bslmf::MovableRef<my_Class1> other) {
@@ -213,27 +225,8 @@ class my_Class1 {
         d_def.d_value = otherRef.d_def.d_value;
         otherRef.d_def.d_value = MOVED_FROM_VAL;
         d_def.d_allocator_p = 0;
+        ++moveConstructorInvocations;
     }
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
-    my_Class1(std::initializer_list<int> il)
-    {
-        d_def.d_value = 0;
-        for (int i : il){
-          d_def.d_value+=i;
-        }
-        d_def.d_allocator_p = 0;
-    }
-    my_Class1(std::initializer_list<int> il, int j)
-    {
-        d_def.d_value = 0;
-        for (int i : il){
-          d_def.d_value +=i;
-        }
-        d_def.d_value +=j;
-        d_def.d_allocator_p = 0;
-    }
-#endif //(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
-
 
     ~my_Class1() {
         ASSERT(d_def.d_value != 91);
@@ -267,6 +260,9 @@ bool operator==(const my_Class1& lhs,
 {
  return (lhs.value()==rhs.value());
 }
+// CLASS DATA
+int my_Class1::copyConstructorInvocations       = 0;
+int my_Class1::moveConstructorInvocations       = 0;
                              // ===============
                              // class my_Class1a
                              // ===============
@@ -279,9 +275,10 @@ class my_Class1a {
 // The class is both constructable and asignable from my_Class1.
   public:
     my_Class1 d_data;
+    static int copyConstructorInvocations;
+    static int moveConstructorInvocations;
 
     // CREATORS
-    my_Class1a() : d_data() { }
 
     explicit
     my_Class1a(int v)  : d_data(v) {}
@@ -292,10 +289,16 @@ class my_Class1a {
     my_Class1a(bslmf::MovableRef<my_Class1> v)
     : d_data(MovUtl::move(v)) {}
 
-    my_Class1a(const my_Class1a& rhs) : d_data(rhs.d_data) {}
+    my_Class1a(const my_Class1a& rhs) : d_data(rhs.d_data)
+    {
+        ++copyConstructorInvocations;
+    }
 
     my_Class1a(bslmf::MovableRef<my_Class1a> rhs)
-    : d_data(MovUtl::move(MovUtl::access(rhs).d_data)) {}
+    : d_data(MovUtl::move(MovUtl::access(rhs).d_data))
+    {
+        ++moveConstructorInvocations;
+    }
 
   // MANIPULATORS
     my_Class1a& operator=(const my_Class1a& rhs) {
@@ -311,6 +314,9 @@ class my_Class1a {
     // ACCESSORS
     int value() const { return d_data.value(); }
 };
+// CLASS DATA
+int my_Class1a::copyConstructorInvocations       = 0;
+int my_Class1a::moveConstructorInvocations       = 0;
 bool operator==(const my_Class1a& lhs,
                 const my_Class1a& rhs)
 {
@@ -974,6 +980,9 @@ class my_Class2 {
     // DATA
     my_ClassDef d_def;
 
+    static int copyConstructorInvocations;
+    static int moveConstructorInvocations;
+
     // CREATORS
     explicit
     my_Class2(bslma::Allocator *a = 0) {
@@ -988,6 +997,7 @@ class my_Class2 {
     my_Class2(const my_Class2& rhs, bslma::Allocator *a = 0) {
         d_def.d_value = rhs.d_def.d_value;
         d_def.d_allocator_p = a;
+        copyConstructorInvocations++;
     }
 
     my_Class2(bslmf::MovableRef<my_Class2> other, bslma::Allocator *a = 0) {
@@ -1001,6 +1011,7 @@ class my_Class2 {
         else {
             d_def.d_allocator_p = otherRef.d_def.d_allocator_p;
         }
+        moveConstructorInvocations++;
     }
 
     my_Class2(const my_Class1& rhs, bslma::Allocator *a = 0) {
@@ -1015,25 +1026,6 @@ class my_Class2 {
         otherRef.d_def.d_value = MOVED_FROM_VAL;
         d_def.d_allocator_p = a;
     }
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
-    my_Class2(std::initializer_list<int> il, bslma::Allocator *a = 0)
-    {
-        d_def.d_value = 0;
-        for (int i : il){
-          d_def.d_value+=i;
-        }
-        d_def.d_allocator_p = a;
-    }
-    my_Class2(std::initializer_list<int> il, int j, bslma::Allocator *a = 0)
-    {
-        d_def.d_value = 0;
-        for (int i : il){
-          d_def.d_value +=i;
-        }
-        d_def.d_value +=j;
-        d_def.d_allocator_p = a;
-    }
-#endif //(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
 
     ~my_Class2() {
         ASSERT(d_def.d_value != 92);
@@ -1072,6 +1064,9 @@ class my_Class2 {
     // ACCESSORS
     int value() const { return d_def.d_value; }
 };
+// CLASS DATA
+int my_Class2::copyConstructorInvocations       = 0;
+int my_Class2::moveConstructorInvocations       = 0;
 bool operator==(const my_Class2& lhs,
                 const my_Class2& rhs)
 {
@@ -1193,6 +1188,9 @@ class my_Class2a {
   public:
     my_Class2 d_data;
 
+    static int copyConstructorInvocations;
+    static int moveConstructorInvocations;
+
     // CREATORS
     my_Class2a() : d_data() { }
 
@@ -1217,33 +1215,32 @@ class my_Class2a {
             : d_data(MovUtl::move(v), a) {}
 
 
-    my_Class2a(const my_Class2a& rhs) : d_data(rhs.d_data) {}
+    my_Class2a(const my_Class2a& rhs) : d_data(rhs.d_data)
+    {
+        ++copyConstructorInvocations;
+    }
 
     my_Class2a(bsl::allocator_arg_t  ,
                bslma::Allocator     *a,
                const my_Class2a&     rhs)
-        : d_data(rhs.d_data, a) {}
+        : d_data(rhs.d_data, a)
+    {
+        ++copyConstructorInvocations;
+    }
 
     my_Class2a(bslmf::MovableRef<my_Class2a> rhs)
-        : d_data(MovUtl::move(MovUtl::access(rhs).d_data)) {}
+        : d_data(MovUtl::move(MovUtl::access(rhs).d_data))
+    {
+        ++moveConstructorInvocations;
+    }
 
     my_Class2a(bsl::allocator_arg_t,
                bslma::Allocator              *a,
                bslmf::MovableRef<my_Class2a>  rhs)
-        : d_data(MovUtl::move(MovUtl::access(rhs).d_data), a) {}
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
-    my_Class2a(bsl::allocator_arg_t  ,
-        bslma::Allocator     *a,
-        std::initializer_list<int> il)
-    : d_data(il, a)
-    {}
-
-    my_Class2a(bsl::allocator_arg_t  ,
-        bslma::Allocator     *a,
-        std::initializer_list<int> il, int j)
-    : d_data(il, j, a)
-    {}
-#endif //(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
+        : d_data(MovUtl::move(MovUtl::access(rhs).d_data), a)
+    {
+        ++moveConstructorInvocations;
+    }
 
     // MANIPULATORS
     my_Class2a& operator=(const my_Class2a& rhs) {
@@ -1269,7 +1266,8 @@ bool operator==(const my_Class2a& lhs,
 {
     return (lhs.value()==rhs.value());
 }
-
+int my_Class2a::copyConstructorInvocations       = 0;
+int my_Class2a::moveConstructorInvocations       = 0;
 // TRAITS
 namespace BloombergLP {
 
@@ -1407,20 +1405,6 @@ class my_Class2c {
               bslma::Allocator              *a,
               bslmf::MovableRef<my_Class2c>  rhs)
     : d_data(MovUtl::move(MovUtl::access(rhs).d_data), a) {}
-
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
-    my_Class2c(bsl::allocator_arg_t  ,
-              bslma::Allocator     *a,
-              std::initializer_list<int> il)
-    : d_data(il, a)
-    {}
-
-    my_Class2c(bsl::allocator_arg_t  ,
-              bslma::Allocator     *a,
-              std::initializer_list<int> il, int j)
-    : d_data(il, j, a)
-    {}
-#endif //(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
 
     // MANIPULATORS
     my_Class2c& operator=(const my_Class2c& rhs) {
@@ -2171,91 +2155,96 @@ public:
     int value() const { return d_def.d_value; }
 };
 
-// ======================
-// class ConstructTestArg
-// ======================
+
+
+                       // ======================
+                       // class ConstructTestArg
+                       // ======================
 
 template <int ID>
 class ConstructTestArg {
-// This very simple 'struct' is used purely to disambiguate types in
-// passing parameters to 'construct' due to the fact that
-// 'ConstructTestArg<ID1>' is a different type than 'ConstructTestArg<ID2>'
-// if 'ID1 != ID2'.  This class does not take an allocator.
+    // This very simple 'struct' is used purely to disambiguate types in
+    // passing parameters to 'construct' due to the fact that
+    // 'ConstructTestArg<ID1>' is a different type than 'ConstructTestArg<ID2>'
+    // if 'ID1 != ID2'.  This class does not take an allocator.
 
-public:
-// PUBLIC DATA FOR TEST DRIVER ONLY
-int d_value;
+  public:
+    // PUBLIC DATA FOR TEST DRIVER ONLY
+    const int d_value;
+    int  d_copied_count;
+        // if true, indicates this object was created from an rvalue
 
-// CREATORS
-ConstructTestArg(const ConstructTestArg & other);
-// Create an object by copying 'other'.
-ConstructTestArg(bslmf::MovableRef<ConstructTestArg> other);
-// Create an object by moving from 'other'.
+    // CREATORS
+    ConstructTestArg(int value = -1);                               // IMPLICIT
+        // Create an object having the specified 'value'.
 
-ConstructTestArg(int value = -1);
-// Create an object having the specified 'value'.
+    ConstructTestArg(const ConstructTestArg& other);
+    ConstructTestArg(bslmf::MovableRef<ConstructTestArg>  other);
 };
 
 // CREATORS
 template <int ID>
-ConstructTestArg<ID>::ConstructTestArg(const ConstructTestArg & other)
-: d_value(other.d_value)
+ConstructTestArg<ID>::ConstructTestArg(int value)
+    : d_value(value), d_copied_count(0)
+{
+}
+template <int ID>
+ConstructTestArg<ID>::ConstructTestArg(const ConstructTestArg& other)
+    : d_value(other.d_value), d_copied_count(other.d_copied_count + 1)
 {
 }
 template <int ID>
 ConstructTestArg<ID>::ConstructTestArg(
-    bslmf::MovableRef<ConstructTestArg> other)
-: d_value(other.d_value)
-{
-  other.d_value = MOVED_FROM_VAL;
-}
-template <int ID>
-ConstructTestArg<ID>::ConstructTestArg(int value)
-: d_value(value)
-{
-}
-
-// ==============================
-// class ConstructTestTypeNoAlloc
-// ==============================
+                                     bslmf::MovableRef<ConstructTestArg> other)
+    : d_value(MovUtl::access(other).d_value),
+      d_copied_count(MovUtl::access(other).d_copied_count)
+{}
+                     // ==============================
+                       // class ConstructTestTypeNoAlloc
+                       // ==============================
 
 class ConstructTestTypeNoAlloc {
-// This 'struct' provides a test class capable of holding up to 14
-// parameters of types 'ConstructTestArg[1--14]'.  By default, a
-// 'ConstructTestTypeNoAlloc' is constructed with nil ('N1') values, but
-// instances can be constructed with actual values (e.g., for creating
-// expected values).  A 'ConstructTestTypeNoAlloc' can be invoked with up
-// to 14 parameters, via member functions 'testFunc[1--14]'.  These
-// functions are also called by the overloaded member 'operator()' of the
-// same signatures, and similar global functions 'testFunc[1--14]'.  All
-// invocations support the above 'ConstructTestSlotsNoAlloc' mechanism.
-//
-// This 'struct' intentionally does *not* take an allocator.
+    // This 'struct' provides a test class capable of holding up to 14
+    // parameters of types 'ConstructTestArg[1--14]'.  By default, a
+    // 'ConstructTestTypeNoAlloc' is constructed with nil ('N1') values, but
+    // instances can be constructed with actual values (e.g., for creating
+    // expected values).  A 'ConstructTestTypeNoAlloc' can be invoked with up
+    // to 14 parameters, via member functions 'testFunc[1--14]'.  These
+    // functions are also called by the overloaded member 'operator()' of the
+    // same signatures, and similar global functions 'testFunc[1--14]'.  All
+    // invocations support the above 'ConstructTestSlotsNoAlloc' mechanism.
+    //
+    // This 'struct' intentionally does *not* take an allocator.
 
-// PRIVATE TYPES
-typedef ConstructTestArg<1>  Arg1;
-typedef ConstructTestArg<2>  Arg2;
-typedef ConstructTestArg<3>  Arg3;
-typedef ConstructTestArg<4>  Arg4;
-typedef ConstructTestArg<5>  Arg5;
-typedef ConstructTestArg<6>  Arg6;
-typedef ConstructTestArg<7>  Arg7;
-typedef ConstructTestArg<8>  Arg8;
-typedef ConstructTestArg<9>  Arg9;
-typedef ConstructTestArg<10> Arg10;
-typedef ConstructTestArg<11> Arg11;
-typedef ConstructTestArg<12> Arg12;
-typedef ConstructTestArg<13> Arg13;
-typedef ConstructTestArg<14> Arg14;
-// Argument types for shortcut.
+    // PRIVATE TYPES
+    typedef ConstructTestArg<1>  Arg1;
+    typedef ConstructTestArg<2>  Arg2;
+    typedef ConstructTestArg<3>  Arg3;
+    typedef ConstructTestArg<4>  Arg4;
+    typedef ConstructTestArg<5>  Arg5;
+    typedef ConstructTestArg<6>  Arg6;
+    typedef ConstructTestArg<7>  Arg7;
+    typedef ConstructTestArg<8>  Arg8;
+    typedef ConstructTestArg<9>  Arg9;
+    typedef ConstructTestArg<10> Arg10;
+    typedef ConstructTestArg<11> Arg11;
+    typedef ConstructTestArg<12> Arg12;
+    typedef ConstructTestArg<13> Arg13;
+    typedef ConstructTestArg<14> Arg14;
+        // Argument types for shortcut.
 
-enum {
-N1 = -1   // default value for all private data
-};
+    enum {
+        N1 = -1   // default value for all private data
+    };
 
   public:
     // DATA (exceptionally public, only within a test driver)
-    int d_ilsum;
+    static int copyConstructorInvocations;
+    static int moveConstructorInvocations;
+
+
+    int d_ilsum; // sum of initializer_list argument
+
     Arg1  d_a1;
     Arg2  d_a2;
     Arg3  d_a3;
@@ -2271,57 +2260,747 @@ N1 = -1   // default value for all private data
     Arg13 d_a13;
     Arg14 d_a14;
 
-  // CREATORS (exceptionally in-line, only within a test driver)
-  explicit
-  ConstructTestTypeNoAlloc(
-  Arg1  a1  = N1, Arg2  a2  = N1, Arg3  a3  = N1,
-  Arg4  a4  = N1, Arg5  a5  = N1, Arg6  a6  = N1, Arg7  a7  = N1,
-  Arg8  a8  = N1, Arg9  a9  = N1, Arg10 a10 = N1, Arg11 a11 = N1,
-  Arg12 a12 = N1, Arg13 a13 = N1, Arg14 a14 = N1)
-  : d_ilsum(0)
-  , d_a1(a1), d_a2(a2), d_a3(a3), d_a4(a4), d_a5(a5), d_a6(a6), d_a7(a7)
-  , d_a8(a8), d_a9(a9), d_a10(a10), d_a11(a11), d_a12(a12), d_a13(a13)
-  , d_a14(a14) {}
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
-  explicit
-  ConstructTestTypeNoAlloc( std::initializer_list<int> il,
-  Arg1  a1  = N1, Arg2  a2  = N1, Arg3  a3  = N1,
-  Arg4  a4  = N1, Arg5  a5  = N1, Arg6  a6  = N1, Arg7  a7  = N1,
-  Arg8  a8  = N1, Arg9  a9  = N1, Arg10 a10 = N1, Arg11 a11 = N1,
-  Arg12 a12 = N1, Arg13 a13 = N1, Arg14 a14 = N1)
-  : d_ilsum(0)
-  , d_a1(a1), d_a2(a2), d_a3(a3), d_a4(a4), d_a5(a5), d_a6(a6), d_a7(a7)
-  , d_a8(a8), d_a9(a9), d_a10(a10), d_a11(a11), d_a12(a12), d_a13(a13)
-  , d_a14(a14)
-  {
-    for (int i : il) d_ilsum+=i;
-  }
-#endif // BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
+    // CREATORS (exceptionally in-line, only within a test driver)
+
+    ConstructTestTypeNoAlloc() : d_ilsum(0){};
+
+    explicit
+    ConstructTestTypeNoAlloc(const Arg1 &  a1)
+        : d_ilsum(0), d_a1(a1) {}
+    explicit
+    ConstructTestTypeNoAlloc(bslmf::MovableRef<Arg1>  a1)
+        : d_ilsum(0), d_a1(MovUtl::move(a1)) {}
+
+    template <class ARG1,  class ARG2>
+    explicit
+    ConstructTestTypeNoAlloc(
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2)
+       : d_ilsum(0),
+         d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+         d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2))
+    {}
+
+    template <class ARG1,  class ARG2,  class ARG3>
+        explicit
+        ConstructTestTypeNoAlloc(
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3)
+       : d_ilsum(0),
+         d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+         d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+         d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3))
+    {}
+    template <class ARG1,  class ARG2,  class ARG3,
+                          class ARG4>
+    explicit
+    ConstructTestTypeNoAlloc(
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4)
+    : d_ilsum(0),
+      d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+      d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+      d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+      d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4))
+    {}
+    template <class ARG1,  class ARG2,  class ARG3,
+                          class ARG4,  class ARG5>
+    explicit
+    ConstructTestTypeNoAlloc(
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5)
+       : d_ilsum(0),
+         d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+         d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+         d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+         d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+         d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5))
+    {}
+    template <class ARG1,  class ARG2,  class ARG3,
+                          class ARG4,  class ARG5,  class ARG6>
+    explicit
+    ConstructTestTypeNoAlloc(
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6)
+       : d_ilsum(0),
+         d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+         d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+         d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+         d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+         d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+         d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6))
+    {}
+    template <class ARG1,  class ARG2,  class ARG3,
+                          class ARG4,  class ARG5,  class ARG6,
+                          class ARG7>
+    explicit
+    ConstructTestTypeNoAlloc(
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7)
+       : d_ilsum(0),
+         d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+         d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+         d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+         d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+         d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+         d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+         d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7))
+    {}
+    template <class ARG1,  class ARG2,  class ARG3,
+                          class ARG4,  class ARG5,  class ARG6,
+                          class ARG7,  class ARG8>
+    explicit
+    ConstructTestTypeNoAlloc(
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8)
+       : d_ilsum(0),
+         d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+         d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+         d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+         d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+         d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+         d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+         d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+         d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8))
+    {}
+    template <class ARG1,  class ARG2,  class ARG3,
+                          class ARG4,  class ARG5,  class ARG6,
+                          class ARG7,  class ARG8,  class ARG9>
+    explicit
+    ConstructTestTypeNoAlloc(
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9)
+       : d_ilsum(0),
+         d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+         d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+         d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+         d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+         d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+         d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+         d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+         d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+         d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9))
+    {}
+    template <class ARG1,  class ARG2,  class ARG3,
+                          class ARG4,  class ARG5,  class ARG6,
+                          class ARG7,  class ARG8,  class ARG9,
+                          class ARG10>
+    explicit
+    ConstructTestTypeNoAlloc(
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10)
+     : d_ilsum(0),
+       d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+       d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+       d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+       d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+       d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+       d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+       d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+       d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+       d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+       d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10))
+    {}
+    template <class ARG1,  class ARG2,  class ARG3,
+                          class ARG4,  class ARG5,  class ARG6,
+                          class ARG7,  class ARG8,  class ARG9,
+                          class ARG10, class ARG11>
+    explicit
+    ConstructTestTypeNoAlloc(
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11)
+       : d_ilsum(0),
+         d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+         d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+         d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+         d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+         d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+         d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+         d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+         d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+         d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+         d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
+         d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11))
+    {}
+
+    template <class ARG1,  class ARG2,  class ARG3,
+                      class ARG4,  class ARG5,  class ARG6,
+                      class ARG7,  class ARG8,  class ARG9,
+                      class ARG10, class ARG11, class ARG12>
+    explicit
+    ConstructTestTypeNoAlloc(
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG12) a12)
+       : d_ilsum(0),
+         d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+         d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+         d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+         d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+         d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+         d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+         d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+         d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+         d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+         d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
+         d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11)),
+         d_a12(BSLS_COMPILERFEATURES_FORWARD(ARG12, a12))
+    {}
+
+    template <class ARG1,  class ARG2,  class ARG3,
+                  class ARG4,  class ARG5,  class ARG6,
+                  class ARG7,  class ARG8,  class ARG9,
+                  class ARG10, class ARG11, class ARG12,
+                  class ARG13>
+    explicit
+    ConstructTestTypeNoAlloc(
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG12) a12,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG13) a13)
+        : d_ilsum(0),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+          d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
+          d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11)),
+          d_a12(BSLS_COMPILERFEATURES_FORWARD(ARG12, a12)),
+          d_a13(BSLS_COMPILERFEATURES_FORWARD(ARG13, a13)) {}
+
+
+    template <class ARG1,  class ARG2,  class ARG3,
+                  class ARG4,  class ARG5,  class ARG6,
+                  class ARG7,  class ARG8,  class ARG9,
+                  class ARG10, class ARG11, class ARG12,
+                  class ARG13, class ARG14>
+    explicit
+    ConstructTestTypeNoAlloc(
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG12) a12,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG13) a13,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG14) a14)
+        :d_ilsum(0),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+          d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
+          d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11)),
+          d_a12(BSLS_COMPILERFEATURES_FORWARD(ARG12, a12)),
+          d_a13(BSLS_COMPILERFEATURES_FORWARD(ARG13, a13)),
+          d_a14(BSLS_COMPILERFEATURES_FORWARD(ARG14, a14)) {}
+
+    ConstructTestTypeNoAlloc(const ConstructTestTypeNoAlloc &other)
+        : d_ilsum(0),
+          d_a1(other.d_a1), d_a2(other.d_a2), d_a3(other.d_a3),
+          d_a4(other.d_a4), d_a5(other.d_a5), d_a6(other.d_a6),
+          d_a7(other.d_a7), d_a8(other.d_a8), d_a9(other.d_a9),
+          d_a10(other.d_a10), d_a11(other.d_a11), d_a12(other.d_a12),
+          d_a13(other.d_a13), d_a14(other.d_a14)
+    {
+        ++copyConstructorInvocations;
+    }
+
+    ConstructTestTypeNoAlloc(
+                           bslmf::MovableRef<ConstructTestTypeNoAlloc> &other)
+        : d_ilsum(0),
+          d_a1(MovUtl::access(other).d_a1), d_a2(MovUtl::access(other).d_a2),
+          d_a3(MovUtl::access(other).d_a3), d_a4(MovUtl::access(other).d_a4),
+          d_a5(MovUtl::access(other).d_a5), d_a6(MovUtl::access(other).d_a6),
+          d_a7(MovUtl::access(other).d_a7), d_a8(MovUtl::access(other).d_a8),
+          d_a9(MovUtl::access(other).d_a9),d_a10(MovUtl::access(other).d_a10),
+          d_a11(MovUtl::access(other).d_a11), d_a12(MovUtl::access(other).d_a12),
+          d_a13(MovUtl::access(other).d_a13), d_a14(MovUtl::access(other).d_a14)
+    {
+        ++moveConstructorInvocations;
+    }
+
+    ConstructTestTypeNoAlloc(std::initializer_list<int> il)
+        : d_ilsum(0)
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+
+    template <class ARG1>
+    explicit
+    ConstructTestTypeNoAlloc(std::initializer_list<int> il,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1)
+       : d_ilsum(0),
+         d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1))
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+
+    template <class ARG1,  class ARG2>
+    explicit
+    ConstructTestTypeNoAlloc(std::initializer_list<int> il,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2)
+       : d_ilsum(0),
+         d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+         d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2))
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+
+
+    template <class ARG1,  class ARG2,  class ARG3>
+        explicit
+        ConstructTestTypeNoAlloc(std::initializer_list<int> il,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3)
+       : d_ilsum(0),
+         d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+         d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+         d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3))
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+
+    template <class ARG1,  class ARG2,  class ARG3,
+                          class ARG4>
+    explicit
+    ConstructTestTypeNoAlloc(std::initializer_list<int> il,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4)
+    : d_ilsum(0),
+      d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+      d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+      d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+      d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4))
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+
+    template <class ARG1,  class ARG2,  class ARG3,
+                          class ARG4,  class ARG5>
+    explicit
+    ConstructTestTypeNoAlloc(std::initializer_list<int> il,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5)
+       : d_ilsum(0),
+         d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+         d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+         d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+         d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+         d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5))
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+
+    template <class ARG1,  class ARG2,  class ARG3,
+                          class ARG4,  class ARG5,  class ARG6>
+    explicit
+    ConstructTestTypeNoAlloc(std::initializer_list<int> il,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6)
+       : d_ilsum(0),
+         d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+         d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+         d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+         d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+         d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+         d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6))
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+
+    template <class ARG1,  class ARG2,  class ARG3,
+                          class ARG4,  class ARG5,  class ARG6,
+                          class ARG7>
+    explicit
+    ConstructTestTypeNoAlloc(std::initializer_list<int> il,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7)
+       : d_ilsum(0),
+         d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+         d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+         d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+         d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+         d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+         d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+         d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7))
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+
+    template <class ARG1,  class ARG2,  class ARG3,
+                          class ARG4,  class ARG5,  class ARG6,
+                          class ARG7,  class ARG8>
+    explicit
+    ConstructTestTypeNoAlloc(std::initializer_list<int> il,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8)
+       : d_ilsum(0),
+         d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+         d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+         d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+         d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+         d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+         d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+         d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+         d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8))
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+
+    template <class ARG1,  class ARG2,  class ARG3,
+                          class ARG4,  class ARG5,  class ARG6,
+                          class ARG7,  class ARG8,  class ARG9>
+    explicit
+    ConstructTestTypeNoAlloc(std::initializer_list<int> il,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9)
+       : d_ilsum(0),
+         d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+         d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+         d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+         d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+         d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+         d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+         d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+         d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+         d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9))
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+
+    template <class ARG1,  class ARG2,  class ARG3,
+                          class ARG4,  class ARG5,  class ARG6,
+                          class ARG7,  class ARG8,  class ARG9,
+                          class ARG10>
+    explicit
+    ConstructTestTypeNoAlloc(std::initializer_list<int> il,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10)
+     : d_ilsum(0),
+       d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+       d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+       d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+       d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+       d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+       d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+       d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+       d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+       d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+       d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10))
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+
+    template <class ARG1,  class ARG2,  class ARG3,
+                          class ARG4,  class ARG5,  class ARG6,
+                          class ARG7,  class ARG8,  class ARG9,
+                          class ARG10, class ARG11>
+    explicit
+    ConstructTestTypeNoAlloc(std::initializer_list<int> il,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11)
+       : d_ilsum(0),
+         d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+         d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+         d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+         d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+         d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+         d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+         d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+         d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+         d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+         d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
+         d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11))
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+
+    template <class ARG1,  class ARG2,  class ARG3,
+                      class ARG4,  class ARG5,  class ARG6,
+                      class ARG7,  class ARG8,  class ARG9,
+                      class ARG10, class ARG11, class ARG12>
+    explicit
+    ConstructTestTypeNoAlloc(std::initializer_list<int> il,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG12) a12)
+       : d_ilsum(0),
+         d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+         d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+         d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+         d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+         d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+         d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+         d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+         d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+         d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+         d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
+         d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11)),
+         d_a12(BSLS_COMPILERFEATURES_FORWARD(ARG12, a12))
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+
+    template <class ARG1,  class ARG2,  class ARG3,
+                  class ARG4,  class ARG5,  class ARG6,
+                  class ARG7,  class ARG8,  class ARG9,
+                  class ARG10, class ARG11, class ARG12,
+                  class ARG13>
+    explicit
+    ConstructTestTypeNoAlloc(std::initializer_list<int> il,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG12) a12,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG13) a13)
+        : d_ilsum(0),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+          d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
+          d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11)),
+          d_a12(BSLS_COMPILERFEATURES_FORWARD(ARG12, a12)),
+          d_a13(BSLS_COMPILERFEATURES_FORWARD(ARG13, a13))
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+
+
+    template <class ARG1,  class ARG2,  class ARG3,
+                  class ARG4,  class ARG5,  class ARG6,
+                  class ARG7,  class ARG8,  class ARG9,
+                  class ARG10, class ARG11, class ARG12,
+                  class ARG13, class ARG14>
+    explicit
+    ConstructTestTypeNoAlloc(std::initializer_list<int> il,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG12) a12,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG13) a13,
+                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG14) a14)
+        :d_ilsum(0),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+          d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
+          d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11)),
+          d_a12(BSLS_COMPILERFEATURES_FORWARD(ARG12, a12)),
+          d_a13(BSLS_COMPILERFEATURES_FORWARD(ARG13, a13)),
+          d_a14(BSLS_COMPILERFEATURES_FORWARD(ARG14, a14))
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+
+
 };
+int ConstructTestTypeNoAlloc::copyConstructorInvocations       = 0;
+int ConstructTestTypeNoAlloc::moveConstructorInvocations       = 0;
 
 // FREE OPERATORS
 bool operator==(const ConstructTestTypeNoAlloc& lhs,
-const ConstructTestTypeNoAlloc& rhs)
+                const ConstructTestTypeNoAlloc& rhs)
 {
-return lhs.d_a1.d_value  == rhs.d_a1.d_value &&
-lhs.d_a2.d_value  == rhs.d_a2.d_value &&
-lhs.d_a3.d_value  == rhs.d_a3.d_value &&
-lhs.d_a4.d_value  == rhs.d_a4.d_value &&
-lhs.d_a5.d_value  == rhs.d_a5.d_value &&
-lhs.d_a6.d_value  == rhs.d_a6.d_value &&
-lhs.d_a7.d_value  == rhs.d_a7.d_value &&
-lhs.d_a8.d_value  == rhs.d_a8.d_value &&
-lhs.d_a9.d_value  == rhs.d_a9.d_value &&
-lhs.d_a10.d_value == rhs.d_a10.d_value &&
-lhs.d_a11.d_value == rhs.d_a11.d_value &&
-lhs.d_a12.d_value == rhs.d_a12.d_value &&
-lhs.d_a13.d_value == rhs.d_a13.d_value &&
-lhs.d_a14.d_value == rhs.d_a14.d_value;
+    return lhs.d_ilsum  == rhs.d_ilsum &&
+           lhs.d_a1.d_value  == rhs.d_a1.d_value &&
+           lhs.d_a2.d_value  == rhs.d_a2.d_value &&
+           lhs.d_a3.d_value  == rhs.d_a3.d_value &&
+           lhs.d_a4.d_value  == rhs.d_a4.d_value &&
+           lhs.d_a5.d_value  == rhs.d_a5.d_value &&
+           lhs.d_a6.d_value  == rhs.d_a6.d_value &&
+           lhs.d_a7.d_value  == rhs.d_a7.d_value &&
+           lhs.d_a8.d_value  == rhs.d_a8.d_value &&
+           lhs.d_a9.d_value  == rhs.d_a9.d_value &&
+           lhs.d_a10.d_value == rhs.d_a10.d_value &&
+           lhs.d_a11.d_value == rhs.d_a11.d_value &&
+           lhs.d_a12.d_value == rhs.d_a12.d_value &&
+           lhs.d_a13.d_value == rhs.d_a13.d_value &&
+           lhs.d_a14.d_value == rhs.d_a14.d_value ;
 }
-
-// =============================
-// class ConstructTestTypeAlloc
-// =============================
+bool createdAlike(const ConstructTestTypeNoAlloc& lhs,
+                  const ConstructTestTypeNoAlloc& rhs)
+{
+    return lhs.d_a1.d_copied_count  == rhs.d_a1.d_copied_count &&
+           lhs.d_a2.d_copied_count  == rhs.d_a2.d_copied_count &&
+           lhs.d_a3.d_copied_count  == rhs.d_a3.d_copied_count &&
+           lhs.d_a4.d_copied_count  == rhs.d_a4.d_copied_count &&
+           lhs.d_a5.d_copied_count  == rhs.d_a5.d_copied_count &&
+           lhs.d_a6.d_copied_count  == rhs.d_a6.d_copied_count &&
+           lhs.d_a7.d_copied_count  == rhs.d_a7.d_copied_count &&
+           lhs.d_a8.d_copied_count  == rhs.d_a8.d_copied_count &&
+           lhs.d_a9.d_copied_count  == rhs.d_a9.d_copied_count &&
+           lhs.d_a10.d_copied_count == rhs.d_a10.d_copied_count &&
+           lhs.d_a11.d_copied_count == rhs.d_a11.d_copied_count &&
+           lhs.d_a12.d_copied_count == rhs.d_a12.d_copied_count &&
+           lhs.d_a13.d_copied_count == rhs.d_a13.d_copied_count &&
+           lhs.d_a14.d_copied_count == rhs.d_a14.d_copied_count;
+}
+                       // =============================
+                       // class ConstructTestTypeAlloc
+                       // =============================
 
 class ConstructTestTypeAlloc {
     // This class provides a test class capable of holding up to 14 parameters
@@ -2345,17 +3024,20 @@ class ConstructTestTypeAlloc {
     typedef ConstructTestArg<12> Arg12;
     typedef ConstructTestArg<13> Arg13;
     typedef ConstructTestArg<14> Arg14;
-    // Argument types for shortcut.
+        // Argument types for shortcut.
 
     enum {
-    N1 = -1   // default value for all private data
+        N1 = -1   // default value for all private data
     };
 
-    public:
+  public:
     // DATA (exceptionally public, only within a test driver)
-    int d_ilsum;
+    static int copyConstructorInvocations;
+    static int moveConstructorInvocations;
 
-    bslma::Allocator *d_allocator_p;;
+    int d_ilsum; // sum of initializer_list argument
+
+    bslma::Allocator *d_allocator_p;
     Arg1  d_a1;
     Arg2  d_a2;
     Arg3  d_a3;
@@ -2374,236 +3056,1290 @@ class ConstructTestTypeAlloc {
     // CREATORS (exceptionally in-line, only within a test driver)
     explicit
     ConstructTestTypeAlloc(bslma::Allocator *allocator = 0)
-    : d_ilsum(0), d_allocator_p(allocator) {}
+        : d_ilsum(0), d_allocator_p(allocator) {}
     ConstructTestTypeAlloc(const ConstructTestTypeAlloc&  other,
-        bslma::Allocator              *allocator = 0)
-    : d_ilsum(0), d_allocator_p(allocator)
-    , d_a1 (other.d_a1),  d_a2 (other.d_a2),  d_a3 (other.d_a3)
-    , d_a4 (other.d_a4),  d_a5 (other.d_a5),  d_a6 (other.d_a6)
-    , d_a7 (other.d_a7),  d_a8 (other.d_a8),  d_a9 (other.d_a9)
-    , d_a10(other.d_a10), d_a11(other.d_a11), d_a12(other.d_a12)
-    , d_a13(other.d_a13), d_a14(other.d_a14){}
+                           bslma::Allocator              *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator)
+        , d_a1 (other.d_a1),  d_a2 (other.d_a2),  d_a3 (other.d_a3)
+        , d_a4 (other.d_a4),  d_a5 (other.d_a5),  d_a6 (other.d_a6)
+        , d_a7 (other.d_a7),  d_a8 (other.d_a8),  d_a9 (other.d_a9)
+        , d_a10(other.d_a10), d_a11(other.d_a11), d_a12(other.d_a12)
+        , d_a13(other.d_a13), d_a14(other.d_a14)
+    {
+        ++copyConstructorInvocations;
+    }
+
+    ConstructTestTypeAlloc(bslmf::MovableRef<ConstructTestTypeAlloc>  other,
+                           bslma::Allocator              *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1 (MovUtl::move(MovUtl::access(other).d_a1)),
+          d_a2 (MovUtl::move(MovUtl::access(other).d_a2)),
+          d_a3 (MovUtl::move(MovUtl::access(other).d_a3)),
+          d_a4 (MovUtl::move(MovUtl::access(other).d_a4)),
+          d_a5 (MovUtl::move(MovUtl::access(other).d_a5)),
+          d_a6 (MovUtl::move(MovUtl::access(other).d_a6)),
+          d_a7 (MovUtl::move(MovUtl::access(other).d_a7)),
+          d_a8 (MovUtl::move(MovUtl::access(other).d_a8)),
+          d_a9 (MovUtl::move(MovUtl::access(other).d_a9)),
+          d_a10(MovUtl::move(MovUtl::access(other).d_a10)),
+          d_a11(MovUtl::move(MovUtl::access(other).d_a11)),
+          d_a12(MovUtl::move(MovUtl::access(other).d_a12)),
+          d_a13(MovUtl::move(MovUtl::access(other).d_a13)),
+          d_a14(MovUtl::move(MovUtl::access(other).d_a14))
+    {
+        ++moveConstructorInvocations;
+    }
+
     explicit
-    ConstructTestTypeAlloc(Arg1  a1, bslma::Allocator *allocator = 0)
-    : d_ilsum(0), d_allocator_p(allocator)
-    , d_a1(a1) {}
-    ConstructTestTypeAlloc(Arg1  a1, Arg2  a2, bslma::Allocator *allocator = 0)
-    : d_ilsum(0), d_allocator_p(allocator)
-    , d_a1(a1), d_a2(a2) {}
-    ConstructTestTypeAlloc(Arg1  a1, Arg2  a2, Arg3  a3,
-        bslma::Allocator *allocator = 0)
-    : d_ilsum(0), d_allocator_p(allocator)
-    , d_a1(a1), d_a2(a2), d_a3(a3) {}
-    ConstructTestTypeAlloc(Arg1  a1, Arg2  a2, Arg3  a3, Arg4  a4,
-        bslma::Allocator *allocator = 0)
-    : d_ilsum(0), d_allocator_p(allocator)
-    , d_a1(a1), d_a2(a2), d_a3(a3), d_a4(a4) {}
-    ConstructTestTypeAlloc(Arg1  a1, Arg2  a2, Arg3  a3, Arg4  a4, Arg5  a5,
-        bslma::Allocator *allocator = 0)
-    : d_ilsum(0), d_allocator_p(allocator)
-    , d_a1(a1), d_a2(a2), d_a3(a3), d_a4(a4), d_a5(a5) {}
-    ConstructTestTypeAlloc(Arg1  a1, Arg2  a2, Arg3  a3, Arg4  a4, Arg5  a5,
-        Arg6  a6, bslma::Allocator *allocator = 0)
-    : d_ilsum(0), d_allocator_p(allocator)
-    , d_a1(a1), d_a2(a2), d_a3(a3), d_a4(a4), d_a5(a5), d_a6(a6) {}
-    ConstructTestTypeAlloc(Arg1  a1, Arg2  a2, Arg3  a3, Arg4  a4, Arg5  a5,
-        Arg6  a6, Arg7  a7, bslma::Allocator *allocator = 0)
-    : d_ilsum(0), d_allocator_p(allocator)
-    , d_a1(a1), d_a2(a2), d_a3(a3), d_a4(a4), d_a5(a5), d_a6(a6)
-    , d_a7(a7) {}
-    ConstructTestTypeAlloc(Arg1  a1, Arg2  a2, Arg3  a3, Arg4  a4, Arg5  a5,
-        Arg6  a6, Arg7  a7, Arg8  a8,
-        bslma::Allocator *allocator = 0)
-    : d_ilsum(0), d_allocator_p(allocator)
-    , d_a1(a1), d_a2(a2), d_a3(a3), d_a4(a4), d_a5(a5), d_a6(a6)
-    , d_a7(a7), d_a8(a8) {}
-    ConstructTestTypeAlloc(Arg1  a1, Arg2  a2, Arg3  a3, Arg4  a4, Arg5  a5,
-        Arg6  a6, Arg7  a7, Arg8  a8, Arg9  a9,
-        bslma::Allocator *allocator = 0)
-    : d_ilsum(0), d_allocator_p(allocator)
-    , d_a1(a1), d_a2(a2), d_a3(a3), d_a4(a4), d_a5(a5), d_a6(a6)
-    , d_a7(a7), d_a8(a8), d_a9(a9) {}
-    ConstructTestTypeAlloc(Arg1  a1, Arg2  a2, Arg3  a3, Arg4  a4, Arg5  a5,
-        Arg6  a6, Arg7  a7, Arg8  a8, Arg9  a9, Arg10 a10,
-        bslma::Allocator *allocator = 0)
-    : d_ilsum(0), d_allocator_p(allocator)
-    , d_a1 (a1), d_a2 (a2), d_a3 (a3), d_a4 (a4), d_a5 (a5), d_a6 (a6)
-    , d_a7 (a7), d_a8 (a8), d_a9 (a9)
-    , d_a10(a10) {}
-    ConstructTestTypeAlloc(Arg1  a1, Arg2  a2, Arg3  a3, Arg4  a4, Arg5  a5,
-        Arg6  a6, Arg7  a7, Arg8  a8, Arg9  a9, Arg10 a10,
-        Arg11 a11, bslma::Allocator *allocator = 0)
-    : d_ilsum(0), d_allocator_p(allocator)
-    , d_a1 (a1), d_a2 (a2), d_a3 (a3), d_a4 (a4), d_a5 (a5), d_a6 (a6)
-    , d_a7 (a7), d_a8 (a8), d_a9 (a9)
-    , d_a10(a10), d_a11(a11) {}
-    ConstructTestTypeAlloc(Arg1  a1, Arg2  a2, Arg3  a3, Arg4  a4, Arg5  a5,
-        Arg6  a6, Arg7  a7, Arg8  a8, Arg9  a9, Arg10 a10,
-        Arg11 a11, Arg12 a12,
-        bslma::Allocator *allocator = 0)
-    : d_ilsum(0), d_allocator_p(allocator)
-    , d_a1 (a1), d_a2 (a2), d_a3 (a3), d_a4 (a4 ), d_a5 (a5 ), d_a6 (a6 )
-    , d_a7 (a7), d_a8 (a8), d_a9 (a9), d_a10(a10), d_a11(a11), d_a12(a12)
-    {}
-    ConstructTestTypeAlloc(Arg1  a1,  Arg2  a2,  Arg3  a3, Arg4  a4, Arg5  a5,
-        Arg6  a6,  Arg7  a7,  Arg8  a8, Arg9  a9, Arg10 a10,
-        Arg11 a11, Arg12 a12, Arg13 a13,
-        bslma::Allocator *allocator = 0)
-    : d_ilsum(0), d_allocator_p(allocator)
-    , d_a1 (a1), d_a2 (a2), d_a3 (a3), d_a4 (a4 ), d_a5 (a5 ), d_a6 (a6 )
-    , d_a7 (a7), d_a8 (a8), d_a9 (a9), d_a10(a10), d_a11(a11), d_a12(a12)
-    , d_a13(a13) {}
-    ConstructTestTypeAlloc(Arg1  a1,  Arg2  a2,  Arg3  a3, Arg4  a4, Arg5  a5,
-        Arg6  a6,  Arg7  a7,  Arg8  a8, Arg9  a9, Arg10 a10,
-        Arg11 a11, Arg12 a12, Arg13 a13, Arg14 a14,
-        bslma::Allocator *allocator = 0)
-    : d_ilsum(0), d_allocator_p(allocator)
-    , d_a1 (a1), d_a2 (a2), d_a3 (a3), d_a4 (a4 ), d_a5 (a5 ), d_a6 (a6 )
-    , d_a7 (a7), d_a8 (a8), d_a9 (a9), d_a10(a10), d_a11(a11), d_a12(a12)
-    , d_a13(a13), d_a14(a14) {}
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
+    ConstructTestTypeAlloc(const Arg1 &  a1, bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator)
+        , d_a1(a1) {}
+    explicit
+    ConstructTestTypeAlloc(bslmf::MovableRef<Arg1>  a1, bslma::Allocator *allocator = 0)
+            : d_ilsum(0), d_allocator_p(allocator)
+            , d_a1(MovUtl::move(a1)) {}
+
+    template <class ARG1>
+    explicit
+    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           const Arg2 &                             a2,
+                           bslma::Allocator             *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(a2) {}
+
+    template <class ARG1>
+    explicit
+    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           bslmf::MovableRef<Arg2>                  a2,
+                           bslma::Allocator *allocator              = 0)
+            : d_ilsum(0), d_allocator_p(allocator),
+              d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+              d_a2(MovUtl::move(a2)) {}
+
+    template <class ARG1,  class ARG2>
+    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           const Arg3                              &a3,
+                           bslma::Allocator *allocator              = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(a3){}
+
+    template <class ARG1,  class ARG2>
+    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           bslmf::MovableRef<Arg3>                  a3,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(MovUtl::move(a3)){}
+
+    template <class ARG1,  class ARG2,  class ARG3>
+    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           const Arg4                              &a4,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(a4){}
+    template <class ARG1,  class ARG2,  class ARG3>
+    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           bslmf::MovableRef<Arg4>                  a4,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(MovUtl::move(a4)){}
+
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4>
+    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           const Arg5                              &a5,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(a5){}
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4>
+    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           bslmf::MovableRef<Arg5>                  a5,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(MovUtl::move(a5)){}
+
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5>
+    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                           const Arg6                              &a6,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(a6){}
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5>
+    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                           bslmf::MovableRef<Arg6>                  a6,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(MovUtl::move(a6)){}
+
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6>
+    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                           const Arg7                              &a7,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(a7){}
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6>
+    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                           bslmf::MovableRef<Arg7>                  a7,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(MovUtl::move(a7)){}
+
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6,
+              class ARG7>
+    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                           const Arg8                              &a8,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(a8){}
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6,
+              class ARG7>
+    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                           bslmf::MovableRef<Arg8>                  a8,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(MovUtl::move(a8)){}
+
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6,
+              class ARG7,  class ARG8>
+    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                           const Arg9                              &a9,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(a9){}
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6,
+              class ARG7,  class ARG8>
+    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                           bslmf::MovableRef<Arg9>                  a9,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(MovUtl::move(a9)){}
+
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6,
+              class ARG7,  class ARG8,  class ARG9>
+    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                           const Arg10                             &a10,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+          d_a10(a10){}
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6,
+              class ARG7,  class ARG8,  class ARG9>
+    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                           bslmf::MovableRef<Arg10>                 a10,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+          d_a10(MovUtl::move(a10)){}
+
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6,
+              class ARG7,  class ARG8,  class ARG9,
+              class ARG10>
+    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                           const Arg11                             &a11,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+          d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
+          d_a11(a11){}
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6,
+              class ARG7,  class ARG8,  class ARG9,
+              class ARG10>
+    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                           bslmf::MovableRef<Arg11>                 a11,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+          d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
+          d_a11(MovUtl::move(a11)){}
+
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6,
+              class ARG7,  class ARG8,  class ARG9,
+              class ARG10, class ARG11>
+    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11,
+                           const Arg12                             &a12,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+          d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
+          d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11)),
+          d_a12(a12){}
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6,
+              class ARG7,  class ARG8,  class ARG9,
+              class ARG10, class ARG11>
+    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11,
+                           bslmf::MovableRef<Arg12>                 a12,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+          d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
+          d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11)),
+          d_a12(MovUtl::move(a12)){}
+
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6,
+              class ARG7,  class ARG8,  class ARG9,
+              class ARG10, class ARG11, class ARG12>
+    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG12) a12,
+                           const Arg13                             &a13,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+          d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
+          d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11)),
+          d_a12(BSLS_COMPILERFEATURES_FORWARD(ARG12, a12)),
+          d_a13(a13){}
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6,
+              class ARG7,  class ARG8,  class ARG9,
+              class ARG10, class ARG11, class ARG12>
+    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG12) a12,
+                           bslmf::MovableRef<Arg13>                 a13,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+          d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
+          d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11)),
+          d_a12(BSLS_COMPILERFEATURES_FORWARD(ARG12, a12)),
+          d_a13(MovUtl::move(a13)){}
+
+    template <class ARG1,  class ARG2,  class ARG3,
+                      class ARG4,  class ARG5,  class ARG6,
+                      class ARG7,  class ARG8,  class ARG9,
+                      class ARG10, class ARG11, class ARG12,
+                      class ARG13>
+    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG12) a12,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG13) a13,
+                           const Arg14                             &a14,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+          d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
+          d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11)),
+          d_a12(BSLS_COMPILERFEATURES_FORWARD(ARG12, a12)),
+          d_a13(BSLS_COMPILERFEATURES_FORWARD(ARG13, a13)),
+          d_a14(a14) {}
+    template <class ARG1,  class ARG2,  class ARG3,
+                      class ARG4,  class ARG5,  class ARG6,
+                      class ARG7,  class ARG8,  class ARG9,
+                      class ARG10, class ARG11, class ARG12,
+                      class ARG13>
+    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG12) a12,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG13) a13,
+                           bslmf::MovableRef<Arg14>                 a14,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+          d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
+          d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11)),
+          d_a12(BSLS_COMPILERFEATURES_FORWARD(ARG12, a12)),
+          d_a13(BSLS_COMPILERFEATURES_FORWARD(ARG13, a13)),
+          d_a14(MovUtl::move(a14)){}
+
+    explicit
     ConstructTestTypeAlloc(std::initializer_list<int> il,
-        bslma::Allocator *allocator = 0)
-    : d_ilsum(0), d_allocator_p(allocator)
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator)
     {
-          for (int i : il) d_ilsum+=i;
+      for (int i : il) d_ilsum+=i;
+    }
+    explicit
+    ConstructTestTypeAlloc(std::initializer_list<int> il,
+                           const Arg1 &  a1,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator)
+        , d_a1(a1)
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+    explicit
+    ConstructTestTypeAlloc(std::initializer_list<int> il,
+                           bslmf::MovableRef<Arg1>  a1,
+                           bslma::Allocator *allocator = 0)
+            : d_ilsum(0), d_allocator_p(allocator)
+            , d_a1(MovUtl::move(a1))
+    {
+      for (int i : il) d_ilsum+=i;
     }
 
+    template <class ARG1>
+    explicit
     ConstructTestTypeAlloc(std::initializer_list<int> il,
-        Arg1  a1, bslma::Allocator *allocator = 0)
-    : d_ilsum(0), d_allocator_p(allocator)
-    , d_a1(a1)
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           const Arg2 &                             a2,
+                           bslma::Allocator             *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(a2)
     {
-          for (int i : il) d_ilsum+=i;
+      for (int i : il) d_ilsum+=i;
     }
 
+    template <class ARG1>
+    explicit
     ConstructTestTypeAlloc(std::initializer_list<int> il,
-        Arg1  a1, Arg2  a2, bslma::Allocator *allocator = 0)
-    : d_ilsum(0), d_allocator_p(allocator)
-    , d_a1(a1), d_a2(a2)
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           bslmf::MovableRef<Arg2>                  a2,
+                           bslma::Allocator *allocator              = 0)
+            : d_ilsum(0), d_allocator_p(allocator),
+              d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+              d_a2(MovUtl::move(a2))
     {
       for (int i : il) d_ilsum+=i;
     }
+
+
+    template <class ARG1,  class ARG2>
     ConstructTestTypeAlloc(std::initializer_list<int> il,
-        Arg1  a1, Arg2  a2, Arg3  a3,
-        bslma::Allocator *allocator = 0)
-    : d_ilsum(0), d_allocator_p(allocator)
-    , d_a1(a1), d_a2(a2), d_a3(a3)
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           const Arg3                              &a3,
+                           bslma::Allocator *allocator              = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(a3)
     {
       for (int i : il) d_ilsum+=i;
     }
+
+    template <class ARG1,  class ARG2>
     ConstructTestTypeAlloc(std::initializer_list<int> il,
-        Arg1  a1, Arg2  a2, Arg3  a3, Arg4  a4,
-        bslma::Allocator *allocator = 0)
-    : d_ilsum(0), d_allocator_p(allocator)
-    , d_a1(a1), d_a2(a2), d_a3(a3), d_a4(a4)
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           bslmf::MovableRef<Arg3>                  a3,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(MovUtl::move(a3))
     {
       for (int i : il) d_ilsum+=i;
     }
+
+    template <class ARG1,  class ARG2,  class ARG3>
     ConstructTestTypeAlloc(std::initializer_list<int> il,
-        Arg1  a1, Arg2  a2, Arg3  a3, Arg4  a4, Arg5  a5,
-        bslma::Allocator *allocator = 0)
-    : d_ilsum(0), d_allocator_p(allocator)
-    , d_a1(a1), d_a2(a2), d_a3(a3), d_a4(a4), d_a5(a5)
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           const Arg4                              &a4,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(a4)
     {
       for (int i : il) d_ilsum+=i;
     }
+
+    template <class ARG1,  class ARG2,  class ARG3>
     ConstructTestTypeAlloc(std::initializer_list<int> il,
-        Arg1  a1, Arg2  a2, Arg3  a3, Arg4  a4, Arg5  a5,
-        Arg6  a6, bslma::Allocator *allocator = 0)
-    : d_ilsum(0), d_allocator_p(allocator)
-    , d_a1(a1), d_a2(a2), d_a3(a3), d_a4(a4), d_a5(a5), d_a6(a6)
-    {
-      d_ilsum = 0;
-      for (int i : il) d_ilsum+=i;
-    }
-    ConstructTestTypeAlloc(std::initializer_list<int> il,
-        Arg1  a1, Arg2  a2, Arg3  a3, Arg4  a4, Arg5  a5,
-        Arg6  a6, Arg7  a7, bslma::Allocator *allocator = 0)
-    : d_ilsum(0), d_allocator_p(allocator)
-    , d_a1(a1), d_a2(a2), d_a3(a3), d_a4(a4), d_a5(a5), d_a6(a6)
-    , d_a7(a7)
-    {
-     for (int i : il) d_ilsum+=i;
-    }
-    ConstructTestTypeAlloc(std::initializer_list<int> il,
-        Arg1  a1, Arg2  a2, Arg3  a3, Arg4  a4, Arg5  a5,
-        Arg6  a6, Arg7  a7, Arg8  a8,
-        bslma::Allocator *allocator = 0)
-    : d_ilsum(0), d_allocator_p(allocator)
-    , d_a1(a1), d_a2(a2), d_a3(a3), d_a4(a4), d_a5(a5), d_a6(a6)
-    , d_a7(a7), d_a8(a8)
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           bslmf::MovableRef<Arg4>                  a4,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(MovUtl::move(a4))
     {
       for (int i : il) d_ilsum+=i;
     }
+
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4>
     ConstructTestTypeAlloc(std::initializer_list<int> il,
-        Arg1  a1, Arg2  a2, Arg3  a3, Arg4  a4, Arg5  a5,
-        Arg6  a6, Arg7  a7, Arg8  a8, Arg9  a9,
-        bslma::Allocator *allocator = 0)
-    : d_ilsum(0), d_allocator_p(allocator)
-    , d_a1(a1), d_a2(a2), d_a3(a3), d_a4(a4), d_a5(a5), d_a6(a6)
-    , d_a7(a7), d_a8(a8), d_a9(a9)
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           const Arg5                              &a5,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(a5)
     {
       for (int i : il) d_ilsum+=i;
     }
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4>
     ConstructTestTypeAlloc(std::initializer_list<int> il,
-        Arg1  a1, Arg2  a2, Arg3  a3, Arg4  a4, Arg5  a5,
-        Arg6  a6, Arg7  a7, Arg8  a8, Arg9  a9, Arg10 a10,
-        bslma::Allocator *allocator = 0)
-    : d_ilsum(0), d_allocator_p(allocator)
-    , d_a1 (a1), d_a2 (a2), d_a3 (a3), d_a4 (a4), d_a5 (a5), d_a6 (a6)
-    , d_a7 (a7), d_a8 (a8), d_a9 (a9)
-    , d_a10(a10)
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           bslmf::MovableRef<Arg5>                  a5,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(MovUtl::move(a5))
     {
       for (int i : il) d_ilsum+=i;
     }
+
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5>
     ConstructTestTypeAlloc(std::initializer_list<int> il,
-        Arg1  a1, Arg2  a2, Arg3  a3, Arg4  a4, Arg5  a5,
-        Arg6  a6, Arg7  a7, Arg8  a8, Arg9  a9, Arg10 a10,
-        Arg11 a11, bslma::Allocator *allocator = 0)
-    : d_ilsum(0), d_allocator_p(allocator)
-    , d_a1 (a1), d_a2 (a2), d_a3 (a3), d_a4 (a4), d_a5 (a5), d_a6 (a6)
-    , d_a7 (a7), d_a8 (a8), d_a9 (a9)
-    , d_a10(a10), d_a11(a11)
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                           const Arg6                              &a6,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(a6)
     {
       for (int i : il) d_ilsum+=i;
     }
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5>
     ConstructTestTypeAlloc(std::initializer_list<int> il,
-        Arg1  a1, Arg2  a2, Arg3  a3, Arg4  a4, Arg5  a5,
-        Arg6  a6, Arg7  a7, Arg8  a8, Arg9  a9, Arg10 a10,
-        Arg11 a11, Arg12 a12,
-        bslma::Allocator *allocator = 0)
-    : d_ilsum(0), d_allocator_p(allocator)
-    , d_a1 (a1), d_a2 (a2), d_a3 (a3), d_a4 (a4 ), d_a5 (a5 ), d_a6 (a6 )
-    , d_a7 (a7), d_a8 (a8), d_a9 (a9), d_a10(a10), d_a11(a11), d_a12(a12)
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                           bslmf::MovableRef<Arg6>                  a6,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(MovUtl::move(a6))
     {
       for (int i : il) d_ilsum+=i;
     }
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6>
     ConstructTestTypeAlloc(std::initializer_list<int> il,
-        Arg1  a1,  Arg2  a2,  Arg3  a3, Arg4  a4, Arg5  a5,
-        Arg6  a6,  Arg7  a7,  Arg8  a8, Arg9  a9, Arg10 a10,
-        Arg11 a11, Arg12 a12, Arg13 a13,
-        bslma::Allocator *allocator = 0)
-    : d_ilsum(0), d_allocator_p(allocator)
-    , d_a1 (a1), d_a2 (a2), d_a3 (a3), d_a4 (a4 ), d_a5 (a5 ), d_a6 (a6 )
-    , d_a7 (a7), d_a8 (a8), d_a9 (a9), d_a10(a10), d_a11(a11), d_a12(a12)
-    , d_a13(a13)
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                           const Arg7                              &a7,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(a7)
     {
       for (int i : il) d_ilsum+=i;
     }
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6>
     ConstructTestTypeAlloc(std::initializer_list<int> il,
-        Arg1  a1,  Arg2  a2,  Arg3  a3, Arg4  a4, Arg5  a5,
-        Arg6  a6,  Arg7  a7,  Arg8  a8, Arg9  a9, Arg10 a10,
-        Arg11 a11, Arg12 a12, Arg13 a13, Arg14 a14,
-        bslma::Allocator *allocator = 0)
-    : d_ilsum(0), d_allocator_p(allocator)
-    , d_a1 (a1), d_a2 (a2), d_a3 (a3), d_a4 (a4 ), d_a5 (a5 ), d_a6 (a6 )
-    , d_a7 (a7), d_a8 (a8), d_a9 (a9), d_a10(a10), d_a11(a11), d_a12(a12)
-    , d_a13(a13), d_a14(a14)
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                           bslmf::MovableRef<Arg7>                  a7,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(MovUtl::move(a7))
     {
       for (int i : il) d_ilsum+=i;
     }
-#endif
+
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6,
+              class ARG7>
+    ConstructTestTypeAlloc(std::initializer_list<int> il,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                           const Arg8                              &a8,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(a8)
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6,
+              class ARG7>
+    ConstructTestTypeAlloc(std::initializer_list<int> il,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                           bslmf::MovableRef<Arg8>                  a8,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(MovUtl::move(a8))
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6,
+              class ARG7,  class ARG8>
+    ConstructTestTypeAlloc(std::initializer_list<int> il,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                           const Arg9                              &a9,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(a9)
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6,
+              class ARG7,  class ARG8>
+    ConstructTestTypeAlloc(std::initializer_list<int> il,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                           bslmf::MovableRef<Arg9>                  a9,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(MovUtl::move(a9))
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6,
+              class ARG7,  class ARG8,  class ARG9>
+    ConstructTestTypeAlloc(std::initializer_list<int> il,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                           const Arg10                             &a10,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+          d_a10(a10)
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6,
+              class ARG7,  class ARG8,  class ARG9>
+    ConstructTestTypeAlloc(std::initializer_list<int> il,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                           bslmf::MovableRef<Arg10>                 a10,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+          d_a10(MovUtl::move(a10))
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6,
+              class ARG7,  class ARG8,  class ARG9,
+              class ARG10>
+    ConstructTestTypeAlloc(std::initializer_list<int> il,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                           const Arg11                             &a11,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+          d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
+          d_a11(a11)
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6,
+              class ARG7,  class ARG8,  class ARG9,
+              class ARG10>
+    ConstructTestTypeAlloc(std::initializer_list<int> il,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                           bslmf::MovableRef<Arg11>                 a11,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+          d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
+          d_a11(MovUtl::move(a11))
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6,
+              class ARG7,  class ARG8,  class ARG9,
+              class ARG10, class ARG11>
+    ConstructTestTypeAlloc(std::initializer_list<int> il,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11,
+                           const Arg12                             &a12,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+          d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
+          d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11)),
+          d_a12(a12)
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6,
+              class ARG7,  class ARG8,  class ARG9,
+              class ARG10, class ARG11>
+    ConstructTestTypeAlloc(std::initializer_list<int> il,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11,
+                           bslmf::MovableRef<Arg12>                 a12,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+          d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
+          d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11)),
+          d_a12(MovUtl::move(a12))
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6,
+              class ARG7,  class ARG8,  class ARG9,
+              class ARG10, class ARG11, class ARG12>
+    ConstructTestTypeAlloc(std::initializer_list<int> il,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG12) a12,
+                           const Arg13                             &a13,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+          d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
+          d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11)),
+          d_a12(BSLS_COMPILERFEATURES_FORWARD(ARG12, a12)),
+          d_a13(a13)
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6,
+              class ARG7,  class ARG8,  class ARG9,
+              class ARG10, class ARG11, class ARG12>
+    ConstructTestTypeAlloc(std::initializer_list<int> il,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG12) a12,
+                           bslmf::MovableRef<Arg13>                 a13,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+          d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
+          d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11)),
+          d_a12(BSLS_COMPILERFEATURES_FORWARD(ARG12, a12)),
+          d_a13(MovUtl::move(a13))
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+
+    template <class ARG1,  class ARG2,  class ARG3,
+                      class ARG4,  class ARG5,  class ARG6,
+                      class ARG7,  class ARG8,  class ARG9,
+                      class ARG10, class ARG11, class ARG12,
+                      class ARG13>
+    ConstructTestTypeAlloc(std::initializer_list<int> il,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG12) a12,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG13) a13,
+                           const Arg14                             &a14,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+          d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
+          d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11)),
+          d_a12(BSLS_COMPILERFEATURES_FORWARD(ARG12, a12)),
+          d_a13(BSLS_COMPILERFEATURES_FORWARD(ARG13, a13)),
+          d_a14(a14)
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+    template <class ARG1,  class ARG2,  class ARG3,
+                      class ARG4,  class ARG5,  class ARG6,
+                      class ARG7,  class ARG8,  class ARG9,
+                      class ARG10, class ARG11, class ARG12,
+                      class ARG13>
+    ConstructTestTypeAlloc(std::initializer_list<int> il,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG12) a12,
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG13) a13,
+                           bslmf::MovableRef<Arg14>                 a14,
+                           bslma::Allocator *allocator = 0)
+        : d_ilsum(0), d_allocator_p(allocator),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+          d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
+          d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11)),
+          d_a12(BSLS_COMPILERFEATURES_FORWARD(ARG12, a12)),
+          d_a13(BSLS_COMPILERFEATURES_FORWARD(ARG13, a13)),
+          d_a14(MovUtl::move(a14))
+    {
+      for (int i : il) d_ilsum+=i;
+    }
+
 };
 
 // TRAITS
@@ -2615,38 +4351,555 @@ struct UsesBslmaAllocator<ConstructTestTypeAlloc> : bsl::true_type { };
 
 }  // close namespace bslma
 }  // close enterprise namespace
-
+int ConstructTestTypeAlloc::copyConstructorInvocations       = 0;
+int ConstructTestTypeAlloc::moveConstructorInvocations       = 0;
 // FREE OPERATORS
 bool operator==(const ConstructTestTypeAlloc& lhs,
-const ConstructTestTypeAlloc& rhs)
+                const ConstructTestTypeAlloc& rhs)
 {
-    return lhs.d_a1.d_value  == rhs.d_a1.d_value &&
-    lhs.d_a2.d_value  == rhs.d_a2.d_value &&
-    lhs.d_a3.d_value  == rhs.d_a3.d_value &&
-    lhs.d_a4.d_value  == rhs.d_a4.d_value &&
-    lhs.d_a5.d_value  == rhs.d_a5.d_value &&
-    lhs.d_a6.d_value  == rhs.d_a6.d_value &&
-    lhs.d_a7.d_value  == rhs.d_a7.d_value &&
-    lhs.d_a8.d_value  == rhs.d_a8.d_value &&
-    lhs.d_a9.d_value  == rhs.d_a9.d_value &&
-    lhs.d_a10.d_value == rhs.d_a10.d_value &&
-    lhs.d_a11.d_value == rhs.d_a11.d_value &&
-    lhs.d_a12.d_value == rhs.d_a12.d_value &&
-    lhs.d_a13.d_value == rhs.d_a13.d_value &&
-    lhs.d_a14.d_value == rhs.d_a14.d_value;
+    return lhs.d_ilsum  == rhs.d_ilsum &&
+           lhs.d_a1.d_value  == rhs.d_a1.d_value &&
+           lhs.d_a2.d_value  == rhs.d_a2.d_value &&
+           lhs.d_a3.d_value  == rhs.d_a3.d_value &&
+           lhs.d_a4.d_value  == rhs.d_a4.d_value &&
+           lhs.d_a5.d_value  == rhs.d_a5.d_value &&
+           lhs.d_a6.d_value  == rhs.d_a6.d_value &&
+           lhs.d_a7.d_value  == rhs.d_a7.d_value &&
+           lhs.d_a8.d_value  == rhs.d_a8.d_value &&
+           lhs.d_a9.d_value  == rhs.d_a9.d_value &&
+           lhs.d_a10.d_value == rhs.d_a10.d_value &&
+           lhs.d_a11.d_value == rhs.d_a11.d_value &&
+           lhs.d_a12.d_value == rhs.d_a12.d_value &&
+           lhs.d_a13.d_value == rhs.d_a13.d_value &&
+           lhs.d_a14.d_value == rhs.d_a14.d_value;
 }
-
-// ================================
-// class ConstructTestTypeAllocArgT
-// ================================
+bool createdAlike(const ConstructTestTypeAlloc& lhs,
+                  const ConstructTestTypeAlloc& rhs)
+{
+    return lhs.d_a1.d_copied_count  == rhs.d_a1.d_copied_count &&
+           lhs.d_a2.d_copied_count  == rhs.d_a2.d_copied_count &&
+           lhs.d_a3.d_copied_count  == rhs.d_a3.d_copied_count &&
+           lhs.d_a4.d_copied_count  == rhs.d_a4.d_copied_count &&
+           lhs.d_a5.d_copied_count  == rhs.d_a5.d_copied_count &&
+           lhs.d_a6.d_copied_count  == rhs.d_a6.d_copied_count &&
+           lhs.d_a7.d_copied_count  == rhs.d_a7.d_copied_count &&
+           lhs.d_a8.d_copied_count  == rhs.d_a8.d_copied_count &&
+           lhs.d_a9.d_copied_count  == rhs.d_a9.d_copied_count &&
+           lhs.d_a10.d_copied_count == rhs.d_a10.d_copied_count &&
+           lhs.d_a11.d_copied_count == rhs.d_a11.d_copied_count &&
+           lhs.d_a12.d_copied_count == rhs.d_a12.d_copied_count &&
+           lhs.d_a13.d_copied_count == rhs.d_a13.d_copied_count &&
+           lhs.d_a14.d_copied_count == rhs.d_a14.d_copied_count;
+}
+                       // ================================
+                       // class ConstructTestTypeAllocArgT
+                       // ================================
 
 class ConstructTestTypeAllocArgT {
-// This class provides a test class capable of holding up to 14 parameters
-// of types 'ConstructTestArg[1--14]'.  By default, a
-// 'ConstructTestTypeAllocArgT' is constructed with nil ('N1') values, but
-// instances can be constructed with actual values (e.g., for creating
-// expected values).  This class takes an allocator using the
-// 'allocator_arg_t' protocol.
+    // This class provides a test class capable of holding up to 14 parameters
+    // of types 'ConstructTestArg[1--14]'.  By default, a
+    // 'ConstructTestTypeAllocArgT' is constructed with nil ('N1') values, but
+    // instances can be constructed with actual values (e.g., for creating
+    // expected values).  This class takes an allocator using the
+    // 'allocator_arg_t' protocol.
+
+    // PRIVATE TYPES
+    typedef ConstructTestArg<1>  Arg1;
+    typedef ConstructTestArg<2>  Arg2;
+    typedef ConstructTestArg<3>  Arg3;
+    typedef ConstructTestArg<4>  Arg4;
+    typedef ConstructTestArg<5>  Arg5;
+    typedef ConstructTestArg<6>  Arg6;
+    typedef ConstructTestArg<7>  Arg7;
+    typedef ConstructTestArg<8>  Arg8;
+    typedef ConstructTestArg<9>  Arg9;
+    typedef ConstructTestArg<10> Arg10;
+    typedef ConstructTestArg<11> Arg11;
+    typedef ConstructTestArg<12> Arg12;
+    typedef ConstructTestArg<13> Arg13;
+    typedef ConstructTestArg<14> Arg14;
+        // Argument types for shortcut.
+
+    enum {
+        N1 = -1   // default value for all private data
+    };
+
+  public:
+    // DATA (exceptionally public, only within a test driver)
+    static int copyConstructorInvocations;
+    static int moveConstructorInvocations;
+
+    bslma::Allocator *d_allocator_p;
+    Arg1  d_a1;
+    Arg2  d_a2;
+    Arg3  d_a3;
+    Arg4  d_a4;
+    Arg5  d_a5;
+    Arg6  d_a6;
+    Arg7  d_a7;
+    Arg8  d_a8;
+    Arg9  d_a9;
+    Arg10 d_a10;
+    Arg11 d_a11;
+    Arg12 d_a12;
+    Arg13 d_a13;
+    Arg14 d_a14;
+
+    // CREATORS (exceptionally in-line, only within a test driver)
+    ConstructTestTypeAllocArgT()
+            : d_allocator_p(0){}
+
+    ConstructTestTypeAllocArgT(ConstructTestTypeAllocArgT const& other)
+    : d_allocator_p(0)
+     , d_a1 (other.d_a1),  d_a2 (other.d_a2),  d_a3 (other.d_a3)
+     , d_a4 (other.d_a4),  d_a5 (other.d_a5),  d_a6 (other.d_a6)
+     , d_a7 (other.d_a7),  d_a8 (other.d_a8),  d_a9 (other.d_a9)
+     , d_a10(other.d_a10), d_a11(other.d_a11), d_a12(other.d_a12)
+     , d_a13(other.d_a13), d_a14(other.d_a14)
+    {
+       ++copyConstructorInvocations;
+    }
+
+    ConstructTestTypeAllocArgT(
+              bslmf::MovableRef<ConstructTestTypeAllocArgT>  other)
+       : d_allocator_p(other.d_allocator_p),
+         d_a1 (MovUtl::move(MovUtl::access(other).d_a1)),
+         d_a2 (MovUtl::move(MovUtl::access(other).d_a2)),
+         d_a3 (MovUtl::move(MovUtl::access(other).d_a3)),
+         d_a4 (MovUtl::move(MovUtl::access(other).d_a4)),
+         d_a5 (MovUtl::move(MovUtl::access(other).d_a5)),
+         d_a6 (MovUtl::move(MovUtl::access(other).d_a6)),
+         d_a7 (MovUtl::move(MovUtl::access(other).d_a7)),
+         d_a8 (MovUtl::move(MovUtl::access(other).d_a8)),
+         d_a9 (MovUtl::move(MovUtl::access(other).d_a9)),
+         d_a10(MovUtl::move(MovUtl::access(other).d_a10)),
+         d_a11(MovUtl::move(MovUtl::access(other).d_a11)),
+         d_a12(MovUtl::move(MovUtl::access(other).d_a12)),
+         d_a13(MovUtl::move(MovUtl::access(other).d_a13)),
+         d_a14(MovUtl::move(MovUtl::access(other).d_a14))
+    {
+       ++moveConstructorInvocations;
+    }
+    ConstructTestTypeAllocArgT(bsl::allocator_arg_t       ,
+                               bslma::Allocator     *alloc,
+                               ConstructTestTypeAllocArgT const& other)
+    : d_allocator_p(alloc)
+     , d_a1 (other.d_a1),  d_a2 (other.d_a2),  d_a3 (other.d_a3)
+     , d_a4 (other.d_a4),  d_a5 (other.d_a5),  d_a6 (other.d_a6)
+     , d_a7 (other.d_a7),  d_a8 (other.d_a8),  d_a9 (other.d_a9)
+     , d_a10(other.d_a10), d_a11(other.d_a11), d_a12(other.d_a12)
+     , d_a13(other.d_a13), d_a14(other.d_a14)
+    {
+       ++copyConstructorInvocations;
+    }
+
+    ConstructTestTypeAllocArgT(bsl::allocator_arg_t       ,
+                          bslma::Allocator     *alloc,
+                          bslmf::MovableRef<ConstructTestTypeAllocArgT>  other)
+       : d_allocator_p(alloc),
+         d_a1 (MovUtl::move(MovUtl::access(other).d_a1)),
+         d_a2 (MovUtl::move(MovUtl::access(other).d_a2)),
+         d_a3 (MovUtl::move(MovUtl::access(other).d_a3)),
+         d_a4 (MovUtl::move(MovUtl::access(other).d_a4)),
+         d_a5 (MovUtl::move(MovUtl::access(other).d_a5)),
+         d_a6 (MovUtl::move(MovUtl::access(other).d_a6)),
+         d_a7 (MovUtl::move(MovUtl::access(other).d_a7)),
+         d_a8 (MovUtl::move(MovUtl::access(other).d_a8)),
+         d_a9 (MovUtl::move(MovUtl::access(other).d_a9)),
+         d_a10(MovUtl::move(MovUtl::access(other).d_a10)),
+         d_a11(MovUtl::move(MovUtl::access(other).d_a11)),
+         d_a12(MovUtl::move(MovUtl::access(other).d_a12)),
+         d_a13(MovUtl::move(MovUtl::access(other).d_a13)),
+         d_a14(MovUtl::move(MovUtl::access(other).d_a14))
+    {
+       ++moveConstructorInvocations;
+    }
+
+    ConstructTestTypeAllocArgT(bsl::allocator_arg_t       ,
+                               bslma::Allocator     *alloc)
+        : d_allocator_p(alloc){}
+
+    ConstructTestTypeAllocArgT(bsl::allocator_arg_t       ,
+                               bslma::Allocator     *alloc,
+                               const Arg1           &a1)
+        : d_allocator_p(alloc),
+          d_a1(a1){}
+
+    ConstructTestTypeAllocArgT(bsl::allocator_arg_t       ,
+                               bslma::Allocator     *alloc,
+                               bslmf::MovableRef<Arg1>  a1)
+        : d_allocator_p(alloc),
+          d_a1(MovUtl::move(a1)){}
+
+    template <class ARG1,  class ARG2>
+    ConstructTestTypeAllocArgT(bsl::allocator_arg_t       ,
+                               bslma::Allocator     *alloc,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2)
+        : d_allocator_p(alloc),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)) {}
+
+    template <class ARG1,  class ARG2,  class ARG3>
+    ConstructTestTypeAllocArgT(bsl::allocator_arg_t       ,
+                               bslma::Allocator     *alloc,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3)
+        : d_allocator_p(alloc),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)){}
+
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4>
+    ConstructTestTypeAllocArgT(bsl::allocator_arg_t       ,
+                               bslma::Allocator     *alloc,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4)
+        : d_allocator_p(alloc),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)) {}
+
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5>
+    ConstructTestTypeAllocArgT(bsl::allocator_arg_t       ,
+                               bslma::Allocator     *alloc,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5)
+        : d_allocator_p(alloc),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)){}
+
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6>
+    ConstructTestTypeAllocArgT(bsl::allocator_arg_t       ,
+                               bslma::Allocator     *alloc,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6)
+        : d_allocator_p(alloc),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)) {}
+
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6,
+              class ARG7>
+    ConstructTestTypeAllocArgT(bsl::allocator_arg_t       ,
+                               bslma::Allocator     *alloc,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7)
+        : d_allocator_p(alloc),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)){}
+
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6,
+              class ARG7,  class ARG8>
+    ConstructTestTypeAllocArgT(bsl::allocator_arg_t       ,
+                               bslma::Allocator     *alloc,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8)
+        : d_allocator_p(alloc),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)) {}
+
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6,
+              class ARG7,  class ARG8,  class ARG9>
+    ConstructTestTypeAllocArgT(bsl::allocator_arg_t       ,
+                               bslma::Allocator     *alloc,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9)
+        : d_allocator_p(alloc),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)){}
+
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6,
+              class ARG7,  class ARG8,  class ARG9,
+              class ARG10>
+    ConstructTestTypeAllocArgT(bsl::allocator_arg_t       ,
+                               bslma::Allocator     *alloc,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10)
+        : d_allocator_p(alloc),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+          d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)) {}
+
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6,
+              class ARG7,  class ARG8,  class ARG9,
+              class ARG10, class ARG11>
+    ConstructTestTypeAllocArgT(bsl::allocator_arg_t       ,
+                               bslma::Allocator     *alloc,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11)
+        : d_allocator_p(alloc),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+          d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
+          d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11)){}
+
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6,
+              class ARG7,  class ARG8,  class ARG9,
+              class ARG10, class ARG11, class ARG12>
+    ConstructTestTypeAllocArgT(bsl::allocator_arg_t       ,
+                               bslma::Allocator     *alloc,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG12) a12)
+        : d_allocator_p(alloc),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+          d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
+          d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11)),
+          d_a12(BSLS_COMPILERFEATURES_FORWARD(ARG12, a12)) {}
+
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6,
+              class ARG7,  class ARG8,  class ARG9,
+              class ARG10, class ARG11, class ARG12,
+              class ARG13>
+    ConstructTestTypeAllocArgT(bsl::allocator_arg_t       ,
+                               bslma::Allocator     *alloc,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG12) a12,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG13) a13)
+        : d_allocator_p(alloc),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+          d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
+          d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11)),
+          d_a12(BSLS_COMPILERFEATURES_FORWARD(ARG12, a12)),
+          d_a13(BSLS_COMPILERFEATURES_FORWARD(ARG13, a13)){}
+
+    template <class ARG1,  class ARG2,  class ARG3,
+              class ARG4,  class ARG5,  class ARG6,
+              class ARG7,  class ARG8,  class ARG9,
+              class ARG10, class ARG11, class ARG12,
+              class ARG13, class ARG14>
+    ConstructTestTypeAllocArgT(bsl::allocator_arg_t       ,
+                               bslma::Allocator     *alloc,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG12) a12,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG13) a13,
+                               BSLS_COMPILERFEATURES_FORWARD_REF(ARG14) a14)
+        : d_allocator_p(alloc),
+          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+          d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
+          d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11)),
+          d_a12(BSLS_COMPILERFEATURES_FORWARD(ARG12, a12)),
+          d_a13(BSLS_COMPILERFEATURES_FORWARD(ARG13, a13)),
+          d_a14(BSLS_COMPILERFEATURES_FORWARD(ARG14, a14)) {}
+
+
+};
+
+// TRAITS
+namespace BloombergLP {
+namespace bslma {
+
+template <>
+struct UsesBslmaAllocator<ConstructTestTypeAllocArgT> : bsl::true_type { };
+
+}  // close namespace bslma
+
+namespace bslmf {
+
+template <>
+struct UsesAllocatorArgT<ConstructTestTypeAllocArgT> : bsl::true_type { };
+
+}  // close namespace bslmf
+}  // close enterprise namespace
+int ConstructTestTypeAllocArgT::copyConstructorInvocations       = 0;
+int ConstructTestTypeAllocArgT::moveConstructorInvocations       = 0;
+
+// FREE OPERATORS
+bool operator==(const ConstructTestTypeAllocArgT& lhs,
+                const ConstructTestTypeAllocArgT& rhs)
+{
+    return lhs.d_a1.d_value  == rhs.d_a1.d_value &&
+           lhs.d_a2.d_value  == rhs.d_a2.d_value &&
+           lhs.d_a3.d_value  == rhs.d_a3.d_value &&
+           lhs.d_a4.d_value  == rhs.d_a4.d_value &&
+           lhs.d_a5.d_value  == rhs.d_a5.d_value &&
+           lhs.d_a6.d_value  == rhs.d_a6.d_value &&
+           lhs.d_a7.d_value  == rhs.d_a7.d_value &&
+           lhs.d_a8.d_value  == rhs.d_a8.d_value &&
+           lhs.d_a9.d_value  == rhs.d_a9.d_value &&
+           lhs.d_a10.d_value == rhs.d_a10.d_value &&
+           lhs.d_a11.d_value == rhs.d_a11.d_value &&
+           lhs.d_a12.d_value == rhs.d_a12.d_value &&
+           lhs.d_a13.d_value == rhs.d_a13.d_value &&
+           lhs.d_a14.d_value == rhs.d_a14.d_value;
+}
+bool createdAlike(const ConstructTestTypeAllocArgT& lhs,
+                  const ConstructTestTypeAllocArgT& rhs)
+{
+    return lhs.d_a1.d_copied_count  == rhs.d_a1.d_copied_count &&
+           lhs.d_a2.d_copied_count  == rhs.d_a2.d_copied_count &&
+           lhs.d_a3.d_copied_count  == rhs.d_a3.d_copied_count &&
+           lhs.d_a4.d_copied_count  == rhs.d_a4.d_copied_count &&
+           lhs.d_a5.d_copied_count  == rhs.d_a5.d_copied_count &&
+           lhs.d_a6.d_copied_count  == rhs.d_a6.d_copied_count &&
+           lhs.d_a7.d_copied_count  == rhs.d_a7.d_copied_count &&
+           lhs.d_a8.d_copied_count  == rhs.d_a8.d_copied_count &&
+           lhs.d_a9.d_copied_count  == rhs.d_a9.d_copied_count &&
+           lhs.d_a10.d_copied_count == rhs.d_a10.d_copied_count &&
+           lhs.d_a11.d_copied_count == rhs.d_a11.d_copied_count &&
+           lhs.d_a12.d_copied_count == rhs.d_a12.d_copied_count &&
+           lhs.d_a13.d_copied_count == rhs.d_a13.d_copied_count &&
+           lhs.d_a14.d_copied_count == rhs.d_a14.d_copied_count;
+}
+                        // ================================
+                        // class ConstructTestTypeAllocArgTIL
+                        // ================================
+
+class ConstructTestTypeAllocArgTIL {
+    // This class provides a test class capable of holding up to 14 parameters
+    // of types 'ConstructTestArg[1--14]'.  By default, a
+    // 'ConstructTestTypeAllocArgTIL' is constructed with nil ('N1') values,
+    // but instances can be constructed with actual values (e.g., for creating
+    // expected values).  This class takes an allocator using the
+    // 'allocator_arg_t' protocol.
 
     // PRIVATE TYPES
     typedef ConstructTestArg<1>  Arg1;
@@ -2671,9 +4924,11 @@ class ConstructTestTypeAllocArgT {
 
   public:
     // DATA (exceptionally public, only within a test driver)
-    int d_ilsum;
+    static int copyConstructorInvocations;
+    static int moveConstructorInvocations;
 
-    bslma::Allocator *d_allocator_p;;
+    int d_ilsum;
+    bslma::Allocator *d_allocator_p;
     Arg1  d_a1;
     Arg2  d_a2;
     Arg3  d_a3;
@@ -2690,59 +4945,449 @@ class ConstructTestTypeAllocArgT {
     Arg14 d_a14;
 
     // CREATORS (exceptionally in-line, only within a test driver)
-    explicit
-    ConstructTestTypeAllocArgT(Arg1  a1  = N1, Arg2  a2 = N1,  Arg3  a3  = N1,
-            Arg4  a4  = N1, Arg5  a5 = N1,  Arg6  a6  = N1,
-            Arg7  a7  = N1, Arg8  a8 = N1,  Arg9  a9  = N1,
-            Arg10 a10 = N1, Arg11 a11 = N1, Arg12 a12 = N1,
-            Arg13 a13 = N1, Arg14 a14 = N1)
-    : d_ilsum(0), d_allocator_p(0)
-    , d_a1 (a1 ), d_a2 (a2 ), d_a3 (a3), d_a4 (a4 ), d_a5 (a5 ), d_a6 (a6 )
-    , d_a7 (a7 ), d_a8 (a8 ), d_a9 (a9), d_a10(a10), d_a11(a11), d_a12(a12)
-    , d_a13(a13), d_a14(a14) {}
+    ConstructTestTypeAllocArgTIL()
+    : d_ilsum(0), d_allocator_p(0){}
 
-    ConstructTestTypeAllocArgT(bsl::allocator_arg_t       ,
-            bslma::Allocator     *alloc,
-            Arg1  a1  = N1, Arg2  a2 = N1,  Arg3  a3  = N1,
-            Arg4  a4  = N1, Arg5  a5 = N1,  Arg6  a6  = N1,
-            Arg7  a7  = N1, Arg8  a8 = N1,  Arg9  a9  = N1,
-            Arg10 a10 = N1, Arg11 a11 = N1, Arg12 a12 = N1,
-            Arg13 a13 = N1, Arg14 a14 = N1)
-    : d_ilsum(0), d_allocator_p(alloc)
-    , d_a1 (a1 ), d_a2 (a2 ), d_a3 (a3), d_a4 (a4 ), d_a5 (a5 ), d_a6 (a6 )
-    , d_a7 (a7 ), d_a8 (a8 ), d_a9 (a9), d_a10(a10), d_a11(a11), d_a12(a12)
-    , d_a13(a13), d_a14(a14) {}
-
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
-    ConstructTestTypeAllocArgT(std::initializer_list<int> il,
-        Arg1  a1  = N1, Arg2  a2 = N1,  Arg3  a3  = N1,
-            Arg4  a4  = N1, Arg5  a5 = N1,  Arg6  a6  = N1,
-            Arg7  a7  = N1, Arg8  a8 = N1,  Arg9  a9  = N1,
-            Arg10 a10 = N1, Arg11 a11 = N1, Arg12 a12 = N1,
-            Arg13 a13 = N1, Arg14 a14 = N1)
+    ConstructTestTypeAllocArgTIL(ConstructTestTypeAllocArgTIL const& other)
     : d_ilsum(0), d_allocator_p(0)
-    , d_a1 (a1 ), d_a2 (a2 ), d_a3 (a3), d_a4 (a4 ), d_a5 (a5 ), d_a6 (a6 )
-    , d_a7 (a7 ), d_a8 (a8 ), d_a9 (a9), d_a10(a10), d_a11(a11), d_a12(a12)
-    , d_a13(a13), d_a14(a14)
+    , d_a1 (other.d_a1),  d_a2 (other.d_a2),  d_a3 (other.d_a3)
+    , d_a4 (other.d_a4),  d_a5 (other.d_a5),  d_a6 (other.d_a6)
+    , d_a7 (other.d_a7),  d_a8 (other.d_a8),  d_a9 (other.d_a9)
+    , d_a10(other.d_a10), d_a11(other.d_a11), d_a12(other.d_a12)
+    , d_a13(other.d_a13), d_a14(other.d_a14)
     {
-         for (int i : il) d_ilsum+=i;
+        ++copyConstructorInvocations;
     }
-    ConstructTestTypeAllocArgT(bsl::allocator_arg_t       ,
+
+    ConstructTestTypeAllocArgTIL(
+    bslmf::MovableRef<ConstructTestTypeAllocArgTIL>  other)
+    : d_ilsum(0), d_allocator_p(other.d_allocator_p),
+    d_a1 (MovUtl::move(MovUtl::access(other).d_a1)),
+    d_a2 (MovUtl::move(MovUtl::access(other).d_a2)),
+    d_a3 (MovUtl::move(MovUtl::access(other).d_a3)),
+    d_a4 (MovUtl::move(MovUtl::access(other).d_a4)),
+    d_a5 (MovUtl::move(MovUtl::access(other).d_a5)),
+    d_a6 (MovUtl::move(MovUtl::access(other).d_a6)),
+    d_a7 (MovUtl::move(MovUtl::access(other).d_a7)),
+    d_a8 (MovUtl::move(MovUtl::access(other).d_a8)),
+    d_a9 (MovUtl::move(MovUtl::access(other).d_a9)),
+    d_a10(MovUtl::move(MovUtl::access(other).d_a10)),
+    d_a11(MovUtl::move(MovUtl::access(other).d_a11)),
+    d_a12(MovUtl::move(MovUtl::access(other).d_a12)),
+    d_a13(MovUtl::move(MovUtl::access(other).d_a13)),
+    d_a14(MovUtl::move(MovUtl::access(other).d_a14))
+    {
+      ++moveConstructorInvocations;
+    }
+    ConstructTestTypeAllocArgTIL(bsl::allocator_arg_t       ,
             bslma::Allocator     *alloc,
-            std::initializer_list<int> il,
-            Arg1  a1  = N1, Arg2  a2 = N1,  Arg3  a3  = N1,
-            Arg4  a4  = N1, Arg5  a5 = N1,  Arg6  a6  = N1,
-            Arg7  a7  = N1, Arg8  a8 = N1,  Arg9  a9  = N1,
-            Arg10 a10 = N1, Arg11 a11 = N1, Arg12 a12 = N1,
-            Arg13 a13 = N1, Arg14 a14 = N1)
+            ConstructTestTypeAllocArgTIL const& other)
     : d_ilsum(0), d_allocator_p(alloc)
-    , d_a1 (a1 ), d_a2 (a2 ), d_a3 (a3), d_a4 (a4 ), d_a5 (a5 ), d_a6 (a6 )
-    , d_a7 (a7 ), d_a8 (a8 ), d_a9 (a9), d_a10(a10), d_a11(a11), d_a12(a12)
-    , d_a13(a13), d_a14(a14)
+    , d_a1 (other.d_a1),  d_a2 (other.d_a2),  d_a3 (other.d_a3)
+    , d_a4 (other.d_a4),  d_a5 (other.d_a5),  d_a6 (other.d_a6)
+    , d_a7 (other.d_a7),  d_a8 (other.d_a8),  d_a9 (other.d_a9)
+    , d_a10(other.d_a10), d_a11(other.d_a11), d_a12(other.d_a12)
+    , d_a13(other.d_a13), d_a14(other.d_a14)
     {
-        for (int i : il) d_ilsum+=i;
+    ++copyConstructorInvocations;
     }
-#endif
+
+    ConstructTestTypeAllocArgTIL(bsl::allocator_arg_t       ,
+       bslma::Allocator     *alloc,
+       bslmf::MovableRef<ConstructTestTypeAllocArgTIL>  other)
+    : d_ilsum(0), d_allocator_p(alloc),
+    d_a1 (MovUtl::move(MovUtl::access(other).d_a1)),
+    d_a2 (MovUtl::move(MovUtl::access(other).d_a2)),
+    d_a3 (MovUtl::move(MovUtl::access(other).d_a3)),
+    d_a4 (MovUtl::move(MovUtl::access(other).d_a4)),
+    d_a5 (MovUtl::move(MovUtl::access(other).d_a5)),
+    d_a6 (MovUtl::move(MovUtl::access(other).d_a6)),
+    d_a7 (MovUtl::move(MovUtl::access(other).d_a7)),
+    d_a8 (MovUtl::move(MovUtl::access(other).d_a8)),
+    d_a9 (MovUtl::move(MovUtl::access(other).d_a9)),
+    d_a10(MovUtl::move(MovUtl::access(other).d_a10)),
+    d_a11(MovUtl::move(MovUtl::access(other).d_a11)),
+    d_a12(MovUtl::move(MovUtl::access(other).d_a12)),
+    d_a13(MovUtl::move(MovUtl::access(other).d_a13)),
+    d_a14(MovUtl::move(MovUtl::access(other).d_a14))
+    {
+    ++moveConstructorInvocations;
+    }
+
+    ConstructTestTypeAllocArgTIL(bsl::allocator_arg_t       ,
+            bslma::Allocator     *alloc)
+    : d_ilsum(0), d_allocator_p(alloc){}
+
+    ConstructTestTypeAllocArgTIL(bsl::allocator_arg_t       ,
+                                bslma::Allocator     *alloc,
+                                std::initializer_list<int> il)
+         : d_ilsum(0), d_allocator_p(alloc)
+     {
+       for (int i : il) d_ilsum+=i;
+     }
+
+     template <class ARG1>
+     ConstructTestTypeAllocArgTIL(bsl::allocator_arg_t       ,
+                                bslma::Allocator     *alloc,
+                                std::initializer_list<int> il,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1)
+         : d_ilsum(0), d_allocator_p(alloc),
+           d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1))
+     {
+       for (int i : il) d_ilsum+=i;
+     }
+
+     template <class ARG1,  class ARG2>
+     ConstructTestTypeAllocArgTIL(bsl::allocator_arg_t       ,
+                                bslma::Allocator     *alloc,
+                                std::initializer_list<int> il,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2)
+         : d_ilsum(0), d_allocator_p(alloc),
+           d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+           d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2))
+     {
+       for (int i : il) d_ilsum+=i;
+     }
+
+     template <class ARG1,  class ARG2,  class ARG3>
+     ConstructTestTypeAllocArgTIL(bsl::allocator_arg_t       ,
+                                bslma::Allocator     *alloc,
+                                std::initializer_list<int> il,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3)
+         : d_ilsum(0), d_allocator_p(alloc),
+           d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+           d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+           d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3))
+     {
+       for (int i : il) d_ilsum+=i;
+     }
+
+     template <class ARG1,  class ARG2,  class ARG3,
+               class ARG4>
+     ConstructTestTypeAllocArgTIL(bsl::allocator_arg_t       ,
+                                bslma::Allocator     *alloc,
+                                std::initializer_list<int> il,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4)
+         : d_ilsum(0), d_allocator_p(alloc),
+           d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+           d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+           d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+           d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4))
+     {
+       for (int i : il) d_ilsum+=i;
+     }
+
+     template <class ARG1,  class ARG2,  class ARG3,
+               class ARG4,  class ARG5>
+     ConstructTestTypeAllocArgTIL(bsl::allocator_arg_t       ,
+                                bslma::Allocator     *alloc,
+                                std::initializer_list<int> il,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5)
+         : d_ilsum(0), d_allocator_p(alloc),
+           d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+           d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+           d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+           d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+           d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5))
+     {
+       for (int i : il) d_ilsum+=i;
+     }
+
+     template <class ARG1,  class ARG2,  class ARG3,
+               class ARG4,  class ARG5,  class ARG6>
+     ConstructTestTypeAllocArgTIL(bsl::allocator_arg_t       ,
+                                bslma::Allocator     *alloc,
+                                std::initializer_list<int> il,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6)
+         : d_ilsum(0), d_allocator_p(alloc),
+           d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+           d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+           d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+           d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+           d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+           d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6))
+     {
+       for (int i : il) d_ilsum+=i;
+     }
+
+     template <class ARG1,  class ARG2,  class ARG3,
+               class ARG4,  class ARG5,  class ARG6,
+               class ARG7>
+     ConstructTestTypeAllocArgTIL(bsl::allocator_arg_t       ,
+                                bslma::Allocator     *alloc,
+                                std::initializer_list<int> il,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7)
+         : d_ilsum(0), d_allocator_p(alloc),
+           d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+           d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+           d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+           d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+           d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+           d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+           d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7))
+     {
+       for (int i : il) d_ilsum+=i;
+     }
+
+     template <class ARG1,  class ARG2,  class ARG3,
+               class ARG4,  class ARG5,  class ARG6,
+               class ARG7,  class ARG8>
+     ConstructTestTypeAllocArgTIL(bsl::allocator_arg_t       ,
+                                bslma::Allocator     *alloc,
+                                std::initializer_list<int> il,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8)
+         : d_ilsum(0), d_allocator_p(alloc),
+           d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+           d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+           d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+           d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+           d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+           d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+           d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+           d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8))
+     {
+       for (int i : il) d_ilsum+=i;
+     }
+
+     template <class ARG1,  class ARG2,  class ARG3,
+               class ARG4,  class ARG5,  class ARG6,
+               class ARG7,  class ARG8,  class ARG9>
+     ConstructTestTypeAllocArgTIL(bsl::allocator_arg_t       ,
+                                bslma::Allocator     *alloc,
+                                std::initializer_list<int> il,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9)
+         : d_ilsum(0), d_allocator_p(alloc),
+           d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+           d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+           d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+           d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+           d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+           d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+           d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+           d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+           d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9))
+     {
+       for (int i : il) d_ilsum+=i;
+     }
+
+     template <class ARG1,  class ARG2,  class ARG3,
+               class ARG4,  class ARG5,  class ARG6,
+               class ARG7,  class ARG8,  class ARG9,
+               class ARG10>
+     ConstructTestTypeAllocArgTIL(bsl::allocator_arg_t       ,
+                                bslma::Allocator     *alloc,
+                                std::initializer_list<int> il,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10)
+         : d_ilsum(0), d_allocator_p(alloc),
+           d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+           d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+           d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+           d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+           d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+           d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+           d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+           d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+           d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+           d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10))
+     {
+       for (int i : il) d_ilsum+=i;
+     }
+
+     template <class ARG1,  class ARG2,  class ARG3,
+               class ARG4,  class ARG5,  class ARG6,
+               class ARG7,  class ARG8,  class ARG9,
+               class ARG10, class ARG11>
+     ConstructTestTypeAllocArgTIL(bsl::allocator_arg_t       ,
+                                bslma::Allocator     *alloc,
+                                std::initializer_list<int> il,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11)
+         : d_ilsum(0), d_allocator_p(alloc),
+           d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+           d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+           d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+           d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+           d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+           d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+           d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+           d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+           d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+           d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
+           d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11))
+     {
+       for (int i : il) d_ilsum+=i;
+     }
+
+     template <class ARG1,  class ARG2,  class ARG3,
+               class ARG4,  class ARG5,  class ARG6,
+               class ARG7,  class ARG8,  class ARG9,
+               class ARG10, class ARG11, class ARG12>
+     ConstructTestTypeAllocArgTIL(bsl::allocator_arg_t       ,
+                                bslma::Allocator     *alloc,
+                                std::initializer_list<int> il,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG12) a12)
+         : d_ilsum(0), d_allocator_p(alloc),
+           d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+           d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+           d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+           d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+           d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+           d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+           d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+           d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+           d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+           d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
+           d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11)),
+           d_a12(BSLS_COMPILERFEATURES_FORWARD(ARG12, a12))
+     {
+       for (int i : il) d_ilsum+=i;
+     }
+
+     template <class ARG1,  class ARG2,  class ARG3,
+               class ARG4,  class ARG5,  class ARG6,
+               class ARG7,  class ARG8,  class ARG9,
+               class ARG10, class ARG11, class ARG12,
+               class ARG13>
+     ConstructTestTypeAllocArgTIL(bsl::allocator_arg_t       ,
+                                bslma::Allocator     *alloc,
+                                std::initializer_list<int> il,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG12) a12,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG13) a13)
+         : d_ilsum(0), d_allocator_p(alloc),
+           d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+           d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+           d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+           d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+           d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+           d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+           d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+           d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+           d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+           d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
+           d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11)),
+           d_a12(BSLS_COMPILERFEATURES_FORWARD(ARG12, a12)),
+           d_a13(BSLS_COMPILERFEATURES_FORWARD(ARG13, a13))
+     {
+       for (int i : il) d_ilsum+=i;
+     }
+
+     template <class ARG1,  class ARG2,  class ARG3,
+               class ARG4,  class ARG5,  class ARG6,
+               class ARG7,  class ARG8,  class ARG9,
+               class ARG10, class ARG11, class ARG12,
+               class ARG13, class ARG14>
+     ConstructTestTypeAllocArgTIL(bsl::allocator_arg_t       ,
+                                bslma::Allocator     *alloc,
+                                std::initializer_list<int> il,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG12) a12,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG13) a13,
+                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG14) a14)
+         : d_ilsum(0), d_allocator_p(alloc),
+           d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
+           d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
+           d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
+           d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
+           d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
+           d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
+           d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
+           d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
+           d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
+           d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
+           d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11)),
+           d_a12(BSLS_COMPILERFEATURES_FORWARD(ARG12, a12)),
+           d_a13(BSLS_COMPILERFEATURES_FORWARD(ARG13, a13)),
+           d_a14(BSLS_COMPILERFEATURES_FORWARD(ARG14, a14))
+     {
+       for (int i : il) d_ilsum+=i;
+     }
+
 };
 
 // TRAITS
@@ -2750,36 +5395,57 @@ namespace BloombergLP {
 namespace bslma {
 
 template <>
-struct UsesBslmaAllocator<ConstructTestTypeAllocArgT> : bsl::true_type { };
+struct UsesBslmaAllocator<ConstructTestTypeAllocArgTIL> : bsl::true_type { };
 
 }  // close namespace bslma
 
 namespace bslmf {
 
 template <>
-struct UsesAllocatorArgT<ConstructTestTypeAllocArgT> : bsl::true_type { };
+struct UsesAllocatorArgT<ConstructTestTypeAllocArgTIL> : bsl::true_type { };
 
 }  // close namespace bslmf
 }  // close enterprise namespace
+int ConstructTestTypeAllocArgTIL::copyConstructorInvocations       = 0;
+int ConstructTestTypeAllocArgTIL::moveConstructorInvocations       = 0;
 
 // FREE OPERATORS
-bool operator==(const ConstructTestTypeAllocArgT& lhs,
-const ConstructTestTypeAllocArgT& rhs)
+bool operator==(const ConstructTestTypeAllocArgTIL& lhs,
+             const ConstructTestTypeAllocArgTIL& rhs)
 {
-    return lhs.d_a1.d_value  == rhs.d_a1.d_value &&
-          lhs.d_a2.d_value  == rhs.d_a2.d_value &&
-          lhs.d_a3.d_value  == rhs.d_a3.d_value &&
-          lhs.d_a4.d_value  == rhs.d_a4.d_value &&
-          lhs.d_a5.d_value  == rhs.d_a5.d_value &&
-          lhs.d_a6.d_value  == rhs.d_a6.d_value &&
-          lhs.d_a7.d_value  == rhs.d_a7.d_value &&
-          lhs.d_a8.d_value  == rhs.d_a8.d_value &&
-          lhs.d_a9.d_value  == rhs.d_a9.d_value &&
-          lhs.d_a10.d_value == rhs.d_a10.d_value &&
-          lhs.d_a11.d_value == rhs.d_a11.d_value &&
-          lhs.d_a12.d_value == rhs.d_a12.d_value &&
-          lhs.d_a13.d_value == rhs.d_a13.d_value &&
-          lhs.d_a14.d_value == rhs.d_a14.d_value;
+ return lhs.d_ilsum == rhs.d_ilsum &&
+        lhs.d_a1.d_value  == rhs.d_a1.d_value &&
+        lhs.d_a2.d_value  == rhs.d_a2.d_value &&
+        lhs.d_a3.d_value  == rhs.d_a3.d_value &&
+        lhs.d_a4.d_value  == rhs.d_a4.d_value &&
+        lhs.d_a5.d_value  == rhs.d_a5.d_value &&
+        lhs.d_a6.d_value  == rhs.d_a6.d_value &&
+        lhs.d_a7.d_value  == rhs.d_a7.d_value &&
+        lhs.d_a8.d_value  == rhs.d_a8.d_value &&
+        lhs.d_a9.d_value  == rhs.d_a9.d_value &&
+        lhs.d_a10.d_value == rhs.d_a10.d_value &&
+        lhs.d_a11.d_value == rhs.d_a11.d_value &&
+        lhs.d_a12.d_value == rhs.d_a12.d_value &&
+        lhs.d_a13.d_value == rhs.d_a13.d_value &&
+        lhs.d_a14.d_value == rhs.d_a14.d_value;
+}
+bool createdAlike(const ConstructTestTypeAllocArgTIL& lhs,
+               const ConstructTestTypeAllocArgTIL& rhs)
+{
+ return lhs.d_a1.d_copied_count  == rhs.d_a1.d_copied_count &&
+        lhs.d_a2.d_copied_count  == rhs.d_a2.d_copied_count &&
+        lhs.d_a3.d_copied_count  == rhs.d_a3.d_copied_count &&
+        lhs.d_a4.d_copied_count  == rhs.d_a4.d_copied_count &&
+        lhs.d_a5.d_copied_count  == rhs.d_a5.d_copied_count &&
+        lhs.d_a6.d_copied_count  == rhs.d_a6.d_copied_count &&
+        lhs.d_a7.d_copied_count  == rhs.d_a7.d_copied_count &&
+        lhs.d_a8.d_copied_count  == rhs.d_a8.d_copied_count &&
+        lhs.d_a9.d_copied_count  == rhs.d_a9.d_copied_count &&
+        lhs.d_a10.d_copied_count == rhs.d_a10.d_copied_count &&
+        lhs.d_a11.d_copied_count == rhs.d_a11.d_copied_count &&
+        lhs.d_a12.d_copied_count == rhs.d_a12.d_copied_count &&
+        lhs.d_a13.d_copied_count == rhs.d_a13.d_copied_count &&
+        lhs.d_a14.d_copied_count == rhs.d_a14.d_copied_count;
 }
 
 const my_Class1     V1(1);
@@ -2919,142 +5585,223 @@ struct UsesBslmaAllocator<SwappableAA> : bsl::true_type { };
 // macros TEST_EMPLACE*
 // ======================
 
-#define TEST_EMPLACE(valtype, obj, emplace, expArgs)                        \
-{                                                                           \
-  valtype EXP expArgs ;                                    \
-  obj . emplace ;                                                           \
-  ASSERT(EXP == obj .value());                                              \
+#define TEST_EMPLACE(expArgs)                                                 \
+{                                                                             \
+  ConstructTestTypeNoAlloc EXP expArgs ;                                      \
+  bsl::optional<ConstructTestTypeNoAlloc> obj;                                \
+  int CCI = ConstructTestTypeNoAlloc::copyConstructorInvocations;             \
+  int MCI = ConstructTestTypeNoAlloc::moveConstructorInvocations;             \
+  obj . emplace expArgs;                                                      \
+  ASSERT(EXP == obj .value());                                                \
+  ASSERT(CCI == ConstructTestTypeNoAlloc::copyConstructorInvocations);        \
+  ASSERT(MCI == ConstructTestTypeNoAlloc::moveConstructorInvocations);        \
+  ASSERT(createdAlike(EXP,obj.value()) == true);                              \
+}                                                                             \
+{                                                                             \
+  ConstructTestTypeAlloc EXP expArgs ;                                        \
+  bslma::TestAllocator oa("other", veryVeryVeryVerbose);                      \
+  bsl::optional<ConstructTestTypeAlloc> obj(bsl::allocator_arg, &oa);         \
+  int CCI = ConstructTestTypeAlloc::copyConstructorInvocations;               \
+  int MCI = ConstructTestTypeAlloc::moveConstructorInvocations;               \
+  obj . emplace expArgs;                                                      \
+  ASSERT(EXP == obj .value());                                                \
+  ASSERT(&oa == obj .value().d_allocator_p);                                  \
+  ASSERT(CCI == ConstructTestTypeAlloc::copyConstructorInvocations);          \
+  ASSERT(MCI == ConstructTestTypeAlloc::moveConstructorInvocations);          \
+  ASSERT(createdAlike(EXP,obj.value()) == true);                              \
 }
-#define TEST_EMPLACEIL(valtype, obj, emplace, expArgs, ilsum)            \
-{                                                                           \
-  valtype EXP expArgs ;                                    \
-  obj . emplace ;                                                           \
-  ASSERT(EXP == obj .value());                                              \
-  ASSERT(ilsum == obj .value().d_ilsum);                                    \
+
+#define TEST_EMPLACE_ARGT(expArgs, emplaceArgs)                               \
+{                                                                             \
+  bslma::TestAllocator oa("other", veryVeryVeryVerbose);                      \
+  ConstructTestTypeAllocArgT EXP expArgs ;                                    \
+  bsl::optional<ConstructTestTypeAllocArgT> obj(bsl::allocator_arg, &oa);     \
+  int CCI = ConstructTestTypeAllocArgT::copyConstructorInvocations;           \
+  int MCI = ConstructTestTypeAllocArgT::moveConstructorInvocations;           \
+  obj . emplace emplaceArgs;                                                  \
+  ASSERT(EXP == obj .value());                                                \
+  ASSERT(&oa == obj .value().d_allocator_p);                                  \
+  ASSERT(CCI == ConstructTestTypeAllocArgT::copyConstructorInvocations);      \
+  ASSERT(MCI == ConstructTestTypeAllocArgT::moveConstructorInvocations);      \
+  ASSERT(createdAlike(EXP,obj.value()) == true);                              \
 }
-#define TEST_EMPLACEA(valtype, obj, emplace, expArgs, alloc)                         \
-{                                                                           \
-  valtype EXP expArgs ;                                      \
-  obj . emplace ;                                                           \
-  ASSERT(EXP == obj .value());                                              \
+#define TEST_EMPLACE_ARGTIL(expArgs, emplaceArgs)                             \
+{                                                                             \
+  bslma::TestAllocator oa("other", veryVeryVeryVerbose);                      \
+  ConstructTestTypeAllocArgTIL EXP expArgs ;                                  \
+  bsl::optional<ConstructTestTypeAllocArgTIL> obj(bsl::allocator_arg, &oa);   \
+  int CCI = ConstructTestTypeAllocArgTIL::copyConstructorInvocations;         \
+  int MCI = ConstructTestTypeAllocArgTIL::moveConstructorInvocations;         \
+  obj . emplace emplaceArgs;                                                  \
+  ASSERT(EXP == obj .value());                                                \
+  ASSERT(&oa == obj .value().d_allocator_p);                                  \
+  ASSERT(CCI == ConstructTestTypeAllocArgTIL::copyConstructorInvocations);    \
+  ASSERT(MCI == ConstructTestTypeAllocArgTIL::moveConstructorInvocations);    \
+  ASSERT(createdAlike(EXP,obj.value()) == true);                              \
+}
+
+#define TEST_EQUAL_EMPTY(obj, type)                                           \
+{                                                                             \
+  type sourceObj;                                                             \
+  ASSERT(!sourceObj.has_value());                                             \
+  obj = sourceObj;                                                            \
+  ASSERT(!obj.has_value());                                                   \
+  ASSERT(!sourceObj.has_value());                                             \
+}
+#define TEST_EQUAL_EMPTY_MOVE(obj, type)                                      \
+{                                                                             \
+  type sourceObj;                                                             \
+  ASSERT(!sourceObj.has_value());                                             \
+  obj = MovUtl::move(sourceObj);                                              \
+  ASSERT(!obj.has_value());                                                   \
+  ASSERT(!sourceObj.has_value());                                             \
+}
+#define TEST_EQUAL_ENGAGED(obj, otype, type, val)                             \
+{                                                                             \
+  otype sourceObj(type(val));                                                 \
+ ASSERT(sourceObj.has_value());                                               \
+  obj = sourceObj;                                                            \
+  ASSERT(obj.has_value());                                                    \
+  ASSERT(val == obj.value().value());                                         \
+  ASSERT(sourceObj.has_value());                                              \
+  ASSERT(val == sourceObj.value().value());                                   \
+}
+#define TEST_EQUAL_ENGAGED_MOVE(obj, otype, type, val, expVal)                \
+{                                                                             \
+  otype sourceObj(type(val));                                                 \
+  ASSERT(sourceObj.has_value());                                              \
+  obj = MovUtl::move(sourceObj);                                              \
+  ASSERT(obj.has_value());                                                    \
+  ASSERT(val == obj.value().value());                                         \
+  ASSERT(sourceObj.has_value());                                              \
+  ASSERT(expVal == sourceObj.value().value());                                \
+}
+#define TEST_EQUAL_EMPTY_A(obj, type)                                         \
+{                                                                             \
+  type sourceObj(bsl::allocator_arg, &ta);                                    \
+  ASSERT(!sourceObj.has_value());                                             \
+  obj = sourceObj;                                                            \
+  ASSERT(!obj.has_value());                                                   \
+  ASSERT(&oa == obj.get_allocator().mechanism());                             \
+  ASSERT(!sourceObj.has_value());                                             \
+}
+#define TEST_EQUAL_EMPTY_MOVE_A(obj, type)                                    \
+{                                                                             \
+  type sourceObj(bsl::allocator_arg, &ta);                                    \
+  ASSERT(!sourceObj.has_value());                                             \
+  obj = MovUtl::move(sourceObj);                                              \
+  ASSERT(!obj.has_value());                                                   \
+  ASSERT(&oa == obj.get_allocator().mechanism());                             \
+  ASSERT(!sourceObj.has_value());                                             \
+}
+#define TEST_EQUAL_ENGAGED_A(obj, otype, type, val)                           \
+{                                                                             \
+  otype sourceObj(bsl::allocator_arg, &ta, type(val));                        \
+  ASSERT(sourceObj.has_value());                                              \
+  obj = sourceObj;                                                            \
+  ASSERT(obj.has_value());                                                    \
+  ASSERT(val == obj.value().value());                                         \
+  ASSERT(&oa == obj.get_allocator().mechanism());                             \
+  ASSERT(sourceObj.has_value());                                              \
+  ASSERT(val == sourceObj.value().value());                                   \
+}
+#define TEST_EQUAL_ENGAGED_MOVE_A(obj, otype, type, val, expVal)              \
+{                                                                             \
+  otype sourceObj(bsl::allocator_arg, &ta, type(val));                        \
+  ASSERT(sourceObj.has_value());                                              \
+  obj = MovUtl::move(sourceObj);                                              \
+  ASSERT(obj.has_value());                                                    \
+  ASSERT(val == obj.value().value());                                         \
+  ASSERT(&oa == obj.get_allocator().mechanism());                             \
+  ASSERT(sourceObj.has_value());                                              \
+  ASSERT(expVal == sourceObj.value().value());                                \
+}
+
+#define TEST_COPY(valtype, optype, init, expArgs)                             \
+{                                                                             \
+  valtype EXP expArgs ;                                                       \
+  int CCI = valtype::copyConstructorInvocations;                              \
+  int MCI = valtype::moveConstructorInvocations;                              \
+  optype obj init ;                                                           \
+  ASSERT(EXP == obj.value());                                                 \
+  ASSERT(CCI == ConstructTestTypeAllocArgTIL::copyConstructorInvocations);    \
+  ASSERT(MCI == ConstructTestTypeAllocArgTIL::moveConstructorInvocations);    \
+  ASSERT(createdAlike(EXP,obj.value()) == true);                              \
+}
+#define TEST_COPYA(valtype, optype, init, expArgs, alloc)                     \
+{                                                                             \
+  /* Expects allocator at end of argument list */                             \
+  valtype EXP expArgs ;                                                       \
+  optype obj init ;                                                           \
+  ASSERT(EXP == obj.value());                                                 \
   ASSERT(alloc == obj.value().d_allocator_p);                                 \
 }
-#define TEST_EMPLACEILA(valtype, obj, emplace, expArgs, ilsum, alloc)               \
-{                                                                           \
-  valtype EXP expArgs ;                                      \
-  obj . emplace ;                                                           \
-  ASSERT(EXP == obj .value());                                              \
-  ASSERT(alloc == obj.value().d_allocator_p);                               \
-  ASSERT(ilsum == obj .value().d_ilsum);                                    \
-}
+#define TEST_CONSTRUCT(op, expArgs)                                           \
+  {                                                                           \
+    ConstructTestTypeNoAlloc EXP expArgs ;                                    \
+    bsls::ObjectBuffer<ConstructTestTypeNoAlloc> rawBuf;                      \
+    ConstructTestTypeNoAlloc  *objPtr =  rawBuf.address();                    \
+    ConstructTestTypeNoAlloc&  mX     = *objPtr;                              \
+    const ConstructTestTypeNoAlloc& X =  mX;                                  \
+    memset(static_cast<void *>(&mX), 92, sizeof mX);                          \
+    Obj:: op ;                                                                \
+    ASSERT(EXP == X);                                                         \
+    ASSERT(createdAlike(EXP,X) == true);                                      \
+  }
 
-#define TEST_EQUAL_EMPTY(obj, type)                                         \
-{                                                                           \
-  type sourceObj;                                                           \
-  ASSERT(!sourceObj.has_value());                                           \
-  obj = sourceObj;                                                          \
-  ASSERT(!obj.has_value());                                                 \
-  ASSERT(!sourceObj.has_value());                                           \
-}
-#define TEST_EQUAL_EMPTY_MOVE(obj, type)                                    \
-{                                                                           \
-  type sourceObj;                                                           \
-  ASSERT(!sourceObj.has_value());                                          \
-  obj = MovUtl::move(sourceObj);                                            \
-  ASSERT(!obj.has_value());                                                 \
-  ASSERT(!sourceObj.has_value());                                           \
-}
-#define TEST_EQUAL_ENGAGED(obj, otype, type, val)                           \
-{                                                                           \
-  otype sourceObj(type(val));                                               \
- ASSERT(sourceObj.has_value());                                             \
-  obj = sourceObj;                                                          \
-  ASSERT(obj.has_value());                                                  \
-  ASSERT(val == obj.value().value());                                       \
-  ASSERT(sourceObj.has_value());                                            \
-  ASSERT(val == sourceObj.value().value());                                 \
-}
-#define TEST_EQUAL_ENGAGED_MOVE(obj, otype, type, val, expVal)              \
-{                                                                           \
-  otype sourceObj(type(val));                                               \
-  ASSERT(sourceObj.has_value());                                           \
-  obj = MovUtl::move(sourceObj);                                            \
-  ASSERT(obj.has_value());                                                  \
-  ASSERT(val == obj.value().value());                                       \
-  ASSERT(sourceObj.has_value());                                            \
-  ASSERT(expVal == sourceObj.value().value());                              \
-}
-#define TEST_EQUAL_EMPTY_A(obj, type)                                       \
-{                                                                           \
-  type sourceObj(bsl::allocator_arg, &ta);                                  \
-  ASSERT(!sourceObj.has_value());                                           \
-  obj = sourceObj;                                                          \
-  ASSERT(!obj.has_value());                                                 \
-  ASSERT(&oa == obj.get_allocator().mechanism());                           \
-  ASSERT(!sourceObj.has_value());                                           \
-}
-#define TEST_EQUAL_EMPTY_MOVE_A(obj, type)                                  \
-{                                                                           \
-  type sourceObj(bsl::allocator_arg, &ta);                                  \
-  ASSERT(!sourceObj.has_value());                                           \
-  obj = MovUtl::move(sourceObj);                                            \
-  ASSERT(!obj.has_value());                                                 \
-  ASSERT(&oa == obj.get_allocator().mechanism());                           \
-  ASSERT(!sourceObj.has_value());                                           \
-}
-#define TEST_EQUAL_ENGAGED_A(obj, otype, type, val)                         \
-{                                                                           \
-  otype sourceObj(bsl::allocator_arg, &ta, type(val));                      \
-  ASSERT(sourceObj.has_value());                                            \
-  obj = sourceObj;                                                          \
-  ASSERT(obj.has_value());                                                  \
-  ASSERT(val == obj.value().value());                                       \
-  ASSERT(&oa == obj.get_allocator().mechanism());                           \
-  ASSERT(sourceObj.has_value());                                            \
-  ASSERT(val == sourceObj.value().value());                                 \
-}
-#define TEST_EQUAL_ENGAGED_MOVE_A(obj, otype, type, val, expVal)            \
-{                                                                           \
-  otype sourceObj(bsl::allocator_arg, &ta, type(val));                      \
-  ASSERT(sourceObj.has_value());                                            \
-  obj = MovUtl::move(sourceObj);                                            \
-  ASSERT(obj.has_value());                                                  \
-  ASSERT(val == obj.value().value());                                       \
-  ASSERT(&oa == obj.get_allocator().mechanism());                           \
-  ASSERT(sourceObj.has_value());                                            \
-  ASSERT(expVal == sourceObj.value().value());                              \
-}
+#define TEST_CONSTRUCTA(op, expArgs1, expArgs2, alloc)                        \
+  {                                                                           \
+    /* Expects allocator at end of argument list */                           \
+    ConstructTestTypeAlloc EXP expArgs1;                                      \
+    bsls::ObjectBuffer<ConstructTestTypeAlloc> rawBuf;                        \
+    ConstructTestTypeAlloc  *objPtr =  rawBuf.address();                      \
+    ConstructTestTypeAlloc&  mX     = *objPtr;                                \
+    const ConstructTestTypeAlloc& X = *objPtr;                                \
+    memset(static_cast<void *>(&mX), 92, sizeof mX);                          \
+    Obj:: op ;                                                                \
+    ASSERT(EXP == X);                                                         \
+    ASSERT(alloc == X.d_allocator_p);                                         \
+    ASSERT(createdAlike(EXP,X) == true);                                      \
+  }
 
-#define TEST_COPY(valtype, optype, init, expArgs)                                 \
-{                                                                           \
-  valtype EXP expArgs ;                                                    \
-  optype obj init ;                                                           \
-  ASSERT(EXP == obj.value());                                              \
-}
-#define TEST_COPYIL(valtype, optype, init, expArgs, ilsum)                        \
-{                                                                           \
-  valtype EXP expArgs ;                                    \
-  optype obj init ;                                                           \
-  ASSERT(EXP == obj.value());                                              \
-  ASSERT(ilsum == obj.value().d_ilsum);                                    \
-}
-#define TEST_COPYA(valtype, optype, init, expArgs, alloc)                   \
-{                                                                           \
-  /* Expects allocator at end of argument list */                           \
-  valtype EXP expArgs ;                                                     \
-  optype obj init ;                                                         \
-  ASSERT(EXP == obj.value());                                               \
-  ASSERT(alloc == obj.value().d_allocator_p);                               \
-}
-#define TEST_COPYILA(valtype, opttype, init, expArgs, ilsum, alloc)        \
-{                                                                           \
-  /* Expects allocator at end of argument list */                           \
-  valtype EXP expArgs ;                                      \
-  opttype obj init;                                                           \
-  ASSERT(EXP == obj .value());                                              \
-  ASSERT(alloc == obj.value().d_allocator_p);                               \
-  ASSERT(ilsum == obj.value().d_ilsum);                                    \
-}
+#define TEST_MAKEOP(expArgs, alloc)                                           \
+  {                                                                           \
+    ConstructTestTypeNoAlloc EXP expArgs ;                                    \
+    int CCI = ConstructTestTypeNoAlloc::copyConstructorInvocations;           \
+    int MCI = ConstructTestTypeNoAlloc::moveConstructorInvocations;           \
+    bsl::optional<ConstructTestTypeNoAlloc>  X =                              \
+                       bsl::make_optional<ConstructTestTypeNoAlloc> expArgs;  \
+    ASSERT(EXP == X.value());                                                 \
+    ASSERT(CCI == ConstructTestTypeNoAlloc::copyConstructorInvocations);      \
+    ASSERT(MCI == ConstructTestTypeNoAlloc::moveConstructorInvocations);      \
+    ASSERT(createdAlike(EXP,X.value()) == true);                              \
+  }                                                                           \
+  {                                                                           \
+    ConstructTestTypeAlloc EXP expArgs ;                                      \
+    int CCI = ConstructTestTypeAlloc::copyConstructorInvocations;             \
+    int MCI = ConstructTestTypeAlloc::moveConstructorInvocations;             \
+    bsl::optional<ConstructTestTypeAlloc> X =                                 \
+                      bsl::make_optional<ConstructTestTypeAlloc> expArgs ;    \
+    ASSERT(EXP == X.value());                                                 \
+    ASSERT(alloc == X.value().d_allocator_p);                                 \
+    ASSERT(CCI == ConstructTestTypeAlloc::copyConstructorInvocations);        \
+    ASSERT(MCI == ConstructTestTypeAlloc::moveConstructorInvocations);        \
+    ASSERT(createdAlike(EXP,X.value()) == true);                              \
+  }
+
+#define TEST_ALLOCOP( op, expArgs, alloc)                                     \
+  {                                                                           \
+    ConstructTestTypeAlloc EXP expArgs ;                                      \
+    int CCI = ConstructTestTypeAlloc::copyConstructorInvocations;             \
+    int MCI = ConstructTestTypeAlloc::moveConstructorInvocations;             \
+    bsl::optional<ConstructTestTypeAlloc> X =                                 \
+                      bsl::alloc_optional<ConstructTestTypeAlloc> op;         \
+    ASSERT(EXP == X.value());                                                 \
+    ASSERT(alloc == X.value().d_allocator_p);                                 \
+    ASSERT(CCI == ConstructTestTypeAlloc::copyConstructorInvocations);        \
+    ASSERT(MCI == ConstructTestTypeAlloc::moveConstructorInvocations);        \
+    ASSERT(createdAlike(EXP,X.value()) == true);                              \
+  }
 
 //=============================================================================
 //                              MAIN PROGRAM
@@ -3064,9 +5811,9 @@ void bslstl_optional_test1()
 {
     // --------------------------------------------------------------------
     // TESTING DISENGAGED CONSTRUCTORS AND BASIC ACCESSORS
-    //   This test will verify that the construction of a disengaged optional is working as
-    //   expected.  Also, we test that the basic accessors are working as
-    //   expected.
+    //   This test will verify that the construction of a disengaged optional
+    //   is working as expected.  Also, we test that the basic accessors are
+    //   working as expected.
     //
     // Concerns:
     //   * The default constructor must create a disengaged object.
@@ -3080,11 +5827,11 @@ void bslstl_optional_test1()
     //
     //   First, verify the default constructor by testing that the
     //   resulting object is null. For bsl::string, verify that the
-    //   resulting object's allocator is the default allocator. //TODO
+    //   resulting object's allocator is the default allocator.
     //
     //   Next, verify the constructor taking nullopt_t by testing that the
     //   resulting object is null. For bsl::string, verify that the
-    //   resulting object's allocator is the default allocator. //TODO
+    //   resulting object's allocator is the default allocator.
     //
     //   Note that the destructor is exercised on each configuration as the
     //   object being tested leaves scope.
@@ -3144,13 +5891,14 @@ void bslstl_optional_test1()
 
         bslma::DefaultAllocatorGuard dag(&da);
 
-        typedef bsl::string                    ValueType;
-        typedef bsl::optional<ValueType> Obj;
+        typedef bsl::string                     ValueType;
+        typedef bsl::optional<ValueType>        Obj;
 
 
         ASSERT(sizeof(ValueType) == sizeof(Obj::value_type));
 
-        if (veryVerbose) printf( "\tTesting default constructor with default allocator.\n");
+        if (veryVerbose)
+            printf( "\tTesting default constructor with default allocator.\n");
 
         {
             bslma::TestAllocator scratch("scratch", veryVeryVeryVerbose);
@@ -3659,8 +6407,8 @@ void bslstl_optional_test4()
 
             int i = Obj(4).value();
             ASSERT(i == 4);
-#if defined(BSLSTL_OPTIONAL_TEST_BAD_VALUE1)
-            X.value() = 2; // this should not compile
+#if defined(BSLSTL_OPTIONAL_TEST_BAD_VALUE)
+            X.value() = 2; // this should not compile 1
 #endif
             try{ CObj().value();}
             catch (bsl::bad_optional_access &)
@@ -3735,11 +6483,11 @@ void bslstl_optional_test4()
 
             int j = CObj(4).value();
             ASSERT(j == 4);
-#if defined(BSLSTL_OPTIONAL_TEST_BAD_VALUE2)
-            int& bad1 = mX.value(); // this should not compile 1/4
-            int& bad2 = X.value(); // this should not compile 2/4
-            int& bad3 = Obj(4).value(); // this should not compile 3/4
-            int& bad4 = CObj(4).value(); // this should not compile 4/4
+#if defined(BSLSTL_OPTIONAL_TEST_BAD_VALUE)
+            int& bad1 = mX.value(); // this should not compile 2
+            int& bad2 = X.value(); // this should not compile 3
+            int& bad3 = Obj(4).value(); // this should not compile 4
+            int& bad4 = CObj(4).value(); // this should not compile 5
 #endif
         }
     } catch (...)
@@ -3826,11 +6574,13 @@ void bslstl_optional_test4()
         // and what ever allocator is deemed appropriate
         ASSERT(j.get_allocator().mechanism() == &da);
 
-#if defined(BSLSTL_OPTIONAL_TEST_BAD_VALUE4)
-        bsl::string& bad1 = mX.value(); // this should not compile 1/4
-        bsl::string& bad2 = X.value(); // this should not compile 2/4
-        bsl::string& bad3 = Obj("test string 6").value(); // this should not compile 3/4
-        bsl::string& bad4 = CObj("test string 6").value(); // this should not compile 4/4
+#if defined(BSLSTL_OPTIONAL_TEST_BAD_VALUE)
+        bsl::string& bad1 = mX.value(); // this should not compile 6
+        bsl::string& bad2 = X.value(); // this should not compile 7
+        bsl::string& bad3 = Obj("test string 6").value();
+            // this should not compile 8
+        bsl::string& bad4 = CObj("test string 6").value();
+          // this should not compile 9
 #endif
     }catch (...)
     {
@@ -3905,8 +6655,8 @@ void bslstl_optional_test4()
         // move uses the original default allocator
         ASSERT(i.get_allocator().mechanism() == &oa);
 
-#if defined(BSLSTL_OPTIONAL_TEST_BAD_VALUE4)
-        X.value() = "test string 5"; // this should not compile
+#if defined(BSLSTL_OPTIONAL_TEST_BAD_VALUE)
+        X.value() = "test string 5"; // this should not compile 10
 #endif
         try{ CObj().value();}
         catch (bsl::bad_optional_access &)
@@ -3930,20 +6680,24 @@ void bslstl_optional_test4()
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
 
-#if defined(BSLSTL_OPTIONAL_TEST_BAD_VALUE5)
+#if defined(BSLSTL_OPTIONAL_TEST_BAD_VALUE)
     {
          typedef const int                    ValueType;
          typedef bsl::optional<ValueType> Obj;
          typedef const Obj CObj;
-         int&& bad1 = Obj("test string 6").value(); // this should not compile 1/4
-         int&& bad2 = CObj("test string 6").value(); // this should not compile 2/4
+         int&& bad1 = Obj("test string 6").value();
+           // this should not compile 11
+         int&& bad2 = CObj("test string 6").value();
+           // this should not compile 12
     }
     {
         typedef const bsl::string                    ValueType;
         typedef bsl::optional<ValueType> Obj;
         typedef const Obj CObj;
-        bsl::string&& bad3 = Obj("test string 6").value(); // this should not compile 3/4
-        bsl::string&& bad4 = CObj("test string 6").value(); // this should not compile 4/4
+        bsl::string&& bad3 = Obj("test string 6").value();
+          // this should not compile 13
+        bsl::string&& bad4 = CObj("test string 6").value();
+          // this should not compile 14
     }
 #endif
 
@@ -3992,14 +6746,17 @@ void bslstl_optional_test5()
     //   The test relies on constructors and emplace member functions.
     //
     // Concerns:
-    //   * Calling value_or() on a engaged optional returns the value in optional.
-    //   * Calling value_or() on a disengaged optional returns the specified value.
+    //   * Calling value_or() on a engaged optional returns the value in
+    //     optional.
+    //   * Calling value_or() on a disengaged optional returns the specified
+    //     value.
     //   * It is possible to call value_or() on a constant optional object
     //   * It is possible to call value_or() on a temporary optional object
     //   * if no allocator is specified, the default allocator is used.
     //   * if an allocator is specified, that allocator is used
     //   * calling value_or does not modify the allocator of optional
-    //   * It is not possible to modify non constant optional through call of value_or()
+    //   * It is not possible to modify non constant optional through call of
+    //     value_or()
     //     Note that this requires tests which check for compilation errors.
     //
     // Plan:
@@ -4007,7 +6764,8 @@ void bslstl_optional_test5()
     //   'bsl::string' (uses allocator) for 'TYPE'.
     //
     //   Create disengaged optional of each type. Call value_or on a disengaged
-    //   optional. Check that the value returned and the allocator used is correct.
+    //   optional. Check that the value returned and the allocator used is
+    //   correct.
     //   Check that the optional object has not changed.
     //
     //   Emplace a value in each optional. Call value_or on an engaged
@@ -4015,18 +6773,18 @@ void bslstl_optional_test5()
     //   returned and the allocator used is correct. Check that the optional
     //   object has not changed.
     //
-    //   Bind const optional reference to optional object. Call value_or and check
-    //   that the value is correct.
+    //   Bind const optional reference to optional object. Call value_or and
+    //   check that the value is correct.
     //
-    //   Call value_or on a disengaged temporary optional object. Check that the value
-    //   returned and the allocator used is correct.
+    //   Call value_or on a disengaged temporary optional object. Check that
+    //   the value returned and the allocator used is correct.
     //
-    //   Call value_or on an engaged temporary optional object. Check that the value
-    //   returned and the allocator used is correct.
+    //   Call value_or on an engaged temporary optional object. Check that the
+    //   value returned and the allocator used is correct.
     //
-    //   Call value_or on engaged optional object using move semantic. Check that the value
-    //   returned and the allocator used is correct. Check the original optional's
-    //   value has been moved from.
+    //   Call value_or on engaged optional object using move semantic. Check
+    //   that the value returned and the allocator used is correct. Check the
+    //   original optional's value has been moved from.
     //
     //
     // Testing:
@@ -4034,7 +6792,8 @@ void bslstl_optional_test5()
     //
     //   void reset();
     //   optional(const T &);
-    //   optional(bsl::allocator_arg_t, allocator_type basicAllocator, const optional& original;
+    //   optional(bsl::allocator_arg_t, allocator_type basicAllocator, const
+    //              optional& original;
     //   emplace(const T &);
     //
     // --------------------------------------------------------------------
@@ -4050,8 +6809,8 @@ void bslstl_optional_test5()
         {
             Obj mX; const Obj& X = mX;
 
-#if defined(BSLSTL_OPTIONAL_TEST_BAD_VALUEOR1)
-            ValueType &i0 = mX.value_or(2); // this should not compile 1/1
+#if defined(BSLSTL_OPTIONAL_TEST_BAD_VALUEOR)
+            ValueType &i0 = mX.value_or(2); // this should not compile 1
 #endif
             const ValueType &i1 = X.value_or(2);
             ASSERT(!X.has_value());
@@ -4086,8 +6845,9 @@ void bslstl_optional_test5()
         {
              Obj mX; const Obj& X = mX;
 
-#if defined(BSLSTL_OPTIONAL_TEST_BAD_VALUEOR2)
-             ValueType &i0 = mX.value_or("some string"); // this should not compile
+#if defined(BSLSTL_OPTIONAL_TEST_BAD_VALUEOR)
+             ValueType &i0 = mX.value_or("some string");
+               // this should not compile 2
 #endif
              const ValueType &i1 = X.value_or("string1");
              ASSERT(!X.has_value());
@@ -4105,7 +6865,8 @@ void bslstl_optional_test5()
              ValueType i4 = Obj("string4").value_or("string5");
              ASSERT(i4 == "string4");
          }
-        if (verbose) printf( "\n allocator tests of non allocator extended value_or'.\n");
+        if (verbose) printf( "\n allocator tests of non allocator extended "
+            "value_or'.\n");
         {
             Obj mX(bsl::allocator_arg, &oa); const Obj& X = mX;
 
@@ -4131,11 +6892,13 @@ void bslstl_optional_test5()
             ASSERT(i4 == "string2");
             ASSERT(i4.get_allocator().mechanism() == &da);
 
-            ValueType i5 = Obj(bsl::allocator_arg, &oa, "string4").value_or("string5");
+            ValueType i5 = Obj(bsl::allocator_arg, &oa, "string4")
+                                .value_or("string5");
             ASSERT(i5 == "string4");
             ASSERT(i5.get_allocator().mechanism() == &da);
         }
-        if (verbose) printf( "\n allocator tests of allocator extended value_or'.\n");
+        if (verbose) printf( "\n allocator tests of allocator extended "
+            "value_or'.\n");
         {
            Obj mX(bsl::allocator_arg, &oa); const Obj& X = mX;
 
@@ -4365,7 +7128,7 @@ void bslstl_optional_test7()
     }
     if (verbose) printf( "\nUsing 'my_Class2'.\n");
     {
-      bslma::TestAllocator da("default", veryVeryVeryVerbose);
+       bslma::TestAllocator da("default", veryVeryVeryVerbose);
        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
        bslma::TestAllocator ta("third", veryVeryVeryVerbose);
 
@@ -4421,6 +7184,7 @@ void bslstl_optional_test8()
   //   * Calling emplace does not modify the allocator, even when called with an
   //     rvalue value type argument
   //   * emplace can not be used on a const qualified optional.
+  //   * there are no unnecessary value type copies created
   //
   //
   // Plan:
@@ -4445,31 +7209,43 @@ void bslstl_optional_test8()
         typedef bsl::optional<ValueType> Obj;
 
         {
-          Obj mX;
-          mX.emplace();
-          ASSERT(mX.has_value());
-          ASSERT(mX->d_def.d_value == 0 );
+            Obj mX;
+            int CCI = ValueType::copyConstructorInvocations;
+            int MCI = ValueType::moveConstructorInvocations;
 
-          ValueType other(3);
-          mX.emplace(other);
-          ASSERT(mX.has_value());
-          ASSERT(mX->d_def.d_value == 3 );
+            mX.emplace();
+            ASSERT(CCI == ValueType::copyConstructorInvocations);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
+            ASSERT(mX.has_value());
+            ASSERT(mX->d_def.d_value == 0 );
 
-          ValueType third(4);
-          mX.emplace(MovUtl::move(third));
-          ASSERT(mX.has_value());
-          ASSERT(mX->d_def.d_value == 4 );
-#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
-          ASSERT(third.d_def.d_value == MOVED_FROM_VAL );
-#endif
-          mX.emplace(6);
-          ASSERT(mX.has_value());
-          ASSERT(mX->d_def.d_value == 6 );
+            ValueType other(3);
+            CCI = ValueType::copyConstructorInvocations;
+            MCI = ValueType::moveConstructorInvocations;
+            mX.emplace(other);
+            ASSERT(mX.has_value());
+            ASSERT(mX->d_def.d_value == 3 );
+            ASSERT(CCI == ValueType::copyConstructorInvocations -1 );
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
 
-          mX.emplace({3,4,5,6});
-          ASSERT(mX.has_value());
-          ASSERT(mX->d_def.d_value == 18 );
+            ValueType third(4);
+            CCI = ValueType::copyConstructorInvocations;
+            MCI = ValueType::moveConstructorInvocations;
+            mX.emplace(MovUtl::move(third));
+            ASSERT(mX.has_value());
+            ASSERT(mX->d_def.d_value == 4 );
+            #if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
+            ASSERT(CCI == ValueType::copyConstructorInvocations );
+            ASSERT(MCI == ValueType::moveConstructorInvocations -1);
+            #endif
 
+            CCI = ValueType::copyConstructorInvocations;
+            MCI = ValueType::moveConstructorInvocations;
+            mX.emplace(6);
+            ASSERT(mX.has_value());
+            ASSERT(mX->d_def.d_value == 6 );
+            ASSERT(CCI == my_Class1::copyConstructorInvocations);
+            ASSERT(MCI == my_Class1::moveConstructorInvocations);
         }
     }
     if (verbose) printf( "\nUsing 'my_Class2'.\n");
@@ -4484,42 +7260,52 @@ void bslstl_optional_test8()
        typedef bsl::optional<ValueType> Obj;
 
        {
-         Obj mX(bsl::allocator_arg, &oa);
-         mX.emplace();
-         ASSERT(mX.has_value());
-         ASSERT(mX->d_def.d_value == 0 );
-         ASSERT(mX.get_allocator().mechanism() == &oa );
+           Obj mX(bsl::allocator_arg, &oa);
+           int CCI = ValueType::copyConstructorInvocations;
+           int MCI = ValueType::moveConstructorInvocations;
 
-         ValueType other(3, &da);
-         ASSERT(other.d_def.d_allocator_p == &da );
-         mX.emplace(other);
-         ASSERT(mX.has_value());
-         ASSERT(mX->d_def.d_value == 3 );
-         ASSERT(mX.get_allocator().mechanism() == &oa );
-         ASSERT(mX->d_def.d_allocator_p == &oa );
+           mX.emplace();
+           ASSERT(CCI == ValueType::copyConstructorInvocations);
+           ASSERT(MCI == ValueType::moveConstructorInvocations);
+           ASSERT(mX.has_value());
+           ASSERT(mX->d_def.d_value == 0 );
+           ASSERT(mX.get_allocator().mechanism() == &oa );
 
-         ValueType third(4, &da);
-         mX.emplace(MovUtl::move(third));
-         ASSERT(third.d_def.d_allocator_p == &da );
-         ASSERT(mX.has_value());
-         ASSERT(mX->d_def.d_value == 4 );
-#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
-         ASSERT(third.d_def.d_value == MOVED_FROM_VAL );
-#endif
-         ASSERT(mX.get_allocator().mechanism() == &oa );
-         ASSERT(mX->d_def.d_allocator_p == &oa );
+           ValueType other(3, &da);
+           ASSERT(other.d_def.d_allocator_p == &da );
+           CCI = ValueType::copyConstructorInvocations;
+           MCI = ValueType::moveConstructorInvocations;
+           mX.emplace(other);
+           ASSERT(mX.has_value());
+           ASSERT(mX->d_def.d_value == 3 );
+           ASSERT(mX.get_allocator().mechanism() == &oa );
+           ASSERT(mX->d_def.d_allocator_p == &oa );
+           ASSERT(CCI == ValueType::copyConstructorInvocations -1 );
+           ASSERT(MCI == ValueType::moveConstructorInvocations);
 
-         mX.emplace(6);
-         ASSERT(mX.has_value());
-         ASSERT(mX->d_def.d_value == 6 );
-         ASSERT(mX.get_allocator().mechanism() == &oa );
-         ASSERT(mX->d_def.d_allocator_p == &oa );
+           ValueType third(4, &da);
+           CCI = ValueType::copyConstructorInvocations;
+           MCI = ValueType::moveConstructorInvocations;
+           mX.emplace(MovUtl::move(third));
+           ASSERT(third.d_def.d_allocator_p == &da );
+           ASSERT(mX.has_value());
+           ASSERT(mX->d_def.d_value == 4 );
+  #if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
+           ASSERT(CCI == ValueType::copyConstructorInvocations);
+           ASSERT(MCI == ValueType::moveConstructorInvocations -1);
+  #endif
+           ASSERT(mX.get_allocator().mechanism() == &oa );
+           ASSERT(mX->d_def.d_allocator_p == &oa );
 
-         mX.emplace({3,4,5,6});
-         ASSERT(mX.has_value());
-         ASSERT(mX->d_def.d_value == 18 );
-         ASSERT(mX.get_allocator().mechanism() == &oa );
-         ASSERT(mX->d_def.d_allocator_p == &oa );
+           CCI = ValueType::copyConstructorInvocations;
+           MCI = ValueType::moveConstructorInvocations;
+           mX.emplace(6);
+           ASSERT(mX.has_value());
+           ASSERT(mX->d_def.d_value == 6 );
+           ASSERT(mX.get_allocator().mechanism() == &oa );
+           ASSERT(mX->d_def.d_allocator_p == &oa );
+           ASSERT(CCI == ValueType::copyConstructorInvocations);
+           ASSERT(MCI == ValueType::moveConstructorInvocations);
        }
     }
     if (verbose) printf( "\nUsing 'my_Class2a'.\n");
@@ -4534,222 +7320,365 @@ void bslstl_optional_test8()
        typedef bsl::optional<ValueType> Obj;
 
        {
-         Obj mX(bsl::allocator_arg, &oa);
-         mX.emplace();
-         ASSERT(mX.has_value());
-         ASSERT(mX->d_data.d_def.d_value == 0 );
-         ASSERT(mX.get_allocator().mechanism() == &oa );
+           Obj mX(bsl::allocator_arg, &oa);
+           int CCI = ValueType::copyConstructorInvocations;
+           int MCI = ValueType::moveConstructorInvocations;
 
-         ValueType other(bsl::allocator_arg, &da, 3);
-         ASSERT(other.d_data.d_def.d_allocator_p == &da );
-         mX.emplace(other);
-         ASSERT(mX.has_value());
-         ASSERT(mX->d_data.d_def.d_value == 3 );
-         ASSERT(mX.get_allocator().mechanism() == &oa );
-         ASSERT(mX->d_data.d_def.d_allocator_p == &oa );
+           mX.emplace();
+           ASSERT(mX.has_value());
+           ASSERT(mX->d_data.d_def.d_value == 0 );
+           ASSERT(mX.get_allocator().mechanism() == &oa );
+           ASSERT(CCI == ValueType::copyConstructorInvocations);
+           ASSERT(MCI == ValueType::moveConstructorInvocations);
 
-         ValueType third(bsl::allocator_arg, &da, 4);
-         mX.emplace(MovUtl::move(third));
-         ASSERT(third.d_data.d_def.d_allocator_p == &da );
-         ASSERT(mX.has_value());
-         ASSERT(mX->d_data.d_def.d_value == 4 );
-#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
-         ASSERT(third.d_data.d_def.d_value == MOVED_FROM_VAL );
-#endif
-         ASSERT(mX.get_allocator().mechanism() == &oa );
-         ASSERT(mX->d_data.d_def.d_allocator_p == &oa );
+           ValueType other(bsl::allocator_arg, &da, 3);
+           ASSERT(other.d_data.d_def.d_allocator_p == &da );
+           CCI = ValueType::copyConstructorInvocations;
+           MCI = ValueType::moveConstructorInvocations;
+           mX.emplace(other);
+           ASSERT(mX.has_value());
+           ASSERT(mX->d_data.d_def.d_value == 3 );
+           ASSERT(mX.get_allocator().mechanism() == &oa );
+           ASSERT(mX->d_data.d_def.d_allocator_p == &oa );
+           ASSERT(CCI == ValueType::copyConstructorInvocations -1);
+           ASSERT(MCI == ValueType::moveConstructorInvocations);
 
-         mX.emplace(6);
-         ASSERT(mX.has_value());
-         ASSERT(mX->d_data.d_def.d_value == 6 );
-         ASSERT(mX.get_allocator().mechanism() == &oa );
-         ASSERT(mX->d_data.d_def.d_allocator_p == &oa );
+           ValueType third(bsl::allocator_arg, &da, 4);
+           CCI = ValueType::copyConstructorInvocations;
+           MCI = ValueType::moveConstructorInvocations;
+           mX.emplace(MovUtl::move(third));
+           ASSERT(third.d_data.d_def.d_allocator_p == &da );
+           ASSERT(mX.has_value());
+           ASSERT(mX->d_data.d_def.d_value == 4 );
+  #if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
+           ASSERT(CCI == ValueType::copyConstructorInvocations);
+           ASSERT(MCI == ValueType::moveConstructorInvocations -1);
+  #endif
+           ASSERT(mX.get_allocator().mechanism() == &oa );
+           ASSERT(mX->d_data.d_def.d_allocator_p == &oa );
 
-         mX.emplace({3,4,5,6});
-         ASSERT(mX.has_value());
-         ASSERT(mX->d_data.d_def.d_value == 18 );
-         ASSERT(mX.get_allocator().mechanism() == &oa );
-         ASSERT(mX->d_data.d_def.d_allocator_p == &oa );
-       }
+           CCI = ValueType::copyConstructorInvocations;
+           MCI = ValueType::moveConstructorInvocations;
+           mX.emplace(6);
+           ASSERT(mX.has_value());
+           ASSERT(mX->d_data.d_def.d_value == 6 );
+           ASSERT(mX.get_allocator().mechanism() == &oa );
+           ASSERT(mX->d_data.d_def.d_allocator_p == &oa );
+           ASSERT(CCI == ValueType::copyConstructorInvocations);
+           ASSERT(MCI == ValueType::moveConstructorInvocations);
+      }
     }
+    if (verbose) printf( "\nTesting var args emplace .\n");
+    {
+        {
+          ConstructTestTypeNoAlloc EXP;
+          bsl::optional<ConstructTestTypeNoAlloc> obj;
+          int CCI = ConstructTestTypeNoAlloc::copyConstructorInvocations;
+          int MCI = ConstructTestTypeNoAlloc::moveConstructorInvocations;
+          obj.emplace();
+          ASSERT(EXP == obj.value());
+          ASSERT(CCI == ConstructTestTypeNoAlloc::copyConstructorInvocations);
+          ASSERT(MCI == ConstructTestTypeNoAlloc::moveConstructorInvocations);
+          ASSERT(createdAlike(EXP,obj.value()) == true);
+        }
+        {
+          ConstructTestTypeAlloc EXP;
+          bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+          bsl::optional<ConstructTestTypeAlloc> obj(bsl::allocator_arg, &oa);
+          int CCI = ConstructTestTypeAlloc::copyConstructorInvocations;
+          int MCI = ConstructTestTypeAlloc::moveConstructorInvocations;
+          obj.emplace();
+          ASSERT(EXP == obj .value());
+          ASSERT(&oa == obj .value().d_allocator_p);
+          ASSERT(CCI == ConstructTestTypeAlloc::copyConstructorInvocations);
+          ASSERT(MCI == ConstructTestTypeAlloc::moveConstructorInvocations);
+          ASSERT(createdAlike(EXP,obj.value()) == true);
+        }
+        {
+          ConstructTestTypeAllocArgT EXP;
+          bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+          bsl::optional<ConstructTestTypeAllocArgT>
+                               obj(bsl::allocator_arg, &oa);
+          int CCI = ConstructTestTypeAllocArgT::copyConstructorInvocations;
+          int MCI = ConstructTestTypeAllocArgT::moveConstructorInvocations;
+          obj.emplace();
+          ASSERT(EXP == obj .value());
+          ASSERT(&oa == obj .value().d_allocator_p);
+          ASSERT(CCI ==
+                     ConstructTestTypeAllocArgT::copyConstructorInvocations);
+          ASSERT(MCI ==
+                     ConstructTestTypeAllocArgT::moveConstructorInvocations);
+          ASSERT(createdAlike(EXP,obj.value()) == true);
+        }
+
+        TEST_EMPLACE((VA1));
+        TEST_EMPLACE((MovUtl::move(VA1)));
+
+        TEST_EMPLACE((MovUtl::move(VA1), VA2));
+        TEST_EMPLACE((VA1, MovUtl::move(VA2)));
+
+        TEST_EMPLACE((MovUtl::move(VA1), VA2, VA3));
+        TEST_EMPLACE((VA1, MovUtl::move(VA2), VA3));
+        TEST_EMPLACE((VA1, VA2, MovUtl::move(VA3)));
+
+        TEST_EMPLACE((MovUtl::move(VA1), VA2,
+                    MovUtl::move(VA3), VA4));
+        TEST_EMPLACE((VA1, MovUtl::move(VA2),
+                    VA3, MovUtl::move(VA4)));
+
+        TEST_EMPLACE((MovUtl::move(VA1), VA2,
+                    MovUtl::move(VA3), VA4,
+                    MovUtl::move(VA5)));
+        TEST_EMPLACE((VA1, MovUtl::move(VA2),
+                    VA3, MovUtl::move(VA4),
+                    VA5));
+
+        TEST_EMPLACE((MovUtl::move(VA1), VA2,
+                    MovUtl::move(VA3), VA4,
+                    MovUtl::move(VA5), VA6));
+        TEST_EMPLACE((VA1, MovUtl::move(VA2),
+                    VA3, MovUtl::move(VA4),
+                    VA5, MovUtl::move(VA6)));
+
+        TEST_EMPLACE((MovUtl::move(VA1), VA2,
+                    MovUtl::move(VA3), VA4,
+                    MovUtl::move(VA5), VA6,
+                    MovUtl::move(VA7)));
+        TEST_EMPLACE((VA1, MovUtl::move(VA2),
+                    VA3, MovUtl::move(VA4),
+                    VA5, MovUtl::move(VA6),
+                    VA7));
+
+        TEST_EMPLACE((MovUtl::move(VA1), VA2,
+                    MovUtl::move(VA3), VA4,
+                    MovUtl::move(VA5), VA6,
+                    MovUtl::move(VA7), VA8));
+        TEST_EMPLACE((VA1, MovUtl::move(VA2),
+                    VA3, MovUtl::move(VA4),
+                    VA5, MovUtl::move(VA6),
+                    VA7, MovUtl::move(VA8)));
+
+        TEST_EMPLACE((MovUtl::move(VA1), VA2,
+                    MovUtl::move(VA3), VA4,
+                    MovUtl::move(VA5), VA6,
+                    MovUtl::move(VA7), VA8,
+                    MovUtl::move(VA9)));
+        TEST_EMPLACE((VA1, MovUtl::move(VA2),
+                    VA3, MovUtl::move(VA4),
+                    VA5, MovUtl::move(VA6),
+                    VA7, MovUtl::move(VA8),
+                    VA9));
+
+        TEST_EMPLACE((MovUtl::move(VA1), VA2,
+                    MovUtl::move(VA3), VA4,
+                    MovUtl::move(VA5), VA6,
+                    MovUtl::move(VA7), VA8,
+                    MovUtl::move(VA9), VA10));
+        TEST_EMPLACE((VA1, MovUtl::move(VA2),
+                    VA3, MovUtl::move(VA4),
+                    VA5, MovUtl::move(VA6),
+                    VA7, MovUtl::move(VA8),
+                    VA9, MovUtl::move(VA10)));
+
+        TEST_EMPLACE((MovUtl::move(VA1), VA2,
+                    MovUtl::move(VA3), VA4,
+                    MovUtl::move(VA5), VA6,
+                    MovUtl::move(VA7), VA8,
+                    MovUtl::move(VA9), VA10,
+                    MovUtl::move(VA11)));
+        TEST_EMPLACE((VA1, MovUtl::move(VA2),
+                    VA3, MovUtl::move(VA4),
+                    VA5, MovUtl::move(VA6),
+                    VA7, MovUtl::move(VA8),
+                    VA9, MovUtl::move(VA10),
+                    VA11));
+
+        TEST_EMPLACE((MovUtl::move(VA1), VA2,
+                    MovUtl::move(VA3), VA4,
+                    MovUtl::move(VA5), VA6,
+                    MovUtl::move(VA7), VA8,
+                    MovUtl::move(VA9), VA10,
+                    MovUtl::move(VA11), VA12));
+        TEST_EMPLACE((VA1, MovUtl::move(VA2),
+                    VA3, MovUtl::move(VA4),
+                    VA5, MovUtl::move(VA6),
+                    VA7, MovUtl::move(VA8),
+                    VA9, MovUtl::move(VA10),
+                    VA11, MovUtl::move(VA12)));
+
+        TEST_EMPLACE((MovUtl::move(VA1), VA2,
+                    MovUtl::move(VA3), VA4,
+                    MovUtl::move(VA5), VA6,
+                    MovUtl::move(VA7), VA8,
+                    MovUtl::move(VA9), VA10,
+                    MovUtl::move(VA11), VA12,
+                    MovUtl::move(VA13)));
+        TEST_EMPLACE((VA1, MovUtl::move(VA2),
+                    VA3, MovUtl::move(VA4),
+                    VA5, MovUtl::move(VA6),
+                    VA7, MovUtl::move(VA8),
+                    VA9, MovUtl::move(VA10),
+                    VA11, MovUtl::move(VA12),
+                    VA13));
+
+        TEST_EMPLACE_ARGT((bsl::allocator_arg, &oa),
+                          ());
+
+        TEST_EMPLACE_ARGT((bsl::allocator_arg, &oa,MovUtl::move(VA1)),
+                          (MovUtl::move(VA1)));
+        TEST_EMPLACE_ARGT((bsl::allocator_arg, &oa,VA1),
+                          (VA1));
+
+        TEST_EMPLACE_ARGT((bsl::allocator_arg, &oa,
+                           MovUtl::move(VA1), VA2),
+                          (MovUtl::move(VA1), VA2));
+        TEST_EMPLACE_ARGT((bsl::allocator_arg, &oa,
+                           VA1, MovUtl::move(VA2)),
+                          (VA1, MovUtl::move(VA2)));
+
+        TEST_EMPLACE_ARGT((bsl::allocator_arg, &oa,
+                           MovUtl::move(VA1), VA2, MovUtl::move(VA3)),
+                          (MovUtl::move(VA1), VA2, MovUtl::move(VA3)));
+        TEST_EMPLACE_ARGT((bsl::allocator_arg, &oa,
+                           VA1, MovUtl::move(VA2), VA3),
+                          (VA1, MovUtl::move(VA2), VA3));
+
+        TEST_EMPLACE_ARGT((bsl::allocator_arg, &oa,
+                           MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4),
+                          (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4));
+        TEST_EMPLACE_ARGT((bsl::allocator_arg, &oa,
+                           VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4)),
+                          (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4)));
+
+        TEST_EMPLACE_ARGT((bsl::allocator_arg, &oa,
+                           MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                           MovUtl::move(VA5)),
+                          (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                           MovUtl::move(VA5)));
+        TEST_EMPLACE_ARGT((bsl::allocator_arg, &oa,
+                           VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                           VA5),
+                          (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                           VA5));
+
+        TEST_EMPLACE_ARGT((bsl::allocator_arg, &oa,
+                           MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                           MovUtl::move(VA5), VA6),
+                          (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                           MovUtl::move(VA5), VA6));
+        TEST_EMPLACE_ARGT((bsl::allocator_arg, &oa,
+                           VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                           VA5, MovUtl::move(VA6)),
+                          (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                           VA5, MovUtl::move(VA6)));
+
+        TEST_EMPLACE_ARGT((bsl::allocator_arg, &oa,
+                           MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                           MovUtl::move(VA5), VA6, MovUtl::move(VA7)),
+                          (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                           MovUtl::move(VA5), VA6, MovUtl::move(VA7)));
+        TEST_EMPLACE_ARGT((bsl::allocator_arg, &oa,
+                           VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                           VA5, MovUtl::move(VA6), VA7),
+                          (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                           VA5, MovUtl::move(VA6), VA7));
+
+        TEST_EMPLACE_ARGT((bsl::allocator_arg, &oa,
+                           MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                           MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8),
+                          (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                           MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8));
+        TEST_EMPLACE_ARGT((bsl::allocator_arg, &oa,
+                           VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                           VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8)),
+                          (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                           VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8)));
+
+        TEST_EMPLACE_ARGT((bsl::allocator_arg, &oa,
+                           MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                           MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                           MovUtl::move(VA9)),
+                          (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                           MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                           MovUtl::move(VA9)));
+        TEST_EMPLACE_ARGT((bsl::allocator_arg, &oa,
+                           VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                           VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                           VA9),
+                          (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                           VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                           VA9));
+
+        TEST_EMPLACE_ARGT((bsl::allocator_arg, &oa,
+                           MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                           MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                           MovUtl::move(VA9), VA10),
+                          (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                           MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                           MovUtl::move(VA9), VA10));
+        TEST_EMPLACE_ARGT((bsl::allocator_arg, &oa,
+                            VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                            VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                            VA9, MovUtl::move(VA10)),
+                           (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                            VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                            VA9, MovUtl::move(VA10)));
+
+
+        TEST_EMPLACE_ARGT((bsl::allocator_arg, &oa,
+                           MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                           MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                           MovUtl::move(VA9), VA10, MovUtl::move(VA11)),
+                          (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                           MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                           MovUtl::move(VA9), VA10, MovUtl::move(VA11)));
+        TEST_EMPLACE_ARGT((bsl::allocator_arg, &oa,
+                           VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                           VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                           VA9, MovUtl::move(VA10), VA11),
+                          (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                           VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                           VA9, MovUtl::move(VA10), VA11));
+
+        TEST_EMPLACE_ARGT((bsl::allocator_arg, &oa,
+                           MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                           MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                           MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12),
+                          (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                           MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                           MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12));
+
+        TEST_EMPLACE_ARGT((bsl::allocator_arg, &oa,
+                           VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                           VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                           VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12)),
+                          (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                           VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                           VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12)));
+
+        TEST_EMPLACE_ARGT((bsl::allocator_arg, &oa,
+                           MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                           MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                           MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+                           MovUtl::move(VA13)),
+                          (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                           MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                           MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+                           MovUtl::move(VA13)));
+        TEST_EMPLACE_ARGT((bsl::allocator_arg, &oa,
+                           VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                           VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                           VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+                           VA13),
+                          (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                           VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                           VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+                           VA13));
+    }
+
 }
-template <typename ValType, typename OptType>
-void test_emplaceil_helper()
-{
-  OptType mX;
-  // ---   -------------------------------------------------
-  TEST_EMPLACEIL( ValType, mX,  emplace({1,2,3}),                            // OP
-                 /* no ctor arg list */                            // EXP
-                , 6);
 
-  TEST_EMPLACEIL( ValType, mX,  emplace({1,2,3},VA1),                       // OP
-                 (VA1)                                             // EXP
-                , 6);
 
-  TEST_EMPLACEIL( ValType, mX,  emplace({1,2,3},VA1, VA2),                  // OP
-                 (VA1, VA2)                                        // EXP
-                , 6);
-
-  TEST_EMPLACEIL( ValType, mX,  emplace({1,2,3},VA1, VA2, VA3),             // OP
-                 (VA1, VA2, VA3)                                   // EXP
-                , 6);
-
-  TEST_EMPLACEIL( ValType, mX,  emplace({1,2,3},VA1, VA2, VA3, VA4),        // OP
-                 (VA1, VA2, VA3, VA4)                              // EXP
-                , 6);
-
-  TEST_EMPLACEIL( ValType, mX,  emplace({1,2,3},VA1, VA2, VA3, VA4, VA5),                            // OP
-                 (VA1, VA2, VA3, VA4, VA5)                         // EXP
-                , 6);
-
-  TEST_EMPLACEIL( ValType, mX,  emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
-                                   VA6),                       // OP
-                 (VA1, VA2, VA3, VA4, VA5, VA6)                    // EXP
-                , 6);
-
-  TEST_EMPLACEIL( ValType, mX,  emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
-                                   VA6, VA7),                  // OP
-                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7)               // EXP
-                , 6);
-
-  TEST_EMPLACEIL( ValType, mX,  emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
-                                   VA6, VA7, VA8),             // OP
-                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8)          // EXP
-                , 6);
-
-  TEST_EMPLACEIL( ValType, mX,  emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
-                                   VA6, VA7, VA8, VA9),        // OP
-                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                  VA9)                                             // EXP
-                , 6);
-
-  TEST_EMPLACEIL( ValType, mX,  emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
-                                   VA6, VA7, VA8, VA9, VA10),                            // OP
-                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7,
-                  VA8, VA9, VA10)                                  // EXP
-                , 6);
-
-  TEST_EMPLACEIL( ValType, mX,  emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
-                                   VA6, VA7, VA8, VA9, VA10,
-                                   VA11),                      // OP
-                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                  VA9, VA10, VA11)                                 // EXP
-                , 6);
-
-  TEST_EMPLACEIL( ValType, mX,  emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
-                                   VA6, VA7, VA8, VA9, VA10,
-                                   VA11, VA12),                // OP
-                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                  VA9, VA10, VA11, VA12)                           // EXP
-                , 6);
-
-  TEST_EMPLACEIL( ValType, mX,  emplace({1,2,3},VA1, VA2, VA3, VA4, VA5,
-                                   VA6, VA7, VA8, VA9, VA10,
-                                   VA11, VA12, VA13),          // OP
-                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                  VA9, VA10, VA11, VA12, VA13)                     // EXP
-                , 6);
-
-}
-template <typename ValType, typename OptType>
-void test_emplaceila_helper()
-{
-    bslma::TestAllocator da("default", veryVeryVeryVerbose);
-    bslma::TestAllocator oa("other", veryVeryVeryVerbose);
-    bslma::TestAllocator ta("third", veryVeryVeryVerbose);
-
-    bslma::DefaultAllocatorGuard dag(&da);
-    OptType mX(bsl::allocator_arg, &oa);
-    // OP  = construct(&ConstructTestArg, VA[1--N])
-    // EXP = ConstructTestArg(VA[1--N])
-    // ---   -------------------------------------------------
-    TEST_EMPLACEILA( ValType, mX,  emplace({1,2,3}),                            // OP
-                  /* no ctor arg list */ ,                           // EXP
-                 6,
-                 &oa);
-
-    TEST_EMPLACEILA( ValType, mX,  emplace({1,2,3}, VA1),                       // OP
-                  (VA1),                                             // EXP
-                  6,
-                 &oa);
-
-    TEST_EMPLACEILA( ValType, mX,  emplace({1,2,3}, VA1, VA2),                  // OP
-                  (VA1, VA2) ,                                       // EXP
-                  6,
-                 &oa);
-
-    TEST_EMPLACEILA( ValType, mX,  emplace({1,2,3}, VA1, VA2, VA3),             // OP
-                  (VA1, VA2, VA3),                                   // EXP
-                  6,
-                 &oa);
-
-    TEST_EMPLACEILA( ValType, mX,  emplace({1,2,3}, VA1, VA2, VA3, VA4),        // OP
-                  (VA1, VA2, VA3, VA4),                              // EXP
-                  6,
-                 &oa);
-
-    TEST_EMPLACEILA( ValType, mX,  emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5),                            // OP
-                  (VA1, VA2, VA3, VA4, VA5),                         // EXP
-                  6,
-                 &oa);
-
-    TEST_EMPLACEILA( ValType, mX,  emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                    VA6),                       // OP
-                  (VA1, VA2, VA3, VA4, VA5, VA6),                    // EXP
-                  6,
-                 &oa);
-
-    TEST_EMPLACEILA( ValType, mX,  emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                    VA6, VA7),                  // OP
-                  (VA1, VA2, VA3, VA4, VA5, VA6, VA7),                // EXP
-                  6,
-                 &oa);
-
-    TEST_EMPLACEILA( ValType, mX,  emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                    VA6, VA7, VA8),             // OP
-                  (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8),          // EXP
-                  6,
-                 &oa);
-
-    TEST_EMPLACEILA( ValType, mX,  emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                    VA6, VA7, VA8, VA9),        // OP
-                  (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                   VA9)                              ,                // EXP
-                   6,
-                 &oa);
-
-    TEST_EMPLACEILA( ValType, mX,  emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                    VA6, VA7, VA8, VA9, VA10),                            // OP
-                  (VA1, VA2, VA3, VA4, VA5, VA6, VA7,
-                   VA8, VA9, VA10)                   ,                // EXP
-                   6,
-                 &oa);
-
-    TEST_EMPLACEILA( ValType, mX,  emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                    VA6, VA7, VA8, VA9, VA10,
-                                    VA11),                      // OP
-                  (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                   VA9, VA10, VA11)                  ,                // EXP
-                   6,
-                 &oa);
-
-    TEST_EMPLACEILA( ValType, mX,  emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                    VA6, VA7, VA8, VA9, VA10,
-                                    VA11, VA12),                // OP
-                  (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                   VA9, VA10, VA11, VA12)            ,                // EXP
-                   6,
-                 &oa);
-
-    TEST_EMPLACEILA( ValType, mX,  emplace({1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                    VA6, VA7, VA8, VA9, VA10,
-                                    VA11, VA12, VA13),          // OP
-                  (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                   VA9, VA10, VA11, VA12, VA13)      ,                // EXP
-                   6,
-                 &oa);
-
-}
 void bslstl_optional_test9()
 {
     // --------------------------------------------------------------------
@@ -4781,102 +7710,351 @@ void bslstl_optional_test9()
     if (verbose) printf(
                        "\nTESTING emplace MEMBER FUNCTION "
                        "\n==================================\n");
+    if (verbose) printf( "\nTesting initializer list emplace .\n");
+    {
+        TEST_EMPLACE(({1,2,3}));
 
+        TEST_EMPLACE(({1,2,3}, VA1));
+        TEST_EMPLACE(({1,2,3}, MovUtl::move(VA1)));
+
+        TEST_EMPLACE(({1,2,3}, MovUtl::move(VA1), VA2));
+        TEST_EMPLACE(({1,2,3}, VA1, MovUtl::move(VA2)));
+
+        TEST_EMPLACE(({1,2,3}, MovUtl::move(VA1), VA2, VA3));
+        TEST_EMPLACE(({1,2,3}, VA1, MovUtl::move(VA2), VA3));
+        TEST_EMPLACE(({1,2,3}, VA1, VA2, MovUtl::move(VA3)));
+
+        TEST_EMPLACE(({1,2,3}, MovUtl::move(VA1), VA2,
+                    MovUtl::move(VA3), VA4));
+        TEST_EMPLACE(({1,2,3}, VA1, MovUtl::move(VA2),
+                    VA3, MovUtl::move(VA4)));
+
+        TEST_EMPLACE(({1,2,3}, MovUtl::move(VA1), VA2,
+                    MovUtl::move(VA3), VA4,
+                    MovUtl::move(VA5)));
+        TEST_EMPLACE(({1,2,3}, VA1, MovUtl::move(VA2),
+                    VA3, MovUtl::move(VA4),
+                    VA5));
+
+        TEST_EMPLACE(({1,2,3}, MovUtl::move(VA1), VA2,
+                    MovUtl::move(VA3), VA4,
+                    MovUtl::move(VA5), VA6));
+        TEST_EMPLACE(({1,2,3}, VA1, MovUtl::move(VA2),
+                    VA3, MovUtl::move(VA4),
+                    VA5, MovUtl::move(VA6)));
+
+        TEST_EMPLACE(({1,2,3}, MovUtl::move(VA1), VA2,
+                    MovUtl::move(VA3), VA4,
+                    MovUtl::move(VA5), VA6,
+                    MovUtl::move(VA7)));
+        TEST_EMPLACE(({1,2,3}, VA1, MovUtl::move(VA2),
+                    VA3, MovUtl::move(VA4),
+                    VA5, MovUtl::move(VA6),
+                    VA7));
+
+        TEST_EMPLACE(({1,2,3}, MovUtl::move(VA1), VA2,
+                    MovUtl::move(VA3), VA4,
+                    MovUtl::move(VA5), VA6,
+                    MovUtl::move(VA7), VA8));
+        TEST_EMPLACE(({1,2,3}, VA1, MovUtl::move(VA2),
+                    VA3, MovUtl::move(VA4),
+                    VA5, MovUtl::move(VA6),
+                    VA7, MovUtl::move(VA8)));
+
+        TEST_EMPLACE(({1,2,3}, MovUtl::move(VA1), VA2,
+                    MovUtl::move(VA3), VA4,
+                    MovUtl::move(VA5), VA6,
+                    MovUtl::move(VA7), VA8,
+                    MovUtl::move(VA9)));
+        TEST_EMPLACE(({1,2,3}, VA1, MovUtl::move(VA2),
+                    VA3, MovUtl::move(VA4),
+                    VA5, MovUtl::move(VA6),
+                    VA7, MovUtl::move(VA8),
+                    VA9));
+
+        TEST_EMPLACE(({1,2,3}, MovUtl::move(VA1), VA2,
+                    MovUtl::move(VA3), VA4,
+                    MovUtl::move(VA5), VA6,
+                    MovUtl::move(VA7), VA8,
+                    MovUtl::move(VA9), VA10));
+        TEST_EMPLACE(({1,2,3}, VA1, MovUtl::move(VA2),
+                    VA3, MovUtl::move(VA4),
+                    VA5, MovUtl::move(VA6),
+                    VA7, MovUtl::move(VA8),
+                    VA9, MovUtl::move(VA10)));
+
+        TEST_EMPLACE(({1,2,3}, MovUtl::move(VA1), VA2,
+                    MovUtl::move(VA3), VA4,
+                    MovUtl::move(VA5), VA6,
+                    MovUtl::move(VA7), VA8,
+                    MovUtl::move(VA9), VA10,
+                    MovUtl::move(VA11)));
+        TEST_EMPLACE(({1,2,3}, VA1, MovUtl::move(VA2),
+                    VA3, MovUtl::move(VA4),
+                    VA5, MovUtl::move(VA6),
+                    VA7, MovUtl::move(VA8),
+                    VA9, MovUtl::move(VA10),
+                    VA11));
+
+        TEST_EMPLACE(({1,2,3}, MovUtl::move(VA1), VA2,
+                    MovUtl::move(VA3), VA4,
+                    MovUtl::move(VA5), VA6,
+                    MovUtl::move(VA7), VA8,
+                    MovUtl::move(VA9), VA10,
+                    MovUtl::move(VA11), VA12));
+        TEST_EMPLACE(({1,2,3}, VA1, MovUtl::move(VA2),
+                    VA3, MovUtl::move(VA4),
+                    VA5, MovUtl::move(VA6),
+                    VA7, MovUtl::move(VA8),
+                    VA9, MovUtl::move(VA10),
+                    VA11, MovUtl::move(VA12)));
+
+        TEST_EMPLACE(({1,2,3}, MovUtl::move(VA1), VA2,
+                    MovUtl::move(VA3), VA4,
+                    MovUtl::move(VA5), VA6,
+                    MovUtl::move(VA7), VA8,
+                    MovUtl::move(VA9), VA10,
+                    MovUtl::move(VA11), VA12,
+                    MovUtl::move(VA13)));
+        TEST_EMPLACE(({1,2,3}, VA1, MovUtl::move(VA2),
+                    VA3, MovUtl::move(VA4),
+                    VA5, MovUtl::move(VA6),
+                    VA7, MovUtl::move(VA8),
+                    VA9, MovUtl::move(VA10),
+                    VA11, MovUtl::move(VA12),
+                    VA13));
+
+        TEST_EMPLACE_ARGTIL((bsl::allocator_arg, &oa, {1,2,3},
+                             MovUtl::move(VA1), VA2, MovUtl::move(VA3)),
+                            ({1,2,3},
+                             MovUtl::move(VA1), VA2, MovUtl::move(VA3)));
+        TEST_EMPLACE_ARGTIL((bsl::allocator_arg, &oa, {1,2,3},
+                             VA1, MovUtl::move(VA2), VA3),
+                            ({1,2,3},
+                             VA1, MovUtl::move(VA2), VA3));
+
+        TEST_EMPLACE_ARGTIL((bsl::allocator_arg, &oa, {1,2,3}),
+                             ({1,2,3}));
+
+        TEST_EMPLACE_ARGTIL((bsl::allocator_arg, &oa, {1,2,3},
+                              MovUtl::move(VA1)),
+                             ({1,2,3},
+                              MovUtl::move(VA1)));
+        TEST_EMPLACE_ARGTIL((bsl::allocator_arg, &oa, {1,2,3},
+                             VA1),
+                            ({1,2,3},
+                             VA1));
+
+        TEST_EMPLACE_ARGTIL((bsl::allocator_arg, &oa, {1,2,3},
+                             MovUtl::move(VA1), VA2),
+                            ({1,2,3},
+                             MovUtl::move(VA1), VA2));
+        TEST_EMPLACE_ARGTIL((bsl::allocator_arg, &oa, {1,2,3},
+                             VA1, MovUtl::move(VA2)),
+                            ({1,2,3},
+                             VA1, MovUtl::move(VA2)));
+
+        TEST_EMPLACE_ARGTIL((bsl::allocator_arg, &oa, {1,2,3},
+                             MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4),
+                            ({1,2,3},
+                             MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4));
+        TEST_EMPLACE_ARGTIL((bsl::allocator_arg, &oa, {1,2,3},
+                            VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4)),
+                           ({1,2,3},
+                            VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4)));
+
+        TEST_EMPLACE_ARGTIL((bsl::allocator_arg, &oa, {1,2,3},
+                             MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                             MovUtl::move(VA5)),
+                            ({1,2,3},
+                             MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                             MovUtl::move(VA5)));
+        TEST_EMPLACE_ARGTIL((bsl::allocator_arg, &oa, {1,2,3},
+                            VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                            VA5),
+                           ({1,2,3},
+                            VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                            VA5));
+
+        TEST_EMPLACE_ARGTIL((bsl::allocator_arg, &oa, {1,2,3},
+                             MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                             MovUtl::move(VA5), VA6),
+                            ({1,2,3},
+                             MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                             MovUtl::move(VA5), VA6));
+        TEST_EMPLACE_ARGTIL((bsl::allocator_arg, &oa, {1,2,3},
+                            VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                            VA5, MovUtl::move(VA6)),
+                           ({1,2,3},
+                            VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                            VA5, MovUtl::move(VA6)));
+
+        TEST_EMPLACE_ARGTIL((bsl::allocator_arg, &oa, {1,2,3},
+                           MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                           MovUtl::move(VA5), VA6, MovUtl::move(VA7)),
+                          ({1,2,3},
+                           MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                           MovUtl::move(VA5), VA6, MovUtl::move(VA7)));
+        TEST_EMPLACE_ARGTIL((bsl::allocator_arg, &oa, {1,2,3},
+                            VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                            VA5, MovUtl::move(VA6), VA7),
+                           ({1,2,3},
+                            VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                            VA5, MovUtl::move(VA6), VA7));
+
+        TEST_EMPLACE_ARGTIL((bsl::allocator_arg, &oa, {1,2,3},
+                             MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                             MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8),
+                            ({1,2,3},
+                             MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                             MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8));
+        TEST_EMPLACE_ARGTIL((bsl::allocator_arg, &oa, {1,2,3},
+                            VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                            VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8)),
+                           ({1,2,3},
+                            VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                            VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8)));
+
+        TEST_EMPLACE_ARGTIL((bsl::allocator_arg, &oa, {1,2,3},
+                             MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                             MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                             MovUtl::move(VA9)),
+                            ({1,2,3},
+                             MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                             MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                             MovUtl::move(VA9)));
+        TEST_EMPLACE_ARGTIL((bsl::allocator_arg, &oa, {1,2,3},
+                            VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                            VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                            VA9),
+                           ({1,2,3},
+                            VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                            VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                            VA9));
+
+        TEST_EMPLACE_ARGTIL((bsl::allocator_arg, &oa, {1,2,3},
+                             MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                             MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                             MovUtl::move(VA9), VA10),
+                            ({1,2,3},
+                             MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                             MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                             MovUtl::move(VA9), VA10));
+        TEST_EMPLACE_ARGTIL((bsl::allocator_arg, &oa, {1,2,3},
+                            VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                            VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                            VA9, MovUtl::move(VA10)),
+                           ({1,2,3},
+                            VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                            VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                            VA9, MovUtl::move(VA10)));
+
+
+        TEST_EMPLACE_ARGTIL((bsl::allocator_arg, &oa, {1,2,3},
+                             MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                             MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                             MovUtl::move(VA9), VA10, MovUtl::move(VA11)),
+                            ({1,2,3},
+                             MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                             MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                             MovUtl::move(VA9), VA10, MovUtl::move(VA11)));
+        TEST_EMPLACE_ARGTIL((bsl::allocator_arg, &oa, {1,2,3},
+                            VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                            VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                            VA9, MovUtl::move(VA10), VA11),
+                           ({1,2,3},
+                            VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                            VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                            VA9, MovUtl::move(VA10), VA11));
+
+        TEST_EMPLACE_ARGTIL((bsl::allocator_arg, &oa, {1,2,3},
+                             MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                             MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                             MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12),
+                            ({1,2,3},
+                             MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                             MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                             MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12));
+        TEST_EMPLACE_ARGTIL((bsl::allocator_arg, &oa, {1,2,3},
+                            VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                            VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                            VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12)),
+                           ({1,2,3},
+                            VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                            VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                            VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12)));
+
+        TEST_EMPLACE_ARGTIL((bsl::allocator_arg, &oa, {1,2,3},
+                             MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                             MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                             MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+                             MovUtl::move(VA13)),
+                            ({1,2,3},
+                             MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                             MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                             MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+                             MovUtl::move(VA13)));
+        TEST_EMPLACE_ARGTIL((bsl::allocator_arg, &oa, {1,2,3},
+                            VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                            VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                            VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+                            VA13),
+                           ({1,2,3},
+                            VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                            VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                            VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+                            VA13));
+    }
+#if defined(BSLSTL_OPTIONAL_TEST_BAD_IL_EMPLACE)
     if (verbose) printf( "\nUsing 'ConstructTestTypeNoAlloc'.\n");
     {
         typedef ConstructTestTypeNoAlloc                  ValueType;
         typedef const ConstructTestTypeNoAlloc            ConstValueType;
-        typedef bsl::optional<ValueType> Obj;
-        typedef bsl::optional<ConstValueType> ObjC;
-
-        test_emplaceil_helper<ValueType, Obj>();
-        test_emplaceil_helper<ValueType, ObjC>();
-        test_emplaceil_helper<ConstValueType, Obj>();
-        test_emplaceil_helper<ConstValueType, ObjC>();
-
-
-#if defined(BSLSTL_OPTIONAL_TEST_BAD_IL_EMPLACE1)
-        {
+        typedef const bsl::optional<ValueType> CObj;
+        typedef const bsl::optional<ConstValueType> CObjC;
+       {
             CObj bad1;
-            bad1.emplace({1,2,3});  // this should not compile 1/10
-            bad1.emplace({1,2,3}, VA1); // this should not compile 2/10
-            bad1.emplace({1,2,3}, VA1, VA2); // this should not compile 3/10
-            bad1.emplace({1,2,3}, VA1, VA2, VA3); // this should not compile 4/10
-            bad1.emplace({1,2,3}, VA1, VA2, VA3, VA4); // this should not compile 5/10
+            bad1.emplace({1,2,3});  // this should not compile 1
+            bad1.emplace({1,2,3}, VA1); // this should not compile 2
+            bad1.emplace({1,2,3}, VA1, VA2); // this should not compile 3
+            bad1.emplace({1,2,3}, VA1, VA2, VA3); // this should not compile 4
+            bad1.emplace({1,2,3}, VA1, VA2, VA3, VA4);
+                  // this should not compile 5
 
             CObjC bad2;
-            bad2.emplace({1,2,3});  // this should not compile 6/10
-            bad2.emplace({1,2,3}, VA1); // this should not compile 7/10
-            bad2.emplace({1,2,3}, VA1, VA2); // this should not compile 8/10
-            bad2.emplace({1,2,3}, VA1, VA2, VA3); // this should not compile 9/10
-            bad2.emplace({1,2,3}, VA1, VA2, VA3, VA4); // this should not compile 10/10
+            bad2.emplace({1,2,3});  // this should not compile 6
+            bad2.emplace({1,2,3}, VA1); // this should not compile 7
+            bad2.emplace({1,2,3}, VA1, VA2); // this should not compile 8
+            bad2.emplace({1,2,3}, VA1, VA2, VA3); // this should not compile 9
+            bad2.emplace({1,2,3}, VA1, VA2, VA3, VA4);
+                  // this should not compile 10
 
         }
-#endif
     }
     if (verbose) printf( "\nUsing 'ConstructTestTypeAlloc'.\n");
     {
         typedef ConstructTestTypeAlloc                  ValueType;
         typedef const ConstructTestTypeAlloc            ConstValueType;
-        typedef bsl::optional<ValueType> Obj;
-        typedef bsl::optional<ConstValueType> ObjC;
-
-        test_emplaceil_helper<ValueType, Obj>();
-        test_emplaceil_helper<ValueType, ObjC>();
-        test_emplaceil_helper<ConstValueType, Obj>();
-        test_emplaceil_helper<ConstValueType, ObjC>();
-
-        test_emplaceila_helper<ValueType, Obj>();
-        test_emplaceila_helper<ValueType, ObjC>();
-        test_emplaceila_helper<ConstValueType, Obj>();
-        test_emplaceila_helper<ConstValueType, ObjC>();
-
-
-#if defined(BSLSTL_OPTIONAL_TEST_BAD_IL_EMPLACE2)
+        typedef const bsl::optional<ValueType>          CObj;
+        typedef const bsl::optional<ConstValueType>     CObjC;
         {
             CObj bad1;
-            bad1.emplace();  // this should not compile 1/10
-            bad1.emplace(VA1); // this should not compile 2/10
-            bad1.emplace(VA1, VA2); // this should not compile 3/10
-            bad1.emplace(VA1, VA2, VA3); // this should not compile 4/10
-            bad1.emplace(VA1, VA2, VA3, VA4); // this should not compile 5/10
+            bad1.emplace();  // this should not compile 11
+            bad1.emplace(VA1); // this should not compile 12
+            bad1.emplace(VA1, VA2); // this should not compile 13
+            bad1.emplace(VA1, VA2, VA3); // this should not compile 14
+            bad1.emplace(VA1, VA2, VA3, VA4); // this should not compile 15
 
             CObjC bad2;
-            bad2.emplace();  // this should not compile 6/10
-            bad2.emplace(VA1); // this should not compile 7/10
-            bad2.emplace(VA1, VA2); // this should not compile 8/10
-            bad2.emplace(VA1, VA2, VA3); // this should not compile 9/10
-            bad2.emplace(VA1, VA2, VA3, VA4); // this should not compile 10/10
+            bad2.emplace();  // this should not compile 16
+            bad2.emplace(VA1); // this should not compile 17
+            bad2.emplace(VA1, VA2); // this should not compile 18
+            bad2.emplace(VA1, VA2, VA3); // this should not compile 19
+            bad2.emplace(VA1, VA2, VA3, VA4); // this should not compile 20
 
         }
+    }
 #endif
-    }
-    if (verbose) printf( "\nUsing 'ConstructTestTypeAllocArgT'.\n");
-    {
-        bslma::TestAllocator da("default", veryVeryVeryVerbose);
-        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
-        bslma::TestAllocator ta("third", veryVeryVeryVerbose);
-
-        bslma::DefaultAllocatorGuard dag(&da);
-
-        typedef ConstructTestTypeAllocArgT               ValueType;
-        typedef const ConstructTestTypeAllocArgT         ConstValueType;
-        typedef bsl::optional<ValueType> Obj;
-        typedef bsl::optional<ConstValueType> ObjC;
-
-        typedef bsl::optional<ValueType> Obj;
-        typedef bsl::optional<ConstValueType> ObjC;
-
-        test_emplaceil_helper<ValueType, Obj>();
-        test_emplaceil_helper<ValueType, ObjC>();
-        test_emplaceil_helper<ConstValueType, Obj>();
-        test_emplaceil_helper<ConstValueType, ObjC>();
-
-        test_emplaceila_helper<ValueType, Obj>();
-        test_emplaceila_helper<ValueType, ObjC>();
-        test_emplaceila_helper<ConstValueType, Obj>();
-        test_emplaceila_helper<ConstValueType, ObjC>();
-    }
 }
 void bslstl_optional_test10()
 {
@@ -4995,6 +8173,7 @@ void bslstl_optional_test10()
     }
 #endif
 }
+
 void bslstl_optional_test11()
 {
   // --------------------------------------------------------------------
@@ -5003,7 +8182,7 @@ void bslstl_optional_test11()
   //   as expected.
   //
   // Concerns:
-  //   * Calling operator=(non_optional_type) assigns the rh value to the
+  //   * Calling operator=(non_optional_type) assigns the rhs value to the
   //     value of the optional.
   //   * for allocator aware types, the assignment to a disengaged optional
   //     uses the stored allocator.
@@ -6142,11 +9321,11 @@ void bslstl_optional_test15()
   //   * Constructing an optional from a disengaged optional of the same type
   //     creates a disengaged optional. The original is not modified.
   //   * If no allocator is provided and the value type uses allocator, the
-  //     default allocator is used for the newly create doptional.
+  //     default allocator is used for the newly created optional.
   //   * If allocator extended version of copy constructor is used, the allocator
   //     passed to the constructor is the allocator of the newly created
   //     optional.
-  //
+  //   * no unnecessary copies are created.
   //
   // Plan:
   //   Conduct the test using 'my_class1' (does not use allocator) and
@@ -6240,19 +9419,27 @@ void bslstl_optional_test15()
             Obj source(ValueType(1));
             ASSERT(source.has_value());
 
+            int CCI = ValueType::copyConstructorInvocations;
+            int MCI = ValueType::moveConstructorInvocations;
             Obj dest = source;
             ASSERT(dest.has_value());
             ASSERT(dest.value() == source.value());
             ASSERT(dest.value().value() == 1);
             ASSERT(source.has_value());
+            ASSERT(CCI == ValueType::copyConstructorInvocations -1);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
+
 
             const Obj source2(ValueType(2));
             ASSERT(source2.has_value());
-
+            CCI = ValueType::copyConstructorInvocations;
+            MCI = ValueType::moveConstructorInvocations;
             Obj dest2 = source2;
             ASSERT(dest2.has_value());
             ASSERT(dest2.value() == source2.value());
             ASSERT(dest2.value().value() == 2);
+            ASSERT(CCI == ValueType::copyConstructorInvocations-1);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
         }
         {
             Obj source(nullopt);
@@ -6285,6 +9472,8 @@ void bslstl_optional_test15()
           ASSERT(source.has_value());
           ASSERT(&oa == source.get_allocator().mechanism());
 
+          int CCI = ValueType::copyConstructorInvocations;
+          int MCI = ValueType::moveConstructorInvocations;
           Obj dest = source;
           ASSERT(dest.has_value());
           ASSERT(dest.value() == source.value());
@@ -6292,15 +9481,24 @@ void bslstl_optional_test15()
           ASSERT(&da == dest.get_allocator().mechanism());
           ASSERT(source.has_value());
           ASSERT(&oa == source.get_allocator().mechanism());
+          ASSERT(CCI == ValueType::copyConstructorInvocations-1);
+          ASSERT(MCI == ValueType::moveConstructorInvocations);
 
           const Obj & csource = source;
           ASSERT(csource.has_value());
 
+          CCI = ValueType::copyConstructorInvocations;
+          MCI = ValueType::moveConstructorInvocations;
           Obj dest2 = csource;
           ASSERT(dest2.has_value());
           ASSERT(dest2.value() == csource.value());
           ASSERT(&da == dest2.get_allocator().mechanism());
+          ASSERT(CCI == ValueType::copyConstructorInvocations-1);
+          ASSERT(MCI == ValueType::moveConstructorInvocations);
 
+
+          CCI = ValueType::copyConstructorInvocations;
+          MCI = ValueType::moveConstructorInvocations;
           Obj dest3(bsl::allocator_arg, &ta, source);
           ASSERT(dest3.has_value());
           ASSERT(dest3.value() == source.value());
@@ -6308,11 +9506,17 @@ void bslstl_optional_test15()
           ASSERT(&ta == dest3.get_allocator().mechanism());
           ASSERT(source.has_value());
           ASSERT(&oa == source.get_allocator().mechanism());
+          ASSERT(CCI == ValueType::copyConstructorInvocations-1);
+          ASSERT(MCI == ValueType::moveConstructorInvocations);
 
+          CCI = ValueType::copyConstructorInvocations;
+          MCI = ValueType::moveConstructorInvocations;
           Obj dest4(bsl::allocator_arg, &ta, csource);
           ASSERT(dest2.has_value());
           ASSERT(dest2.value() == source.value());
           ASSERT(&ta == dest4.get_allocator().mechanism());
+          ASSERT(CCI == ValueType::copyConstructorInvocations-1);
+          ASSERT(MCI == ValueType::moveConstructorInvocations);
        }
        {
           Obj source(bsl::allocator_arg, &oa, nullopt);
@@ -6355,6 +9559,8 @@ void bslstl_optional_test15()
          Obj source(bsl::allocator_arg, &oa, ValueType(1));
          ASSERT(source.has_value());
          ASSERT(&oa == source.get_allocator().mechanism());
+         int CCI = ValueType::copyConstructorInvocations;
+         int MCI = ValueType::moveConstructorInvocations;
 
          Obj dest = source;
          ASSERT(dest.has_value());
@@ -6363,15 +9569,24 @@ void bslstl_optional_test15()
          ASSERT(&da == dest.get_allocator().mechanism());
          ASSERT(source.has_value());
          ASSERT(&oa == source.get_allocator().mechanism());
+         ASSERT(CCI == ValueType::copyConstructorInvocations-1);
+         ASSERT(MCI == ValueType::moveConstructorInvocations);
+
 
          const Obj & csource = source;
          ASSERT(csource.has_value());
 
+         CCI = ValueType::copyConstructorInvocations;
+         MCI = ValueType::moveConstructorInvocations;
          Obj dest2 = csource;
          ASSERT(dest2.has_value());
          ASSERT(dest2.value() == csource.value());
          ASSERT(&da == dest2.get_allocator().mechanism());
+         ASSERT(CCI == ValueType::copyConstructorInvocations-1);
+         ASSERT(MCI == ValueType::moveConstructorInvocations);
 
+         CCI = ValueType::copyConstructorInvocations;
+         MCI = ValueType::moveConstructorInvocations;
          Obj dest3(bsl::allocator_arg, &ta, source);
          ASSERT(dest3.has_value());
          ASSERT(dest3.value() == source.value());
@@ -6379,12 +9594,18 @@ void bslstl_optional_test15()
          ASSERT(&ta == dest3.get_allocator().mechanism());
          ASSERT(source.has_value());
          ASSERT(&oa == source.get_allocator().mechanism());
+         ASSERT(CCI == ValueType::copyConstructorInvocations-1);
+         ASSERT(MCI == ValueType::moveConstructorInvocations);
 
+         CCI = ValueType::copyConstructorInvocations;
+         MCI = ValueType::moveConstructorInvocations;
          Obj dest4(bsl::allocator_arg, &ta, csource);
          ASSERT(dest2.has_value());
          ASSERT(dest2.value() == source.value());
          ASSERT(&ta == dest4.get_allocator().mechanism());
-      }
+         ASSERT(CCI == ValueType::copyConstructorInvocations-1);
+         ASSERT(MCI == ValueType::moveConstructorInvocations);
+       }
       {
          Obj source(bsl::allocator_arg, &oa, nullopt);
          ASSERT(!source.has_value());
@@ -6412,6 +9633,7 @@ void bslstl_optional_test15()
       }
    }
 }
+
 void bslstl_optional_test16()
 {
   // --------------------------------------------------------------------
@@ -6554,22 +9776,32 @@ void bslstl_optional_test16()
             Obj source(ValueType(1));
             ASSERT(source.has_value());
 
+            int CCI = ValueType::copyConstructorInvocations;
+            int MCI = ValueType::moveConstructorInvocations;
             Obj dest = MovUtl::move(source);
             ASSERT(dest.has_value());
             ASSERT(dest.value().value() == 1);
             ASSERT(source.has_value());
 #if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
+            ASSERT(CCI == ValueType::copyConstructorInvocations);
+            ASSERT(MCI == ValueType::moveConstructorInvocations-1);
             ASSERT(source.value().value() == MOVED_FROM_VAL);
 #endif
 
             const Obj source2(ValueType(2));
             ASSERT(source2.has_value());
 
+            CCI = ValueType::copyConstructorInvocations;
+            MCI = ValueType::moveConstructorInvocations;
             Obj dest2 = MovUtl::move(source2);
             ASSERT(dest2.has_value());
             ASSERT(dest2.value().value() == 2);
             ASSERT(source2.has_value());
             ASSERT(source2.value().value() == 2);
+            // const rvalue will invoke a copy
+            ASSERT(CCI == ValueType::copyConstructorInvocations-1);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
+
         }
         {
             Obj source(nullopt);
@@ -6603,6 +9835,8 @@ void bslstl_optional_test16()
           ASSERT(source.has_value());
           ASSERT(source.get_allocator().mechanism() == &oa);
 
+          int CCI = ValueType::copyConstructorInvocations;
+          int MCI = ValueType::moveConstructorInvocations;
           Obj dest = MovUtl::move(source);
           ASSERT(dest.has_value());
           ASSERT(dest.value().value() == 1);
@@ -6610,6 +9844,8 @@ void bslstl_optional_test16()
           ASSERT(source.has_value());
 #if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
           ASSERT(source.value().value() == MOVED_FROM_VAL);
+          ASSERT(CCI == ValueType::copyConstructorInvocations);
+          ASSERT(MCI == ValueType::moveConstructorInvocations-1);
 #endif
           ASSERT(source.get_allocator().mechanism() == &oa);
 
@@ -6617,6 +9853,8 @@ void bslstl_optional_test16()
           ASSERT(source2.has_value());
           ASSERT(source.get_allocator().mechanism() == &oa);
 
+          CCI = ValueType::copyConstructorInvocations;
+          MCI = ValueType::moveConstructorInvocations;
           Obj dest2 = MovUtl::move(source2);
           ASSERT(dest2.has_value());
           ASSERT(dest2.value().value() == 2);
@@ -6624,12 +9862,16 @@ void bslstl_optional_test16()
           ASSERT(source2.has_value());
           ASSERT(source2.value().value() == 2);
           ASSERT(source2.get_allocator().mechanism() == &oa);
+          ASSERT(CCI == ValueType::copyConstructorInvocations-1);
+          ASSERT(MCI == ValueType::moveConstructorInvocations);
 
 
           Obj source3(bsl::allocator_arg, &oa, ValueType(3));
           ASSERT(source3.has_value());
           ASSERT(source3.get_allocator().mechanism() == &oa);
 
+          CCI = ValueType::copyConstructorInvocations;
+          MCI = ValueType::moveConstructorInvocations;
           Obj dest3(bsl::allocator_arg, &ta, MovUtl::move(source3));
           ASSERT(dest3.has_value());
           ASSERT(dest3.value().value() == 3);
@@ -6637,14 +9879,17 @@ void bslstl_optional_test16()
           ASSERT(source3.has_value());
 #if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
           ASSERT(source3.value().value() == MOVED_FROM_VAL);
+          ASSERT(CCI == ValueType::copyConstructorInvocations);
+          ASSERT(MCI == ValueType::moveConstructorInvocations-1);
 #endif
           ASSERT(source3.get_allocator().mechanism() == &oa);
-
 
           const Obj source4(bsl::allocator_arg, &oa, ValueType(4));
           ASSERT(source4.has_value());
           ASSERT(source4.get_allocator().mechanism() == &oa);
 
+          CCI = ValueType::copyConstructorInvocations;
+          MCI = ValueType::moveConstructorInvocations;
           Obj dest4(bsl::allocator_arg, &ta, MovUtl::move(source4));
           ASSERT(dest4.has_value());
           ASSERT(dest4.value().value() == 4);
@@ -6652,6 +9897,9 @@ void bslstl_optional_test16()
           ASSERT(source4.has_value());
           ASSERT(source4.value().value() == 4);
           ASSERT(source4.get_allocator().mechanism() == &oa);
+          ASSERT(CCI == ValueType::copyConstructorInvocations-1);
+          ASSERT(MCI == ValueType::moveConstructorInvocations);
+
        }
        {
           Obj source(bsl::allocator_arg, &oa, nullopt);
@@ -6707,6 +9955,8 @@ void bslstl_optional_test16()
           ASSERT(source.has_value());
           ASSERT(source.get_allocator().mechanism() == &oa);
 
+          int CCI = ValueType::copyConstructorInvocations;
+          int MCI = ValueType::moveConstructorInvocations;
           Obj dest = MovUtl::move(source);
           ASSERT(dest.has_value());
           ASSERT(dest.value().value() == 1);
@@ -6714,6 +9964,9 @@ void bslstl_optional_test16()
           ASSERT(source.has_value());
 #if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
           ASSERT(source.value().value() == MOVED_FROM_VAL);
+          ASSERT(CCI == ValueType::copyConstructorInvocations);
+          ASSERT(MCI == ValueType::moveConstructorInvocations-1);
+
 #endif
           ASSERT(source.get_allocator().mechanism() == &oa);
 
@@ -6721,6 +9974,8 @@ void bslstl_optional_test16()
           ASSERT(source2.has_value());
           ASSERT(source2.get_allocator().mechanism() == &oa);
 
+          CCI = ValueType::copyConstructorInvocations;
+          MCI = ValueType::moveConstructorInvocations;
           Obj dest2 = MovUtl::move(source2);
           ASSERT(dest2.has_value());
           ASSERT(dest2.value().value() == 2);
@@ -6728,12 +9983,15 @@ void bslstl_optional_test16()
           ASSERT(source2.has_value());
           ASSERT(source2.value().value() == 2);
           ASSERT(source2.get_allocator().mechanism() == &oa);
-
+          ASSERT(CCI == ValueType::copyConstructorInvocations-1);
+          ASSERT(MCI == ValueType::moveConstructorInvocations);
 
           Obj source3(bsl::allocator_arg, &oa, ValueType(3));
           ASSERT(source3.has_value());
           ASSERT(source3.get_allocator().mechanism() == &oa);
 
+          CCI = ValueType::copyConstructorInvocations;
+          MCI = ValueType::moveConstructorInvocations;
           Obj dest3(bsl::allocator_arg, &ta, MovUtl::move(source3));
           ASSERT(dest3.has_value());
           ASSERT(dest3.value().value() == 3);
@@ -6741,14 +9999,17 @@ void bslstl_optional_test16()
           ASSERT(source3.has_value());
 #if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
           ASSERT(source3.value().value() == MOVED_FROM_VAL);
+          ASSERT(CCI == ValueType::copyConstructorInvocations);
+          ASSERT(MCI == ValueType::moveConstructorInvocations-1);
 #endif
           ASSERT(source3.get_allocator().mechanism() == &oa);
-
 
           const Obj source4(bsl::allocator_arg, &oa, ValueType(4));
           ASSERT(source4.has_value());
           ASSERT(source4.get_allocator().mechanism() == &oa);
 
+          CCI = ValueType::copyConstructorInvocations;
+          MCI = ValueType::moveConstructorInvocations;
           Obj dest4(bsl::allocator_arg, &ta, MovUtl::move(source4));
           ASSERT(dest4.has_value());
           ASSERT(dest4.value().value() == 4);
@@ -6756,6 +10017,8 @@ void bslstl_optional_test16()
           ASSERT(source4.has_value());
           ASSERT(source4.value().value() == 4);
           ASSERT(source4.get_allocator().mechanism() == &oa);
+          ASSERT(CCI == ValueType::copyConstructorInvocations-1);
+          ASSERT(MCI == ValueType::moveConstructorInvocations);
        }
        {
           Obj source(bsl::allocator_arg, &oa, nullopt);
@@ -6879,17 +10142,25 @@ void bslstl_optional_test17()
         {
             ValueType source(ValueType(1));
 
+            int CCI = ValueType::copyConstructorInvocations;
+            int MCI = ValueType::moveConstructorInvocations;
             Obj dest = source;
             ASSERT(dest.has_value());
             ASSERT(dest.value() == source);
             ASSERT(dest.value().value() == 1);
+            ASSERT(CCI == ValueType::copyConstructorInvocations-1);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
 
             const ValueType & csource = source;
 
+            CCI = ValueType::copyConstructorInvocations;
+            MCI = ValueType::moveConstructorInvocations;
             Obj dest2 = csource;
             ASSERT(dest2.has_value());
             ASSERT(dest2.value() == csource);
             ASSERT(dest2.value().value() == 1);
+            ASSERT(CCI == ValueType::copyConstructorInvocations-1);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
         }
     }
     if (verbose) printf( "\nUsing 'my_Class2'.\n");
@@ -6909,6 +10180,8 @@ void bslstl_optional_test17()
           ASSERT(1 == source.value());
           ASSERT(&oa == source.d_def.d_allocator_p);
 
+          int CCI = ValueType::copyConstructorInvocations;
+          int MCI = ValueType::moveConstructorInvocations;
           Obj dest = source;
           ASSERT(dest.has_value());
           ASSERT(dest.value() == source);
@@ -6916,26 +10189,40 @@ void bslstl_optional_test17()
           ASSERT(&da == dest.get_allocator().mechanism());
           ASSERT(1 == source.value());
           ASSERT(&oa == source.d_def.d_allocator_p);
+          ASSERT(CCI == ValueType::copyConstructorInvocations-1);
+          ASSERT(MCI == ValueType::moveConstructorInvocations);
 
           const ValueType source2(2, &oa);
+          CCI = ValueType::copyConstructorInvocations;
+          MCI = ValueType::moveConstructorInvocations;
           Obj dest2 = source2;
           ASSERT(dest2.has_value());
           ASSERT(dest2.value() == source2);
           ASSERT(&da == dest2.get_allocator().mechanism());
+          ASSERT(CCI == ValueType::copyConstructorInvocations-1);
+          ASSERT(MCI == ValueType::moveConstructorInvocations);
 
           ValueType source3(3, &oa);
+          CCI = ValueType::copyConstructorInvocations;
+          MCI = ValueType::moveConstructorInvocations;
           Obj dest3(bsl::allocator_arg, &ta, source3);
           ASSERT(dest3.has_value());
           ASSERT(dest3.value() == source3);
           ASSERT(dest3.value().value() == 3);
           ASSERT(&ta == dest3.get_allocator().mechanism());
           ASSERT(&oa == source.d_def.d_allocator_p);
+          ASSERT(CCI == ValueType::copyConstructorInvocations-1);
+          ASSERT(MCI == ValueType::moveConstructorInvocations);
 
           const ValueType source4(4, &oa);
+          CCI = ValueType::copyConstructorInvocations;
+          MCI = ValueType::moveConstructorInvocations;
           Obj dest4(bsl::allocator_arg, &ta, source4);
           ASSERT(dest4.has_value());
           ASSERT(dest4.value() == source4);
           ASSERT(&ta == dest4.get_allocator().mechanism());
+          ASSERT(CCI == ValueType::copyConstructorInvocations-1);
+          ASSERT(MCI == ValueType::moveConstructorInvocations);
        }
      }
     if (verbose) printf( "\nUsing 'my_Class2a'.\n");
@@ -6955,6 +10242,8 @@ void bslstl_optional_test17()
             ASSERT(1 == source.value());
             ASSERT(&oa == source.d_data.d_def.d_allocator_p);
 
+            int CCI = ValueType::copyConstructorInvocations;
+            int MCI = ValueType::moveConstructorInvocations;
             Obj dest = source;
             ASSERT(dest.has_value());
             ASSERT(dest.value() == source);
@@ -6962,14 +10251,22 @@ void bslstl_optional_test17()
             ASSERT(&da == dest.get_allocator().mechanism());
             ASSERT(1 == source.value());
             ASSERT(&oa == source.d_data.d_def.d_allocator_p);
+            ASSERT(CCI == ValueType::copyConstructorInvocations-1);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
 
             const ValueType & csource = source;
 
+            CCI = ValueType::copyConstructorInvocations;
+            MCI = ValueType::moveConstructorInvocations;
             Obj dest2 = csource;
             ASSERT(dest2.has_value());
             ASSERT(dest2.value() == csource);
             ASSERT(&da == dest2.get_allocator().mechanism());
+            ASSERT(CCI == ValueType::copyConstructorInvocations-1);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
 
+            CCI = ValueType::copyConstructorInvocations;
+            MCI = ValueType::moveConstructorInvocations;
             Obj dest3(bsl::allocator_arg, &ta, source);
             ASSERT(dest3.has_value());
             ASSERT(dest3.value() == source);
@@ -6977,11 +10274,17 @@ void bslstl_optional_test17()
             ASSERT(&ta == dest3.get_allocator().mechanism());
             ASSERT(1 == source.value());
             ASSERT(&oa == source.d_data.d_def.d_allocator_p);
+            ASSERT(CCI == ValueType::copyConstructorInvocations-1);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
 
+            CCI = ValueType::copyConstructorInvocations;
+            MCI = ValueType::moveConstructorInvocations;
             Obj dest4(bsl::allocator_arg, &ta, csource);
             ASSERT(dest2.has_value());
             ASSERT(dest2.value() == source);
             ASSERT(&ta == dest4.get_allocator().mechanism());
+            ASSERT(CCI == ValueType::copyConstructorInvocations-1);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
          }
      }
 }
@@ -7077,18 +10380,26 @@ void bslstl_optional_test18()
 
         {
             ValueType source(ValueType(1));
+            int CCI = ValueType::copyConstructorInvocations;
+            int MCI = ValueType::moveConstructorInvocations;
             Obj dest = MovUtl::move(source);
             ASSERT(dest.has_value());
             ASSERT(dest.value().value() == 1);
 #if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
             ASSERT(source.value() == MOVED_FROM_VAL);
+            ASSERT(CCI == ValueType::copyConstructorInvocations);
+            ASSERT(MCI == ValueType::moveConstructorInvocations-1);
 #endif
 
             const ValueType source2(2);
-           Obj dest2 = MovUtl::move(source2);
+            CCI = ValueType::copyConstructorInvocations;
+            MCI = ValueType::moveConstructorInvocations;
+            Obj dest2 = MovUtl::move(source2);
             ASSERT(dest2.has_value());
             ASSERT(dest2.value().value() == 2);
             ASSERT(source2.value() == 2);
+            ASSERT(CCI == ValueType::copyConstructorInvocations-1);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
         }
     }
     if (verbose) printf( "\nUsing 'my_Class2'.\n");
@@ -7104,40 +10415,56 @@ void bslstl_optional_test18()
 
         {
           ValueType source(1, &oa);
+          int CCI = ValueType::copyConstructorInvocations;
+          int MCI = ValueType::moveConstructorInvocations;
           Obj dest = MovUtl::move(source);
           ASSERT(dest.has_value());
           ASSERT(dest.value().value() == 1);
           ASSERT(dest.get_allocator().mechanism() == &da);
 #if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
           ASSERT(source.value() == MOVED_FROM_VAL);
+          ASSERT(CCI == ValueType::copyConstructorInvocations);
+          ASSERT(MCI == ValueType::moveConstructorInvocations-1);
 #endif
           ASSERT(source.d_def.d_allocator_p == &oa);
 
           const ValueType source2(2, &oa);
+          CCI = ValueType::copyConstructorInvocations;
+          MCI = ValueType::moveConstructorInvocations;
           Obj dest2 = MovUtl::move(source2);
           ASSERT(dest2.has_value());
           ASSERT(dest2.value().value() == 2);
           ASSERT(dest2.get_allocator().mechanism() == &da);
           ASSERT(source2.value() == 2);
           ASSERT(source2.d_def.d_allocator_p == &oa);
+          ASSERT(CCI == ValueType::copyConstructorInvocations-1);
+          ASSERT(MCI == ValueType::moveConstructorInvocations);
 
           ValueType source3(3, &oa);
+          CCI = ValueType::copyConstructorInvocations;
+          MCI = ValueType::moveConstructorInvocations;
           Obj dest3(bsl::allocator_arg, &ta, MovUtl::move(source3));
           ASSERT(dest3.has_value());
           ASSERT(dest3.value().value() == 3);
           ASSERT(dest3.get_allocator().mechanism() == &ta);
 #if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
           ASSERT(source3.value() == MOVED_FROM_VAL);
+          ASSERT(CCI == ValueType::copyConstructorInvocations);
+          ASSERT(MCI == ValueType::moveConstructorInvocations-1);
 #endif
           ASSERT(source3.d_def.d_allocator_p == &oa);
 
           const ValueType source4(4, &oa);
-         Obj dest4(bsl::allocator_arg, &ta, MovUtl::move(source4));
+          CCI = ValueType::copyConstructorInvocations;
+          MCI = ValueType::moveConstructorInvocations;
+          Obj dest4(bsl::allocator_arg, &ta, MovUtl::move(source4));
           ASSERT(dest4.has_value());
           ASSERT(dest4.value().value() == 4);
           ASSERT(dest4.get_allocator().mechanism() == &ta);
           ASSERT(source4.value() == 4);
           ASSERT(source4.d_def.d_allocator_p == &oa);
+          ASSERT(CCI == ValueType::copyConstructorInvocations-1);
+          ASSERT(MCI == ValueType::moveConstructorInvocations);
        }
     }
     if (verbose) printf( "\nUsing 'my_Class2a'.\n");
@@ -7154,42 +10481,58 @@ void bslstl_optional_test18()
         {
           ValueType source(bsl::allocator_arg, &oa, 1);
 
+          int CCI = ValueType::copyConstructorInvocations;
+          int MCI = ValueType::moveConstructorInvocations;
           Obj dest = MovUtl::move(source);
           ASSERT(dest.has_value());
           ASSERT(dest.value().value() == 1);
           ASSERT(dest.get_allocator().mechanism() == &da);
 #if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
           ASSERT(source.value() == MOVED_FROM_VAL);
+          ASSERT(CCI == ValueType::copyConstructorInvocations);
+          ASSERT(MCI == ValueType::moveConstructorInvocations-1);
 #endif
           ASSERT(source.d_data.d_def.d_allocator_p == &oa);
 
           const ValueType source2(bsl::allocator_arg, &oa, 2);
+          CCI = ValueType::copyConstructorInvocations;
+          MCI = ValueType::moveConstructorInvocations;
           Obj dest2 = MovUtl::move(source2);
           ASSERT(dest2.has_value());
           ASSERT(dest2.value().value() == 2);
           ASSERT(dest2.get_allocator().mechanism() == &da);
           ASSERT(source2.value() == 2);
           ASSERT(source2.d_data.d_def.d_allocator_p == &oa);
+          ASSERT(CCI == ValueType::copyConstructorInvocations-1);
+          ASSERT(MCI == ValueType::moveConstructorInvocations);
 
           ValueType source3(bsl::allocator_arg, &oa, 3);
+          CCI = ValueType::copyConstructorInvocations;
+          MCI = ValueType::moveConstructorInvocations;
           Obj dest3(bsl::allocator_arg, &ta, MovUtl::move(source3));
           ASSERT(dest3.has_value());
           ASSERT(dest3.value().value() == 3);
           ASSERT(dest3.get_allocator().mechanism() == &ta);
 #if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
           ASSERT(source3.value() == MOVED_FROM_VAL);
+          ASSERT(CCI == ValueType::copyConstructorInvocations);
+          ASSERT(MCI == ValueType::moveConstructorInvocations-1);
 #endif
           ASSERT(source3.d_data.d_def.d_allocator_p == &oa);
 
 
           const ValueType source4(bsl::allocator_arg, &oa, 4);
 
+          CCI = ValueType::copyConstructorInvocations;
+          MCI = ValueType::moveConstructorInvocations;
           Obj dest4(bsl::allocator_arg, &ta, MovUtl::move(source4));
           ASSERT(dest4.has_value());
           ASSERT(dest4.value().value() == 4);
           ASSERT(dest4.get_allocator().mechanism() == &ta);
           ASSERT(source4.value() == 4);
           ASSERT(source4.d_data.d_def.d_allocator_p == &oa);
+          ASSERT(CCI == ValueType::copyConstructorInvocations-1);
+          ASSERT(MCI == ValueType::moveConstructorInvocations);
        }
     }
 }
@@ -7378,30 +10721,46 @@ void bslstl_optional_test19()
             SrcObj source(SourceType(1));
             ASSERT(source.has_value());
 
+            int CCI = ValueType::copyConstructorInvocations;
+            int MCI = ValueType::moveConstructorInvocations;
             Obj dest = source;
             ASSERT(dest.has_value());
             ASSERT(dest.value().value() == 1);
             ASSERT(source.has_value());
             ASSERT(source.value().value() == 1);
+            ASSERT(CCI == ValueType::copyConstructorInvocations);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
 
             const SrcObj source2(SourceType(2));;
+            CCI = ValueType::copyConstructorInvocations;
+            MCI = ValueType::moveConstructorInvocations;
             Obj dest2 = source2;
             ASSERT(dest2.has_value());
             ASSERT(dest2.value().value() == 2);
+            ASSERT(CCI == ValueType::copyConstructorInvocations);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
         }
         {
             SrcObj source(nullopt);
             ASSERT(!source.has_value());
 
+            int CCI = ValueType::copyConstructorInvocations;
+            int MCI = ValueType::moveConstructorInvocations;
             Obj dest = source;
             ASSERT(!dest.has_value());
             ASSERT(!source.has_value());
+            ASSERT(CCI == ValueType::copyConstructorInvocations);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
 
             const SrcObj & csource = source;
             ASSERT(!csource.has_value());
 
+            CCI = ValueType::copyConstructorInvocations;
+            MCI = ValueType::moveConstructorInvocations;
             Obj dest2 = csource;
             ASSERT(!dest2.has_value());
+            ASSERT(CCI == ValueType::copyConstructorInvocations);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
         }
     }
     if (verbose) printf( "\nUsing 'my_Class2'.\n");
@@ -7421,22 +10780,32 @@ void bslstl_optional_test19()
           SrcObj source(SourceType(1));
           ASSERT(source.has_value());
 
+          int CCI = ValueType::copyConstructorInvocations;
+          int MCI = ValueType::moveConstructorInvocations;
           Obj dest = source;
           ASSERT(dest.has_value());
           ASSERT(dest.value().value() == 1);
           ASSERT(dest.get_allocator().mechanism() == &da);
           ASSERT(source.has_value());
           ASSERT(source.value().value() == 1);
+          ASSERT(CCI == ValueType::copyConstructorInvocations);
+          ASSERT(MCI == ValueType::moveConstructorInvocations);
 
           const SrcObj source2(SourceType(2));
+          CCI = ValueType::copyConstructorInvocations;
+          MCI = ValueType::moveConstructorInvocations;
           Obj dest2 = source2;
           ASSERT(dest2.has_value());
           ASSERT(dest2.value().value() == 2);
           ASSERT(dest2.value().d_def.d_allocator_p == &da);
           ASSERT(dest2.get_allocator().mechanism() == &da);
+          ASSERT(CCI == ValueType::copyConstructorInvocations);
+          ASSERT(MCI == ValueType::moveConstructorInvocations);
 
 
           SrcObj source3(SourceType(3));
+          CCI = ValueType::copyConstructorInvocations;
+          MCI = ValueType::moveConstructorInvocations;
           Obj dest3(bsl::allocator_arg, &ta, source3);
           ASSERT(dest3.has_value());
           ASSERT(dest3.value().value() == 3);
@@ -7444,13 +10813,19 @@ void bslstl_optional_test19()
           ASSERT(dest3.get_allocator().mechanism() == &ta);
           ASSERT(source3.has_value());
           ASSERT(source3.value().value() == 3);
+          ASSERT(CCI == ValueType::copyConstructorInvocations);
+          ASSERT(MCI == ValueType::moveConstructorInvocations);
 
           const SrcObj source4(SourceType(4));
+          CCI = ValueType::copyConstructorInvocations;
+          MCI = ValueType::moveConstructorInvocations;
           Obj dest4(bsl::allocator_arg, &ta, source4);
           ASSERT(dest4.has_value());
           ASSERT(dest4.value().value() == 4);
           ASSERT(dest4.value().d_def.d_allocator_p == &ta);
           ASSERT(dest4.get_allocator().mechanism() == &ta);
+          ASSERT(CCI == ValueType::copyConstructorInvocations);
+          ASSERT(MCI == ValueType::moveConstructorInvocations);
        }
        {
           SrcObj source(nullopt);
@@ -7495,6 +10870,8 @@ void bslstl_optional_test19()
             ASSERT(source.has_value());
             ASSERT(&oa == source.get_allocator().mechanism());
 
+            int CCI = ValueType::copyConstructorInvocations;
+            int MCI = ValueType::moveConstructorInvocations;
             Obj dest = source;
             ASSERT(dest.has_value());
             ASSERT(dest.value() == source.value());
@@ -7502,15 +10879,23 @@ void bslstl_optional_test19()
             ASSERT(&da == dest.get_allocator().mechanism());
             ASSERT(source.has_value());
             ASSERT(&oa == source.get_allocator().mechanism());
+            ASSERT(CCI == ValueType::copyConstructorInvocations);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
 
             const SrcObj & csource = source;
             ASSERT(csource.has_value());
 
+            CCI = ValueType::copyConstructorInvocations;
+            MCI = ValueType::moveConstructorInvocations;
             Obj dest2 = csource;
             ASSERT(dest2.has_value());
             ASSERT(dest2.value() == csource.value());
             ASSERT(&da == dest2.get_allocator().mechanism());
+            ASSERT(CCI == ValueType::copyConstructorInvocations);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
 
+            CCI = ValueType::copyConstructorInvocations;
+            MCI = ValueType::moveConstructorInvocations;
             Obj dest3(bsl::allocator_arg, &ta, source);
             ASSERT(dest3.has_value());
             ASSERT(dest3.value() == source.value());
@@ -7518,36 +10903,58 @@ void bslstl_optional_test19()
             ASSERT(&ta == dest3.get_allocator().mechanism());
             ASSERT(source.has_value());
             ASSERT(&oa == source.get_allocator().mechanism());
+            ASSERT(CCI == ValueType::copyConstructorInvocations);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
 
+            CCI = ValueType::copyConstructorInvocations;
+            MCI = ValueType::moveConstructorInvocations;
             Obj dest4(bsl::allocator_arg, &ta, csource);
             ASSERT(dest2.has_value());
             ASSERT(dest2.value() == source.value());
             ASSERT(&ta == dest4.get_allocator().mechanism());
+            ASSERT(CCI == ValueType::copyConstructorInvocations);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
         }
         {
             SrcObj source(bsl::allocator_arg, &oa, nullopt);
             ASSERT(!source.has_value());
             ASSERT(&oa == source.get_allocator().mechanism());
 
+            int CCI = ValueType::copyConstructorInvocations;
+            int MCI = ValueType::moveConstructorInvocations;
             Obj dest = source;
             ASSERT(!dest.has_value());
             ASSERT(&da == dest.get_allocator().mechanism());
             ASSERT(!source.has_value());
+            ASSERT(CCI == ValueType::copyConstructorInvocations);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
 
             const SrcObj & csource = source;
             ASSERT(!csource.has_value());
 
+            CCI = ValueType::copyConstructorInvocations;
+            MCI = ValueType::moveConstructorInvocations;
             Obj dest2 = csource;
             ASSERT(!dest2.has_value());
             ASSERT(&da == dest2.get_allocator().mechanism());
+            ASSERT(CCI == ValueType::copyConstructorInvocations);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
 
+            CCI = ValueType::copyConstructorInvocations;
+            MCI = ValueType::moveConstructorInvocations;
             Obj dest3(bsl::allocator_arg, &ta, source);
             ASSERT(!dest3.has_value());
             ASSERT(&ta == dest3.get_allocator().mechanism());
+            ASSERT(CCI == ValueType::copyConstructorInvocations);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
 
+            CCI = ValueType::copyConstructorInvocations;
+            MCI = ValueType::moveConstructorInvocations;
             Obj dest4(bsl::allocator_arg, &ta, csource);
             ASSERT(!dest4.has_value());
             ASSERT(&ta == dest4.get_allocator().mechanism());
+            ASSERT(CCI == ValueType::copyConstructorInvocations);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
       }
    }
 }
@@ -7762,32 +11169,48 @@ void bslstl_optional_test20()
             SrcObj source(SourceType(1));
             ASSERT(source.has_value());
 
+            int CCI = ValueType::copyConstructorInvocations;
+            int MCI = ValueType::moveConstructorInvocations;
             Obj dest = MovUtl::move(source);
             ASSERT(dest.has_value());
             ASSERT(dest.value().value() == 1);
 #if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
             ASSERT(source.value().value() == MOVED_FROM_VAL);
+            ASSERT(CCI == ValueType::copyConstructorInvocations);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
 #endif
 
             const SrcObj csource(SourceType(2));
 
+            CCI = ValueType::copyConstructorInvocations;
+            MCI = ValueType::moveConstructorInvocations;
             Obj dest2 = MovUtl::move(csource);
             ASSERT(dest2.has_value());
             ASSERT(dest2.value().value() == 2);
+            ASSERT(CCI == ValueType::copyConstructorInvocations);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
         }
         {
             SrcObj source(nullopt);
             ASSERT(!source.has_value());
 
+            int CCI = ValueType::copyConstructorInvocations;
+            int MCI = ValueType::moveConstructorInvocations;
             Obj dest = MovUtl::move(source);
             ASSERT(!dest.has_value());
             ASSERT(!source.has_value());
+            ASSERT(CCI == ValueType::copyConstructorInvocations);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
 
             const SrcObj & csource = source;
             ASSERT(!csource.has_value());
 
+            CCI = ValueType::copyConstructorInvocations;
+            MCI = ValueType::moveConstructorInvocations;
             Obj dest2 = MovUtl::move(csource);
             ASSERT(!dest2.has_value());
+            ASSERT(CCI == ValueType::copyConstructorInvocations);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
         }
     }
     if (verbose) printf( "\nUsing 'my_Class2'.\n");
@@ -7807,6 +11230,8 @@ void bslstl_optional_test20()
           SrcObj source(SourceType(1));
           ASSERT(source.has_value());
 
+          int CCI = ValueType::copyConstructorInvocations;
+          int MCI = ValueType::moveConstructorInvocations;
           Obj dest = MovUtl::move(source);
           ASSERT(dest.has_value());
           ASSERT(dest.value().value() == 1);
@@ -7814,15 +11239,23 @@ void bslstl_optional_test20()
 #if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
           ASSERT(source.value().value() == MOVED_FROM_VAL);
 #endif
+          ASSERT(CCI == ValueType::copyConstructorInvocations);
+          ASSERT(MCI == ValueType::moveConstructorInvocations);
 
           const SrcObj source2(SourceType(2));
+          CCI = ValueType::copyConstructorInvocations;
+          MCI = ValueType::moveConstructorInvocations;
           Obj dest2 = MovUtl::move(source2);;
           ASSERT(dest2.has_value());
           ASSERT(dest2.value().value() == 2);
           ASSERT(dest2.value().d_def.d_allocator_p == &da);
           ASSERT(dest2.get_allocator().mechanism() == &da);
+          ASSERT(CCI == ValueType::copyConstructorInvocations);
+          ASSERT(MCI == ValueType::moveConstructorInvocations);
 
           SrcObj source3(SourceType(3));
+          CCI = ValueType::copyConstructorInvocations;
+          MCI = ValueType::moveConstructorInvocations;
           Obj dest3(bsl::allocator_arg, &ta, MovUtl::move(source3));
           ASSERT(dest3.has_value());
           ASSERT(dest3.value().value() == 3);
@@ -7831,37 +11264,59 @@ void bslstl_optional_test20()
 #if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
           ASSERT(source3.value().value() == MOVED_FROM_VAL);
 #endif
+          ASSERT(CCI == ValueType::copyConstructorInvocations);
+          ASSERT(MCI == ValueType::moveConstructorInvocations);
 
           const SrcObj source4(SourceType(4));
+          CCI = ValueType::copyConstructorInvocations;
+          MCI = ValueType::moveConstructorInvocations;
           Obj dest4(bsl::allocator_arg, &ta, MovUtl::move(source4));
           ASSERT(dest4.has_value());
           ASSERT(dest4.value().value() == 4);
           ASSERT(dest4.value().d_def.d_allocator_p == &ta);
           ASSERT(dest4.get_allocator().mechanism() == &ta);
+          ASSERT(CCI == ValueType::copyConstructorInvocations);
+          ASSERT(MCI == ValueType::moveConstructorInvocations);
        }
        {
           SrcObj source(nullopt);
           ASSERT(!source.has_value());
 
+          int CCI = ValueType::copyConstructorInvocations;
+          int MCI = ValueType::moveConstructorInvocations;
           Obj dest = MovUtl::move(source);
           ASSERT(!dest.has_value());
           ASSERT(dest.get_allocator().mechanism() == &da);
           ASSERT(!source.has_value());
+          ASSERT(CCI == ValueType::copyConstructorInvocations);
+          ASSERT(MCI == ValueType::moveConstructorInvocations);
 
           const SrcObj source2(nullopt);
+          CCI = ValueType::copyConstructorInvocations;
+          MCI = ValueType::moveConstructorInvocations;
           Obj dest2 = MovUtl::move(source2);
           ASSERT(!dest2.has_value());
           ASSERT(dest2.get_allocator().mechanism() == &da);
+          ASSERT(CCI == ValueType::copyConstructorInvocations);
+          ASSERT(MCI == ValueType::moveConstructorInvocations);
 
           SrcObj source3(nullopt);
+          CCI = ValueType::copyConstructorInvocations;
+          MCI = ValueType::moveConstructorInvocations;
           Obj dest3(bsl::allocator_arg, &ta, MovUtl::move(source3));
           ASSERT(!dest3.has_value());
           ASSERT(dest3.get_allocator().mechanism() == &ta);
+          ASSERT(CCI == ValueType::copyConstructorInvocations);
+          ASSERT(MCI == ValueType::moveConstructorInvocations);
 
           const SrcObj source4(nullopt);
+          CCI = ValueType::copyConstructorInvocations;
+          MCI = ValueType::moveConstructorInvocations;
           Obj dest4(bsl::allocator_arg, &ta, MovUtl::move(source4));
           ASSERT(!dest4.has_value());
           ASSERT(dest4.get_allocator().mechanism() == &ta);
+          ASSERT(CCI == ValueType::copyConstructorInvocations);
+          ASSERT(MCI == ValueType::moveConstructorInvocations);
        }
     }
     if (verbose) printf( "\nUsing 'my_Class2a'.\n");
@@ -7879,6 +11334,8 @@ void bslstl_optional_test20()
 
         {
             SrcObj source(bsl::allocator_arg, &oa, SourceType(1));
+            int CCI = ValueType::copyConstructorInvocations;
+            int MCI = ValueType::moveConstructorInvocations;
             Obj dest = MovUtl::move(source);
             ASSERT(dest.has_value());
             ASSERT(dest.value().value() == 1);
@@ -7886,14 +11343,22 @@ void bslstl_optional_test20()
 #if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
             ASSERT(source.value().value() == MOVED_FROM_VAL);
 #endif
+            ASSERT(CCI == ValueType::copyConstructorInvocations);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
 
             const SrcObj source2(bsl::allocator_arg, &oa, SourceType(2));
+            CCI = ValueType::copyConstructorInvocations;
+            MCI = ValueType::moveConstructorInvocations;
             Obj dest2 = MovUtl::move(source2);;
             ASSERT(dest2.has_value());
             ASSERT(dest2.value().value() == 2);
             ASSERT(&da == dest2.get_allocator().mechanism());
+            ASSERT(CCI == ValueType::copyConstructorInvocations);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
 
             SrcObj source3(bsl::allocator_arg, &oa, SourceType(3));
+            CCI = ValueType::copyConstructorInvocations;
+            MCI = ValueType::moveConstructorInvocations;
             Obj dest3(bsl::allocator_arg, &ta, MovUtl::move(source3));
             ASSERT(dest3.has_value());
             ASSERT(dest3.value().value() == 3);
@@ -7901,11 +11366,17 @@ void bslstl_optional_test20()
 #if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
             ASSERT(source3.value().value() == MOVED_FROM_VAL);
 #endif
+            ASSERT(CCI == ValueType::copyConstructorInvocations);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
 
             const SrcObj source4(bsl::allocator_arg, &oa, SourceType(4));
+            CCI = ValueType::copyConstructorInvocations;
+            MCI = ValueType::moveConstructorInvocations;
             Obj dest4(bsl::allocator_arg, &ta, MovUtl::move(source4));
             ASSERT(dest4.value().value() == 4);
             ASSERT(&ta == dest4.get_allocator().mechanism());
+            ASSERT(CCI == ValueType::copyConstructorInvocations);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
         }
         {
             SrcObj source(bsl::allocator_arg, &oa, nullopt);
@@ -8056,16 +11527,24 @@ void bslstl_optional_test21()
         {
             SourceType source(1);
 
+            int CCI = ValueType::copyConstructorInvocations;
+            int MCI = ValueType::moveConstructorInvocations;
             Obj dest = source;
             ASSERT(dest.has_value());
             ASSERT(dest.value() == source);
             ASSERT(dest.value().value() == 1);
+            ASSERT(CCI == ValueType::copyConstructorInvocations);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
 
-            const ValueType & csource = source;
+            const SourceType & csource = source;
+            CCI = ValueType::copyConstructorInvocations;
+            MCI = ValueType::moveConstructorInvocations;
             Obj dest2 = csource;
             ASSERT(dest2.has_value());
             ASSERT(dest2.value() == csource);
             ASSERT(dest2.value().value() == 1);
+            ASSERT(CCI == ValueType::copyConstructorInvocations);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
         }
     }
     if (verbose) printf( "\nUsing 'my_Class2'.\n");
@@ -8082,30 +11561,46 @@ void bslstl_optional_test21()
 
         {
             SourceType source(1);
+            int CCI = ValueType::copyConstructorInvocations;
+            int MCI = ValueType::moveConstructorInvocations;
             Obj dest = source;
             ASSERT(dest.has_value());
             ASSERT(dest.value() == source);
             ASSERT(dest.value().value() == 1);
             ASSERT(&da == dest.get_allocator().mechanism());
+            ASSERT(CCI == ValueType::copyConstructorInvocations);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
 
             const SourceType source2(2);
+            CCI = ValueType::copyConstructorInvocations;
+            MCI = ValueType::moveConstructorInvocations;
             Obj dest2 = source2;
             ASSERT(dest2.has_value());
             ASSERT(dest2.value() == source2);
             ASSERT(&da == dest2.get_allocator().mechanism());
+            ASSERT(CCI == ValueType::copyConstructorInvocations);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
 
             const SourceType source3(3);
+            CCI = ValueType::copyConstructorInvocations;
+            MCI = ValueType::moveConstructorInvocations;
             Obj dest3(bsl::allocator_arg, &ta, source3);
             ASSERT(dest3.has_value());
             ASSERT(dest3.value() == source3);
             ASSERT(dest3.value().value() == 3);
             ASSERT(&ta == dest3.get_allocator().mechanism());
+            ASSERT(CCI == ValueType::copyConstructorInvocations);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
 
             const SourceType source4(4);
+            CCI = ValueType::copyConstructorInvocations;
+            MCI = ValueType::moveConstructorInvocations;
             Obj dest4(bsl::allocator_arg, &ta, source4);
             ASSERT(dest4.has_value());
             ASSERT(dest4.value() == source4);
             ASSERT(&ta == dest4.get_allocator().mechanism());
+            ASSERT(CCI == ValueType::copyConstructorInvocations);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
        }
      }
     if (verbose) printf( "\nUsing 'my_Class2a'.\n");
@@ -8125,32 +11620,48 @@ void bslstl_optional_test21()
             ASSERT(1 == source.value());
             ASSERT(&oa == source.d_def.d_allocator_p);
 
+            int CCI = ValueType::copyConstructorInvocations;
+            int MCI = ValueType::moveConstructorInvocations;
             Obj dest = source;
             ASSERT(dest.has_value());
             ASSERT(dest.value().value() == 1);
             ASSERT(&da == dest.get_allocator().mechanism());
             ASSERT(1 == source.value());
             ASSERT(&oa == source.d_def.d_allocator_p);
+            ASSERT(CCI == ValueType::copyConstructorInvocations);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
 
             const SourceType source2(2, &oa);
+            CCI = ValueType::copyConstructorInvocations;
+            MCI = ValueType::moveConstructorInvocations;
             Obj dest2 = source2;
             ASSERT(dest2.has_value());
             ASSERT(dest2.value().value() == 2);
             ASSERT(&da == dest2.get_allocator().mechanism());
+            ASSERT(CCI == ValueType::copyConstructorInvocations);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
 
             SourceType source3(3, &oa);
+            CCI = ValueType::copyConstructorInvocations;
+            MCI = ValueType::moveConstructorInvocations;
             Obj dest3(bsl::allocator_arg, &ta, source3);
             ASSERT(dest3.has_value());
             ASSERT(dest3.value().value() == 3);
             ASSERT(&ta == dest3.get_allocator().mechanism());
             ASSERT(3 == source3.value());
             ASSERT(&oa == source3.d_def.d_allocator_p);
+            ASSERT(CCI == ValueType::copyConstructorInvocations);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
 
             const SourceType source4(4, &oa);
+            CCI = ValueType::copyConstructorInvocations;
+            MCI = ValueType::moveConstructorInvocations;
             Obj dest4(bsl::allocator_arg, &ta, source4);
             ASSERT(dest4.has_value());
             ASSERT(dest4.value().value() == 4);
             ASSERT(&ta == dest4.get_allocator().mechanism());
+            ASSERT(CCI == ValueType::copyConstructorInvocations);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
          }
      }
 }
@@ -8279,18 +11790,26 @@ void bslstl_optional_test22()
 
         {
             SourceType source(1);
+            int CCI = ValueType::copyConstructorInvocations;
+            int MCI = ValueType::moveConstructorInvocations;
             Obj dest = MovUtl::move(source);
             ASSERT(dest.has_value());
             ASSERT(dest.value().value() == 1);
 #if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
             ASSERT(source.value() == MOVED_FROM_VAL);
 #endif
+            ASSERT(CCI == ValueType::copyConstructorInvocations);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
 
             const SourceType source2(2);
+            CCI = ValueType::copyConstructorInvocations;
+            MCI = ValueType::moveConstructorInvocations;
             Obj dest2 = MovUtl::move(source2);
             ASSERT(dest2.has_value());
             ASSERT(dest2.value().value() == 2);
             ASSERT(source2.value() == 2);
+            ASSERT(CCI == ValueType::copyConstructorInvocations);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
         }
     }
     if (verbose) printf( "\nUsing 'my_Class2'.\n");
@@ -8307,6 +11826,8 @@ void bslstl_optional_test22()
 
         {
           SourceType source(1, &oa);
+          int CCI = ValueType::copyConstructorInvocations;
+          int MCI = ValueType::moveConstructorInvocations;
           Obj dest = MovUtl::move(source);
           ASSERT(dest.has_value());
           ASSERT(dest.value().value() == 1);
@@ -8315,16 +11836,24 @@ void bslstl_optional_test22()
           ASSERT(source.value() == MOVED_FROM_VAL);
 #endif
           ASSERT(source.d_def.d_allocator_p == &oa);
+          ASSERT(CCI == ValueType::copyConstructorInvocations);
+          ASSERT(MCI == ValueType::moveConstructorInvocations);
 
           const SourceType source2(2, &oa);
+          CCI = ValueType::copyConstructorInvocations;
+          MCI = ValueType::moveConstructorInvocations;
           Obj dest2 = MovUtl::move(source2);
           ASSERT(dest2.has_value());
           ASSERT(dest2.value().value() == 2);
           ASSERT(dest2.get_allocator().mechanism() == &da);
           ASSERT(source2.value() == 2);
           ASSERT(source2.d_def.d_allocator_p == &oa);
+          ASSERT(CCI == ValueType::copyConstructorInvocations);
+          ASSERT(MCI == ValueType::moveConstructorInvocations);
 
           SourceType source3(3, &oa);
+          CCI = ValueType::copyConstructorInvocations;
+          MCI = ValueType::moveConstructorInvocations;
           Obj dest3(bsl::allocator_arg, &ta, MovUtl::move(source3));
           ASSERT(dest3.has_value());
           ASSERT(dest3.value().value() == 3);
@@ -8333,14 +11862,20 @@ void bslstl_optional_test22()
           ASSERT(source3.value() == MOVED_FROM_VAL);
 #endif
           ASSERT(source3.d_def.d_allocator_p == &oa);
+          ASSERT(CCI == ValueType::copyConstructorInvocations);
+          ASSERT(MCI == ValueType::moveConstructorInvocations);
 
           const SourceType source4(4, &oa);
+          CCI = ValueType::copyConstructorInvocations;
+          MCI = ValueType::moveConstructorInvocations;
           Obj dest4(bsl::allocator_arg, &ta, MovUtl::move(source4));
           ASSERT(dest4.has_value());
           ASSERT(dest4.value().value() == 4);
           ASSERT(dest4.get_allocator().mechanism() == &ta);
           ASSERT(source4.value() == 4);
           ASSERT(source4.d_def.d_allocator_p == &oa);
+          ASSERT(CCI == ValueType::copyConstructorInvocations);
+          ASSERT(MCI == ValueType::moveConstructorInvocations);
        }
     }
     if (verbose) printf( "\nUsing 'my_Class2a'.\n");
@@ -8357,6 +11892,8 @@ void bslstl_optional_test22()
 
         {
           SourceType source(1, &oa);
+          int CCI = ValueType::copyConstructorInvocations;
+          int MCI = ValueType::moveConstructorInvocations;
           Obj dest = MovUtl::move(source);
           ASSERT(dest.has_value());
           ASSERT(dest.value().value() == 1);
@@ -8365,16 +11902,24 @@ void bslstl_optional_test22()
           ASSERT(source.value() == MOVED_FROM_VAL);
 #endif
           ASSERT(source.d_def.d_allocator_p == &oa);
+          ASSERT(CCI == ValueType::copyConstructorInvocations);
+          ASSERT(MCI == ValueType::moveConstructorInvocations);
 
           const SourceType source2(2, &oa);
+          CCI = ValueType::copyConstructorInvocations;
+          MCI = ValueType::moveConstructorInvocations;
           Obj dest2 = MovUtl::move(source2);
           ASSERT(dest2.has_value());
           ASSERT(dest2.value().value() == 2);
           ASSERT(dest2.get_allocator().mechanism() == &da);
           ASSERT(source2.value() == 2);
           ASSERT(source2.d_def.d_allocator_p == &oa);
+          ASSERT(CCI == ValueType::copyConstructorInvocations);
+          ASSERT(MCI == ValueType::moveConstructorInvocations);
 
           SourceType source3(3, &oa);
+          CCI = ValueType::copyConstructorInvocations;
+          MCI = ValueType::moveConstructorInvocations;
           Obj dest3(bsl::allocator_arg, &ta, MovUtl::move(source3));
           ASSERT(dest3.has_value());
           ASSERT(dest3.value().value() == 3);
@@ -8383,454 +11928,752 @@ void bslstl_optional_test22()
           ASSERT(source3.value() == MOVED_FROM_VAL);
 #endif
           ASSERT(source3.d_def.d_allocator_p == &oa);
+          ASSERT(CCI == ValueType::copyConstructorInvocations);
+          ASSERT(MCI == ValueType::moveConstructorInvocations);
 
           const SourceType source4(4, &oa);
+          CCI = ValueType::copyConstructorInvocations;
+          MCI = ValueType::moveConstructorInvocations;
           Obj dest4(bsl::allocator_arg, &ta, MovUtl::move(source4));
           ASSERT(dest4.has_value());
           ASSERT(dest4.value().value() == 4);
           ASSERT(dest4.get_allocator().mechanism() == &ta);
           ASSERT(source4.value() == 4);
           ASSERT(source4.d_def.d_allocator_p == &oa);
+          ASSERT(CCI == ValueType::copyConstructorInvocations);
+          ASSERT(MCI == ValueType::moveConstructorInvocations);
        }
     }
 }
-template <typename ValType,typename OptType>
-void test_emplace_helper()
-{
-    OptType mX;
-    // ---   -------------------------------------------------
-    TEST_EMPLACE( ValType, mX, emplace(),                            // OP
-                   /* no ctor arg list */                            // EXP
-                  );
 
-    TEST_EMPLACE( ValType, mX,emplace(VA1),                       // OP
-                   (VA1)                                             // EXP
-                  );
-
-    TEST_EMPLACE( ValType, mX,emplace(VA1, VA2),                  // OP
-                   (VA1, VA2)                                        // EXP
-                  );
-
-    TEST_EMPLACE( ValType, mX,emplace(VA1, VA2, VA3),             // OP
-                   (VA1, VA2, VA3)                                   // EXP
-                  );
-
-    TEST_EMPLACE( ValType, mX,emplace(VA1, VA2, VA3, VA4),        // OP
-                   (VA1, VA2, VA3, VA4)                              // EXP
-                  );
-
-    TEST_EMPLACE( ValType, mX,emplace(VA1, VA2, VA3, VA4, VA5),                            // OP
-                   (VA1, VA2, VA3, VA4, VA5)                         // EXP
-                  );
-
-    TEST_EMPLACE( ValType, mX,emplace(VA1, VA2, VA3, VA4, VA5,
-                                     VA6),                       // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6)                    // EXP
-                  );
-
-    TEST_EMPLACE( ValType, mX,emplace(VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7),                  // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7)               // EXP
-                  );
-
-    TEST_EMPLACE( ValType, mX,emplace(VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7, VA8),             // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8)          // EXP
-                  );
-
-    TEST_EMPLACE( ValType, mX,emplace(VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7, VA8, VA9),        // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                    VA9)                                             // EXP
-                  );
-
-    TEST_EMPLACE( ValType, mX,emplace(VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7, VA8, VA9, VA10),                            // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7,
-                    VA8, VA9, VA10)                                  // EXP
-                  );
-
-    TEST_EMPLACE( ValType, mX,emplace(VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7, VA8, VA9, VA10,
-                                     VA11),                      // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                    VA9, VA10, VA11)                                 // EXP
-                  );
-
-    TEST_EMPLACE( ValType, mX,emplace(VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7, VA8, VA9, VA10,
-                                     VA11, VA12),                // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                    VA9, VA10, VA11, VA12)                           // EXP
-                  );
-
-    TEST_EMPLACE( ValType, mX,emplace(VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7, VA8, VA9, VA10,
-                                     VA11, VA12, VA13),          // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                    VA9, VA10, VA11, VA12, VA13)                     // EXP
-                  );
-
-}
-template <typename ValType, typename ObjType>
-void test_emplacea_helper()
-{
-    bslma::TestAllocator da("default", veryVeryVeryVerbose);
-    bslma::TestAllocator oa("other", veryVeryVeryVerbose);
-    bslma::TestAllocator ta("third", veryVeryVeryVerbose);
-
-    bslma::DefaultAllocatorGuard dag(&da);
-
-    ObjType mX(bsl::allocator_arg, &oa);
-     TEST_EMPLACEA( ValType, mX, emplace(),                            // OP
-                   /* no ctor arg list */ ,                           // EXP
-                   &oa);
-
-    TEST_EMPLACEA( ValType, mX, emplace( VA1),                       // OP
-                   (VA1),                                             // EXP
-                  &oa);
-
-    TEST_EMPLACEA( ValType, mX, emplace( VA1, VA2),                  // OP
-                   (VA1, VA2) ,                                       // EXP
-                  &oa);
-
-    TEST_EMPLACEA( ValType, mX, emplace( VA1, VA2, VA3),             // OP
-                   (VA1, VA2, VA3),                                   // EXP
-                  &oa);
-
-    TEST_EMPLACEA( ValType, mX, emplace( VA1, VA2, VA3, VA4),        // OP
-                   (VA1, VA2, VA3, VA4),                              // EXP
-                   &oa);
-
-    TEST_EMPLACEA( ValType, mX, emplace( VA1, VA2, VA3, VA4, VA5),                            // OP
-                   (VA1, VA2, VA3, VA4, VA5),                         // EXP
-                  &oa);
-
-    TEST_EMPLACEA( ValType, mX, emplace( VA1, VA2, VA3, VA4, VA5,
-                                     VA6),                       // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6),                    // EXP
-                  &oa);
-
-    TEST_EMPLACEA( ValType, mX, emplace( VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7),                  // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7),                // EXP
-                  &oa);
-
-    TEST_EMPLACEA( ValType, mX, emplace( VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7, VA8),             // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8),          // EXP
-                 &oa);
-
-    TEST_EMPLACEA( ValType, mX, emplace( VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7, VA8, VA9),        // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                    VA9)                              ,                // EXP
-                   &oa);
-
-    TEST_EMPLACEA( ValType, mX, emplace( VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7, VA8, VA9, VA10),                            // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7,
-                    VA8, VA9, VA10)                   ,                // EXP
-                   &oa);
-
-    TEST_EMPLACEA( ValType, mX, emplace( VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7, VA8, VA9, VA10,
-                                     VA11),                      // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                    VA9, VA10, VA11)                  ,                // EXP
-                  &oa);
-
-    TEST_EMPLACEA( ValType, mX, emplace( VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7, VA8, VA9, VA10,
-                                     VA11, VA12),                // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                    VA9, VA10, VA11, VA12)            ,                // EXP
-                  &oa);
-
-    TEST_EMPLACEA( ValType, mX, emplace( VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7, VA8, VA9, VA10,
-                                     VA11, VA12, VA13),          // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                    VA9, VA10, VA11, VA12, VA13)      ,                // EXP
-                  &oa);
-
-}
-void bslstl_optional_test23()
-{
-    // --------------------------------------------------------------------
-    // TESTING emplace ARGS... FUNCTIONALITY
-    //   This test will verify that the var args emplace function works
-    //   as expected.
-    //
-    // Concerns:
-    //   * Calling emplace on a non-engaged optional creates a value type object
-    //     using the optional's allocator and emplace arguments
-    //   * Calling emplace on an engaged optional replaces the value type object
-    //     with a new one created using the optional's allocator and emplace arguments
-    //   * Multiple arguments are correctly forwarded.
-    //   * emplace can not be used on a const qualified optional.
-    //
-    //
-    // Plan:
-    //
-    //
-    // Testing:
-    //
-    //   void emplace( Args&&...);
-    //
-    //   void value();
-    //
-    // --------------------------------------------------------------------
-
-    if (verbose) printf(
-                       "\nTESTING emplace ARGS... MEMBER FUNCTION "
-                       "\n==================================\n");
-
-    if (verbose) printf( "\nUsing 'ConstructTestTypeNoAlloc'.\n");
-    {
-        typedef ConstructTestTypeNoAlloc                  ValueType;
-        typedef const ConstructTestTypeNoAlloc            ConstValueType;
-        typedef bsl::optional<ValueType> Obj;
-        typedef bsl::optional<ConstValueType> ObjC;
-
-        test_emplace_helper<ValueType,Obj> ();
-        test_emplace_helper<ValueType,ObjC> ();
-        test_emplace_helper<ConstValueType,Obj> ();
-        test_emplace_helper<ConstValueType,ObjC> ();
-#if defined(BSLSTL_OPTIONAL_TEST_BAD_IL_EMPLACE1)
-        {
-            CObj bad1;
-            bad1.emplace();  // this should not compile 1/10
-            bad1.emplace( VA1); // this should not compile 2/10
-            bad1.emplace( VA1, VA2); // this should not compile 3/10
-            bad1.emplace( VA1, VA2, VA3); // this should not compile 4/10
-            bad1.emplace( VA1, VA2, VA3, VA4); // this should not compile 5/10
-
-            CObjC bad2;
-            bad2.emplace();  // this should not compile 6/10
-            bad2.emplace( VA1); // this should not compile 7/10
-            bad2.emplace( VA1, VA2); // this should not compile 8/10
-            bad2.emplace( VA1, VA2, VA3); // this should not compile 9/10
-            bad2.emplace( VA1, VA2, VA3, VA4); // this should not compile 10/10
-
-        }
-#endif
-    }
-    if (verbose) printf( "\nUsing 'ConstructTestTypeAlloc'.\n");
-    {
-        bslma::TestAllocator da("default", veryVeryVeryVerbose);
-        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
-        bslma::TestAllocator ta("third", veryVeryVeryVerbose);
-
-        bslma::DefaultAllocatorGuard dag(&da);
-
-        typedef ConstructTestTypeAlloc                  ValueType;
-        typedef const ConstructTestTypeAlloc            ConstValueType;
-        typedef bsl::optional<ValueType> Obj;
-        typedef bsl::optional<ConstValueType> ObjC;
-
-        test_emplace_helper<ValueType,Obj> ();
-        test_emplace_helper<ValueType,ObjC> ();
-        test_emplace_helper<ConstValueType,Obj> ();
-        test_emplace_helper<ConstValueType,ObjC> ();
-
-        test_emplacea_helper<ValueType,Obj> ();
-        test_emplacea_helper<ValueType,ObjC> ();
-        test_emplacea_helper<ConstValueType,Obj> ();
-        test_emplacea_helper<ConstValueType,ObjC> ();
-#if defined(BSLSTL_OPTIONAL_TEST_BAD_IL_EMPLACE2)
-        {
-            CObj bad1;
-            bad1.emplace();  // this should not compile 1/10
-            bad1.emplace(VA1); // this should not compile 2/10
-            bad1.emplace(VA1, VA2); // this should not compile 3/10
-            bad1.emplace(VA1, VA2, VA3); // this should not compile 4/10
-            bad1.emplace(VA1, VA2, VA3, VA4); // this should not compile 5/10
-
-            CObjC bad2;
-            bad2.emplace();  // this should not compile 6/10
-            bad2.emplace(VA1); // this should not compile 7/10
-            bad2.emplace(VA1, VA2); // this should not compile 8/10
-            bad2.emplace(VA1, VA2, VA3); // this should not compile 9/10
-            bad2.emplace(VA1, VA2, VA3, VA4); // this should not compile 10/10
-
-        }
-#endif
-    }
-    if (verbose) printf( "\nUsing 'ConstructTestTypeAllocArgT'.\n");
-    {
-        bslma::TestAllocator da("default", veryVeryVeryVerbose);
-        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
-        bslma::TestAllocator ta("third", veryVeryVeryVerbose);
-
-        bslma::DefaultAllocatorGuard dag(&da);
-
-        typedef ConstructTestTypeAllocArgT               ValueType;
-        typedef const ConstructTestTypeAllocArgT         ConstValueType;
-        typedef bsl::optional<ValueType> Obj;
-        typedef bsl::optional<ConstValueType> ObjC;
-
-        test_emplace_helper<ValueType,Obj> ();
-        test_emplace_helper<ValueType,ObjC> ();
-        test_emplace_helper<ConstValueType,Obj> ();
-        test_emplace_helper<ConstValueType,ObjC> ();
-
-        test_emplacea_helper<ValueType,Obj> ();
-        test_emplacea_helper<ValueType,ObjC> ();
-        test_emplacea_helper<ConstValueType,Obj> ();
-        test_emplacea_helper<ConstValueType,ObjC> ();
-    }
-}
 template <typename VALTYPE, typename OPTYPE>
 void test_copy_helper()
 {
-  TEST_COPY(VALTYPE, OPTYPE, (bsl::in_place),                            // OP
-                 /* no ctor arg list */                            // EXP
+    TEST_COPY(VALTYPE, OPTYPE, (bsl::in_place),
+                 /* no ctor arg list */
                 );
 
-  TEST_COPY(VALTYPE, OPTYPE, (bsl::in_place,VA1),                       // OP
-                 (VA1)                                             // EXP
-                );
+    TEST_COPY(VALTYPE, OPTYPE,
+              (bsl::in_place, MovUtl::move(VA1)),
+              (MovUtl::move(VA1))
+             );
+    TEST_COPY(VALTYPE, OPTYPE,
+              (bsl::in_place, VA1),
+              (VA1)
+             );
 
-  TEST_COPY(VALTYPE, OPTYPE, (bsl::in_place,VA1, VA2),                  // OP
-                 (VA1, VA2)                                        // EXP
-                );
+    TEST_COPY(VALTYPE, OPTYPE,
+              (bsl::in_place,
+               MovUtl::move(VA1), VA2),
+              (MovUtl::move(VA1), VA2)
+             );
+    TEST_COPY(VALTYPE, OPTYPE,
+              (bsl::in_place,
+               VA1, MovUtl::move(VA2)),
+              (VA1, MovUtl::move(VA2))
+             );
 
-  TEST_COPY(VALTYPE, OPTYPE, (bsl::in_place,VA1, VA2, VA3),             // OP
-                 (VA1, VA2, VA3)                                   // EXP
-                );
+    TEST_COPY(VALTYPE, OPTYPE,
+              (bsl::in_place,
+               MovUtl::move(VA1), VA2, MovUtl::move(VA3)),
+              (MovUtl::move(VA1), VA2, MovUtl::move(VA3))
+             );
+    TEST_COPY(VALTYPE, OPTYPE,
+              (bsl::in_place,
+               VA1, MovUtl::move(VA2), VA3),
+              (VA1, MovUtl::move(VA2), VA3)
+             );
 
-  TEST_COPY(VALTYPE, OPTYPE, (bsl::in_place,VA1, VA2, VA3, VA4),        // OP
-                 (VA1, VA2, VA3, VA4)                              // EXP
-                );
+    TEST_COPY(VALTYPE, OPTYPE,
+              (bsl::in_place,
+               MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4),
+              (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4)
+             );
+    TEST_COPY(VALTYPE, OPTYPE,
+              (bsl::in_place,
+               VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4)),
+              (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4))
+             );
 
-  TEST_COPY(VALTYPE, OPTYPE, (bsl::in_place,VA1, VA2, VA3, VA4, VA5),                            // OP
-                 (VA1, VA2, VA3, VA4, VA5)                         // EXP
-                );
+    TEST_COPY(VALTYPE, OPTYPE,
+              (bsl::in_place,
+               MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+               MovUtl::move(VA5)),
+              (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+               MovUtl::move(VA5))
+             );
+    TEST_COPY(VALTYPE, OPTYPE,
+              (bsl::in_place,
+               VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+               VA5),
+              (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+               VA5)
+             );
 
-  TEST_COPY(VALTYPE, OPTYPE, (bsl::in_place,VA1, VA2, VA3, VA4, VA5,
-                                   VA6),                       // OP
-                 (VA1, VA2, VA3, VA4, VA5, VA6)                    // EXP
-                );
+    TEST_COPY(VALTYPE, OPTYPE,
+              (bsl::in_place,
+               MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+               MovUtl::move(VA5), VA6),
+              (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+               MovUtl::move(VA5), VA6)
+             );
+    TEST_COPY(VALTYPE, OPTYPE,
+              (bsl::in_place,
+               VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+               VA5, MovUtl::move(VA6)),
+              (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+               VA5, MovUtl::move(VA6))
+             );
 
-  TEST_COPY(VALTYPE, OPTYPE, (bsl::in_place,VA1, VA2, VA3, VA4, VA5,
-                                   VA6, VA7),                  // OP
-                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7)               // EXP
-                );
+    TEST_COPY(VALTYPE, OPTYPE,
+              (bsl::in_place,
+               MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+               MovUtl::move(VA5), VA6, MovUtl::move(VA7)),
+              (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+               MovUtl::move(VA5), VA6, MovUtl::move(VA7))
+             );
+    TEST_COPY(VALTYPE, OPTYPE,
+              (bsl::in_place,
+               VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+               VA5, MovUtl::move(VA6), VA7),
+              (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+               VA5, MovUtl::move(VA6), VA7)
+              );
 
-  TEST_COPY(VALTYPE, OPTYPE, (bsl::in_place,VA1, VA2, VA3, VA4, VA5,
-                                   VA6, VA7, VA8),             // OP
-                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8)          // EXP
-                );
+    TEST_COPY(VALTYPE, OPTYPE,
+              (bsl::in_place,
+               MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+               MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8),
+              (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+               MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8)
+             );
+    TEST_COPY(VALTYPE, OPTYPE,
+              (bsl::in_place,
+               VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+               VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8)),
+              (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+               VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8))
+              );
 
-  TEST_COPY(VALTYPE, OPTYPE, (bsl::in_place,VA1, VA2, VA3, VA4, VA5,
-                                   VA6, VA7, VA8, VA9),        // OP
-                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                  VA9)                                             // EXP
-                );
+    TEST_COPY(VALTYPE, OPTYPE,
+              (bsl::in_place,
+               MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+               MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+               MovUtl::move(VA9)),
+              (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+               MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+               MovUtl::move(VA9))
+             );
+    TEST_COPY(VALTYPE, OPTYPE,
+              (bsl::in_place,
+               VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+               VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+               VA9),
+              (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+               VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+               VA9)
+              );
 
-  TEST_COPY(VALTYPE, OPTYPE, (bsl::in_place,VA1, VA2, VA3, VA4, VA5,
-                                   VA6, VA7, VA8, VA9, VA10),                            // OP
-                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7,
-                  VA8, VA9, VA10)                                  // EXP
-                );
+    TEST_COPY(VALTYPE, OPTYPE,
+              (bsl::in_place,
+               MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+               MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+               MovUtl::move(VA9), VA10),
+              (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+               MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+               MovUtl::move(VA9), VA10)
+             );
+    TEST_COPY(VALTYPE, OPTYPE,
+              (bsl::in_place,
+               VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+               VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+               VA9, MovUtl::move(VA10)),
+              (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+               VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+               VA9, MovUtl::move(VA10))
+              );
 
-  TEST_COPY(VALTYPE, OPTYPE, (bsl::in_place,VA1, VA2, VA3, VA4, VA5,
-                                   VA6, VA7, VA8, VA9, VA10,
-                                   VA11),                      // OP
-                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                  VA9, VA10, VA11)                                 // EXP
-                );
+    TEST_COPY(VALTYPE, OPTYPE,
+              (bsl::in_place,
+               MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+               MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+               MovUtl::move(VA9), VA10, MovUtl::move(VA11)),
+              (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+               MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+               MovUtl::move(VA9), VA10, MovUtl::move(VA11))
+             );
+    TEST_COPY(VALTYPE, OPTYPE,
+              (bsl::in_place,
+               VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+               VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+               VA9, MovUtl::move(VA10), VA11),
+              (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+               VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+               VA9, MovUtl::move(VA10), VA11)
+              );
 
-  TEST_COPY(VALTYPE, OPTYPE, (bsl::in_place,VA1, VA2, VA3, VA4, VA5,
-                                   VA6, VA7, VA8, VA9, VA10,
-                                   VA11, VA12),                // OP
-                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                  VA9, VA10, VA11, VA12)                           // EXP
-                );
+    TEST_COPY(VALTYPE, OPTYPE,
+              (bsl::in_place,
+               MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+               MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+               MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12),
+              (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+               MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+               MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12)
+             );
+    TEST_COPY(VALTYPE, OPTYPE,
+              (bsl::in_place,
+               VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+               VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+               VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12)),
+              (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+               VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+               VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12))
+              );
 
-  TEST_COPY(VALTYPE, OPTYPE, (bsl::in_place,VA1, VA2, VA3, VA4, VA5,
-                                   VA6, VA7, VA8, VA9, VA10,
-                                   VA11, VA12, VA13),          // OP
-                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                  VA9, VA10, VA11, VA12, VA13)                     // EXP
-                );
+    TEST_COPY(VALTYPE, OPTYPE,
+              (bsl::in_place,
+               MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+               MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+               MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+               MovUtl::move(VA13)),
+              (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+               MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+               MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+               MovUtl::move(VA13))
+             );
+    TEST_COPY(VALTYPE, OPTYPE,
+              (bsl::in_place,
+               VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+               VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+               VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+               VA13),
+              (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+               VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+               VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+               VA13)
+              );
 
+    TEST_COPY(VALTYPE, OPTYPE,
+              (bsl::in_place,
+               MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+               MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+               MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+               MovUtl::move(VA13), VA14),
+              (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+               MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+               MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+               MovUtl::move(VA13), VA14)
+             );
+    TEST_COPY(VALTYPE, OPTYPE,
+              (bsl::in_place,
+               VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+               VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+               VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+               VA13, MovUtl::move(VA14)),
+              (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+               VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+               VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+               VA13, MovUtl::move(VA14))
+              );
 }
 template <typename VALTYPE, typename OPTYPE>
 void test_copyad_helper()
 {
     bslma::TestAllocator da("default", veryVeryVeryVerbose);
     bslma::TestAllocator oa("other", veryVeryVeryVerbose);
-    bslma::TestAllocator ta("third", veryVeryVeryVerbose);
 
     bslma::DefaultAllocatorGuard dag(&da);
     // ---   -------------------------------------------------
-    TEST_COPYA(VALTYPE, OPTYPE, (bsl::in_place, {1,2,3}),                            // OP
-                   /* no ctor arg list */ ,                           // EXP
-                  &da);
+    TEST_COPYA(VALTYPE, OPTYPE, (bsl::in_place),
+               /* no ctor arg list */,
+               &da);
 
-    TEST_COPYA(VALTYPE, OPTYPE, (bsl::in_place, VA1),                       // OP
-                   (VA1),                                             // EXP
-                   &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, MovUtl::move(VA1)),
+               (MovUtl::move(VA1)),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, VA1),
+               (VA1),
+               &da);
 
-    TEST_COPYA(VALTYPE, OPTYPE, (bsl::in_place, VA1, VA2),                  // OP
-                   (VA1, VA2) ,                                       // EXP
-                  &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                MovUtl::move(VA1), VA2),
+               (MovUtl::move(VA1), VA2),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                VA1, MovUtl::move(VA2)),
+               (VA1, MovUtl::move(VA2)),
+               &da);
 
-    TEST_COPYA(VALTYPE, OPTYPE, (bsl::in_place, VA1, VA2, VA3),             // OP
-                   (VA1, VA2, VA3),                                   // EXP
-                  &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3)),
+               (MovUtl::move(VA1), VA2, MovUtl::move(VA3)),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3),
+               (VA1, MovUtl::move(VA2), VA3),
+               &da);
 
-    TEST_COPYA(VALTYPE, OPTYPE, (bsl::in_place, VA1, VA2, VA3, VA4),        // OP
-                   (VA1, VA2, VA3, VA4),                              // EXP
-                  &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4),
+               (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4)),
+               (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4)),
+               &da);
 
-    TEST_COPYA(VALTYPE, OPTYPE, (bsl::in_place, VA1, VA2, VA3, VA4, VA5),                            // OP
-                   (VA1, VA2, VA3, VA4, VA5),                         // EXP
-                  &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5)),
+               (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5)),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5),
+               (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5),
+               &da);
 
-    TEST_COPYA(VALTYPE, OPTYPE, (bsl::in_place, VA1, VA2, VA3, VA4, VA5,
-                                     VA6),                       // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6),                    // EXP
-                  &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6),
+               (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6)),
+               (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6)),
+               &da);
 
-    TEST_COPYA(VALTYPE, OPTYPE, (bsl::in_place, VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7),                  // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7),                // EXP
-                  &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7)),
+               (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7)),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7),
+               (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7),
+               &da);
 
-    TEST_COPYA(VALTYPE, OPTYPE, (bsl::in_place, VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7, VA8),             // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8),          // EXP
-                  &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8),
+               (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8)),
+               (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8)),
+               &da);
 
-    TEST_COPYA(VALTYPE, OPTYPE, (bsl::in_place, VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7, VA8, VA9),        // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                    VA9)                              ,                // EXP
-                  &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9)),
+               (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9)),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9),
+               (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9),
+               &da);
 
-    TEST_COPYA(VALTYPE, OPTYPE, (bsl::in_place, VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7, VA8, VA9, VA10),                            // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7,
-                    VA8, VA9, VA10)                   ,                // EXP
-                  &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+              (bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10),
+               (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10)),
+               (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10)),
+               &da);
 
-    TEST_COPYA(VALTYPE, OPTYPE, (bsl::in_place, VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7, VA8, VA9, VA10,
-                                     VA11),                      // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                    VA9, VA10, VA11)                  ,                // EXP
-                  &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11)),
+               (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11)),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11),
+               (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11),
+               &da);
 
-    TEST_COPYA(VALTYPE, OPTYPE, (bsl::in_place, VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7, VA8, VA9, VA10,
-                                     VA11, VA12),                // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                    VA9, VA10, VA11, VA12)            ,                // EXP
-                  &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12),
+               (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12)),
+               (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12)),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+                MovUtl::move(VA13)),
+               (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+                MovUtl::move(VA13)),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+                VA13),
+               (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+                VA13),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+                MovUtl::move(VA13), VA14),
+               (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+                MovUtl::move(VA13), VA14),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+                VA13, MovUtl::move(VA14)),
+               (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+                VA13, MovUtl::move(VA14)),
+               &da);
+
 }
+template <typename VALTYPE, typename OPTYPE>
+void test_copyad_argt_helper()
+{
+    bslma::TestAllocator da("default", veryVeryVeryVerbose);
+    bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+    bslma::DefaultAllocatorGuard dag(&da);
+    // ---   -------------------------------------------------
+    TEST_COPYA(VALTYPE, OPTYPE, (bsl::in_place),
+               (bsl::allocator_arg, &oa),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, MovUtl::move(VA1)),
+               (bsl::allocator_arg, &oa, MovUtl::move(VA1)),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, VA1),
+               (bsl::allocator_arg, &oa, VA1),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                MovUtl::move(VA1), VA2),
+               (bsl::allocator_arg, &oa, MovUtl::move(VA1), VA2),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                VA1, MovUtl::move(VA2)),
+               (bsl::allocator_arg, &oa, VA1, MovUtl::move(VA2)),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3)),
+               (bsl::allocator_arg, &oa,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3)),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3),
+               (bsl::allocator_arg, &oa,
+                VA1, MovUtl::move(VA2), VA3),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4),
+               (bsl::allocator_arg, &oa,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4)),
+               (bsl::allocator_arg, &oa,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4)),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5)),
+               (bsl::allocator_arg, &oa,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5)),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5),
+               (bsl::allocator_arg, &oa,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6),
+               (bsl::allocator_arg, &oa,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6)),
+               (bsl::allocator_arg, &oa,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6)),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7)),
+               (bsl::allocator_arg, &oa,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7)),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7),
+               (bsl::allocator_arg, &oa,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8),
+               (bsl::allocator_arg, &oa,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8)),
+               (bsl::allocator_arg, &oa,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8)),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9)),
+               (bsl::allocator_arg, &oa,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9)),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9),
+               (bsl::allocator_arg, &oa,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+              (bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10),
+               (bsl::allocator_arg, &oa,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10)),
+               (bsl::allocator_arg, &oa,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10)),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11)),
+               (bsl::allocator_arg, &oa,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11)),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11),
+               (bsl::allocator_arg, &oa,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12),
+               (bsl::allocator_arg, &oa,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12)),
+               (bsl::allocator_arg, &oa,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12)),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+                MovUtl::move(VA13)),
+               (bsl::allocator_arg, &oa,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+                MovUtl::move(VA13)),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+                VA13),
+               (bsl::allocator_arg, &oa,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+                VA13),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+                MovUtl::move(VA13), VA14),
+               (bsl::allocator_arg, &oa,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+                MovUtl::move(VA13), VA14),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+                VA13, MovUtl::move(VA14)),
+               (bsl::allocator_arg, &oa,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+                VA13, MovUtl::move(VA14)),
+               &da);
+
+ }
 template <typename VALTYPE, typename OPTYPE>
 void test_copya_helper()
 {
@@ -8840,146 +12683,706 @@ void test_copya_helper()
 
     bslma::DefaultAllocatorGuard dag(&da);
     // ---   -------------------------------------------------
-    TEST_COPYA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3}),                            // OP
-                   /* no ctor arg list */ ,                           // EXP
-                  &oa);
 
-    TEST_COPYA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place, VA1),                       // OP
-                   (VA1),                                             // EXP
-                   &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place),
+               ,
+               &oa);
 
-    TEST_COPYA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place, VA1, VA2),                  // OP
-                   (VA1, VA2) ,                                       // EXP
-                  &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, MovUtl::move(VA1)),
+               (MovUtl::move(VA1)),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, VA1),
+               (VA1),
+               &oa);
 
-    TEST_COPYA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place, VA1, VA2, VA3),             // OP
-                   (VA1, VA2, VA3),                                   // EXP
-                  &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                MovUtl::move(VA1), VA2),
+               (MovUtl::move(VA1), VA2),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                VA1, MovUtl::move(VA2)),
+               (VA1, MovUtl::move(VA2)),
+               &oa);
 
-    TEST_COPYA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place, VA1, VA2, VA3, VA4),        // OP
-                   (VA1, VA2, VA3, VA4),                              // EXP
-                  &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3)),
+               (MovUtl::move(VA1), VA2, MovUtl::move(VA3)),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3),
+               (VA1, MovUtl::move(VA2), VA3),
+               &oa);
 
-    TEST_COPYA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place, VA1, VA2, VA3, VA4, VA5),                            // OP
-                   (VA1, VA2, VA3, VA4, VA5),                         // EXP
-                  &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4),
+               (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4)),
+               (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4)),
+               &oa);
 
-    TEST_COPYA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place, VA1, VA2, VA3, VA4, VA5,
-                                     VA6),                       // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6),                    // EXP
-                  &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5)),
+               (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5)),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5),
+               (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5),
+               &oa);
 
-    TEST_COPYA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place, VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7),                  // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7),                // EXP
-                  &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6),
+               (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6)),
+               (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6)),
+               &oa);
 
-    TEST_COPYA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place, VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7, VA8),             // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8),          // EXP
-                  &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7)),
+               (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7)),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7),
+               (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7),
+               &oa);
 
-    TEST_COPYA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place, VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7, VA8, VA9),        // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                    VA9)                              ,                // EXP
-                  &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8),
+               (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8)),
+               (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8)),
+               &oa);
 
-    TEST_COPYA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place, VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7, VA8, VA9, VA10),                            // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7,
-                    VA8, VA9, VA10)                   ,                // EXP
-                  &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9)),
+               (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9)),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9),
+               (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9),
+               &oa);
 
-    TEST_COPYA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place, VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7, VA8, VA9, VA10,
-                                     VA11),                      // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                    VA9, VA10, VA11)                  ,                // EXP
-                  &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+              (bsl::allocator_arg, &oa, bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10),
+               (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10)),
+               (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10)),
+               &oa);
 
-    TEST_COPYA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place, VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7, VA8, VA9, VA10,
-                                     VA11, VA12),                // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                    VA9, VA10, VA11, VA12)            ,                // EXP
-                  &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11)),
+               (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11)),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11),
+               (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11),
+               &oa);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12),
+               (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12)),
+               (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12)),
+               &oa);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+                MovUtl::move(VA13)),
+               (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+                MovUtl::move(VA13)),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+                VA13),
+               (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+                VA13),
+               &oa);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+                MovUtl::move(VA13), VA14),
+               (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+                MovUtl::move(VA13), VA14),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+                VA13, MovUtl::move(VA14)),
+               (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+                VA13, MovUtl::move(VA14)),
+               &oa);
+}
+template <typename VALTYPE, typename OPTYPE>
+void test_copya_argt_helper()
+{
+    bslma::TestAllocator da("default", veryVeryVeryVerbose);
+    bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+    bslma::TestAllocator ta("third", veryVeryVeryVerbose);
+
+    bslma::DefaultAllocatorGuard dag(&oa);
+    // ---   -------------------------------------------------
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place),
+               (bsl::allocator_arg, &oa),
+               &oa);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, MovUtl::move(VA1)),
+               (bsl::allocator_arg, &oa, MovUtl::move(VA1)),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, VA1),
+               (bsl::allocator_arg, &oa, VA1),
+               &oa);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                MovUtl::move(VA1), VA2),
+               (bsl::allocator_arg, &oa, MovUtl::move(VA1), VA2),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                VA1, MovUtl::move(VA2)),
+               (bsl::allocator_arg, &oa, VA1, MovUtl::move(VA2)),
+               &oa);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3)),
+               (bsl::allocator_arg, &oa,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3)),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3),
+               (bsl::allocator_arg, &oa,
+                VA1, MovUtl::move(VA2), VA3),
+               &oa);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4),
+               (bsl::allocator_arg, &oa,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4)),
+               (bsl::allocator_arg, &oa,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4)),
+               &oa);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5)),
+               (bsl::allocator_arg, &oa,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5)),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5),
+               (bsl::allocator_arg, &oa,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5),
+               &oa);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6),
+               (bsl::allocator_arg, &oa,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6)),
+               (bsl::allocator_arg, &oa,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6)),
+               &oa);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7)),
+               (bsl::allocator_arg, &oa,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7)),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7),
+               (bsl::allocator_arg, &oa,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7),
+               &oa);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8),
+               (bsl::allocator_arg, &oa,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8)),
+               (bsl::allocator_arg, &oa,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8)),
+               &oa);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9)),
+               (bsl::allocator_arg, &oa,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9)),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9),
+               (bsl::allocator_arg, &oa,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9),
+               &oa);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+              (bsl::allocator_arg, &oa, bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10),
+               (bsl::allocator_arg, &oa,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10)),
+               (bsl::allocator_arg, &oa,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10)),
+               &oa);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11)),
+               (bsl::allocator_arg, &oa,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11)),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11),
+               (bsl::allocator_arg, &oa,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11),
+               &oa);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12),
+               (bsl::allocator_arg, &oa,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12)),
+               (bsl::allocator_arg, &oa,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12)),
+               &oa);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+                MovUtl::move(VA13)),
+               (bsl::allocator_arg, &oa,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+                MovUtl::move(VA13)),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+                VA13),
+               (bsl::allocator_arg, &oa,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+                VA13),
+               &oa);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+                MovUtl::move(VA13), VA14),
+               (bsl::allocator_arg, &oa,
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+                MovUtl::move(VA13), VA14),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+                VA13, MovUtl::move(VA14)),
+               (bsl::allocator_arg, &oa,
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+                VA13, MovUtl::move(VA14)),
+               &oa);
 }
 template <typename VALTYPE, typename OPTYPE>
 void test_copyil_helper()
 {
-  TEST_COPYIL(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3}),                            // OP
-                 /* no ctor arg list */                            // EXP
-                , 6);
+  TEST_COPY(VALTYPE, OPTYPE, (bsl::in_place, {1,2,3}),
+            ({1,2,3})
+           );
 
-  TEST_COPYIL(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3},VA1),                       // OP
-                 (VA1)                                             // EXP
-                , 6);
+  TEST_COPY(VALTYPE, OPTYPE,
+            (bsl::in_place, {1,2,3}, MovUtl::move(VA1)),
+            ({1,2,3}, MovUtl::move(VA1))
+           );
+  TEST_COPY(VALTYPE, OPTYPE,
+            (bsl::in_place, {1,2,3},  VA1),
+            ({1,2,3}, VA1)
+           );
 
-  TEST_COPYIL(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3},VA1, VA2),                  // OP
-                 (VA1, VA2)                                        // EXP
-                , 6);
+  TEST_COPY(VALTYPE, OPTYPE,
+            (bsl::in_place, {1,2,3},
+             MovUtl::move(VA1), VA2),
+            ({1,2,3}, MovUtl::move(VA1), VA2)
+           );
+  TEST_COPY(VALTYPE, OPTYPE,
+            (bsl::in_place, {1,2,3},
+             VA1, MovUtl::move(VA2)),
+            ({1,2,3}, VA1, MovUtl::move(VA2))
+           );
 
-  TEST_COPYIL(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3},VA1, VA2, VA3),             // OP
-                 (VA1, VA2, VA3)                                   // EXP
-                , 6);
+  TEST_COPY(VALTYPE, OPTYPE,
+            (bsl::in_place, {1,2,3},
+             MovUtl::move(VA1), VA2, MovUtl::move(VA3)),
+            ({1,2,3}, MovUtl::move(VA1), VA2, MovUtl::move(VA3))
+           );
+  TEST_COPY(VALTYPE, OPTYPE,
+            (bsl::in_place, {1,2,3},
+             VA1, MovUtl::move(VA2), VA3),
+            ({1,2,3}, VA1, MovUtl::move(VA2), VA3)
+           );
 
-  TEST_COPYIL(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3},VA1, VA2, VA3, VA4),        // OP
-                 (VA1, VA2, VA3, VA4)                              // EXP
-                , 6);
+  TEST_COPY(VALTYPE, OPTYPE,
+            (bsl::in_place, {1,2,3},
+             MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4),
+            ({1,2,3}, MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4)
+           );
+  TEST_COPY(VALTYPE, OPTYPE,
+            (bsl::in_place, {1,2,3},
+             VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4)),
+            ({1,2,3}, VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4))
+           );
 
-  TEST_COPYIL(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3},VA1, VA2, VA3, VA4, VA5),                            // OP
-                 (VA1, VA2, VA3, VA4, VA5)                         // EXP
-                , 6);
+  TEST_COPY(VALTYPE, OPTYPE,
+            (bsl::in_place, {1,2,3},
+             MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+             MovUtl::move(VA5)),
+            ({1,2,3}, MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+             MovUtl::move(VA5))
+           );
+  TEST_COPY(VALTYPE, OPTYPE,
+            (bsl::in_place, {1,2,3},
+             VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+             VA5),
+            ({1,2,3}, VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+             VA5)
+           );
 
-  TEST_COPYIL(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3},VA1, VA2, VA3, VA4, VA5,
-                                   VA6),                       // OP
-                 (VA1, VA2, VA3, VA4, VA5, VA6)                    // EXP
-                , 6);
+  TEST_COPY(VALTYPE, OPTYPE,
+            (bsl::in_place, {1,2,3},
+             MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+             MovUtl::move(VA5), VA6),
+            ({1,2,3}, MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+             MovUtl::move(VA5), VA6)
+           );
+  TEST_COPY(VALTYPE, OPTYPE,
+            (bsl::in_place, {1,2,3},
+             VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+             VA5, MovUtl::move(VA6)),
+            ({1,2,3}, VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+             VA5, MovUtl::move(VA6))
+           );
 
-  TEST_COPYIL(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3},VA1, VA2, VA3, VA4, VA5,
-                                   VA6, VA7),                  // OP
-                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7)               // EXP
-                , 6);
+  TEST_COPY(VALTYPE, OPTYPE,
+            (bsl::in_place, {1,2,3},
+             MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+             MovUtl::move(VA5), VA6, MovUtl::move(VA7)),
+            ({1,2,3}, MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+             MovUtl::move(VA5), VA6, MovUtl::move(VA7))
+           );
+  TEST_COPY(VALTYPE, OPTYPE,
+            (bsl::in_place, {1,2,3},
+             VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+             VA5, MovUtl::move(VA6), VA7),
+            ({1,2,3}, VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+             VA5, MovUtl::move(VA6), VA7)
+            );
 
-  TEST_COPYIL(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3},VA1, VA2, VA3, VA4, VA5,
-                                   VA6, VA7, VA8),             // OP
-                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8)          // EXP
-                , 6);
+  TEST_COPY(VALTYPE, OPTYPE,
+            (bsl::in_place, {1,2,3},
+             MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+             MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8),
+            ({1,2,3}, MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+             MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8)
+           );
+  TEST_COPY(VALTYPE, OPTYPE,
+            (bsl::in_place, {1,2,3},
+             VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+             VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8)),
+            ({1,2,3}, VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+             VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8))
+            );
 
-  TEST_COPYIL(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3},VA1, VA2, VA3, VA4, VA5,
-                                   VA6, VA7, VA8, VA9),        // OP
-                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                  VA9)                                             // EXP
-                , 6);
+  TEST_COPY(VALTYPE, OPTYPE,
+            (bsl::in_place, {1,2,3},
+             MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+             MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+             MovUtl::move(VA9)),
+            ({1,2,3}, MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+             MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+             MovUtl::move(VA9))
+           );
+  TEST_COPY(VALTYPE, OPTYPE,
+            (bsl::in_place, {1,2,3},
+             VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+             VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+             VA9),
+            ({1,2,3}, VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+             VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+             VA9)
+            );
 
-  TEST_COPYIL(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3},VA1, VA2, VA3, VA4, VA5,
-                                   VA6, VA7, VA8, VA9, VA10),                            // OP
-                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7,
-                  VA8, VA9, VA10)                                  // EXP
-                , 6);
+  TEST_COPY(VALTYPE, OPTYPE,
+            (bsl::in_place, {1,2,3},
+             MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+             MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+             MovUtl::move(VA9), VA10),
+            ({1,2,3}, MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+             MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+             MovUtl::move(VA9), VA10)
+           );
+  TEST_COPY(VALTYPE, OPTYPE,
+            (bsl::in_place, {1,2,3},
+             VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+             VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+             VA9, MovUtl::move(VA10)),
+            ({1,2,3}, VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+             VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+             VA9, MovUtl::move(VA10))
+            );
 
-  TEST_COPYIL(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3},VA1, VA2, VA3, VA4, VA5,
-                                   VA6, VA7, VA8, VA9, VA10,
-                                   VA11),                      // OP
-                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                  VA9, VA10, VA11)                                 // EXP
-                , 6);
+  TEST_COPY(VALTYPE, OPTYPE,
+            (bsl::in_place, {1,2,3},
+             MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+             MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+             MovUtl::move(VA9), VA10, MovUtl::move(VA11)),
+            ({1,2,3}, MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+             MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+             MovUtl::move(VA9), VA10, MovUtl::move(VA11))
+           );
+  TEST_COPY(VALTYPE, OPTYPE,
+            (bsl::in_place, {1,2,3},
+             VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+             VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+             VA9, MovUtl::move(VA10), VA11),
+            ({1,2,3}, VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+             VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+             VA9, MovUtl::move(VA10), VA11)
+            );
 
-  TEST_COPYIL(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3},VA1, VA2, VA3, VA4, VA5,
-                                   VA6, VA7, VA8, VA9, VA10,
-                                   VA11, VA12),                // OP
-                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                  VA9, VA10, VA11, VA12)                           // EXP
-                , 6);
+  TEST_COPY(VALTYPE, OPTYPE,
+            (bsl::in_place, {1,2,3},
+             MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+             MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+             MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12),
+            ({1,2,3}, MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+             MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+             MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12)
+           );
+  TEST_COPY(VALTYPE, OPTYPE,
+            (bsl::in_place, {1,2,3},
+             VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+             VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+             VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12)),
+            ({1,2,3}, VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+             VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+             VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12))
+            );
 
-  TEST_COPYIL(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3},VA1, VA2, VA3, VA4, VA5,
-                                   VA6, VA7, VA8, VA9, VA10,
-                                   VA11, VA12, VA13),          // OP
-                 (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                  VA9, VA10, VA11, VA12, VA13)                     // EXP
-                , 6);
-
+  TEST_COPY(VALTYPE, OPTYPE,
+            (bsl::in_place, {1,2,3},
+             MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+             MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+             MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+             MovUtl::move(VA13)),
+            ({1,2,3}, MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+             MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+             MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+             MovUtl::move(VA13))
+           );
+  TEST_COPY(VALTYPE, OPTYPE,
+            (bsl::in_place, {1,2,3},
+             VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+             VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+             VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+             VA13),
+            ({1,2,3}, VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+             VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+             VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+             VA13)
+            );
 }
 template <typename VALTYPE, typename OPTYPE>
 void test_copyila_helper()
@@ -8990,86 +13393,215 @@ void test_copyila_helper()
 
     bslma::DefaultAllocatorGuard dag(&da);
     // ---   -------------------------------------------------
-    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3}),                            // OP
-                   /* no ctor arg list */ ,                           // EXP
-                  6,
-                  &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3}),
+               ({1,2,3}),
+               &oa);
 
-    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place,{1,2,3}, VA1),                       // OP
-                   (VA1),                                             // EXP
-                   6,
-                  &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                MovUtl::move(VA1)),
+               ({1,2,3}, MovUtl::move(VA1)),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3}, VA1),
+               ({1,2,3},VA1),
+               &oa);
 
-    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place,{1,2,3}, VA1, VA2),                  // OP
-                   (VA1, VA2) ,                                       // EXP
-                   6,
-                  &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2),
+               ({1,2,3}, MovUtl::move(VA1), VA2),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2)),
+               ({1,2,3}, VA1, MovUtl::move(VA2)),
+               &oa);
 
-    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place,{1,2,3}, VA1, VA2, VA3),             // OP
-                   (VA1, VA2, VA3),                                   // EXP
-                   6,
-                  &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3)),
+               ({1,2,3}, MovUtl::move(VA1), VA2, MovUtl::move(VA3)),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3),
+               ({1,2,3}, VA1, MovUtl::move(VA2), VA3),
+               &oa);
 
-    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place,{1,2,3}, VA1, VA2, VA3, VA4),        // OP
-                   (VA1, VA2, VA3, VA4),                              // EXP
-                   6,
-                  &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4),
+               ({1,2,3}, MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4)),
+               ({1,2,3}, VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4)),
+               &oa);
 
-    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place,{1,2,3}, VA1, VA2, VA3, VA4, VA5),                            // OP
-                   (VA1, VA2, VA3, VA4, VA5),                         // EXP
-                   6,
-                  &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5)),
+               ({1,2,3}, MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5)),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5),
+               ({1,2,3}, VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5),
+               &oa);
 
-    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place,{1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                     VA6),                       // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6),                    // EXP
-                   6,
-                  &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6),
+               ({1,2,3}, MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6)),
+               ({1,2,3}, VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6)),
+               &oa);
 
-    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place,{1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7),                  // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7),                // EXP
-                   6,
-                  &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7)),
+               ({1,2,3}, MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7)),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7),
+               ({1,2,3}, VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7),
+               &oa);
 
-    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place,{1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7, VA8),             // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8),          // EXP
-                   6,
-                  &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8),
+               ({1,2,3}, MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8)),
+               ({1,2,3}, VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8)),
+               &oa);
 
-    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place,{1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7, VA8, VA9),        // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                    VA9)                              ,                // EXP
-                    6,
-                  &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9)),
+               ({1,2,3}, MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9)),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9),
+               ({1,2,3}, VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9),
+               &oa);
 
-    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place,{1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7, VA8, VA9, VA10),                            // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7,
-                    VA8, VA9, VA10)                   ,                // EXP
-                    6,
-                  &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+              (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10),
+               ({1,2,3}, MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10)),
+               ({1,2,3}, VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10)),
+               &oa);
 
-    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place,{1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7, VA8, VA9, VA10,
-                                     VA11),                      // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                    VA9, VA10, VA11)                  ,                // EXP
-                    6,
-                  &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11)),
+               ({1,2,3}, MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11)),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11),
+               ({1,2,3}, VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11),
+               &oa);
 
-    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::allocator_arg, &oa, bsl::in_place,{1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7, VA8, VA9, VA10,
-                                     VA11, VA12),                // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                    VA9, VA10, VA11, VA12)            ,                // EXP
-                    6,
-                  &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12),
+               ({1,2,3}, MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12)),
+               ({1,2,3}, VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12)),
+               &oa);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+                MovUtl::move(VA13)),
+               ({1,2,3}, MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+                MovUtl::move(VA13)),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+                VA13),
+               ({1,2,3}, VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+                VA13),
+               &oa);
 }
 template <typename VALTYPE, typename OPTYPE>
-void test_copyilad_helper()
+void test_copyila_argt_helper()
 {
     bslma::TestAllocator da("default", veryVeryVeryVerbose);
     bslma::TestAllocator oa("other", veryVeryVeryVerbose);
@@ -9077,84 +13609,686 @@ void test_copyilad_helper()
 
     bslma::DefaultAllocatorGuard dag(&da);
     // ---   -------------------------------------------------
-    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::in_place, {1,2,3}),                            // OP
-                   /* no ctor arg list */ ,                           // EXP
-                  6,
-                  &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3}),
+               (bsl::allocator_arg, &oa, {1,2,3}),
+               &oa);
 
-    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3}, VA1),                       // OP
-                   (VA1),                                             // EXP
-                   6,
-                  &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                MovUtl::move(VA1)),
+               (bsl::allocator_arg, &oa, {1,2,3}, MovUtl::move(VA1)),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3}, VA1),
+               (bsl::allocator_arg, &oa, {1,2,3}, VA1),
+               &oa);
 
-    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3}, VA1, VA2),                  // OP
-                   (VA1, VA2) ,                                       // EXP
-                   6,
-                  &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2),
+               (bsl::allocator_arg, &oa, {1,2,3}, MovUtl::move(VA1), VA2),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2)),
+               (bsl::allocator_arg, &oa, {1,2,3}, VA1, MovUtl::move(VA2)),
+               &oa);
 
-    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3}, VA1, VA2, VA3),             // OP
-                   (VA1, VA2, VA3),                                   // EXP
-                   6,
-                  &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3)),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3)),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3),
+               &oa);
 
-    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3}, VA1, VA2, VA3, VA4),        // OP
-                   (VA1, VA2, VA3, VA4),                              // EXP
-                   6,
-                  &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4)),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4)),
+               &oa);
 
-    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3}, VA1, VA2, VA3, VA4, VA5),                            // OP
-                   (VA1, VA2, VA3, VA4, VA5),                         // EXP
-                   6,
-                  &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5)),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5)),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5),
+               &oa);
 
-    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                     VA6),                       // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6),                    // EXP
-                   6,
-                  &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6)),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6)),
+               &oa);
 
-    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7),                  // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7),                // EXP
-                   6,
-                  &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7)),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7)),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7),
+               &oa);
 
-    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7, VA8),             // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8),          // EXP
-                   6,
-                  &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8)),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8)),
+               &oa);
 
-    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7, VA8, VA9),        // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                    VA9)                              ,                // EXP
-                    6,
-                  &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9)),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9)),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9),
+               &oa);
 
-    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7, VA8, VA9, VA10),                            // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7,
-                    VA8, VA9, VA10)                   ,                // EXP
-                    6,
-                  &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+              (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10)),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10)),
+               &oa);
 
-    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7, VA8, VA9, VA10,
-                                     VA11),                      // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                    VA9, VA10, VA11)                  ,                // EXP
-                    6,
-                  &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11)),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11)),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11),
+               &oa);
 
-    TEST_COPYILA(VALTYPE, OPTYPE, (bsl::in_place,{1,2,3}, VA1, VA2, VA3, VA4, VA5,
-                                     VA6, VA7, VA8, VA9, VA10,
-                                     VA11, VA12),                // OP
-                   (VA1, VA2, VA3, VA4, VA5, VA6, VA7, VA8,
-                    VA9, VA10, VA11, VA12)            ,                // EXP
-                    6,
-                  &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12)),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12)),
+               &oa);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+                MovUtl::move(VA13)),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+                MovUtl::move(VA13)),
+               &oa);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+                VA13),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+                VA13),
+               &oa);
 }
+template <typename VALTYPE, typename OPTYPE>
+void test_copyilad_helper()
+{
+    bslma::TestAllocator da("default", veryVeryVeryVerbose);
+    bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+
+    bslma::DefaultAllocatorGuard dag(&da);
+    // ---   -------------------------------------------------
+
+    TEST_COPYA(VALTYPE, OPTYPE, (bsl::in_place, {1,2,3}),
+               ({1,2,3}),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3}, MovUtl::move(VA1)),
+               ({1,2,3}, MovUtl::move(VA1)),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3}, VA1),
+               ({1,2,3},VA1),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2),
+               ({1,2,3}, MovUtl::move(VA1), VA2),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2)),
+               ({1,2,3}, VA1, MovUtl::move(VA2)),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3)),
+               ({1,2,3}, MovUtl::move(VA1), VA2, MovUtl::move(VA3)),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3),
+               ({1,2,3}, VA1, MovUtl::move(VA2), VA3),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4),
+               ({1,2,3}, MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4)),
+               ({1,2,3}, VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4)),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5)),
+               ({1,2,3}, MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5)),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5),
+               ({1,2,3}, VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6),
+               ({1,2,3}, MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6)),
+               ({1,2,3}, VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6)),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7)),
+               ({1,2,3}, MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7)),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7),
+               ({1,2,3}, VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8),
+               ({1,2,3}, MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8)),
+               ({1,2,3}, VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8)),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9)),
+               ({1,2,3}, MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9)),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9),
+               ({1,2,3}, VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+              (bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10),
+               ({1,2,3}, MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10)),
+               ({1,2,3}, VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10)),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11)),
+               ({1,2,3}, MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11)),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11),
+               ({1,2,3}, VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12),
+               ({1,2,3}, MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12)),
+               ({1,2,3}, VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12)),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+                MovUtl::move(VA13)),
+               ({1,2,3}, MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+                MovUtl::move(VA13)),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+                VA13),
+               ({1,2,3}, VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+                VA13),
+               &da);
+
+}
+template <typename VALTYPE, typename OPTYPE>
+void test_copyilad_argt_helper()
+{
+    bslma::TestAllocator da("default", veryVeryVeryVerbose);
+    bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+
+    bslma::DefaultAllocatorGuard dag(&da);
+    // ---   -------------------------------------------------
+    TEST_COPYA(VALTYPE, OPTYPE, (bsl::in_place, {1,2,3}),
+               (bsl::allocator_arg, &oa, {1,2,3}),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3}, MovUtl::move(VA1)),
+               (bsl::allocator_arg, &oa, {1,2,3}, MovUtl::move(VA1)),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3}, VA1),
+               (bsl::allocator_arg, &oa, {1,2,3}, VA1),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2),
+               (bsl::allocator_arg, &oa, {1,2,3}, MovUtl::move(VA1), VA2),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2)),
+               (bsl::allocator_arg, &oa, {1,2,3}, VA1, MovUtl::move(VA2)),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3)),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3)),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4)),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4)),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5)),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5)),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6)),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6)),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7)),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7)),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8)),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8)),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9)),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9)),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+              (bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10)),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10)),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11)),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11)),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12)),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12)),
+               &da);
+
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+                MovUtl::move(VA13)),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+                MovUtl::move(VA13)),
+               &da);
+    TEST_COPYA(VALTYPE, OPTYPE,
+               (bsl::in_place, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+                VA13),
+               (bsl::allocator_arg, &oa, {1,2,3},
+                VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+                VA13),
+               &da);
+}
+
 void bslstl_optional_test24()
 {
     // --------------------------------------------------------------------
@@ -9166,6 +14300,7 @@ void bslstl_optional_test24()
     //   * Calling in_place_t constructor creates an engaged optional whose
     //     value type object is created using theconstructors arguments
     //   * Multiple arguments are correctly forwarded.
+    //   * No unnecessary copies of the value type are created
     //   * If no allocators is provided for a type which uses an allocator,
     //     default allocator is used.
     //
@@ -9217,21 +14352,22 @@ void bslstl_optional_test24()
     if (verbose) printf( "\nUsing 'ConstructTestTypeAllocArgT'.\n");
     {
         typedef ConstructTestTypeAllocArgT                ValueType;
-        test_copyad_helper<ValueType, bsl::optional<ValueType> >();
-        test_copyad_helper<ValueType, const bsl::optional<ValueType> >();
-        test_copyad_helper<ValueType, bsl::optional< const ValueType> >();
-        test_copyad_helper<const ValueType, bsl::optional<ValueType> >();
-        test_copyad_helper<const ValueType, const bsl::optional<ValueType> >();
-        test_copyad_helper<const ValueType, bsl::optional< const ValueType> >();
+        test_copyad_argt_helper<ValueType, bsl::optional<ValueType> >();
+        test_copyad_argt_helper<ValueType, const bsl::optional<ValueType> >();
+        test_copyad_argt_helper<ValueType, bsl::optional< const ValueType> >();
+        test_copyad_argt_helper<const ValueType, bsl::optional<ValueType> >();
+        test_copyad_argt_helper<const ValueType, const bsl::optional<ValueType> >();
+        test_copyad_argt_helper<const ValueType, bsl::optional< const ValueType> >();
 
-        test_copya_helper<ValueType, bsl::optional<ValueType> >();
-        test_copya_helper<ValueType, const bsl::optional<ValueType> >();
-        test_copya_helper<ValueType, bsl::optional< const ValueType> >();
-        test_copya_helper<const ValueType, bsl::optional<ValueType> >();
-        test_copya_helper<const ValueType, const bsl::optional<ValueType> >();
-        test_copya_helper<const ValueType, bsl::optional< const ValueType> >();
+        test_copya_argt_helper<ValueType, bsl::optional<ValueType> >();
+        test_copya_argt_helper<ValueType, const bsl::optional<ValueType> >();
+        test_copya_argt_helper<ValueType, bsl::optional< const ValueType> >();
+        test_copya_argt_helper<const ValueType, bsl::optional<ValueType> >();
+        test_copya_argt_helper<const ValueType, const bsl::optional<ValueType> >();
+        test_copya_argt_helper<const ValueType, bsl::optional< const ValueType> >();
     }
 }
+
 void bslstl_optional_test25()
 {
     // --------------------------------------------------------------------
@@ -9293,20 +14429,20 @@ void bslstl_optional_test25()
     }
     if (verbose) printf( "\nUsing 'ConstructTestTypeAllocArgT'.\n");
     {
-        typedef ConstructTestTypeAllocArgT                ValueType;
-        test_copyilad_helper<ValueType, bsl::optional<ValueType> >();
-        test_copyilad_helper<ValueType, const bsl::optional<ValueType> >();
-        test_copyilad_helper<ValueType, bsl::optional< const ValueType> >();
-        test_copyilad_helper<const ValueType, bsl::optional<ValueType> >();
-        test_copyilad_helper<const ValueType, const bsl::optional<ValueType> >();
-        test_copyilad_helper<const ValueType, bsl::optional< const ValueType> >();
+        typedef ConstructTestTypeAllocArgTIL                ValueType;
+        test_copyilad_argt_helper<ValueType, bsl::optional<ValueType> >();
+        test_copyilad_argt_helper<ValueType, const bsl::optional<ValueType> >();
+        test_copyilad_argt_helper<ValueType, bsl::optional< const ValueType> >();
+        test_copyilad_argt_helper<const ValueType, bsl::optional<ValueType> >();
+        test_copyilad_argt_helper<const ValueType, const bsl::optional<ValueType> >();
+        test_copyilad_argt_helper<const ValueType, bsl::optional< const ValueType> >();
 
-        test_copyila_helper<ValueType, bsl::optional<ValueType> >();
-        test_copyila_helper<ValueType, const bsl::optional<ValueType> >();
-        test_copyila_helper<ValueType, bsl::optional< const ValueType> >();
-        test_copyila_helper<const ValueType, bsl::optional<ValueType> >();
-        test_copyila_helper<const ValueType, const bsl::optional<ValueType> >();
-        test_copyila_helper<const ValueType, bsl::optional< const ValueType> >();
+        test_copyila_argt_helper<ValueType, bsl::optional<ValueType> >();
+        test_copyila_argt_helper<ValueType, const bsl::optional<ValueType> >();
+        test_copyila_argt_helper<ValueType, bsl::optional< const ValueType> >();
+        test_copyila_argt_helper<const ValueType, bsl::optional<ValueType> >();
+        test_copyila_argt_helper<const ValueType, const bsl::optional<ValueType> >();
+        test_copyila_argt_helper<const ValueType, bsl::optional< const ValueType> >();
     }
 }
 TrackableValue give_me_tv()
@@ -9317,7 +14453,6 @@ bsltf::MoveOnlyAllocTestType give_me_moatt()
 {
   return bsltf::MoveOnlyAllocTestType();
 }
-
 void bslstl_optional_test26()
 {
   // --------------------------------------------------------------------
@@ -9487,10 +14622,11 @@ void bslstl_optional_test26()
     }
 
 }
+
 void bslstl_optional_test27()
 {
     // --------------------------------------------------------------------
-    // TESTING operator=(optional_type) OVERLOAD RESOLUTION
+    // TESTING swap FACILITY
     // Concerns:
     //   1. Swap of two disengaged objects is a no-op,
     //   2. Swap of an engaged and a disengage doptional moves the value
@@ -9851,6 +14987,874 @@ void bslstl_optional_test28()
         ASSERT(!(bsl::nullopt >= X) ); // !x
     }
 }
+void bslstl_optional_test29()
+{
+    // --------------------------------------------------------------------
+    // TESTING make_optional FACILITY
+    //
+    //  In this test, we are ensuring that the optional created using
+    //  make_optional facility is created using the given arguments and
+    //  without unnecessary copies. We are not worried about the allocator
+    //  policy of the allocator aware type, as choosing the allocator policy
+    //  when creating an optional is tested in constructor tests.
+    //
+    //
+    // Concerns:
+    //: 1 Invoking make_optional creates an optional with the value of the
+    //    arguments without any intermediate optional instances
+    //
+    //: 2 Multiple arguments are correctly forwarded.
+    //
+    //: 3 Arguments are perfectly forwarded.
+    //
+    //: 4 If the value type is allocator aware, default allocator is used
+    //
+    //
+    // Plan:
+    //: 1 Execute tests for my_class1( doesn't use allocator) and my_class2
+    //    (uses allocator).
+    //: 2 Call make_optional with an lvalue of each type. Check the value and
+    //    allocator (if any) is correct. Check there were no additional copies
+    //    created by checking the number of copy and move constructors
+    //    invoked.
+    //: 3 Call make_optional with an rvalue of each type. Check the value and
+    //    allocator (if any) is correct. Check the move constructor was
+    //    called. Check there were no additional copies created by checking
+    //    the number of copy and move constructors invoked.
+    //
+    //: 4 Call make_optional to create an optional of ConstructTestTypeNoAlloc
+    //    and ConstructTestTypeAlloc type. For each muber of var args check
+    //    that:
+    //      - the arguments are correctly forwarded
+    //      - the arguments are perfectly forwarded
+    //      - there are no additional copies of ConstructTestTypeNoAlloc/
+    //        ConstructTestTypeAlloc created by checking the numbed of copy and
+    //        move constructors invoked.
+    //      - for ConstructTestTypeAlloc, check the default allocator is used.
+    //
+    //: 5 Repeat the above with initializer list as the first argument
+    //
+    // Testing:
+    //      make_optional(T&&);
+    //      make_optional(Args&&... args);
+    //      make_optional(initializer_list<U> il, Args&&... args);
+
+    if (verbose) printf("\nTESTING make_optional FACILITY"
+                        "\n==============================\n");
+
+    if (verbose) printf( "\nDeduced type make optional.\n");
+    {
+        my_Class1 source(2);
+
+        int CCI = my_Class1::copyConstructorInvocations;
+        int MCI = my_Class1::moveConstructorInvocations;
+
+        optional<my_Class1> obj = bsl::make_optional(source);
+        ASSERT( 2 == obj.value().value());
+        ASSERT( CCI == (my_Class1::copyConstructorInvocations -1));
+        ASSERT( MCI == my_Class1::moveConstructorInvocations);
+
+        CCI = my_Class1::copyConstructorInvocations;
+        MCI = my_Class1::moveConstructorInvocations;
+
+        optional<my_Class1> obj2 = bsl::make_optional(std::move(source));
+        ASSERT( 2 == obj2.value().value());
+        ASSERT( CCI == (my_Class1::copyConstructorInvocations));
+        ASSERT( MCI == (my_Class1::moveConstructorInvocations  - 1));
+    }
+    {
+        bslma::TestAllocator da("default", veryVeryVeryVerbose);
+        bslma::DefaultAllocatorGuard dag(&da);
+        my_Class2 source(2);
+
+        int CCI = my_Class2::copyConstructorInvocations;
+        int MCI = my_Class2::moveConstructorInvocations;
+
+        optional<my_Class2> obj = bsl::make_optional(source);
+        ASSERT( 2 == obj.value().value());
+        ASSERT( &da == obj.value().d_def.d_allocator_p);
+        ASSERT( CCI == (my_Class2::copyConstructorInvocations -1));
+        ASSERT( MCI == my_Class2::moveConstructorInvocations);
+
+        CCI = my_Class2::copyConstructorInvocations;
+        MCI = my_Class2::moveConstructorInvocations;
+
+        optional<my_Class2> obj2 = bsl::make_optional(std::move(source));
+        ASSERT( 2 == obj2.value().value());
+        ASSERT( &da == obj2.value().d_def.d_allocator_p);
+        ASSERT( CCI == (my_Class2::copyConstructorInvocations));
+        ASSERT( MCI == (my_Class2::moveConstructorInvocations  - 1));
+    }
+    {
+        bslma::TestAllocator da("default", veryVeryVeryVerbose);
+        bslma::DefaultAllocatorGuard dag(&da);
+        my_Class2a source(2);
+
+        int CCI = my_Class2a::copyConstructorInvocations;
+        int MCI = my_Class2a::moveConstructorInvocations;
+
+        optional<my_Class2a> obj = bsl::make_optional(source);
+        ASSERT( 2 == obj.value().value());
+        ASSERT( &da == obj.value().d_data.d_def.d_allocator_p);
+        ASSERT( CCI == (my_Class2a::copyConstructorInvocations -1));
+        ASSERT( MCI == my_Class2a::moveConstructorInvocations);
+
+        CCI = my_Class2a::copyConstructorInvocations;
+        MCI = my_Class2a::moveConstructorInvocations;
+
+        optional<my_Class2a> obj2 = bsl::make_optional(std::move(source));
+        ASSERT( 2 == obj2.value().value());
+        ASSERT( &da == obj2.value().d_data.d_def.d_allocator_p);
+        ASSERT( CCI == (my_Class2a::copyConstructorInvocations));
+        ASSERT( MCI == (my_Class2a::moveConstructorInvocations  - 1));
+    }
+    if (verbose) printf( "\nvar arg make optional.\n");
+    {
+        bslma::TestAllocator da("default", veryVeryVeryVerbose);
+        bslma::DefaultAllocatorGuard dag(&da);
+        TEST_MAKEOP((VA1),&da);
+        TEST_MAKEOP((MovUtl::move(VA1)),&da);
+
+        TEST_MAKEOP((MovUtl::move(VA1), VA2),&da);
+        TEST_MAKEOP((VA1, MovUtl::move(VA2)),&da);
+
+        TEST_MAKEOP((MovUtl::move(VA1), VA2, VA3),&da);
+        TEST_MAKEOP((VA1, MovUtl::move(VA2), VA3),&da);
+        TEST_MAKEOP((VA1, VA2, MovUtl::move(VA3)),&da);
+
+        TEST_MAKEOP((MovUtl::move(VA1), VA2,
+                     MovUtl::move(VA3), VA4),&da);
+        TEST_MAKEOP((VA1, MovUtl::move(VA2),
+                     VA3, MovUtl::move(VA4)),&da);
+
+        TEST_MAKEOP((MovUtl::move(VA1), VA2,
+                     MovUtl::move(VA3), VA4,
+                     MovUtl::move(VA5)),&da);
+        TEST_MAKEOP((VA1, MovUtl::move(VA2),
+                     VA3, MovUtl::move(VA4),
+                     VA5),&da);
+
+        TEST_MAKEOP((MovUtl::move(VA1), VA2,
+                     MovUtl::move(VA3), VA4,
+                     MovUtl::move(VA5), VA6),&da);
+        TEST_MAKEOP((VA1, MovUtl::move(VA2),
+                     VA3, MovUtl::move(VA4),
+                     VA5, MovUtl::move(VA6)),&da);
+
+        TEST_MAKEOP((MovUtl::move(VA1), VA2,
+                     MovUtl::move(VA3), VA4,
+                     MovUtl::move(VA5), VA6,
+                     MovUtl::move(VA7)),&da);
+        TEST_MAKEOP((VA1, MovUtl::move(VA2),
+                     VA3, MovUtl::move(VA4),
+                     VA5, MovUtl::move(VA6),
+                     VA7),&da);
+
+        TEST_MAKEOP((MovUtl::move(VA1), VA2,
+                     MovUtl::move(VA3), VA4,
+                     MovUtl::move(VA5), VA6,
+                     MovUtl::move(VA7), VA8),&da);
+        TEST_MAKEOP((VA1, MovUtl::move(VA2),
+                     VA3, MovUtl::move(VA4),
+                     VA5, MovUtl::move(VA6),
+                     VA7, MovUtl::move(VA8)),&da);
+
+        TEST_MAKEOP((MovUtl::move(VA1), VA2,
+                     MovUtl::move(VA3), VA4,
+                     MovUtl::move(VA5), VA6,
+                     MovUtl::move(VA7), VA8,
+                     MovUtl::move(VA9)),&da);
+        TEST_MAKEOP((VA1, MovUtl::move(VA2),
+                     VA3, MovUtl::move(VA4),
+                     VA5, MovUtl::move(VA6),
+                     VA7, MovUtl::move(VA8),
+                     VA9),&da);
+
+        TEST_MAKEOP((MovUtl::move(VA1), VA2,
+                     MovUtl::move(VA3), VA4,
+                     MovUtl::move(VA5), VA6,
+                     MovUtl::move(VA7), VA8,
+                     MovUtl::move(VA9), VA10),&da);
+        TEST_MAKEOP((VA1, MovUtl::move(VA2),
+                     VA3, MovUtl::move(VA4),
+                     VA5, MovUtl::move(VA6),
+                     VA7, MovUtl::move(VA8),
+                     VA9, MovUtl::move(VA10)),&da);
+
+        TEST_MAKEOP((MovUtl::move(VA1), VA2,
+                     MovUtl::move(VA3), VA4,
+                     MovUtl::move(VA5), VA6,
+                     MovUtl::move(VA7), VA8,
+                     MovUtl::move(VA9), VA10,
+                     MovUtl::move(VA11)),&da);
+        TEST_MAKEOP((VA1, MovUtl::move(VA2),
+                     VA3, MovUtl::move(VA4),
+                     VA5, MovUtl::move(VA6),
+                     VA7, MovUtl::move(VA8),
+                     VA9, MovUtl::move(VA10),
+                     VA11),&da);
+
+        TEST_MAKEOP((MovUtl::move(VA1), VA2,
+                     MovUtl::move(VA3), VA4,
+                     MovUtl::move(VA5), VA6,
+                     MovUtl::move(VA7), VA8,
+                     MovUtl::move(VA9), VA10,
+                     MovUtl::move(VA11), VA12),&da);
+        TEST_MAKEOP((VA1, MovUtl::move(VA2),
+                     VA3, MovUtl::move(VA4),
+                     VA5, MovUtl::move(VA6),
+                     VA7, MovUtl::move(VA8),
+                     VA9, MovUtl::move(VA10),
+                     VA11, MovUtl::move(VA12)),&da);
+
+        TEST_MAKEOP((MovUtl::move(VA1), VA2,
+                     MovUtl::move(VA3), VA4,
+                     MovUtl::move(VA5), VA6,
+                     MovUtl::move(VA7), VA8,
+                     MovUtl::move(VA9), VA10,
+                     MovUtl::move(VA11), VA12,
+                     MovUtl::move(VA13)),&da);
+        TEST_MAKEOP((VA1, MovUtl::move(VA2),
+                     VA3, MovUtl::move(VA4),
+                     VA5, MovUtl::move(VA6),
+                     VA7, MovUtl::move(VA8),
+                     VA9, MovUtl::move(VA10),
+                     VA11, MovUtl::move(VA12),
+                     VA13),&da);
+
+        TEST_MAKEOP((MovUtl::move(VA1), VA2,
+                     MovUtl::move(VA3), VA4,
+                     MovUtl::move(VA5), VA6,
+                     MovUtl::move(VA7), VA8,
+                     MovUtl::move(VA9), VA10,
+                     MovUtl::move(VA11), VA12,
+                     MovUtl::move(VA13), VA14),&da);
+        TEST_MAKEOP((VA1, MovUtl::move(VA2),
+                     VA3, MovUtl::move(VA4),
+                     VA5, MovUtl::move(VA6),
+                     VA7, MovUtl::move(VA8),
+                     VA9, MovUtl::move(VA10),
+                     VA11, MovUtl::move(VA12),
+                     VA13, MovUtl::move(VA14)),&da);
+    }
+    if (verbose) printf( "\ninitializer_list make optional.\n");
+    {
+       bslma::TestAllocator da("default", veryVeryVeryVerbose);
+       bslma::DefaultAllocatorGuard dag(&da);
+       TEST_MAKEOP(({1,2,3}),&da);
+
+       TEST_MAKEOP(({1,2,3}, VA1),&da);
+       TEST_MAKEOP(({1,2,3}, MovUtl::move(VA1)),&da);
+
+       TEST_MAKEOP(({1,2,3}, MovUtl::move(VA1), VA2),&da);
+       TEST_MAKEOP(({1,2,3}, VA1, MovUtl::move(VA2)),&da);
+
+       TEST_MAKEOP(({1,2,3}, MovUtl::move(VA1), VA2, VA3),&da);
+       TEST_MAKEOP(({1,2,3}, VA1, MovUtl::move(VA2), VA3),&da);
+       TEST_MAKEOP(({1,2,3}, VA1, VA2, MovUtl::move(VA3)),&da);
+
+       TEST_MAKEOP(({1,2,3}, MovUtl::move(VA1), VA2,
+                    MovUtl::move(VA3), VA4),&da);
+       TEST_MAKEOP(({1,2,3}, VA1, MovUtl::move(VA2),
+                    VA3, MovUtl::move(VA4)),&da);
+
+       TEST_MAKEOP(({1,2,3}, MovUtl::move(VA1), VA2,
+                    MovUtl::move(VA3), VA4,
+                    MovUtl::move(VA5)),&da);
+       TEST_MAKEOP(({1,2,3}, VA1, MovUtl::move(VA2),
+                    VA3, MovUtl::move(VA4),
+                    VA5),&da);
+
+       TEST_MAKEOP(({1,2,3}, MovUtl::move(VA1), VA2,
+                    MovUtl::move(VA3), VA4,
+                    MovUtl::move(VA5), VA6),&da);
+       TEST_MAKEOP(({1,2,3}, VA1, MovUtl::move(VA2),
+                    VA3, MovUtl::move(VA4),
+                    VA5, MovUtl::move(VA6)),&da);
+
+       TEST_MAKEOP(({1,2,3}, MovUtl::move(VA1), VA2,
+                    MovUtl::move(VA3), VA4,
+                    MovUtl::move(VA5), VA6,
+                    MovUtl::move(VA7)),&da);
+       TEST_MAKEOP(({1,2,3}, VA1, MovUtl::move(VA2),
+                    VA3, MovUtl::move(VA4),
+                    VA5, MovUtl::move(VA6),
+                    VA7),&da);
+
+       TEST_MAKEOP(({1,2,3}, MovUtl::move(VA1), VA2,
+                    MovUtl::move(VA3), VA4,
+                    MovUtl::move(VA5), VA6,
+                    MovUtl::move(VA7), VA8),&da);
+       TEST_MAKEOP(({1,2,3}, VA1, MovUtl::move(VA2),
+                    VA3, MovUtl::move(VA4),
+                    VA5, MovUtl::move(VA6),
+                    VA7, MovUtl::move(VA8)),&da);
+
+       TEST_MAKEOP(({1,2,3}, MovUtl::move(VA1), VA2,
+                    MovUtl::move(VA3), VA4,
+                    MovUtl::move(VA5), VA6,
+                    MovUtl::move(VA7), VA8,
+                    MovUtl::move(VA9)),&da);
+       TEST_MAKEOP(({1,2,3}, VA1, MovUtl::move(VA2),
+                    VA3, MovUtl::move(VA4),
+                    VA5, MovUtl::move(VA6),
+                    VA7, MovUtl::move(VA8),
+                    VA9),&da);
+
+       TEST_MAKEOP(({1,2,3}, MovUtl::move(VA1), VA2,
+                    MovUtl::move(VA3), VA4,
+                    MovUtl::move(VA5), VA6,
+                    MovUtl::move(VA7), VA8,
+                    MovUtl::move(VA9), VA10),&da);
+       TEST_MAKEOP(({1,2,3}, VA1, MovUtl::move(VA2),
+                    VA3, MovUtl::move(VA4),
+                    VA5, MovUtl::move(VA6),
+                    VA7, MovUtl::move(VA8),
+                    VA9, MovUtl::move(VA10)),&da);
+
+       TEST_MAKEOP(({1,2,3}, MovUtl::move(VA1), VA2,
+                    MovUtl::move(VA3), VA4,
+                    MovUtl::move(VA5), VA6,
+                    MovUtl::move(VA7), VA8,
+                    MovUtl::move(VA9), VA10,
+                    MovUtl::move(VA11)),&da);
+       TEST_MAKEOP(({1,2,3}, VA1, MovUtl::move(VA2),
+                    VA3, MovUtl::move(VA4),
+                    VA5, MovUtl::move(VA6),
+                    VA7, MovUtl::move(VA8),
+                    VA9, MovUtl::move(VA10),
+                    VA11),&da);
+
+       TEST_MAKEOP(({1,2,3}, MovUtl::move(VA1), VA2,
+                    MovUtl::move(VA3), VA4,
+                    MovUtl::move(VA5), VA6,
+                    MovUtl::move(VA7), VA8,
+                    MovUtl::move(VA9), VA10,
+                    MovUtl::move(VA11), VA12),&da);
+       TEST_MAKEOP(({1,2,3}, VA1, MovUtl::move(VA2),
+                    VA3, MovUtl::move(VA4),
+                    VA5, MovUtl::move(VA6),
+                    VA7, MovUtl::move(VA8),
+                    VA9, MovUtl::move(VA10),
+                    VA11, MovUtl::move(VA12)),&da);
+
+       TEST_MAKEOP(({1,2,3}, MovUtl::move(VA1), VA2,
+                    MovUtl::move(VA3), VA4,
+                    MovUtl::move(VA5), VA6,
+                    MovUtl::move(VA7), VA8,
+                    MovUtl::move(VA9), VA10,
+                    MovUtl::move(VA11), VA12,
+                    MovUtl::move(VA13)),&da);
+       TEST_MAKEOP(({1,2,3}, VA1, MovUtl::move(VA2),
+                    VA3, MovUtl::move(VA4),
+                    VA5, MovUtl::move(VA6),
+                    VA7, MovUtl::move(VA8),
+                    VA9, MovUtl::move(VA10),
+                    VA11, MovUtl::move(VA12),
+                    VA13),&da);
+
+    }
+}
+void bslstl_optional_test23()
+{
+    // --------------------------------------------------------------------
+    // TESTING alloc_optional FACILITY
+    //
+    //  In this test, we are ensuring that the optional created using
+    //  alloc_optional facility is created using the given arguments and
+    //  without unnecessary copies. We are not worried about the allocator
+    //  policy of the allocator aware type, as choosing the allocator policy
+    //  when creating an optional is tested in constructor tests.
+    //
+    //
+    // Concerns:
+    //: 1 Invoking alloc_optional creates an optional which uses the specified
+    //    allocator and with the value of the given arguments without any
+    //    intermediate optional instances
+    //
+    //: 2 Multiple arguments are correctly forwarded.
+    //
+    //: 3 Arguments are perfectly forwarded.
+    //
+    //
+    // Plan:
+    //: 1 Execute tests for my_class2.
+    //: 2 Call alloc_optional with an lvalue of my_class2. Check the value and
+    //    allocator of the created optional is correct. Check there were no
+    //    additional copies created by checking the number of copy and move
+    //    constructors invoked.
+    //: 3 Call alloc_optional with an rvalue of of my_class2. Check the value
+    //    and allocator of the created optional is correct. Check the move
+    //    constructor was used. Check there were no additional copies created
+    //    by checking the number of copy and move constructors invoked.
+    //
+    //: 4 Repeat the test with initializer list overload.
+    //
+    //: 5 Call alloc_optional to create an optional of ConstructTestTypeAlloc
+    //    type. For each number of arguments check that:
+    //      - correct allocator is used
+    //      - the arguments are correctly forwarded
+    //      - the arguments are perfectly forwarded
+    //      - there are no additional copies of ConstructTestTypAlloc created
+    //        by checking the numbed of copy and move constructors invoked.
+    //
+    //
+    // Testing:
+    //      alloc_optional(const bsl::allocator<char>& a, T&&);
+    //      alloc_optional(const bsl::allocator<char>>& a, Args&&... args);
+    //      alloc_optional(const bsl::allocator<char><>& a,
+    //                     initializer_list<U> il,
+    //                     Args&&... args);
+    //
+
+    if (verbose) printf("\nTESTING alloc_optional FACILITY"
+                        "\n==============================\n");
+
+    if (verbose) printf( "\nDeduced type alloc_optional.\n");
+    {
+        bslma::TestAllocator da("default", veryVeryVeryVerbose);
+        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+        bslma::DefaultAllocatorGuard dag(&da);
+        my_Class2 source(2);
+
+        int CCI = my_Class2::copyConstructorInvocations;
+        int MCI = my_Class2::moveConstructorInvocations;
+
+        optional<my_Class2> obj = bsl::alloc_optional(&oa, source);
+        ASSERT( 2 == obj.value().value());
+        ASSERT( &oa == obj.value().d_def.d_allocator_p);
+        ASSERT( CCI == (my_Class2::copyConstructorInvocations -1));
+        ASSERT( MCI == my_Class2::moveConstructorInvocations);
+
+        CCI = my_Class2::copyConstructorInvocations;
+        MCI = my_Class2::moveConstructorInvocations;
+
+        optional<my_Class2> obj2 = bsl::alloc_optional(&oa, std::move(source));
+        ASSERT( 2 == obj2.value().value());
+        ASSERT( &oa == obj2.value().d_def.d_allocator_p);
+        ASSERT( CCI == (my_Class2::copyConstructorInvocations));
+        ASSERT( MCI == (my_Class2::moveConstructorInvocations  - 1));
+    }
+    if (verbose) printf( "\nvar arg alloc_optional.\n");
+    {
+        bslma::TestAllocator da("default", veryVeryVeryVerbose);
+        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+        bslma::DefaultAllocatorGuard dag(&da);
+
+        TEST_ALLOCOP((&da, VA1),
+                     (VA1, &da), &da);
+        TEST_ALLOCOP((&da, MovUtl::move(VA1)),
+                      (MovUtl::move(VA1), &da), &da);
+
+        TEST_ALLOCOP((&da,MovUtl::move(VA1), VA2),
+                     (MovUtl::move(VA1), VA2, &da),
+                     &da);
+        TEST_ALLOCOP((&da,VA1, MovUtl::move(VA2)),
+                     (VA1, MovUtl::move(VA2), &da),
+                     &da);
+
+        TEST_ALLOCOP((&da,MovUtl::move(VA1), VA2, MovUtl::move(VA3)),
+                     (MovUtl::move(VA1), VA2, MovUtl::move(VA3), &da),
+                     &da);
+        TEST_ALLOCOP((&da,VA1, MovUtl::move(VA2), VA3),
+                     (VA1, MovUtl::move(VA2), VA3, &da),
+                     &da);
+
+        TEST_ALLOCOP((&da,MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4),
+                     (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      &da),
+                     &da);
+        TEST_ALLOCOP((&da,VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4)),
+                     (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      &da),
+                     &da);
+
+        TEST_ALLOCOP((&da,MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5)),
+                     (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), &da),
+                     &da);
+        TEST_ALLOCOP((&da,VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5),
+                     (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, &da),
+                     &da);
+
+        TEST_ALLOCOP((&da,MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6),
+                     (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6, &da),
+                     &da);
+        TEST_ALLOCOP((&da,VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6)),
+                     (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6),&da),
+                     &da);
+
+        TEST_ALLOCOP((&da,MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6, MovUtl::move(VA7)),
+                     (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6, MovUtl::move(VA7), &da),
+                     &da);
+        TEST_ALLOCOP((&da,VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6), VA7),
+                     (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6), VA7, &da),
+                     &da);
+
+        TEST_ALLOCOP((&da,MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6, MovUtl::move(VA7)),
+                     (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6, MovUtl::move(VA7), &da),
+                     &da);
+        TEST_ALLOCOP((&da,VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6), VA7),
+                     (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6), VA7, &da),
+                     &da);
+
+        TEST_ALLOCOP((&da,MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8),
+                     (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                      &da),
+                     &da);
+        TEST_ALLOCOP((&da,VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8)),
+                     (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                      &da),
+                     &da);
+
+        TEST_ALLOCOP((&da,MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                      MovUtl::move(VA9)),
+                     (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                      MovUtl::move(VA9),&da),
+                     &da);
+        TEST_ALLOCOP((&da,VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                      VA9),
+                     (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                      VA9, &da),
+                     &da);
+
+        TEST_ALLOCOP((&da,MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                      MovUtl::move(VA9), VA10),
+                     (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                      MovUtl::move(VA9), VA10, &da),
+                     &da);
+        TEST_ALLOCOP((&da,VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                      VA9, MovUtl::move(VA10)),
+                     (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                      VA9, MovUtl::move(VA10), &da),
+                     &da);
+
+        TEST_ALLOCOP((&da,MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                      MovUtl::move(VA9), VA10, MovUtl::move(VA11)),
+                     (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                      MovUtl::move(VA9), VA10, MovUtl::move(VA11),&da),
+                     &da);
+        TEST_ALLOCOP((&da,VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                      VA9, MovUtl::move(VA10), VA11),
+                     (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                      VA9, MovUtl::move(VA10), VA11, &da),
+                     &da);
+
+        TEST_ALLOCOP((&da,MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                      MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12),
+                     (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                      MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+                      &da),
+                     &da);
+        TEST_ALLOCOP((&da,VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                      VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12)),
+                     (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                      VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+                      &da),
+                     &da);
+
+        TEST_ALLOCOP((&da,MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                      MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+                      MovUtl::move(VA13)),
+                     (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                      MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+                      MovUtl::move(VA13), &da),
+                     &da);
+        TEST_ALLOCOP((&da,VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                      VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+                      VA13),
+                     (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                      VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+                      VA13, &da),
+                     &da);
+
+
+        TEST_ALLOCOP((&da,MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                      MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+                      MovUtl::move(VA13), VA14),
+                     (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                      MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+                      MovUtl::move(VA13), VA14, &da),
+                     &da);
+        TEST_ALLOCOP((&da,VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                      VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+                      VA13, MovUtl::move(VA14)),
+                     (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                      VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+                      VA13, MovUtl::move(VA14)),
+                     &da);
+
+    }
+    if (verbose) printf( "\ninitializer_list alloc_optional.\n");
+    {
+        bslma::TestAllocator da("default", veryVeryVeryVerbose);
+        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+        bslma::DefaultAllocatorGuard dag(&da);
+
+        TEST_ALLOCOP((&da,{1,2,3}),
+                     ({1,2,3}, &da), &da);
+
+        TEST_ALLOCOP((&da,{1,2,3}, VA1),
+                     ({1,2,3}, VA1, &da), &da);
+        TEST_ALLOCOP((&da,{1,2,3}, MovUtl::move(VA1)),
+                      ({1,2,3}, MovUtl::move(VA1), &da), &da);
+
+        TEST_ALLOCOP((&da, {1,2,3}, MovUtl::move(VA1), VA2),
+                     ({1,2,3}, MovUtl::move(VA1), VA2, &da),
+                     &da);
+        TEST_ALLOCOP((&da, {1,2,3}, VA1, MovUtl::move(VA2)),
+                     ({1,2,3}, VA1, MovUtl::move(VA2), &da),
+                     &da);
+
+        TEST_ALLOCOP((&da, {1,2,3},
+                      MovUtl::move(VA1), VA2, MovUtl::move(VA3)),
+                     ({1,2,3},
+                      MovUtl::move(VA1), VA2, MovUtl::move(VA3), &da),
+                     &da);
+        TEST_ALLOCOP((&da, {1,2,3},
+                      VA1, MovUtl::move(VA2), VA3),
+                     ({1,2,3},
+                      VA1, MovUtl::move(VA2), VA3, &da),
+                     &da);
+
+        TEST_ALLOCOP((&da, {1,2,3},
+                      MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4),
+                     ({1,2,3},
+                      MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      &da),
+                     &da);
+        TEST_ALLOCOP((&da, {1,2,3},
+                      VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4)),
+                     ({1,2,3},
+                      VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      &da),
+                     &da);
+
+        TEST_ALLOCOP((&da, {1,2,3},
+                      MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5)),
+                     ({1,2,3},
+                      MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), &da),
+                     &da);
+        TEST_ALLOCOP((&da, {1,2,3},
+                      VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5),
+                     ({1,2,3},
+                      VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, &da),
+                     &da);
+
+        TEST_ALLOCOP((&da, {1,2,3},
+                      MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6),
+                     ({1,2,3},
+                      MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6, &da),
+                     &da);
+        TEST_ALLOCOP((&da, {1,2,3},
+                      VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6)),
+                     ({1,2,3},
+                      VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6),&da),
+                     &da);
+
+        TEST_ALLOCOP((&da, {1,2,3},
+                      MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6, MovUtl::move(VA7)),
+                     ({1,2,3},
+                      MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6, MovUtl::move(VA7), &da),
+                     &da);
+        TEST_ALLOCOP((&da, {1,2,3},
+                      VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6), VA7),
+                     ({1,2,3},
+                      VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6), VA7, &da),
+                     &da);
+
+        TEST_ALLOCOP((&da, {1,2,3},
+                      MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6, MovUtl::move(VA7)),
+                     ({1,2,3},
+                      MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6, MovUtl::move(VA7), &da),
+                     &da);
+        TEST_ALLOCOP((&da, {1,2,3},
+                      VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6), VA7),
+                     ({1,2,3},
+                      VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6), VA7, &da),
+                     &da);
+
+        TEST_ALLOCOP((&da, {1,2,3},
+                      MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8),
+                     ({1,2,3},
+                      MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                      &da),
+                     &da);
+        TEST_ALLOCOP((&da, {1,2,3},
+                      VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8)),
+                     ({1,2,3},
+                      VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                      &da),
+                     &da);
+
+        TEST_ALLOCOP((&da, {1,2,3},
+                      MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                      MovUtl::move(VA9)),
+                     ({1,2,3},
+                      MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                      MovUtl::move(VA9),&da),
+                     &da);
+        TEST_ALLOCOP((&da, {1,2,3},
+                      VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                      VA9),
+                     ({1,2,3},
+                      VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                      VA9, &da),
+                     &da);
+
+        TEST_ALLOCOP((&da, {1,2,3},
+                      MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                      MovUtl::move(VA9), VA10),
+                     ({1,2,3},
+                      MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                      MovUtl::move(VA9), VA10, &da),
+                     &da);
+        TEST_ALLOCOP((&da, {1,2,3},
+                       VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                      VA9, MovUtl::move(VA10)),
+                     ({1,2,3},
+                      VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                      VA9, MovUtl::move(VA10), &da),
+                     &da);
+
+        TEST_ALLOCOP((&da, {1,2,3},
+                      MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                      MovUtl::move(VA9), VA10, MovUtl::move(VA11)),
+                     ({1,2,3},
+                      MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                      MovUtl::move(VA9), VA10, MovUtl::move(VA11),&da),
+                     &da);
+        TEST_ALLOCOP((&da, {1,2,3},
+                      VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                      VA9, MovUtl::move(VA10), VA11),
+                     ({1,2,3},
+                      VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                      VA9, MovUtl::move(VA10), VA11, &da),
+                     &da);
+
+        TEST_ALLOCOP((&da, {1,2,3},
+                      MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                      MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12),
+                     ({1,2,3},
+                      MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                      MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+                      &da),
+                     &da);
+        TEST_ALLOCOP((&da, {1,2,3},
+                      VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                      VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12)),
+                     ({1,2,3},
+                      VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                      VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+                      &da),
+                     &da);
+
+        TEST_ALLOCOP((&da, {1,2,3},
+                      MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                      MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+                      MovUtl::move(VA13)),
+                     ({1,2,3},
+                      MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
+                      MovUtl::move(VA5), VA6, MovUtl::move(VA7), VA8,
+                      MovUtl::move(VA9), VA10, MovUtl::move(VA11), VA12,
+                      MovUtl::move(VA13), &da),
+                     &da);
+        TEST_ALLOCOP((&da, {1,2,3},
+                      VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                      VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+                      VA13),
+                     ({1,2,3},
+                      VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
+                      VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+                      VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
+                      VA13, &da),
+                     &da);
+
+
+    }
+
+}
 int main(int argc, char **argv)
 {
     const int                 test = argc > 1 ? atoi(argv[1]) : 0;
@@ -9874,6 +15878,9 @@ int main(int argc, char **argv)
     bslma::Default::setGlobalAllocator(&globalAllocator);
 
     switch (test) { case 0:
+      case 29:
+          bslstl_optional_test29();
+          break;
       case 28:
         bslstl_optional_test28();
         break;
@@ -9934,7 +15941,7 @@ int main(int argc, char **argv)
       case 9:
         bslstl_optional_test9();
         break;
-      case 8:
+     case 8:
         bslstl_optional_test8();
         break;
       case 7:

@@ -1559,8 +1559,9 @@ make_optional(std::initializer_list<U> il,
 
 template<class TYPE>
 BSLS_KEYWORD_CONSTEXPR
-optional<TYPE>
-alloc_optional(typename optional<TYPE>::allocator_type const&,
+optional<typename std::decay<TYPE>::type>
+alloc_optional(typename optional<typename std::decay<TYPE>::type
+                                 >::allocator_type const&,
                BSLS_COMPILERFEATURES_FORWARD_REF(TYPE) rhs);
     // Return an 'optional' object containing a 'TYPE' object created from
     // the given TYPE parameter using
@@ -3029,11 +3030,12 @@ make_optional(std::initializer_list<U> il,
 
 template<class TYPE>
 BSLS_KEYWORD_CONSTEXPR
-optional<TYPE>
-alloc_optional(typename optional<TYPE>::allocator_type const& alloc,
+optional<typename std::decay<TYPE>::type>
+alloc_optional(typename optional<typename std::decay<TYPE>::type
+                                >::allocator_type const& alloc,
                BSLS_COMPILERFEATURES_FORWARD_REF(TYPE) rhs)
 {
-    return optional<TYPE>(allocator_arg,
+    return optional<typename std::decay<TYPE>::type >(allocator_arg,
                           alloc,
                           in_place,
                           BSLS_COMPILERFEATURES_FORWARD(TYPE, rhs));
