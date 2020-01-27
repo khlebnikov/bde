@@ -1309,6 +1309,11 @@ void swap(bsl::optional<TYPE>& lhs,
     // Swap the value of the specified 'lhs' optional with the value of the
     // specified 'rhs' optional.
 
+// HASH SPECIALIZATIONS
+template <class HASHALG, class TYPE>
+void hashAppend(HASHALG& hashAlg, const optional<TYPE>&  input);
+    // Pass the specified 'input' to the specified 'hashAlg'
+
 // FREE OPERATORS
 // comparison with optional
 template <class LHS_TYPE, class RHS_TYPE>
@@ -2744,6 +2749,17 @@ inline
 void swap(bsl::optional<TYPE>& lhs, optional<TYPE>& rhs)
 {
     lhs.swap(rhs);
+}
+template <class HASHALG, class TYPE>
+void hashAppend(HASHALG& hashAlg, const optional<TYPE>& input)
+{
+    if (input.has_value()) {
+        hashAppend(hashAlg, true);
+        hashAppend(hashAlg, input.value());
+    }
+    else {
+        hashAppend(hashAlg, false);
+    }
 }
 
 template <class LHS_TYPE, class RHS_TYPE>
