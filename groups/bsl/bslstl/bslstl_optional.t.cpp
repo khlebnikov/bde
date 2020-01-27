@@ -5803,6 +5803,28 @@ struct UsesBslmaAllocator<SwappableAA> : bsl::true_type { };
     ASSERT(createdAlike(EXP,X.value()) == true);                              \
   }
 
+#define TEST_HASH_EMPTY(ValueType)                                            \
+  {                                                                           \
+      bsl::optional<ValueType> X;                                             \
+      ASSERTV(!X.has_value());                                                \
+      const size_t hashValue_1 = bslh::Hash<>()(X);                           \
+      const size_t hashValue_2 = bslh::Hash<>()(false);                       \
+      ASSERTV(hashValue_1, hashValue_2, hashValue_1 == hashValue_2);          \
+  }
+#define TEST_HASH_ENGAGED(ValueType, init)                                    \
+  {                                                                           \
+      bsl::optional<ValueType> X init;                                        \
+      ValueType Y init;                                                       \
+      ASSERTV(X.has_value());                                                 \
+      ASSERTV(X.value() == Y);                                                \
+      const size_t hashValue_1 = bslh::Hash<>()(X);                           \
+      bslh::DefaultHashAlgorithm hasher;                                      \
+      hashAppend(hasher, true);                                               \
+      hashAppend(hasher, Y);                                                  \
+      const size_t hashValue_2 = static_cast<size_t>(hasher.computeHash());   \
+      ASSERTV(hashValue_1, hashValue_2, hashValue_1 == hashValue_2);          \
+  }
+
 //=============================================================================
 //                              MAIN PROGRAM
 //-----------------------------------------------------------------------------
@@ -14288,7 +14310,90 @@ void test_copyilad_argt_helper()
                 VA13),
                &da);
 }
+void bslstl_optional_test23()
+{
+    // ------------------------------------------------------------------------
+    // TESTING hash_append facility
+    //
+    //  This test will verify that hashing functionality works with
+    //  bsl::optional objects
+    //
+    // Concerns:
+    //: 1 Hashing a disengaged optional is equivalent to appending 'false'
+    //:   to the hash.
+    //:
+    //: 2 Hashing an engaged optional is equivalent to appending 'true' to
+    //    the hash followed by the value.
+    //
+    // Plan:
+    //
+    //: 1 Execute test for int (doesn't use allocator) and bsl::string (uses
+    //    allocator) value type.
+    //
+    //: 2 Create a disengaged optional and verify that hashing it yields the
+    //    same value as hashing 'false'.
+    //
+    //: 3 Emplace a series of test values and verify that hashing the optional
+    //    produces the same result as hashing 'true' and then the test values
+    //    themselves.
+    //
+    // Testing:
+    //   void hashAppend(HASHALG& hashAlg, optional<TYPE>& input);
+    // ------------------------------------------------------------------------
+  if (verbose) printf(
+                      "\nTESTING hash_append FACILITY"
+                      "\n============================\n");
 
+   if (verbose) printf( "\nUsing 'bsl::optional<int>'.\n");
+   {
+       typedef size_t                          ValueType;
+
+       TEST_HASH_EMPTY(ValueType);
+       TEST_HASH_ENGAGED(ValueType, (0));
+       TEST_HASH_ENGAGED(ValueType, (3));
+       TEST_HASH_ENGAGED(ValueType, (777));
+       TEST_HASH_ENGAGED(ValueType, (1056));
+
+       TEST_HASH_EMPTY(const ValueType);
+       TEST_HASH_ENGAGED(const ValueType, (0));
+       TEST_HASH_ENGAGED(const ValueType, (3));
+       TEST_HASH_ENGAGED(const ValueType, (777));
+       TEST_HASH_ENGAGED(const ValueType, (1056));
+
+   }
+
+   if (verbose) printf( "\nUsing 'bsl::optional<bsl::string>'.\n");
+   {
+       typedef bsl::string                          ValueType;
+
+
+       bslma::TestAllocator da("default", veryVeryVeryVerbose);
+
+       bslma::DefaultAllocatorGuard dag(&da);
+
+       TEST_HASH_EMPTY(ValueType);
+       TEST_HASH_ENGAGED(ValueType, (""));
+       TEST_HASH_ENGAGED(ValueType, ("short string"));
+       TEST_HASH_ENGAGED(ValueType, ("1234567890abcdefghijklmnopqrstuvwxyz~!@#"
+                                     "$%^&*()_+-=`{}|[]\\\t\n "));
+       TEST_HASH_ENGAGED(ValueType, ("1234567890abcdefghijklmnopqrstuvwxyz~!@#"
+                                     "1234567890abcdefghijklmnopqrstuvwxyz~!@#"
+                                     "1234567890abcdefghijklmnopqrstuvwxyz~!@"));
+
+       TEST_HASH_EMPTY(const ValueType);
+       TEST_HASH_ENGAGED(const ValueType, (""));
+       TEST_HASH_ENGAGED(const ValueType, ("short string"));
+       TEST_HASH_ENGAGED(const ValueType,
+                         ("1234567890abcdefghijklmnopqrstuvwxyz~!@#"
+                          "$%^&*()_+-=`{}|[]\\\t\n "));
+       TEST_HASH_ENGAGED(const ValueType,
+                         ("1234567890abcdefghijklmnopqrstuvwxyz~!@#"
+                          "1234567890abcdefghijklmnopqrstuvwxyz~!@#"
+                          "1234567890abcdefghijklmnopqrstuvwxyz~!@"));
+
+
+   }
+}
 void bslstl_optional_test24()
 {
     // --------------------------------------------------------------------
@@ -15355,7 +15460,7 @@ void bslstl_optional_test29()
 
     }
 }
-void bslstl_optional_test23()
+void bslstl_optional_test30()
 {
     // --------------------------------------------------------------------
     // TESTING alloc_optional FACILITY
@@ -15878,9 +15983,12 @@ int main(int argc, char **argv)
     bslma::Default::setGlobalAllocator(&globalAllocator);
 
     switch (test) { case 0:
+      case 30:
+        bslstl_optional_test30();
+        break;
       case 29:
-          bslstl_optional_test29();
-          break;
+        bslstl_optional_test29();
+        break;
       case 28:
         bslstl_optional_test28();
         break;
