@@ -4768,6 +4768,10 @@ int main(int argc, char *argv[])
             ASSERT(0 == rawBuf.d_allocator_p);
             if (veryVerbose) { P_(rawBuf.d_value); PP(rawBuf.d_allocator_p); }
         }
+#if defined(BSLMF_MOVABLEREF_USES_RVALUE_REFERENCES)
+        /* TBD: this test relies on stripping MovableRef to be able to avoid
+         * constructor invocation and doing a memcpy instead.
+         */
         {
             my_ClassDef rawBuf;
             my_ClassFussy *objPtr = (my_ClassFussy *) &rawBuf;
@@ -4783,6 +4787,7 @@ int main(int argc, char *argv[])
             ASSERT(0 == rawBuf.d_allocator_p);
             if (veryVerbose) { P_(rawBuf.d_value); PP(rawBuf.d_allocator_p); }
         }
+#endif // defined(BSLMF_MOVABLEREF_USES_RVALUE_REFERENCES)
         {
             my_ClassDef rawBuf;
             my_ClassFussy *objPtr = (my_ClassFussy *) &rawBuf;
@@ -4812,6 +4817,10 @@ int main(int argc, char *argv[])
             ASSERT(0 == rawBuf.d_allocator_p);
             if (veryVerbose) { P_(rawBuf.d_value); PP(rawBuf.d_allocator_p); }
         }
+#if defined(BSLMF_MOVABLEREF_USES_RVALUE_REFERENCES)
+        /* TBD: this test relies on stripping MovableRef to be able to avoid
+         * constructor invocation and doing a memcpy instead.
+         */
         {
             my_ClassDef rawBuf;
             my_ClassFussy *objPtr = (my_ClassFussy *) &rawBuf;
@@ -4827,6 +4836,7 @@ int main(int argc, char *argv[])
             ASSERT(0 == rawBuf.d_allocator_p);
             if (veryVerbose) { P_(rawBuf.d_value); PP(rawBuf.d_allocator_p); }
         }
+#endif // defined(BSLMF_MOVABLEREF_USES_RVALUE_REFERENCES)
         {
             my_ClassDef rawBuf;
             my_ClassFussy *objPtr = (my_ClassFussy *) &rawBuf;
