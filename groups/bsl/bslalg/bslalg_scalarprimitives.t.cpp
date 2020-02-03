@@ -4758,13 +4758,36 @@ int main(int argc, char *argv[])
             my_ClassFussy *objPtr = (my_ClassFussy *) &rawBuf;
             memset(&rawBuf, 92, sizeof rawBuf);
             const int CCI = my_ClassFussy::copyConstructorInvocations;
+            const int CVI = my_ClassFussy::conversionConstructorInvocations;
+            const int MCI = my_ClassFussy::moveConstructorInvocations;
             Obj::construct(objPtr, VF, (bslma::Allocator*)TA);
             ASSERT(CCI == my_ClassFussy::copyConstructorInvocations);
+            ASSERT(CVI == my_ClassFussy::conversionConstructorInvocations);
+            ASSERT(MCI == my_ClassFussy::moveConstructorInvocations);
             ASSERT(3 == rawBuf.d_value);
             ASSERT(0 == rawBuf.d_allocator_p);
             if (veryVerbose) { P_(rawBuf.d_value); PP(rawBuf.d_allocator_p); }
         }
-
+#if defined(BSLMF_MOVABLEREF_USES_RVALUE_REFERENCES)
+        /* TBD: this test relies on stripping MovableRef to be able to avoid
+         * constructor invocation and doing a memcpy instead.
+         */
+        {
+            my_ClassDef rawBuf;
+            my_ClassFussy *objPtr = (my_ClassFussy *) &rawBuf;
+            memset(&rawBuf, 92, sizeof rawBuf);
+            const int CCI = my_ClassFussy::copyConstructorInvocations;
+            const int CVI = my_ClassFussy::conversionConstructorInvocations;
+            const int MCI = my_ClassFussy::moveConstructorInvocations;
+            Obj::construct(objPtr, MovUtl::move(VF), (bslma::Allocator*)TA);
+            ASSERT(CCI == my_ClassFussy::copyConstructorInvocations);
+            ASSERT(CVI == my_ClassFussy::conversionConstructorInvocations);
+            ASSERT(MCI == my_ClassFussy::moveConstructorInvocations);
+            ASSERT(3 == rawBuf.d_value);
+            ASSERT(0 == rawBuf.d_allocator_p);
+            if (veryVerbose) { P_(rawBuf.d_value); PP(rawBuf.d_allocator_p); }
+        }
+#endif // defined(BSLMF_MOVABLEREF_USES_RVALUE_REFERENCES)
         {
             my_ClassDef rawBuf;
             my_ClassFussy *objPtr = (my_ClassFussy *) &rawBuf;
@@ -4784,13 +4807,36 @@ int main(int argc, char *argv[])
             my_ClassFussy *objPtr = (my_ClassFussy *) &rawBuf;
             memset(&rawBuf, 92, sizeof rawBuf);
             const int CCI = my_ClassFussy::copyConstructorInvocations;
+            const int CVI = my_ClassFussy::conversionConstructorInvocations;
+            const int MCI = my_ClassFussy::moveConstructorInvocations;
             Obj::construct(objPtr, VF, XA);
             ASSERT(CCI == my_ClassFussy::copyConstructorInvocations);
+            ASSERT(CVI == my_ClassFussy::conversionConstructorInvocations);
+            ASSERT(MCI == my_ClassFussy::moveConstructorInvocations);
             ASSERT(3 == rawBuf.d_value);
             ASSERT(0 == rawBuf.d_allocator_p);
             if (veryVerbose) { P_(rawBuf.d_value); PP(rawBuf.d_allocator_p); }
         }
-
+#if defined(BSLMF_MOVABLEREF_USES_RVALUE_REFERENCES)
+        /* TBD: this test relies on stripping MovableRef to be able to avoid
+         * constructor invocation and doing a memcpy instead.
+         */
+        {
+            my_ClassDef rawBuf;
+            my_ClassFussy *objPtr = (my_ClassFussy *) &rawBuf;
+            memset(&rawBuf, 92, sizeof rawBuf);
+            const int CCI = my_ClassFussy::copyConstructorInvocations;
+            const int CVI = my_ClassFussy::conversionConstructorInvocations;
+            const int MCI = my_ClassFussy::moveConstructorInvocations;
+            Obj::construct(objPtr, MovUtl::move(VF), XA);
+            ASSERT(CCI == my_ClassFussy::copyConstructorInvocations);
+            ASSERT(CVI == my_ClassFussy::conversionConstructorInvocations);
+            ASSERT(MCI == my_ClassFussy::moveConstructorInvocations);
+            ASSERT(3 == rawBuf.d_value);
+            ASSERT(0 == rawBuf.d_allocator_p);
+            if (veryVerbose) { P_(rawBuf.d_value); PP(rawBuf.d_allocator_p); }
+        }
+#endif // defined(BSLMF_MOVABLEREF_USES_RVALUE_REFERENCES)
         {
             my_ClassDef rawBuf;
             my_ClassFussy *objPtr = (my_ClassFussy *) &rawBuf;
@@ -4805,7 +4851,134 @@ int main(int argc, char *argv[])
             ASSERT(0 == rawBuf.d_allocator_p);
             if (veryVerbose) { P_(rawBuf.d_value); PP(rawBuf.d_allocator_p); }
         }
-
+        if (verbose) printf("Construct from same type testing.\n");
+        {
+            my_ClassDef rawBuf;
+            my_Class1 *objPtr = (my_Class1 *) &rawBuf;
+            memset(&rawBuf, 92, sizeof rawBuf);
+            const my_Class1 VF  = V1;
+            Obj::construct(objPtr, VF, (bslma::Allocator*)TA);
+            ASSERT(1 == rawBuf.d_value);
+            ASSERT(0 == rawBuf.d_allocator_p);
+            if (veryVerbose) { P_(rawBuf.d_value); PP(rawBuf.d_allocator_p); }
+        }
+        {
+            my_ClassDef rawBuf;
+            my_Class2 *objPtr = (my_Class2 *) &rawBuf;
+            memset(&rawBuf, 92, sizeof rawBuf);
+            const my_Class2 VF  = V2;
+            Obj::construct(objPtr, VF, (bslma::Allocator*)TA);
+            ASSERT(2 == rawBuf.d_value);
+            ASSERT(TA == rawBuf.d_allocator_p);
+            if (veryVerbose) { P_(rawBuf.d_value); PP(rawBuf.d_allocator_p); }
+        }
+        {
+            my_ClassDef rawBuf;
+            my_Class2a *objPtr = (my_Class2a *) &rawBuf;
+            memset(&rawBuf, 92, sizeof rawBuf);
+            const my_Class2a VF  = V2A;
+            Obj::construct(objPtr, VF, (bslma::Allocator*)TA);
+            ASSERT(0x2a == rawBuf.d_value);
+            ASSERT(TA == rawBuf.d_allocator_p);
+            if (veryVerbose) { P_(rawBuf.d_value); PP(rawBuf.d_allocator_p); }
+        }
+        {
+            my_ClassDef rawBuf;
+            my_Class1 *objPtr = (my_Class1 *) &rawBuf;
+            memset(&rawBuf, 92, sizeof rawBuf);
+            my_Class1 VF  = V1;
+            Obj::construct(objPtr, MovUtl::move(VF), (bslma::Allocator*)TA);
+            ASSERT(1 == rawBuf.d_value);
+            ASSERT(0 == rawBuf.d_allocator_p);
+            ASSERT(MOVED_FROM_VAL == VF.value());
+            if (veryVerbose) { P_(rawBuf.d_value); PP(rawBuf.d_allocator_p); }
+        }
+        {
+            my_ClassDef rawBuf;
+            my_Class2 *objPtr = (my_Class2 *) &rawBuf;
+            memset(&rawBuf, 92, sizeof rawBuf);
+            my_Class2 VF  = V2;
+            Obj::construct(objPtr, MovUtl::move(VF), (bslma::Allocator*)TA);
+            ASSERT(2 == rawBuf.d_value);
+            ASSERT(TA == rawBuf.d_allocator_p);
+            ASSERT(MOVED_FROM_VAL == VF.value());
+            if (veryVerbose) { P_(rawBuf.d_value); PP(rawBuf.d_allocator_p); }
+        }
+        {
+            my_ClassDef rawBuf;
+            my_Class2a *objPtr = (my_Class2a *) &rawBuf;
+            memset(&rawBuf, 92, sizeof rawBuf);
+            my_Class2a VF  = V2A;
+            Obj::construct(objPtr, MovUtl::move(VF), (bslma::Allocator*)TA);
+            ASSERT(0x2a == rawBuf.d_value);
+            ASSERT(TA == rawBuf.d_allocator_p);
+            ASSERT(MOVED_FROM_VAL == VF.value());
+            if (veryVerbose) { P_(rawBuf.d_value); PP(rawBuf.d_allocator_p); }
+        }
+        if (verbose) printf("Construct from same type with void* testing.\n");
+        {
+            my_ClassDef rawBuf;
+            my_Class1 *objPtr = (my_Class1 *) &rawBuf;
+            memset(&rawBuf, 92, sizeof rawBuf);
+            const my_Class1 VF  = V1;
+            Obj::construct(objPtr, VF, XA);
+            ASSERT(1 == rawBuf.d_value);
+            ASSERT(0 == rawBuf.d_allocator_p);
+            if (veryVerbose) { P_(rawBuf.d_value); PP(rawBuf.d_allocator_p); }
+        }
+        {
+            my_ClassDef rawBuf;
+            my_Class2 *objPtr = (my_Class2 *) &rawBuf;
+            memset(&rawBuf, 92, sizeof rawBuf);
+            const my_Class2 VF  = V2;
+            Obj::construct(objPtr, VF, XA);
+            ASSERT(2 == rawBuf.d_value);
+            ASSERT(0 == rawBuf.d_allocator_p);
+            if (veryVerbose) { P_(rawBuf.d_value); PP(rawBuf.d_allocator_p); }
+        }
+        {
+            my_ClassDef rawBuf;
+            my_Class2a *objPtr = (my_Class2a *) &rawBuf;
+            memset(&rawBuf, 92, sizeof rawBuf);
+            const my_Class2a VF  = V2A;
+            Obj::construct(objPtr, VF, XA);
+            ASSERT(0x2a == rawBuf.d_value);
+            ASSERT(0 == rawBuf.d_allocator_p);
+            if (veryVerbose) { P_(rawBuf.d_value); PP(rawBuf.d_allocator_p); }
+        }
+        {
+            my_ClassDef rawBuf;
+            my_Class1 *objPtr = (my_Class1 *) &rawBuf;
+            memset(&rawBuf, 92, sizeof rawBuf);
+            my_Class1 VF  = V1;
+            Obj::construct(objPtr, MovUtl::move(VF), XA);
+            ASSERT(1 == rawBuf.d_value);
+            ASSERT(0 == rawBuf.d_allocator_p);
+            ASSERT(MOVED_FROM_VAL == VF.value());
+            if (veryVerbose) { P_(rawBuf.d_value); PP(rawBuf.d_allocator_p); }
+        }
+        {
+            my_ClassDef rawBuf;
+            my_Class2 *objPtr = (my_Class2 *) &rawBuf;
+            memset(&rawBuf, 92, sizeof rawBuf);
+            my_Class2 VF  = V2;
+            Obj::construct(objPtr, MovUtl::move(VF), XA);
+            ASSERT(2 == rawBuf.d_value);
+            ASSERT(0 == rawBuf.d_allocator_p);
+            ASSERT(MOVED_FROM_VAL == VF.value());
+            if (veryVerbose) { P_(rawBuf.d_value); PP(rawBuf.d_allocator_p); }
+        }
+        {
+            my_ClassDef rawBuf;
+            my_Class2a *objPtr = (my_Class2a *) &rawBuf;
+            memset(&rawBuf, 92, sizeof rawBuf);
+            my_Class2a VF  = V2A;
+            Obj::construct(objPtr, MovUtl::move(VF), XA);
+            ASSERT(0x2a == rawBuf.d_value);
+            ASSERT(0 == rawBuf.d_allocator_p);
+            ASSERT(MOVED_FROM_VAL == VF.value());
+            if (veryVerbose) { P_(rawBuf.d_value); PP(rawBuf.d_allocator_p); }
+        }
       } break;
       case 5: {
         // --------------------------------------------------------------------

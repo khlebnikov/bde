@@ -1728,9 +1728,17 @@ ScalarPrimitives::construct(TARGET_TYPE *address,
                             void        *)
 {
     BSLS_ASSERT_SAFE(address);
-
-    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1,a1));
-    BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
+    enum {
+           k_VALUE = bsl::is_same<typename bsl::remove_cv<
+                                    typename bsl::remove_reference<
+                                      ARG1>::type >::type,
+                                TARGET_TYPE>::value
+                     && bsl::is_trivially_copyable<TARGET_TYPE>::value
+                     ? Imp::e_BITWISE_COPYABLE_TRAITS
+                     : Imp::e_NIL_TRAITS
+     };
+     Imp::construct(address, BSLS_COMPILERFEATURES_FORWARD(ARG1,a1),
+                    0,(bsl::integral_constant<int, k_VALUE>*)0);
 }
 
 template <class TARGET_TYPE, class ARG1, class ARG2>
@@ -3032,7 +3040,6 @@ ScalarPrimitives_Imp::construct(
                                                                   // no overlap
     }
 }
-
 template <class TARGET_TYPE>
 inline
 void
