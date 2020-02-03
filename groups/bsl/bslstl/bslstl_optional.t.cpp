@@ -25,12 +25,6 @@
 #include <bslma_testallocator.h>
 #include <bslma_testallocatormonitor.h>
 
-
-#include <bslt_trackablevalue.h>
-
-#include <bsltf_moveonlyalloctesttype.h>
-
-
 #define BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING true
 // A list of disabled tests :
 // BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING
@@ -14549,14 +14543,6 @@ void bslstl_optional_test25()
         test_copyila_argt_helper<const ValueType, const bsl::optional<ValueType> >();
         test_copyila_argt_helper<const ValueType, bsl::optional< const ValueType> >();
     }
-}
-TrackableValue give_me_tv()
-{
-  return TrackableValue();
-}
-bsltf::MoveOnlyAllocTestType give_me_moatt()
-{
-  return bsltf::MoveOnlyAllocTestType();
 }
 void bslstl_optional_test26()
 {
