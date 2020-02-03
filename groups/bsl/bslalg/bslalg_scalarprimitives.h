@@ -821,12 +821,6 @@ struct ScalarPrimitives_Imp {
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)         a1,
                      bslma::Allocator                               *allocator,
                      bsl::integral_constant<int, e_BITWISE_COPYABLE_TRAITS> *);
-    template <class TARGET_TYPE, class ARG1>
-    static void construct(
-                     TARGET_TYPE                                    *address,
-                     BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)         a1,
-                     void                                           *allocator,
-                     bsl::integral_constant<int, e_BITWISE_COPYABLE_TRAITS> *);
         // Build an object from the specified 'a1' in the uninitialized memory
         // at the specified 'address'.  The specified 'allocator' is ignored.
         // Use the parameterized 'TARGET_TYPE' constructor with the signature
@@ -1282,11 +1276,6 @@ struct ScalarPrimitives_Imp {
                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)   a1,
                           bslma::Allocator                          *allocator,
                           bsl::integral_constant<int, e_NIL_TRAITS> *);
-    template <class TARGET_TYPE, class ARG1>
-    static void construct(TARGET_TYPE                               *address,
-                          BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)   a1,
-                          void                                      *allocator,
-                          bsl::integral_constant<int, e_NIL_TRAITS> *);
     template <class TARGET_TYPE, class ARG1, class ARG2>
     static void construct(TARGET_TYPE                               *address,
                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)    a1,
@@ -1736,7 +1725,7 @@ inline
 void
 ScalarPrimitives::construct(TARGET_TYPE *address,
                             BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
-                            void        *allocator)
+                            void        *)
 {
     BSLS_ASSERT_SAFE(address);
     enum {
@@ -1749,7 +1738,7 @@ ScalarPrimitives::construct(TARGET_TYPE *address,
                      : Imp::e_NIL_TRAITS
      };
      Imp::construct(address, BSLS_COMPILERFEATURES_FORWARD(ARG1,a1),
-                   allocator,(bsl::integral_constant<int, k_VALUE>*)0);
+                    0,(bsl::integral_constant<int, k_VALUE>*)0);
 }
 
 template <class TARGET_TYPE, class ARG1, class ARG2>
@@ -3051,32 +3040,6 @@ ScalarPrimitives_Imp::construct(
                                                                   // no overlap
     }
 }
-template <class TARGET_TYPE, class ARG1>
-inline
-void
-ScalarPrimitives_Imp::construct(
-                      TARGET_TYPE                                     *address,
-                      BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)         a1,
-                      void                                            *,
-                      bsl::integral_constant<int, e_BITWISE_COPYABLE_TRAITS> *)
-{
-    if (bsl::is_fundamental<TARGET_TYPE>::value
-     || bsl::is_pointer<TARGET_TYPE>::value) {
-        // Detectable at compile-time, this condition ensures that we don't
-        // call library functions for fundamental or pointer types.  Note that
-        // copy-constructor can't throw, and that assignment (although would
-        // likely produce equivalent code) can't be used, in case 'TARGET_TYPE'
-        // is 'const'-qualified.
-
-        ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1,a1));
-        BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
-    } else {
-        BSLMF_ASSERT(sizeof (TARGET_TYPE) == sizeof(a1));
-        memcpy((void *)address, BSLS_UTIL_ADDRESSOF(a1), sizeof a1);
-                                                                  // no overlap
-    }
-}
-
 template <class TARGET_TYPE>
 inline
 void
@@ -3146,18 +3109,6 @@ void
 ScalarPrimitives_Imp::construct(TARGET_TYPE                           *address,
                                 BSLS_COMPILERFEATURES_FORWARD_REF(ARG1) a1,
                                 bslma::Allocator                      *,
-                                bsl::integral_constant<int, e_NIL_TRAITS> *)
-{
-    ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1,a1));
-    BSLALG_SCALARPRIMITIVES_XLC_PLACEMENT_NEW_FIX;
-}
-
-template <class TARGET_TYPE, class ARG1>
-inline
-void
-ScalarPrimitives_Imp::construct(TARGET_TYPE                           *address,
-                                BSLS_COMPILERFEATURES_FORWARD_REF(ARG1) a1,
-                                void                                  *,
                                 bsl::integral_constant<int, e_NIL_TRAITS> *)
 {
     ::new (address) TARGET_TYPE(BSLS_COMPILERFEATURES_FORWARD(ARG1,a1));
