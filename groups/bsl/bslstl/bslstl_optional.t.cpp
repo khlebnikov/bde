@@ -55,6 +55,14 @@ using namespace bsl;
 //                     STANDARD BDE ASSERT TEST FUNCTION
 // ----------------------------------------------------------------------------
 
+#if BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES // $var-args=5
+#error "BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES not supported"
+#endif
+
+#if !defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
+#error "Generalized initializers needed for the current version of bsl::optional"
+#endif
+
 namespace {
 
 int testStatus = 0;
