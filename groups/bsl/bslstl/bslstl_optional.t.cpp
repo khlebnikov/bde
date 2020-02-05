@@ -7,15 +7,6 @@
 // should not be used as an example for new development.
 // ----------------------------------------------------------------------------
 
-// Todo:
-//       - add class that is convertible/assignable from an optional object
-//       - add monitoring of the allocators
-//       - tests from volatile/const of same type and from optional of volatile/const type
-//       - failure copy/move construction tests for non copyable and non moveable types
-//       - perfect forwarding tests for ARGS... constructor emplace and equal operator
-//         (requires perfect forwarding in the allocator construction utility)
-//
-
 #include "bslstl_optional.h"
 #include <bsls_bsltestutil.h>
 #include <bslstl_string.h>
@@ -378,9 +369,9 @@ bool operator==(const my_Class1b& lhs,
 {
     return (lhs.value()==rhs.value());
 }
-                              // ===============
+                             // ================
                              // class my_Class1c
-                             // ===============
+                             // ================
 
 class my_Class1c {
   // This 'class' is a simple type that does not take allocators.  Its
