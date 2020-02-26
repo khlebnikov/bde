@@ -12,9 +12,7 @@
 #include <bsls_ident.h>
 BSLS_IDENT_RCSID(bslstl_optional_cpp,"$Id$ $CSID$")
 namespace bsl {
-#ifdef __cpp_lib_optional
-}
-#else
+#ifndef __cpp_lib_optional
 nullopt_t nullopt = nullopt_t(2);
 in_place_t in_place;
 #endif // __cpp_lib_optional
