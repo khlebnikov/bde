@@ -916,34 +916,29 @@ public:
 
       // DATA
       my_ClassDef d_def;
-      int i;
 
       // CREATORS
       explicit
       my_Class3(bslma::Allocator *a = 0) {
-          i = 1;
           d_def.d_value = 0;
           d_def.d_allocator_p = a;
       }
       my_Class3(int v, bslma::Allocator *a = 0) {
-          i=2;
           d_def.d_value = v;
           d_def.d_allocator_p = a;
       }
       my_Class3(const my_Class3& rhs, bslma::Allocator *a = 0) {
-          i=3;
           d_def.d_value = rhs.d_def.d_value;
           d_def.d_allocator_p = a;
       }
 
       my_Class3(const my_Class2& rhs, bslma::Allocator *a = 0) {
-          i=4;
           d_def.d_value = rhs.d_def.d_value;
           d_def.d_allocator_p = a;
       }
 
       my_Class3(bslmf::MovableRef<my_Class3> other, bslma::Allocator *a = 0) {
-          i=5;
+
           my_Class3& otherRef = MovUtl::access(other);
           d_def.d_value = otherRef.d_def.d_value + 10;
           otherRef.d_def.d_value = MOVED_FROM_VAL;
@@ -956,7 +951,6 @@ public:
       }
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
       my_Class3(const my_Class3&& other, bslma::Allocator *a = 0) {
-          i=6;
           d_def.d_value = other.d_def.d_value + 20;
           if (a) {
               d_def.d_allocator_p = a;
@@ -975,7 +969,6 @@ public:
 
       // MANIPULATORS
       my_Class3& operator=(const my_Class3& rhs) {
-          i=i+10;
           d_def.d_value = rhs.d_def.d_value;
           // do not touch allocator!
           return *this;
@@ -1008,41 +1001,34 @@ public:
 
     // DATA
     my_ClassDef d_def;
-    int i;
 
     // CREATORS
     explicit
     my_Class4() {
-        i=1;
         d_def.d_value = 0;
         d_def.d_allocator_p = 0;
     }
     my_Class4(int v) {
-        i=2;
         d_def.d_value = v;
         d_def.d_allocator_p = 0;
     }
     my_Class4(const my_Class4& rhs) {
-        i=3;
         d_def.d_value = rhs.d_def.d_value;
         d_def.d_allocator_p = 0;
     }
 
     my_Class4(const my_Class2& rhs) {
-        i=4;
         d_def.d_value = rhs.d_def.d_value;
         d_def.d_allocator_p = 0;
     }
 
     my_Class4(bslmf::MovableRef<my_Class4> other) {
-        i=5;
         my_Class4& otherRef = MovUtl::access(other);
         d_def.d_value = otherRef.d_def.d_value + 10;
         otherRef.d_def.d_value = MOVED_FROM_VAL;
     }
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
     my_Class4(const my_Class4&& other) {
-        i=6;
         d_def.d_value = other.d_def.d_value + 20;
     }
 #endif //BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS
@@ -1055,7 +1041,6 @@ public:
 
     // MANIPULATORS
     my_Class4& operator=(const my_Class4& rhs) {
-        i=7;
         d_def.d_value = rhs.d_def.d_value;
         return *this;
     }
@@ -5601,11 +5586,9 @@ void bslstl_optional_test4()
         }
         ASSERT(bad_optional_exception_caught);
         bad_optional_exception_caught = false;
-
-        bsl::string j = CObj(bsl::allocator_arg, &oa, "test string 6").value();
+        CObj temp = CObj(bsl::allocator_arg, &oa, "test string 6");
+        bsl::string j = MovUtl::move(temp).value();
         ASSERT(j == "test string 6");
-        // todo : add a test that check const move returns a const && objects
-        // and what ever allocator is deemed appropriate
         ASSERT(j.get_allocator().mechanism() == &da);
     }catch (...)
     {
@@ -5645,9 +5628,10 @@ void bslstl_optional_test4()
         typedef bsl::optional<ValueType> Obj;
         typedef const Obj CObj;
 
-        ValueType j = CObj(V4).value();
+        CObj temp = CObj(V4);
+        ValueType j = MovUtl::move(temp).value();
         //make sure const&& constructor was called
-        ASSERTV(j.i,24 == j.d_def.d_value);
+        ASSERT(24 == j.d_def.d_value);
     }catch (...)
     {
         unexpected_exception_thrown = true;
@@ -5662,9 +5646,10 @@ void bslstl_optional_test4()
         typedef bsl::optional<ValueType> Obj;
         typedef const Obj CObj;
 
-        ValueType j = CObj(V5).value();
+        CObj temp = CObj(V5);
+        ValueType j = MovUtl::move(temp).value();
         //make sure const&& constructor was called
-        ASSERTV(j.i,25 == j.d_def.d_value);
+        ASSERT(25 == j.d_def.d_value);
     }catch (...)
     {
         unexpected_exception_thrown = true;
