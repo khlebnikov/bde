@@ -121,25 +121,12 @@ static bool         veryVerbose;
 static bool     veryVeryVerbose;
 static bool veryVeryVeryVerbose;
 
-const int   MAX_NUM_PARAMS = 5; // max in simulation of variadic templates
-
-// Define 'bsl::string' value long enough to ensure dynamic memory allocation.
-
-#ifdef BSLS_PLATFORM_CPU_32_BIT
-#define SUFFICIENTLY_LONG_STRING "123456789012345678901234567890123"
-#else  // 64_BIT
-#define SUFFICIENTLY_LONG_STRING "12345678901234567890123456789012" \
-                                 "123456789012345678901234567890123"
-#endif
-BSLMF_ASSERT(sizeof SUFFICIENTLY_LONG_STRING > sizeof(bsl::string));
-
 using namespace BloombergLP;
 using namespace bsl;
 
 typedef bslmf::MovableRefUtil MovUtl;
 
 const int MOVED_FROM_VAL = 0x01d;
-const int OPT_OL_OFFSET = 0x00a;
 
 //=============================================================================
 //                  CLASSES FOR TESTING USAGE EXAMPLES
@@ -5217,6 +5204,20 @@ void bslstl_optional_test4()
     //   This test will verify that the value function works as expected.
     //   The test relies on constructors and emplace member functions.
     //
+    //   MSVC2015 has a bug which removes constness from temporaries in certain
+    //   situations. For example :
+    //
+    //       bsl::string = CObj("s").value();
+    //
+    //   invokes non const qualified overload of value(), despite the fact the
+    //   temporary is of a const qualified bsl::optional. In the following
+    //   example, the constness is preserved:
+    //
+    //       Cobj temp = Cobj("s");
+    //       bsl::string = std::move(temp).value();
+    //
+    //    The tests have ben written to take this issue into account.
+    //
     // Concerns:
     //   * Calling value() on a engaged optional returns the value.
     //   * Calling value() on a disengaged optional throws bad_optional_access
@@ -5586,6 +5587,7 @@ void bslstl_optional_test4()
         }
         ASSERT(bad_optional_exception_caught);
         bad_optional_exception_caught = false;
+
         CObj temp = CObj(bsl::allocator_arg, &oa, "test string 6");
         bsl::string j = MovUtl::move(temp).value();
         ASSERT(j == "test string 6");
@@ -5629,6 +5631,7 @@ void bslstl_optional_test4()
         typedef const Obj CObj;
 
         CObj temp = CObj(V4);
+
         ValueType j = MovUtl::move(temp).value();
         //make sure const&& constructor was called
         ASSERT(24 == j.d_def.d_value);
