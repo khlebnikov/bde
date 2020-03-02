@@ -5294,7 +5294,7 @@ void bslstl_optional_test4()
 
             bool bad_optional_exception_caught = false;
             try{ mX.value();}
-            catch (bsl::bad_optional_access &)
+            catch (const bsl::bad_optional_access &)
             {
               bad_optional_exception_caught = true;
             }
@@ -5343,7 +5343,11 @@ void bslstl_optional_test4()
             int j = CObj(4).value();
             ASSERT(j == 4);
         }
-    } catch (...)
+    }
+    catch (std::bad_optional_access &e)
+        {
+          unexpected_exception_thrown = true;
+        }catch (...)
     {
       unexpected_exception_thrown = true;
     }
@@ -14865,6 +14869,49 @@ void bslstl_optional_test30()
     }
 
 }
+template <typename TYPE>
+void bslstl_optional_value_type_deduce(const bsl::optional<TYPE>& )
+{
+
+}
+
+template <typename TYPE>
+void bslstl_optional_optional_type_deduce(const TYPE& )
+{
+
+}
+void bslstl_optional_test31()
+{
+    // --------------------------------------------------------------------
+    // TESTING type deduction
+    //
+    //  In this test, we check that type deduction with bsl::optional
+    //  works.
+    //
+    // Concerns:
+    //: 1 Invoking a template function which takes bsl::optional<TYPE> deduces
+    //    the TYPE
+    //: 2 Invoking a template function which takes <TYPE> with bsl::optional
+    //    will be able to deduce bsl::optional<VALUE_TYPE>
+    //
+    // Plan:
+    //: 1 Execute tests for int and bsl::string as TestType.
+    //: 2 Call a template function which takes bsl::optinal<TYPE> with an
+    //    object of type bsl::optional<TestType>
+    //: 3 Call a template function which takes TYPE with an object of type
+    //    bsl::optional<TestType>
+    //
+    //
+    // Testing:
+    //    Type deduction
+    //
+
+    bslstl_optional_value_type_deduce(bsl::optional<int>());
+    bslstl_optional_value_type_deduce(bsl::optional<bsl::string>());
+    bslstl_optional_optional_type_deduce(bsl::optional<int>());
+    bslstl_optional_optional_type_deduce(bsl::optional<bsl::string>());
+
+}
 int main(int argc, char **argv)
 {
     const int                 test = argc > 1 ? atoi(argv[1]) : 0;
@@ -14888,6 +14935,9 @@ int main(int argc, char **argv)
     bslma::Default::setGlobalAllocator(&globalAllocator);
 
     switch (test) { case 0:
+      case 31:
+        bslstl_optional_test31();
+        break;
       case 30:
         bslstl_optional_test30();
         break;

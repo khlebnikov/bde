@@ -1131,6 +1131,18 @@ class optional {
                         // ====================
                         // class optional<TYPE>
                         // ====================
+#ifdef __cpp_lib_optional
+template <class TYPE>
+class optional<TYPE, false> : public std::optional<TYPE> {
+
+    typedef std::optional<TYPE> optionalBase;
+  public :
+    using optionalBase::optionalBase;
+
+    optional& operator=(bsl::nullopt_t) BSLS_KEYWORD_NOEXCEPT;
+        // reset the optional to a disengaged state.
+};
+#else
 template <class TYPE>
 class optional<TYPE, false> {
     // specialization of bslstl_optional for type that are not allocator aware
@@ -1508,7 +1520,7 @@ class optional<TYPE, false> {
 
 
 };
-
+#endif // __cpp_lib_optional
 // FREE FUNCTIONS
 template <class TYPE>
 void swap(bsl::optional<TYPE>& lhs,
@@ -2228,6 +2240,16 @@ void optional<TYPE, UsesBslmaAllocator>::swap(optional &other)
                       // ---------------------------
                       // class optional<TYPE, false>
                       // ---------------------------
+#ifdef __cpp_lib_optional
+template <class TYPE>
+inline
+optional<TYPE, false>&
+optional<TYPE, false>::operator=(bsl::nullopt_t) BSLS_KEYWORD_NOEXCEPT
+{
+    this->reset();
+    return *this;
+}
+#else
 
 // CREATORS
 template <class TYPE>
@@ -2500,7 +2522,7 @@ void optional<TYPE, false>::swap(optional &other)
         other.reset();
     }
 }
-
+#endif // __cpp_lib_optional
 // FREE FUNCTIONS
 template<typename TYPE>
 inline

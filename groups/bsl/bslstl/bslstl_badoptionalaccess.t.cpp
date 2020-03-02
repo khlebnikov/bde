@@ -30,7 +30,7 @@ using namespace BloombergLP;
 namespace {
 
 int testStatus = 0;
-
+#ifndef __cpp_lib_optional
 void aSsErT(bool condition, const char *message, int line)
 {
     if (condition) {
@@ -41,7 +41,7 @@ void aSsErT(bool condition, const char *message, int line)
         }
     }
 }
-
+#endif
 }  // close unnamed namespace
 
 // ============================================================================
@@ -93,6 +93,7 @@ void aSsErT(bool condition, const char *message, int line)
 
 int main(int argc, char *argv[])
 {
+
     int  test                = argc > 1 ? atoi(argv[1]) : 0;
     bool verbose             = argc > 2;
 //  bool veryVerbose         = argc > 3;
@@ -102,7 +103,7 @@ int main(int argc, char *argv[])
     printf("TEST " __FILE__ " CASE %d\n", test);
 
     switch (test) { case 0:
-      case 2: {
+     case 2: {
         // --------------------------------------------------------------------
         // 'noexcept' SPECIFICATION
         //
@@ -137,10 +138,10 @@ int main(int argc, char *argv[])
         //       };
         //     } // namespace std
         //..
-
+#ifndef __cpp_lib_optional
         ASSERT(BSLS_KEYWORD_NOEXCEPT_AVAILABLE
             == BSLS_KEYWORD_NOEXCEPT_OPERATOR(bslstl::BadOptionalAccess()));
-
+#endif
       } break;
       case 1: {
         // --------------------------------------------------------------------
@@ -160,7 +161,7 @@ int main(int argc, char *argv[])
 
         if (verbose) printf("\nBREATHING TEST"
                             "\n==============\n");
-
+#ifndef __cpp_lib_optional
         bslstl::BadOptionalAccess b;
         const native_std::exception *ptr = &b;
 
@@ -168,12 +169,13 @@ int main(int argc, char *argv[])
         ASSERT(0 == strcmp("bad_optional_access", ptr->what()));
 
         const bsl::bad_optional_access b2;
-        ptr = &b2;
+        const native_std::exception *ptr2 = &b2;
 
         ASSERT(0 == strcmp("bad_optional_access", b2.what()));
-        ASSERT(0 == strcmp("bad_optional_access", ptr->what()));
+        ASSERT(0 == strcmp("bad_optional_access", ptr2->what()));
+#endif
 
-      } break;
+      }break;
       default: {
         fprintf(stderr, "WARNING: CASE `%d' NOT FOUND.\n", test);
         testStatus = -1;

@@ -36,22 +36,25 @@ BSL_OVERRIDES_STD mode"
 
 #include <exception>
 
-#include <memory>                // 'std::bad_optional_access' if defined
+#ifdef BSLS_LIBRARYFEATURES_HAS_CPP17_BASELINE_LIBRARY
+#include <optional> // 'std::bad_optional_access' if defined
+#endif // BSLS_LIBRARYFEATURES_HAS_CPP17_BASELINE_LIBRARY
 
 namespace BloombergLP {
 namespace bslstl { class BadOptionalAccess; }
 }  // close enterprise namespace
 
 namespace bsl {
-#if 0
-typedef native_std::bad_optional_access bad_optional_access;
+#ifdef __cpp_lib_optional
+typedef std::bad_optional_access bad_optional_access;
 #else
 typedef ::BloombergLP::bslstl::BadOptionalAccess bad_optional_access;
-#endif
+#endif //__cpp_lib_optional
 
 }  // close namespace bsl
 
-
+#ifdef __cpp_lib_optional
+#else
 namespace BloombergLP {
 namespace bslstl {
 
@@ -99,7 +102,7 @@ const char *BadOptionalAccess::what() const BSLS_EXCEPTION_WHAT_NOTHROW
 
 }  // close package namespace
 }  // close enterprise namespace
-
+#endif //__cpp_lib_optional
 #endif
 
 // ----------------------------------------------------------------------------
