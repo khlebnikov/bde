@@ -35,7 +35,7 @@ BSLS_IDENT("$Id: $")
 //
 //known limitations :
 //  - move semantics depend on changes to
-//    BloombergLP::bslalg::ScalarPrimitives::construct to allow for
+//    BloombergLP::bslma::ConstructionUtil::construct to allow for
 //    perfect fowarding of construct arguments
 //  - MoveableRef can not be used where the argument is a deduced type.
 //    This means that rvalue overloads taking optional<OTHER_TYPE>
@@ -109,7 +109,6 @@ BSLS_IDENT("$Id: $")
 //..
 
 #include <bslalg_constructusingallocator.h>
-#include <bslalg_scalarprimitives.h>
 #include <bslalg_swaputil.h>
 
 #include <bslma_stdallocator.h>
@@ -406,8 +405,8 @@ void optional_data_imp<TYPE, UsesBslmaAllocator>::emplace(
     bsl::allocator_arg_t, allocator_type allocator)
 {
     reset();
-    BloombergLP::bslalg::ScalarPrimitives::construct(d_buffer.address(),
-                                                     allocator.mechanism());
+    BloombergLP::bslma::ConstructionUtil::construct(d_buffer.address(),
+                                                    allocator.mechanism());
     d_hasValue = true;
 }
 #if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES
@@ -419,9 +418,10 @@ void optional_data_imp<TYPE, UsesBslmaAllocator>::emplace(
     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args)
 {
     reset();
-    BloombergLP::bslalg::ScalarPrimitives::construct(d_buffer.address(),
-                                  BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...,
-                                  allocator.mechanism());
+    BloombergLP::bslma::ConstructionUtil::construct(d_buffer.address(),
+                                  allocator.mechanism(),
+                                  BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...
+                                  );
     d_hasValue = true;
 }
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
@@ -434,10 +434,11 @@ void optional_data_imp<TYPE, UsesBslmaAllocator>::emplace(
     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args)
 {
     reset();
-    BloombergLP::bslalg::ScalarPrimitives::construct(d_buffer.address(),
+    BloombergLP::bslma::ConstructionUtil::construct(d_buffer.address(),
+                                  allocator.mechanism(),
                                   il,
-                                  BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...,
-                                  allocator.mechanism());
+                                  BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...
+                                  );
     d_hasValue = true;
 }
 #endif//BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
@@ -511,7 +512,7 @@ inline
 void optional_data_imp<TYPE, false>::emplace()
 {
     reset();
-    BloombergLP::bslalg::ScalarPrimitives::construct(d_buffer.address(),
+    BloombergLP::bslma::ConstructionUtil::construct(d_buffer.address(),
                                                      (void *) 0);
     d_hasValue = true;
 }
@@ -523,9 +524,10 @@ void optional_data_imp<TYPE, false>::emplace(
                       BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args)
 {
     reset();
-    BloombergLP::bslalg::ScalarPrimitives::construct(d_buffer.address(),
-                                  BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...,
-                                  (void *) 0);
+    BloombergLP::bslma::ConstructionUtil::construct(d_buffer.address(),
+                                  (void *) 0,
+                                  BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...
+                                  );
     d_hasValue = true;
 }
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
@@ -536,10 +538,11 @@ void optional_data_imp<TYPE, false>::emplace(
     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args)
 {
     reset();
-    BloombergLP::bslalg::ScalarPrimitives::construct(d_buffer.address(),
+    BloombergLP::bslma::ConstructionUtil::construct(d_buffer.address(),
+                                  (void *) 0,
                                   il,
-                                  BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...,
-                                  (void *) 0);
+                                  BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...
+                                  );
     d_hasValue = true;
 }
 #endif//BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
@@ -1746,7 +1749,78 @@ bool operator>=(const LHS_TYPE&                lhs,
     // 'rhs' optional object or 'lhs' and 'rhs' have the same value, and
     // 'false' otherwise.  (See 'operator>' and 'operator=='.)  Note that this
     // operator returns '!(lhs < rhs)'.
+#ifdef __cpp_lib_optional
+template <class TYPE>
+void swap(bsl::optional<TYPE>& lhs,
+          std::optional<TYPE>& rhs);
+template <class TYPE>
+void swap(std::optional<TYPE>& lhs,
+          bsl::optional<TYPE>& rhs);
+    // Swap the value of the specified 'lhs' optional with the value of the
+    // specified 'rhs' optional.
 
+// comparison with optional
+template <class LHS_TYPE, class RHS_TYPE>
+bool operator==(const std::optional<LHS_TYPE>& lhs,
+                const bsl::optional<RHS_TYPE>& rhs);
+template <class LHS_TYPE, class RHS_TYPE>
+bool operator==(const bsl::optional<LHS_TYPE>& lhs,
+                const std::optional<RHS_TYPE>& rhs);
+    // If bool(x) != bool(y), false; otherwise if bool(x) == false, true;
+    // otherwise *x == *y. Note that this function will fail to compile if
+    // 'LHS_TYPE' and 'RHS_TYPE' are not compatible.
+
+template <class LHS_TYPE, class RHS_TYPE>
+bool operator!=(const bsl::optional<LHS_TYPE>& lhs,
+                const std::optional<RHS_TYPE>& rhs);
+template <class LHS_TYPE, class RHS_TYPE>
+bool operator!=(const std::optional<LHS_TYPE>& lhs,
+                const bsl::optional<RHS_TYPE>& rhs);
+    // If bool(x) != bool(y), true; otherwise, if bool(x) == false, false;
+    // otherwise *x != *y.  Note that this function will fail to compile if
+    // 'LHS_TYPE' and 'RHS_TYPE' are not compatible.
+
+template <class LHS_TYPE, class RHS_TYPE>
+bool operator<(const bsl::optional<LHS_TYPE>& lhs,
+               const std::optional<RHS_TYPE>& rhs);
+template <class LHS_TYPE, class RHS_TYPE>
+bool operator<(const std::optional<LHS_TYPE>& lhs,
+               const bsl::optional<RHS_TYPE>& rhs);
+    // If !y, false; otherwise, if !x, true; otherwise *x < *y.  Note that
+    // this function will fail to compile if 'LHS_TYPE' and 'RHS_TYPE' are
+    // not compatible.
+
+template <class LHS_TYPE, class RHS_TYPE>
+bool operator>(const bsl::optional<LHS_TYPE>& lhs,
+               const std::optional<RHS_TYPE>& rhs);
+template <class LHS_TYPE, class RHS_TYPE>
+bool operator>(const std::optional<LHS_TYPE>& lhs,
+               const bsl::optional<RHS_TYPE>& rhs);
+    // If !x, false; otherwise, if !y, true; otherwise *x > *y. note that this
+    // function will fail to compile if 'LHS_TYPE' and 'RHS_TYPE' are not
+    // compatible.
+
+template <class LHS_TYPE, class RHS_TYPE>
+bool operator<=(const bsl::optional<LHS_TYPE>& lhs,
+                const std::optional<RHS_TYPE>& rhs);
+template <class LHS_TYPE, class RHS_TYPE>
+bool operator<=(const std::optional<LHS_TYPE>& lhs,
+                const bsl::optional<RHS_TYPE>& rhs);
+    // If !x, true; otherwise, if !y, false; otherwise *x <= *y. Note that this
+    // function will fail to compile if 'LHS_TYPE' and 'RHS_TYPE' are not
+    // compatible.
+
+template <class LHS_TYPE, class RHS_TYPE>
+bool operator>=(const bsl::optional<LHS_TYPE>& lhs,
+                const std::optional<RHS_TYPE>& rhs);
+template <class LHS_TYPE, class RHS_TYPE>
+bool operator>=(const std::optional<LHS_TYPE>& lhs,
+                const bsl::optional<RHS_TYPE>& rhs);
+    // If !y, true; otherwise, if !x, false; otherwise *x >= *y. Note that this
+    // function will fail to compile if 'LHS_TYPE' and 'RHS_TYPE' are not
+    // compatible.
+
+#endif // __cpp_lib_optional
 
 template<class TYPE>
 BSLS_KEYWORD_CONSTEXPR
@@ -2863,6 +2937,135 @@ alloc_optional(typename bsl::optional<TYPE>::allocator_type const& alloc,
                           BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...);
 }
 #endif // defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
+#ifdef __cpp_lib_optional
+// in presence of std::optional, we need to provide better match relation
+// operators, or some comparisons may be ambiguous.
+template<typename TYPE>
+inline
+void swap(bsl::optional<TYPE>& lhs, std::optional<TYPE>& rhs)
+{
+    lhs.swap(rhs);
+}
+template<typename TYPE>
+inline
+void swap(std::optional<TYPE>& lhs, bsl::optional<TYPE>& rhs)
+{
+    lhs.swap(rhs);
+}
+
+template <class LHS_TYPE, class RHS_TYPE>
+inline
+bool operator==(const bsl::optional<LHS_TYPE>& lhs,
+                const std::optional<RHS_TYPE>& rhs)
+{
+    if (lhs && rhs) {
+        return lhs.value() == rhs.value();
+    }
+    return lhs.has_value() == rhs.has_value();
+}
+template <class LHS_TYPE, class RHS_TYPE>
+inline
+bool operator==(const std::optional<LHS_TYPE>& lhs,
+                const bsl::optional<RHS_TYPE>& rhs)
+{
+    if (lhs && rhs) {
+        return lhs.value() == rhs.value();
+    }
+    return lhs.has_value() == rhs.has_value();
+}
+
+template <class LHS_TYPE, class RHS_TYPE>
+inline
+bool operator!=(const bsl::optional<LHS_TYPE>& lhs,
+                const std::optional<RHS_TYPE>& rhs)
+{
+    if (lhs && rhs) {
+        return lhs.value() != rhs.value();
+    }
+
+    return lhs.has_value() != rhs.has_value();
+}
+template <class LHS_TYPE, class RHS_TYPE>
+inline
+bool operator!=(const std::optional<LHS_TYPE>& lhs,
+                const bsl::optional<RHS_TYPE>& rhs)
+{
+    if (lhs && rhs) {
+        return lhs.value() != rhs.value();
+    }
+
+    return lhs.has_value() != rhs.has_value();
+}
+
+template <class LHS_TYPE, class RHS_TYPE>
+inline
+bool operator<(const bsl::optional<LHS_TYPE>& lhs,
+               const std::optional<RHS_TYPE>& rhs)
+{
+    if (!rhs) {
+        return false;
+    }
+
+    return !lhs || lhs.value() < rhs.value();
+}
+template <class LHS_TYPE, class RHS_TYPE>
+inline
+bool operator<(const std::optional<LHS_TYPE>& lhs,
+               const bsl::optional<RHS_TYPE>& rhs)
+{
+    if (!rhs) {
+        return false;
+    }
+
+    return !lhs || lhs.value() < rhs.value();
+}
+
+template <class LHS_TYPE, class RHS_TYPE>
+inline
+bool operator>(const bsl::optional<LHS_TYPE>& lhs,
+               const std::optional<RHS_TYPE>& rhs)
+{
+    return rhs < lhs;
+}
+template <class LHS_TYPE, class RHS_TYPE>
+inline
+bool operator>(const std::optional<LHS_TYPE>& lhs,
+               const bsl::optional<RHS_TYPE>& rhs)
+{
+    return rhs < lhs;
+}
+
+template <class LHS_TYPE, class RHS_TYPE>
+inline
+bool operator<=(const bsl::optional<LHS_TYPE>& lhs,
+                const std::optional<RHS_TYPE>& rhs)
+{
+    return !(rhs < lhs);
+}
+template <class LHS_TYPE, class RHS_TYPE>
+inline
+bool operator<=(const std::optional<LHS_TYPE>& lhs,
+                const bsl::optional<RHS_TYPE>& rhs)
+{
+    return !(rhs < lhs);
+}
+
+template <class LHS_TYPE, class RHS_TYPE>
+inline
+bool operator>=(const bsl::optional<LHS_TYPE>& lhs,
+                const std::optional<RHS_TYPE>& rhs)
+{
+    return !(lhs < rhs);
+}
+template <class LHS_TYPE, class RHS_TYPE>
+inline
+bool operator>=(const std::optional<LHS_TYPE>& lhs,
+                const bsl::optional<RHS_TYPE>& rhs)
+{
+    return !(lhs < rhs);
+}
+
+#endif
 }  // close bsl namespace
 #endif // INCLUDED_BSLSTL_OPTIONAL
 // ----------------------------------------------------------------------------

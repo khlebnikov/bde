@@ -5344,7 +5344,7 @@ void bslstl_optional_test4()
             ASSERT(j == 4);
         }
     }
-    catch (std::bad_optional_access &e)
+    catch (bsl::bad_optional_access &e)
         {
           unexpected_exception_thrown = true;
         }catch (...)
@@ -7133,7 +7133,7 @@ void bslstl_optional_test11()
   // Plan:
   //
   //   Conduct the test using 'my_class1' (does not use allocator) and
-  //   'my_class2'/'my_class2a (uses allocator) for 'TYPE'.
+  //   'my_Class2'/'my_Class2a (uses allocator) for 'TYPE'.
   //
   //   Create an engaged optional of each type. Assign a value type value to
   //   the optional. Check the value of the optional and allocator, if any,
@@ -7605,7 +7605,7 @@ void bslstl_optional_test13()
   // Plan:
   //
   //   Conduct the test using 'my_class1' (does not use allocator) and
-  //   'my_class2'/'my_Class2a' (uses allocator) for 'TYPE'.
+  //   'my_Class2'/'my_Class2a' (uses allocator) for 'TYPE'.
   //
   //   Create an engaged optional of each type. Assign a disengaged optional
   //   of the same type to it. Check the value of the optional and allocator,
@@ -8265,7 +8265,7 @@ void bslstl_optional_test15()
   //
   // Plan:
   //   Conduct the test using 'my_class1' (does not use allocator) and
-  //   'my_class2'/'my_Class2a' (uses allocator) for 'TYPE'.
+  //   'my_Class2'/'my_Class2a' (uses allocator) for 'TYPE'.
   //
   //   Create an engaged optional of my_class1 type. Create another optional
   //   of my_class1 type using the first object as the initialization object.
@@ -8285,16 +8285,16 @@ void bslstl_optional_test15()
   //   object.
   //   Check the newly created object is disengaged.
   //
-  //   Create an engaged optional of my_class2 type using a non default
+  //   Create an engaged optional of my_Class2 type using a non default
   //   allocator.
-  //   Create another optional of my_class2 type using the first object as
+  //   Create another optional of my_Class2 type using the first object as
   //   the initialization object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //   Check the source object has not changed.
   //
-  //   Create another optional of my_class2 type using the first object as
+  //   Create another optional of my_Class2 type using the first object as
   //   the initialization object and a non default allocator as the allocator
   //   argument.
   //   Check the value of the newly created object is as expected.
@@ -8303,21 +8303,21 @@ void bslstl_optional_test15()
   //   Check the source object has not changed.
   //
   //   Bind a const reference to the original object. Create another optional
-  //   of my_class2 type using the const reference as the initialization object
+  //   of my_Class2 type using the const reference as the initialization object
   //   and a non default allocator as the allocator argument.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the one used
   //   as the allocator argument.
   //
-  //   Create a disengaged optional of my_class2 type using a non default
+  //   Create a disengaged optional of my_Class2 type using a non default
   //   allocator.
-  //   Create another optional of my_class2 type using the disengaged
+  //   Create another optional of my_Class2 type using the disengaged
   //   object as the initialization object.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //
-  //   Create another optional of my_class2 type using the disengaged
+  //   Create another optional of my_Class2 type using the disengaged
   //   object as the initialization object and non default allocator
   //   as the allocator argument.
   //   Check the newly created object is disengaged.
@@ -8325,13 +8325,13 @@ void bslstl_optional_test15()
   //   used in the construction call.
   //
   //   Bind a const reference to the original object. Create another optional
-  //   of my_class2 type using the const reference as the initialization object
+  //   of my_Class2 type using the const reference as the initialization object
   //   and non default allocator as the allocator argument.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the one
   //   used in the construction call.
   //
-  //   Repeat the above tests with my_class2a type.
+  //   Repeat the above tests with my_Class2a type.
   //
   //
   // Testing:
@@ -8595,7 +8595,7 @@ void bslstl_optional_test16()
   //
   // Plan:
   //   Conduct the test using 'my_class1' (does not use allocator) and
-  //   'my_class2'/'my_Class2a' (uses allocator) for 'TYPE'.
+  //   'my_Class2'/'my_Class2a' (uses allocator) for 'TYPE'.
   //
   //   Create an engaged optional of my_class1 type. Create another optional
   //   of my_class1 type by move construction from the original object.
@@ -8618,27 +8618,27 @@ void bslstl_optional_test16()
   //   Check the newly created object is disengaged.
   //   Check the source object has not changed.
   //
-  //   Create an engaged optional of my_class2 type using a non default
+  //   Create an engaged optional of my_Class2 type using a non default
   //   allocator.
-  //   Create another optional of my_class2 type by move construction from
+  //   Create another optional of my_Class2 type by move construction from
   //   the first object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the one from
   //   the source optional object.
   //   Check the source object's value type is in a moved from state.
   //
-  //   Create an engaged const optional of my_class2 type using a non default
+  //   Create an engaged const optional of my_Class2 type using a non default
   //   allocator.
-  //   Create another optional of my_class2 type  by move construction from
+  //   Create another optional of my_Class2 type  by move construction from
   //   the first object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the
   //   default allocator.
   //   Check the source object's value type has not changed.
   //
-  //   Create an engaged optional of my_class2 type using a non default
+  //   Create an engaged optional of my_Class2 type using a non default
   //   allocator.
-  //   Create another optional of my_class2 type  by move construction from
+  //   Create another optional of my_Class2 type  by move construction from
   //   the first object and a non default allocator as the allocator
   //   argument.
   //   Check the value of the newly created object is as expected.
@@ -8646,49 +8646,49 @@ void bslstl_optional_test16()
   //   as the one used for the source object.
   //   Check the source object's value type is in a moved from state.
   //
-  //   Create an engaged const optional of my_class2 type using a non default
+  //   Create an engaged const optional of my_Class2 type using a non default
   //   allocator.
-  //   Create another optional of my_class2 type by move construction from
+  //   Create another optional of my_Class2 type by move construction from
   //   the first object and a non default allocator as the allocator argument.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the one used
   //   as the allocator argument.
   //   Check the source object has not changed.
   //
-  //   Create a disengaged optional of my_class2 type using a non default
+  //   Create a disengaged optional of my_Class2 type using a non default
   //   allocator.
-  //   Create another optional of my_class2 type by move construction from
+  //   Create another optional of my_Class2 type by move construction from
   //   the first object.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the same as
   //   the source optional object.
   //
-  //   Create a disengaged const optional of my_class2 type using a non default
+  //   Create a disengaged const optional of my_Class2 type using a non default
   //   allocator.
-  //   Create another optional of my_class2 type by move construction from
+  //   Create another optional of my_Class2 type by move construction from
   //   the first object.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //
-  //   Create a disengaged optional of my_class2 type using a non default
+  //   Create a disengaged optional of my_Class2 type using a non default
   //   allocator.
-  //   Create another optional of my_class2 type by move construction from
+  //   Create another optional of my_Class2 type by move construction from
   //   the first object and with non default allocator as the allocator
   //   argument.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the one
   //   used in the construction call.
   //
-  //   Create a disengaged const optional of my_class2 type using a non
+  //   Create a disengaged const optional of my_Class2 type using a non
   //   default allocator.
-  //   Create another optional of my_class2 type by move construction from
+  //   Create another optional of my_Class2 type by move construction from
   //   the first object.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the default
   //   allocator
   //
-  //   Repeat the above tests with my_class2a type.
+  //   Repeat the above tests with my_Class2a type.
   //
   //
   // Testing:
@@ -9018,7 +9018,7 @@ void bslstl_optional_test17()
   //
   // Plan:
   //   Conduct the test using 'my_class1' (does not use allocator) and
-  //   'my_class2'/'my_Class2a' (uses allocator) for 'TYPE'.
+  //   'my_Class2'/'my_Class2a' (uses allocator) for 'TYPE'.
   //
   //   Create an object of my_class1 type.
   //   Create an optional of my_class1 type using the first object as the
@@ -9030,15 +9030,15 @@ void bslstl_optional_test17()
   //   of my_class1 type using the const reference as the initialization object.
   //   Check the value of the newly created object is as expected.
   //
-  //   Create an object of my_class2 type using a non default allocator.
-  //   Create an optional of my_class2 type using the first object as
+  //   Create an object of my_Class2 type using a non default allocator.
+  //   Create an optional of my_Class2 type using the first object as
   //   the initialization object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //   Check the source object has not changed.
   //
-  //   Create an optional of my_class2 type using the original my_class2
+  //   Create an optional of my_Class2 type using the original my_Class2
   //   object as the initialization object and a non default allocator
   //   as the allocator argument.
   //   Check the value of the newly created object is as expected.
@@ -9046,8 +9046,8 @@ void bslstl_optional_test17()
   //   as the allocator argument.
   //   Check the source object has not changed.
   //
-  //   Bind a const reference to the original my_class2 object. Create an
-  //   optional of my_class2 type using the const reference as the
+  //   Bind a const reference to the original my_Class2 object. Create an
+  //   optional of my_Class2 type using the const reference as the
   //   initialization object and a non default allocator as the allocator
   //   argument.
   //   Check the value of the newly created object is as expected.
@@ -9055,7 +9055,7 @@ void bslstl_optional_test17()
   //   as the allocator argument.
   //
   //
-  //   Repeat the above tests with my_class2a type.
+  //   Repeat the above tests with my_Class2a type.
   //
   //
   // Testing:
@@ -9246,7 +9246,7 @@ void bslstl_optional_test18()
   //
   // Plan:
   //   Conduct the test using 'my_class1' (does not use allocator) and
-  //   'my_class2'/'my_Class2a' (uses allocator) for 'TYPE'.
+  //   'my_Class2'/'my_Class2a' (uses allocator) for 'TYPE'.
   //
   //   Create an object of my_class1 type.
   //   Create an optional of my_class1 type by move construction from the
@@ -9261,40 +9261,40 @@ void bslstl_optional_test18()
   //   Check the source object has not changed.
   //
   //
-  //   Create an object of my_class2 type using a non default allocator.
-  //   Create an optional of my_class2 type by move construction from the
-  //   my_class2 object.
+  //   Create an object of my_Class2 type using a non default allocator.
+  //   Create an optional of my_Class2 type by move construction from the
+  //   my_Class2 object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //   Check the source object is in a moved from state.
   //
-  //   Create a const object of my_class2 type using a non default allocator.
-  //   Create an optional of my_class2 type by move construction from the
-  //   my_class2 object.
+  //   Create a const object of my_Class2 type using a non default allocator.
+  //   Create an optional of my_Class2 type by move construction from the
+  //   my_Class2 object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //   Check the source object has not changed.
   //
-  //   Create an object of my_class2 type using a non default allocator.
-  //   Create an optional of my_class2 type  by move construction from
-  //   the my_class2 object and a non default allocator as the allocator
+  //   Create an object of my_Class2 type using a non default allocator.
+  //   Create an optional of my_Class2 type  by move construction from
+  //   the my_Class2 object and a non default allocator as the allocator
   //   argument.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the same
   //   as the one used for the source object.
   //   Check the source object is in a moved from state.
   //
-  //   Create a const object of my_class2 type using a non default allocator.
-  //   Create an optional of my_class2 type by move construction from
+  //   Create a const object of my_Class2 type using a non default allocator.
+  //   Create an optional of my_Class2 type by move construction from
   //   the first object and a non default allocator as the allocator argument.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the one used
   //   as the allocator argument.
   //   Check the source object has not changed.
   //
-  //   Repeat the above tests with my_class2a type.
+  //   Repeat the above tests with my_Class2a type.
   //
   //
   // Testing:
@@ -9496,7 +9496,7 @@ void bslstl_optional_test19()
   //
   // Plan:
   //   Conduct the test using 'my_class1a' (does not use allocator) and
-  //   'my_class2'/'my_Class2a' (uses allocator) for 'TYPE'.
+  //   'my_Class2'/'my_Class2a' (uses allocator) for 'TYPE'.
   //
   //   Create an engaged optional of my_class1 type. Create an optional of
   //   my_class1a type using the first object as the initialization object.
@@ -9515,7 +9515,7 @@ void bslstl_optional_test19()
   //   Check the newly created object is disengaged.
   //
   //   Create an engaged optional of my_class1 type.
-  //   Create an optional of my_class2 type using the my_class1 object as
+  //   Create an optional of my_Class2 type using the my_class1 object as
   //   the initialization object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
@@ -9523,13 +9523,13 @@ void bslstl_optional_test19()
   //   Check the source object has not changed.
   //
   //   Bind a const reference to the my_class1 object. Create an optional
-  //   of my_class2 type using the const reference as the initialization
+  //   of my_Class2 type using the const reference as the initialization
   //   object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the one used
   //   as the allocator argument.
   //
-  //   Create an optional of my_class2 type using the my_class1 object as
+  //   Create an optional of my_Class2 type using the my_class1 object as
   //   the initialization object and a non default allocator as the allocator
   //   argument.
   //   Check the value of the newly created object is as expected.
@@ -9538,26 +9538,26 @@ void bslstl_optional_test19()
   //   Check the source object has not changed.
   //
   //   Bind a const reference to the my_class1 object. Create an optional
-  //   of my_class2 type using the const reference as the initialization object
+  //   of my_Class2 type using the const reference as the initialization object
   //   and a non default allocator as the allocator argument.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the one used
   //   as the allocator argument.
   //
   //   Create a disengaged optional of my_class1 type.
-  //   Create an optional of my_class2 type using the disengaged
+  //   Create an optional of my_Class2 type using the disengaged
   //   object as the initialization object.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //
   //   Bind a const reference to the my_class1 optional object. Create an optional
-  //   of my_class2 type using the const reference as the initialization object.
+  //   of my_Class2 type using the const reference as the initialization object.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the one
   //   used in the construction call.
   //
-  //   Create an optional of my_class2 type using the disengaged my_class1
+  //   Create an optional of my_Class2 type using the disengaged my_class1
   //   optional object as the initialization object and non default allocator
   //   as the allocator argument.
   //   Check the newly created object is disengaged.
@@ -9565,29 +9565,29 @@ void bslstl_optional_test19()
   //   used in the construction call.
   //
   //   Bind a const reference to the my_class1 optional object. Create an optional
-  //   of my_class2 type using the const reference as the initialization object
+  //   of my_Class2 type using the const reference as the initialization object
   //   and non default allocator as the allocator argument.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the one
   //   used in the construction call.
   //
-  //   Create an engaged optional of my_class2 type using a non default
+  //   Create an engaged optional of my_Class2 type using a non default
   //   allocator.
-  //   Create an optional of my_class2a type using the first object as
+  //   Create an optional of my_Class2a type using the first object as
   //   the initialization object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //   Check the source object has not changed.
   //
-  //   Bind a const reference to the my_class2 object.
-  //   Create an optional of my_class2a type using the const reference as
+  //   Bind a const reference to the my_Class2 object.
+  //   Create an optional of my_Class2a type using the const reference as
   //   the initialization object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //
-  //   Create an optional of my_class2a type using the my_class2 object as
+  //   Create an optional of my_Class2a type using the my_Class2 object as
   //   the initialization object and a non default allocator as the allocator
   //   argument.
   //   Check the value of the newly created object is as expected.
@@ -9596,35 +9596,35 @@ void bslstl_optional_test19()
   //   Check the source object has not changed.
   //
   //   Bind a const reference to the original object. Create an optional
-  //   of my_class2a type using the const reference as the initialization
+  //   of my_Class2a type using the const reference as the initialization
   //   object and a non default allocator as the allocator argument.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the one used
   //   as the allocator argument.
   //
-  //   Create a disengaged optional of my_class2 type using a non default
+  //   Create a disengaged optional of my_Class2 type using a non default
   //   allocator.
-  //   Create an optional of my_class2a type using the disengaged
+  //   Create an optional of my_Class2a type using the disengaged
   //   object as the initialization object.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //
-  //   Bind a const reference to the my_class2 optional object. Create an optional
-  //   of my_class2a type using the const reference as the initialization object.
+  //   Bind a const reference to the my_Class2 optional object. Create an optional
+  //   of my_Class2a type using the const reference as the initialization object.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the one
   //   used in the construction call.
   //
-  //   Create an optional of my_class2a type using the disengaged my_class2
+  //   Create an optional of my_Class2a type using the disengaged my_Class2
   //   optional object as the initialization object and non default allocator
   //   as the allocator argument.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the one
   //   used in the construction call.
   //
-  //   Bind a const reference to the my_class2 optional object. Create an optional
-  //   of my_class2a type using the const reference as the initialization object
+  //   Bind a const reference to the my_Class2 optional object. Create an optional
+  //   of my_Class2a type using the const reference as the initialization object
   //   and non default allocator as the allocator argument.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the one
@@ -9920,7 +9920,7 @@ void bslstl_optional_test20()
   //
   // Plan:
   //   Conduct the test using 'my_class1a' (does not use allocator) and
-  //   'my_class2'/'my_Class2a' (uses allocator) for 'TYPE'.
+  //   'my_Class2'/'my_Class2a' (uses allocator) for 'TYPE'.
   //
   //   Create an engaged optional of my_class1 type. Create an optional
   //   of my_class1a type by move construction from the original object.
@@ -9944,7 +9944,7 @@ void bslstl_optional_test20()
   //   Check the source object has not changed.
   //
   //   Create an engaged optional of my_class1 type.
-  //   Create an optional of my_class2 type by move construction from the
+  //   Create an optional of my_Class2 type by move construction from the
   //   my_class1 optional object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
@@ -9953,7 +9953,7 @@ void bslstl_optional_test20()
   //
   //   Create an engaged const optional of my_class1 type using a non default
   //   allocator.
-  //   Create an optional of my_class2 type by move construction from the
+  //   Create an optional of my_Class2 type by move construction from the
   //   my_class1 optional object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the
@@ -9962,7 +9962,7 @@ void bslstl_optional_test20()
   //
   //   Create an engaged optional of my_class1 type using a non default
   //   allocator.
-  //   Create another optional of my_class2 type by move construction from
+  //   Create another optional of my_Class2 type by move construction from
   //   the first object and a non default allocator as the allocator
   //   argument.
   //   Check the value of the newly created object is as expected.
@@ -9972,7 +9972,7 @@ void bslstl_optional_test20()
   //
   //   Create an engaged const optional of my_class1 type using a non default
   //   allocator.
-  //   Create an optional of my_class2 type by move construction from the
+  //   Create an optional of my_Class2 type by move construction from the
   //   first object and a non default allocator as the allocator argument.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the one used
@@ -9980,98 +9980,98 @@ void bslstl_optional_test20()
   //   Check the source object has not changed.
   //
   //   Create a disengaged optional of my_class1 type
-  //   Create an optional of my_class2 type by move construction from the
+  //   Create an optional of my_Class2 type by move construction from the
   //   first object.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //
   //   Create a disengaged const optional of my_class1 type.
-  //   Create an optional of my_class2 type by move construction from the
+  //   Create an optional of my_Class2 type by move construction from the
   //   first object.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //
   //   Create a disengaged optional of my_class1 type.
-  //   Create an optional of my_class2 type by move construction from the
+  //   Create an optional of my_Class2 type by move construction from the
   //   first object and with non default allocator as the allocator argument.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the one
   //   used in the construction call.
   //
   //   Create a disengaged const optional of my_class1 type.
-  //   Create another optional of my_class2 type by move construction from the
+  //   Create another optional of my_Class2 type by move construction from the
   //   first object.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the default
   //   allocator
   //
-  //   Create an engaged optional of my_class2 type using a non default
+  //   Create an engaged optional of my_Class2 type using a non default
   //   allocator.
-  //   Create an optional of my_class2a type by move construction from the
-  //   my_class2 optional object.
+  //   Create an optional of my_Class2a type by move construction from the
+  //   my_Class2 optional object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //   Check the source object is in a moved from state.
   //
-  //   Create an engaged const optional of my_class2 type using a non default
+  //   Create an engaged const optional of my_Class2 type using a non default
   //   allocator.
-  //   Create an optional of my_class2a type by move construction from the
-  //   optional of my_class2.
+  //   Create an optional of my_Class2a type by move construction from the
+  //   optional of my_Class2.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //
-  //   Create an engaged optional of my_class2 type using a non default
+  //   Create an engaged optional of my_Class2 type using a non default
   //   allocator.
-  //   Create an optional of my_class2a type by move construction from the
-  //   my_class2 optional object and a non default allocator as the allocator
+  //   Create an optional of my_Class2a type by move construction from the
+  //   my_Class2 optional object and a non default allocator as the allocator
   //   argument.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the one used
   //   as the allocator argument.
   //   Check the source object is in a moved from state.
   //
-  //   Create an engaged const optional of my_class2 type using a non default
+  //   Create an engaged const optional of my_Class2 type using a non default
   //   allocator.
-  //   Create an optional by move construction from the my_class2 optional
+  //   Create an optional by move construction from the my_Class2 optional
   //   object and a non default allocator as the allocator
   //   argument.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the one used
   //   as the allocator argument.
   //
-  //   Create a disengaged optional of my_class2 type using a non default
+  //   Create a disengaged optional of my_Class2 type using a non default
   //   allocator.
-  //   Create an optional of my_class2a type by move construction from the
-  //   optional of my_class2.
+  //   Create an optional of my_Class2a type by move construction from the
+  //   optional of my_Class2.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //
-  //   Create a disengaged const optional of my_class2 type using a non default
+  //   Create a disengaged const optional of my_Class2 type using a non default
   //   allocator.
-  //   Create an optional of my_class2a type by move construction from the
-  //   optional of my_class2.
+  //   Create an optional of my_Class2a type by move construction from the
+  //   optional of my_Class2.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the one
   //   used in the construction call.
   //
-  //   Create a disengaged optional of my_class2 type using a non default
+  //   Create a disengaged optional of my_Class2 type using a non default
   //   allocator.
-  //   Create an optional of my_class2a type by move construction from the
-  //   optional of my_class2 and non default allocator as the allocator
+  //   Create an optional of my_Class2a type by move construction from the
+  //   optional of my_Class2 and non default allocator as the allocator
   //   argument.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the one
   //   used in the construction call.
   //
-  //   Create a disengaged const optional of my_class2 type using a non default
+  //   Create a disengaged const optional of my_Class2 type using a non default
   //   allocator.
-  //   Create an optional of my_class2a type by move construction from the
-  //   optional of my_class2 and non default allocator as the allocator
+  //   Create an optional of my_Class2a type by move construction from the
+  //   optional of my_Class2 and non default allocator as the allocator
   //   argument.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the one
@@ -10361,7 +10361,7 @@ void bslstl_optional_test21()
   //
   // Plan:
   //   Conduct the test using 'my_class1a' (does not use allocator) and
-  //   'my_class2'/'my_Class2a' (uses allocator) for 'TYPE'.
+  //   'my_Class2'/'my_Class2a' (uses allocator) for 'TYPE'.
   //
   //   Create an object of my_class1 type.
   //   Create an optional of my_class1a type using the first object as the
@@ -10375,7 +10375,7 @@ void bslstl_optional_test21()
   //   Check the value of the newly created object is as expected.
   //
   //   Create an object of my_class1 type.
-  //   Create an optional of my_class2 type using the first object as
+  //   Create an optional of my_Class2 type using the first object as
   //   the initialization object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
@@ -10383,7 +10383,7 @@ void bslstl_optional_test21()
   //   Check the source object has not changed.
   //
   //   Create a const object of my_class1 type using a non default allocator.
-  //   Create an optional of my_class2 type using the first object as
+  //   Create an optional of my_Class2 type using the first object as
   //   the initialization object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
@@ -10391,7 +10391,7 @@ void bslstl_optional_test21()
   //   Check the source object has not changed.
   //
   //   Create an object of my_class1 type.
-  //   Create an optional of my_class2 type using the my_class1 object as the
+  //   Create an optional of my_Class2 type using the my_class1 object as the
   //   initialization object and a non default allocator as the allocator
   //   argument.
   //   Check the value of the newly created object is as expected.
@@ -10400,31 +10400,31 @@ void bslstl_optional_test21()
   //   Check the source object has not changed.
   //
   //   Create a const object of my_class1 type using a non default allocator.
-  //   Create an optional of my_class2 type using the my_class1 object as the
+  //   Create an optional of my_Class2 type using the my_class1 object as the
   //   initialization object and a non default allocator as the allocator
   //   argument.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the one used
   //   as the allocator argument.
   //
-  //   Create an object my_class2 type using a non default allocator.
-  //   Create an optional of my_class2a type using the first object as
+  //   Create an object my_Class2 type using a non default allocator.
+  //   Create an optional of my_Class2a type using the first object as
   //   the initialization object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //   Check the source object has not changed.
   //
-  //   Create a const object my_class2 type using a non default allocator.
-  //   Bind a const reference to the my_class2 object.
-  //   Create an optional of my_class2a type using the const object as
+  //   Create a const object my_Class2 type using a non default allocator.
+  //   Bind a const reference to the my_Class2 object.
+  //   Create an optional of my_Class2a type using the const object as
   //   the initialization object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //
-  //   Create an object my_class2 type using a non default allocator.
-  //   Create an optional of my_class2a type using the my_class2 object as
+  //   Create an object my_Class2 type using a non default allocator.
+  //   Create an optional of my_Class2a type using the my_Class2 object as
   //   the initialization object and a non default allocator as the allocator
   //   argument.
   //   Check the value of the newly created object is as expected.
@@ -10432,8 +10432,8 @@ void bslstl_optional_test21()
   //   as the allocator argument.
   //   Check the source object has not changed.
   //
-  //   Create a const object my_class2 type using a non default allocator.
-  //   Create an optional of my_class2a type using the const object as
+  //   Create a const object my_Class2 type using a non default allocator.
+  //   Create an optional of my_Class2a type using the const object as
   //   the initialization object and a non default allocator as the allocator
   //   argument.
   //   Check the value of the newly created object is as expected.
@@ -10624,7 +10624,7 @@ void bslstl_optional_test22()
   //
   // Plan:
   //   Conduct the test using 'my_class1a' (does not use allocator) and
-  //   'my_class2'/'my_Class2a' (uses allocator) for 'TYPE'.
+  //   'my_Class2'/'my_Class2a' (uses allocator) for 'TYPE'.
   //
   //   Create an object of my_class1 type.
   //   Create an optional of my_class1a type by move construction from the
@@ -10639,7 +10639,7 @@ void bslstl_optional_test22()
   //   Check the source object has not changed.
   //
   //   Create an object of my_class1 type.
-  //   Create an optional of my_class2 type by move construction from the
+  //   Create an optional of my_Class2 type by move construction from the
   //   my_class1 object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
@@ -10647,7 +10647,7 @@ void bslstl_optional_test22()
   //   Check the source object is in a moved from state.
   //
   //   Create a const object of my_class1 type.
-  //   Create an optional of my_class2 type by move construction from the
+  //   Create an optional of my_Class2 type by move construction from the
   //   my_class1 object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
@@ -10655,7 +10655,7 @@ void bslstl_optional_test22()
   //   Check the source object has not changed.
   //
   //   Create an object of my_class1.
-  //   Create an optional of my_class2 type  by move construction from
+  //   Create an optional of my_Class2 type  by move construction from
   //   the my_class1 object and a non default allocator as the allocator
   //   argument.
   //   Check the value of the newly created object is as expected.
@@ -10664,41 +10664,41 @@ void bslstl_optional_test22()
   //   Check the source object is in a moved from state.
   //
   //   Create a const object of my_class1 type.
-  //   Create an optional of my_class2 type by move construction from
+  //   Create an optional of my_Class2 type by move construction from
   //   the first object and a non default allocator as the allocator argument.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the one used
   //   as the allocator argument.
   //   Check the source object has not changed.
   //
-  //   Create an object of my_class2 type using a non default allocator.
-  //   Create an optional of my_class2a type by move construction from the
-  //   my_class2 object.
+  //   Create an object of my_Class2 type using a non default allocator.
+  //   Create an optional of my_Class2a type by move construction from the
+  //   my_Class2 object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //   Check the source object is in a moved from state.
   //
-  //   Create a const object of my_class2 type using a non default allocator.
-  //   Create an optional of my_class2a type by move construction from the
-  //   my_class2 object.
+  //   Create a const object of my_Class2 type using a non default allocator.
+  //   Create an optional of my_Class2a type by move construction from the
+  //   my_Class2 object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //   Check the source object has not changed.
   //
-  //   Create an object of my_class2 type using a non default allocator.
-  //   Create an optional of my_class2a type  by move construction from
-  //   the my_class2 object and a non default allocator as the allocator
+  //   Create an object of my_Class2 type using a non default allocator.
+  //   Create an optional of my_Class2a type  by move construction from
+  //   the my_Class2 object and a non default allocator as the allocator
   //   argument.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the same
   //   as the one used for the source object.
   //   Check the source object is in a moved from state.
   //
-  //   Create a const object of my_class2 type using a non default allocator.
-  //   Create an optional of my_class2a type by move construction from
-  //   the my_class2 object and a non default allocator as the allocator
+  //   Create a const object of my_Class2 type using a non default allocator.
+  //   Create an optional of my_Class2a type by move construction from
+  //   the my_Class2 object and a non default allocator as the allocator
   //   argument.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the one used
@@ -13494,7 +13494,7 @@ void bslstl_optional_test26()
   //
   //   Conduct the test using 'int' (scalar type, doesn't use allocator),
   //   'my_class1' (non scalar type, doesn't use allocator), and
-  //   'my_class2' (non scalar type, uses allocator), for 'TYPE'.
+  //   'my_Class2' (non scalar type, uses allocator), for 'TYPE'.
   //
   //   Create a disengaged source optional of each type.
   //   Create a destination optional of optional of each type.
@@ -13827,7 +13827,7 @@ void bslstl_optional_test28()
     //:
     //
     // Plan:
-    //: 1 Execute tests for int( doesn't use allocator) and my_class2 (uses
+    //: 1 Execute tests for int( doesn't use allocator) and my_Class2 (uses
     //    allocator).
     //  2 For each relation operator, execute a combination of comparing:
     //      - two optional objects of different types
@@ -14025,7 +14025,7 @@ void bslstl_optional_test29()
     //
     //
     // Plan:
-    //: 1 Execute tests for my_class1( doesn't use allocator) and my_class2
+    //: 1 Execute tests for my_class1( doesn't use allocator) and my_Class2
     //    (uses allocator).
     //: 2 Call make_optional with an lvalue of each type. Check the value and
     //    allocator (if any) is correct. Check there were no additional copies
@@ -14392,12 +14392,12 @@ void bslstl_optional_test30()
     //
     //
     // Plan:
-    //: 1 Execute tests for my_class2.
-    //: 2 Call alloc_optional with an lvalue of my_class2. Check the value and
+    //: 1 Execute tests for my_Class2.
+    //: 2 Call alloc_optional with an lvalue of my_Class2. Check the value and
     //    allocator of the created optional is correct. Check there were no
     //    additional copies created by checking the number of copy and move
     //    constructors invoked.
-    //: 3 Call alloc_optional with an rvalue of of my_class2. Check the value
+    //: 3 Call alloc_optional with an rvalue of of my_Class2. Check the value
     //    and allocator of the created optional is correct. Check the move
     //    constructor was used. Check there were no additional copies created
     //    by checking the number of copy and move constructors invoked.
@@ -14912,6 +14912,434 @@ void bslstl_optional_test31()
     bslstl_optional_optional_type_deduce(bsl::optional<bsl::string>());
 
 }
+#ifdef __cpp_lib_optional
+void bslstl_optional_test32()
+{
+    // --------------------------------------------------------------------
+    // TESTING relop with std::optional
+    //
+    //  In this test, we check that relationship operators work when used
+    //  with bsl::optional and std::optional;
+    //
+    // Concerns:
+    //: 1 We can compare a bsl::optional object of value type V and an
+    //    std::optional object of type U if U and V are comparable types. The
+    //    result depends on whether the optional objects is engaged or not.
+    //
+    // Plan:
+    //: 1 Execute tests for int( doesn't use allocator) and my_Class2 (uses
+    //    allocator).
+    //  2 For each relation operator, execute a combination of comparing:
+    //      - a bsl::optional and std::optional objects of same
+    //        value types, with bsl::optional on left hand side
+    //      - a bsl::optional and std::optional objects of same
+    //        value types, with bsl::optional on right hand side
+    //      - a bsl::optional and std::optional objects of different
+    //        value types, with bsl::optional on left hand side
+    //      - a bsl::optional and std::optional objects of different
+    //        value types, with bsl::optional on right hand side
+    //
+    //   For each comparison, execute tests for both engaged and disengaged
+    //   optional objects
+    //
+    // Testing:
+    //   bool operator==(const optional<LHS>&, const optional<RHS>&)
+    //   bool operator!=(const optional<LHS>&, const optional<RHS>&)
+    //   bool operator<=(const optional<LHS>&, const optional<RHS>&)
+    //   bool operator>=(const optional<LHS>&, const optional<RHS>&)
+    //   bool operator< (const optional<LHS>&, const optional<RHS>&)
+    //   bool operator> (const optional<LHS>&, const optional<RHS>&)
+
+
+  if (verbose) printf("\nTESTING RELATIONAL OPERATORS"
+                      "\n============================\n");
+  {
+      typedef std::optional<int>                    OptT;
+      typedef bsl::optional<int>                    OptV;
+
+      OptT X;
+      OptV Y;
+
+      //comparing two disengaged optionals
+      ASSERT(  X == Y  ); // If bool(x) != bool(y), false;
+      ASSERT(!(X != Y) ); // If bool(x) != bool(y), true;
+                          // otherwise, if bool(x) == false, false;
+      ASSERT(!(X <  Y) ); // If !y, false;
+      ASSERT(!(X >  Y) ); // If !x, false;
+      ASSERT(  X <= Y  ); // If !x, true;
+      ASSERT(  X >= Y  ); // If !y, true;
+
+      //rhs disengaged, lhs engaged
+      Y.emplace(3);
+      ASSERT(!(X == Y) ); // If bool(x) != bool(y), false;
+      ASSERT( (X != Y) ); // If bool(x) != bool(y), true;
+                          // otherwise, if bool(x) == false, false;
+      ASSERT( (X <  Y) ); // If !y, false; otherwise, if !x, true;
+      ASSERT(!(X >  Y) ); // If !x, false;
+      ASSERT(  X <= Y  ); // If !x, true;
+      ASSERT(!(X >= Y) ); // If !y, true; otherwise, if !x, false;
+
+      //rhs engaged, lhs disengaged
+      X.emplace(5);
+      Y.reset();
+      ASSERT(!(X == Y) ); // If bool(x) != bool(y), false;
+      ASSERT( (X != Y) ); // If bool(x) != bool(y), true;
+                          // otherwise, if bool(x) == false, false;
+      ASSERT(!(X <  Y) ); // If !y, false; otherwise, if !x, true;
+      ASSERT( (X >  Y) ); // If !x, false; otherwise, if !y, true;
+      ASSERT(!(X <= Y) ); // If !x, true; otherwise, if !y, false;
+      ASSERT( (X >= Y) ); // If !y, true; otherwise, if !x, false;
+
+      //both engaged, compare the values
+      X.emplace(1);
+      Y.emplace(3);
+      ASSERT(!(X == Y) ); // If bool(x) != bool(y), false;
+      ASSERT( (X != Y) ); // If bool(x) != bool(y), true;
+                          // otherwise, if bool(x) == false, false;
+      ASSERT( (X <  Y) ); // If !y, false; otherwise, if !x, true;
+      ASSERT(!(X >  Y) ); // If !x, false; otherwise, if !y, true;
+      ASSERT( (X <= Y) ); // If !x, true; otherwise, if !y, false;
+      ASSERT(!(X >= Y) ); // If !y, true; otherwise, if !x, false;
+  }
+  {
+      typedef bsl::optional<int>                    OptT;
+      typedef std::optional<int>                    OptV;
+
+      OptT X;
+      OptV Y;
+
+      //comparing two disengaged optionals
+      ASSERT(  X == Y  ); // If bool(x) != bool(y), false;
+      ASSERT(!(X != Y) ); // If bool(x) != bool(y), true;
+                          // otherwise, if bool(x) == false, false;
+      ASSERT(!(X <  Y) ); // If !y, false;
+      ASSERT(!(X >  Y) ); // If !x, false;
+      ASSERT(  X <= Y  ); // If !x, true;
+      ASSERT(  X >= Y  ); // If !y, true;
+
+      //rhs disengaged, lhs engaged
+      Y.emplace(3);
+      ASSERT(!(X == Y) ); // If bool(x) != bool(y), false;
+      ASSERT( (X != Y) ); // If bool(x) != bool(y), true;
+                          // otherwise, if bool(x) == false, false;
+      ASSERT( (X <  Y) ); // If !y, false; otherwise, if !x, true;
+      ASSERT(!(X >  Y) ); // If !x, false;
+      ASSERT(  X <= Y  ); // If !x, true;
+      ASSERT(!(X >= Y) ); // If !y, true; otherwise, if !x, false;
+
+      //rhs engaged, lhs disengaged
+      X.emplace(5);
+      Y.reset();
+      ASSERT(!(X == Y) ); // If bool(x) != bool(y), false;
+      ASSERT( (X != Y) ); // If bool(x) != bool(y), true;
+                          // otherwise, if bool(x) == false, false;
+      ASSERT(!(X <  Y) ); // If !y, false; otherwise, if !x, true;
+      ASSERT( (X >  Y) ); // If !x, false; otherwise, if !y, true;
+      ASSERT(!(X <= Y) ); // If !x, true; otherwise, if !y, false;
+      ASSERT( (X >= Y) ); // If !y, true; otherwise, if !x, false;
+
+      //both engaged, compare the values
+      X.emplace(1);
+      Y.emplace(3);
+      ASSERT(!(X == Y) ); // If bool(x) != bool(y), false;
+      ASSERT( (X != Y) ); // If bool(x) != bool(y), true;
+                          // otherwise, if bool(x) == false, false;
+      ASSERT( (X <  Y) ); // If !y, false; otherwise, if !x, true;
+      ASSERT(!(X >  Y) ); // If !x, false; otherwise, if !y, true;
+      ASSERT( (X <= Y) ); // If !x, true; otherwise, if !y, false;
+      ASSERT(!(X >= Y) ); // If !y, true; otherwise, if !x, false;
+  }
+  {
+      typedef std::optional<my_Class2>                    OptT;
+      typedef bsl::optional<my_Class2>                    OptV;
+
+      OptT X;
+      OptV Y;
+
+      //comparing two disengaged optionals
+      ASSERT(  X == Y  ); // If bool(x) != bool(y), false;
+      ASSERT(!(X != Y) ); // If bool(x) != bool(y), true;
+                          // otherwise, if bool(x) == false, false;
+      ASSERT(!(X <  Y) ); // If !y, false;
+      ASSERT(!(X >  Y) ); // If !x, false;
+      ASSERT(  X <= Y  ); // If !x, true;
+      ASSERT(  X >= Y  ); // If !y, true;
+
+      //rhs disengaged, lhs engaged
+      Y.emplace(3);
+      ASSERT(!(X == Y) ); // If bool(x) != bool(y), false;
+      ASSERT( (X != Y) ); // If bool(x) != bool(y), true;
+                          // otherwise, if bool(x) == false, false;
+      ASSERT( (X <  Y) ); // If !y, false; otherwise, if !x, true;
+      ASSERT(!(X >  Y) ); // If !x, false;
+      ASSERT(  X <= Y  ); // If !x, true;
+      ASSERT(!(X >= Y) ); // If !y, true; otherwise, if !x, false;
+
+      //rhs engaged, lhs disengaged
+      X.emplace(5);
+      Y.reset();
+      ASSERT(!(X == Y) ); // If bool(x) != bool(y), false;
+      ASSERT( (X != Y) ); // If bool(x) != bool(y), true;
+                          // otherwise, if bool(x) == false, false;
+      ASSERT(!(X <  Y) ); // If !y, false; otherwise, if !x, true;
+      ASSERT( (X >  Y) ); // If !x, false; otherwise, if !y, true;
+      ASSERT(!(X <= Y) ); // If !x, true; otherwise, if !y, false;
+      ASSERT( (X >= Y) ); // If !y, true; otherwise, if !x, false;
+
+      //both engaged, compare the values
+      X.emplace(1);
+      Y.emplace(3);
+      ASSERT(!(X == Y) ); // If bool(x) != bool(y), false;
+      ASSERT( (X != Y) ); // If bool(x) != bool(y), true;
+                          // otherwise, if bool(x) == false, false;
+      ASSERT( (X <  Y) ); // If !y, false; otherwise, if !x, true;
+      ASSERT(!(X >  Y) ); // If !x, false; otherwise, if !y, true;
+      ASSERT( (X <= Y) ); // If !x, true; otherwise, if !y, false;
+      ASSERT(!(X >= Y) ); // If !y, true; otherwise, if !x, false;
+  }
+  {
+      typedef bsl::optional<my_Class2>                    OptT;
+      typedef std::optional<my_Class2>                    OptV;
+
+      OptT X;
+      OptV Y;
+
+      //comparing two disengaged optionals
+      ASSERT(  X == Y  ); // If bool(x) != bool(y), false;
+      ASSERT(!(X != Y) ); // If bool(x) != bool(y), true;
+                          // otherwise, if bool(x) == false, false;
+      ASSERT(!(X <  Y) ); // If !y, false;
+      ASSERT(!(X >  Y) ); // If !x, false;
+      ASSERT(  X <= Y  ); // If !x, true;
+      ASSERT(  X >= Y  ); // If !y, true;
+
+      //rhs disengaged, lhs engaged
+      Y.emplace(3);
+      ASSERT(!(X == Y) ); // If bool(x) != bool(y), false;
+      ASSERT( (X != Y) ); // If bool(x) != bool(y), true;
+                          // otherwise, if bool(x) == false, false;
+      ASSERT( (X <  Y) ); // If !y, false; otherwise, if !x, true;
+      ASSERT(!(X >  Y) ); // If !x, false;
+      ASSERT(  X <= Y  ); // If !x, true;
+      ASSERT(!(X >= Y) ); // If !y, true; otherwise, if !x, false;
+
+      //rhs engaged, lhs disengaged
+      X.emplace(5);
+      Y.reset();
+      ASSERT(!(X == Y) ); // If bool(x) != bool(y), false;
+      ASSERT( (X != Y) ); // If bool(x) != bool(y), true;
+                          // otherwise, if bool(x) == false, false;
+      ASSERT(!(X <  Y) ); // If !y, false; otherwise, if !x, true;
+      ASSERT( (X >  Y) ); // If !x, false; otherwise, if !y, true;
+      ASSERT(!(X <= Y) ); // If !x, true; otherwise, if !y, false;
+      ASSERT( (X >= Y) ); // If !y, true; otherwise, if !x, false;
+
+      //both engaged, compare the values
+      X.emplace(1);
+      Y.emplace(3);
+      ASSERT(!(X == Y) ); // If bool(x) != bool(y), false;
+      ASSERT( (X != Y) ); // If bool(x) != bool(y), true;
+                          // otherwise, if bool(x) == false, false;
+      ASSERT( (X <  Y) ); // If !y, false; otherwise, if !x, true;
+      ASSERT(!(X >  Y) ); // If !x, false; otherwise, if !y, true;
+      ASSERT( (X <= Y) ); // If !x, true; otherwise, if !y, false;
+      ASSERT(!(X >= Y) ); // If !y, true; otherwise, if !x, false;
+  }
+  {
+      typedef std::optional<int>                          OptT;
+      typedef bsl::optional<my_Class2>                    OptV;
+
+      OptT X;
+      OptV Y;
+
+      //comparing two disengaged optionals
+      ASSERT(  X == Y  ); // If bool(x) != bool(y), false;
+      ASSERT(!(X != Y) ); // If bool(x) != bool(y), true;
+                          // otherwise, if bool(x) == false, false;
+      ASSERT(!(X <  Y) ); // If !y, false;
+      ASSERT(!(X >  Y) ); // If !x, false;
+      ASSERT(  X <= Y  ); // If !x, true;
+      ASSERT(  X >= Y  ); // If !y, true;
+
+      //rhs disengaged, lhs engaged
+      Y.emplace(3);
+      ASSERT(!(X == Y) ); // If bool(x) != bool(y), false;
+      ASSERT( (X != Y) ); // If bool(x) != bool(y), true;
+                          // otherwise, if bool(x) == false, false;
+      ASSERT( (X <  Y) ); // If !y, false; otherwise, if !x, true;
+      ASSERT(!(X >  Y) ); // If !x, false;
+      ASSERT(  X <= Y  ); // If !x, true;
+      ASSERT(!(X >= Y) ); // If !y, true; otherwise, if !x, false;
+
+      //rhs engaged, lhs disengaged
+      X.emplace(5);
+      Y.reset();
+      ASSERT(!(X == Y) ); // If bool(x) != bool(y), false;
+      ASSERT( (X != Y) ); // If bool(x) != bool(y), true;
+                          // otherwise, if bool(x) == false, false;
+      ASSERT(!(X <  Y) ); // If !y, false; otherwise, if !x, true;
+      ASSERT( (X >  Y) ); // If !x, false; otherwise, if !y, true;
+      ASSERT(!(X <= Y) ); // If !x, true; otherwise, if !y, false;
+      ASSERT( (X >= Y) ); // If !y, true; otherwise, if !x, false;
+
+      //both engaged, compare the values
+      X.emplace(1);
+      Y.emplace(3);
+      ASSERT(!(X == Y) ); // If bool(x) != bool(y), false;
+      ASSERT( (X != Y) ); // If bool(x) != bool(y), true;
+                          // otherwise, if bool(x) == false, false;
+      ASSERT( (X <  Y) ); // If !y, false; otherwise, if !x, true;
+      ASSERT(!(X >  Y) ); // If !x, false; otherwise, if !y, true;
+      ASSERT( (X <= Y) ); // If !x, true; otherwise, if !y, false;
+      ASSERT(!(X >= Y) ); // If !y, true; otherwise, if !x, false;
+  }
+  {
+      typedef bsl::optional<int>                          OptT;
+      typedef std::optional<my_Class2>                    OptV;
+
+      OptT X;
+      OptV Y;
+
+      //comparing two disengaged optionals
+      ASSERT(  X == Y  ); // If bool(x) != bool(y), false;
+      ASSERT(!(X != Y) ); // If bool(x) != bool(y), true;
+                          // otherwise, if bool(x) == false, false;
+      ASSERT(!(X <  Y) ); // If !y, false;
+      ASSERT(!(X >  Y) ); // If !x, false;
+      ASSERT(  X <= Y  ); // If !x, true;
+      ASSERT(  X >= Y  ); // If !y, true;
+
+      //rhs disengaged, lhs engaged
+      Y.emplace(3);
+      ASSERT(!(X == Y) ); // If bool(x) != bool(y), false;
+      ASSERT( (X != Y) ); // If bool(x) != bool(y), true;
+                          // otherwise, if bool(x) == false, false;
+      ASSERT( (X <  Y) ); // If !y, false; otherwise, if !x, true;
+      ASSERT(!(X >  Y) ); // If !x, false;
+      ASSERT(  X <= Y  ); // If !x, true;
+      ASSERT(!(X >= Y) ); // If !y, true; otherwise, if !x, false;
+
+      //rhs engaged, lhs disengaged
+      X.emplace(5);
+      Y.reset();
+      ASSERT(!(X == Y) ); // If bool(x) != bool(y), false;
+      ASSERT( (X != Y) ); // If bool(x) != bool(y), true;
+                          // otherwise, if bool(x) == false, false;
+      ASSERT(!(X <  Y) ); // If !y, false; otherwise, if !x, true;
+      ASSERT( (X >  Y) ); // If !x, false; otherwise, if !y, true;
+      ASSERT(!(X <= Y) ); // If !x, true; otherwise, if !y, false;
+      ASSERT( (X >= Y) ); // If !y, true; otherwise, if !x, false;
+
+      //both engaged, compare the values
+      X.emplace(1);
+      Y.emplace(3);
+      ASSERT(!(X == Y) ); // If bool(x) != bool(y), false;
+      ASSERT( (X != Y) ); // If bool(x) != bool(y), true;
+                          // otherwise, if bool(x) == false, false;
+      ASSERT( (X <  Y) ); // If !y, false; otherwise, if !x, true;
+      ASSERT(!(X >  Y) ); // If !x, false; otherwise, if !y, true;
+      ASSERT( (X <= Y) ); // If !x, true; otherwise, if !y, false;
+      ASSERT(!(X >= Y) ); // If !y, true; otherwise, if !x, false;
+  }
+  {
+    typedef std::optional<my_Class2>                    OptT;
+    typedef bsl::optional<int>                          OptV;
+
+    OptT X;
+    OptV Y;
+
+    //comparing two disengaged optionals
+    ASSERT(  X == Y  ); // If bool(x) != bool(y), false;
+    ASSERT(!(X != Y) ); // If bool(x) != bool(y), true;
+                        // otherwise, if bool(x) == false, false;
+    ASSERT(!(X <  Y) ); // If !y, false;
+    ASSERT(!(X >  Y) ); // If !x, false;
+    ASSERT(  X <= Y  ); // If !x, true;
+    ASSERT(  X >= Y  ); // If !y, true;
+
+    //rhs disengaged, lhs engaged
+    Y.emplace(3);
+    ASSERT(!(X == Y) ); // If bool(x) != bool(y), false;
+    ASSERT( (X != Y) ); // If bool(x) != bool(y), true;
+                        // otherwise, if bool(x) == false, false;
+    ASSERT( (X <  Y) ); // If !y, false; otherwise, if !x, true;
+    ASSERT(!(X >  Y) ); // If !x, false;
+    ASSERT(  X <= Y  ); // If !x, true;
+    ASSERT(!(X >= Y) ); // If !y, true; otherwise, if !x, false;
+
+    //rhs engaged, lhs disengaged
+    X.emplace(5);
+    Y.reset();
+    ASSERT(!(X == Y) ); // If bool(x) != bool(y), false;
+    ASSERT( (X != Y) ); // If bool(x) != bool(y), true;
+                        // otherwise, if bool(x) == false, false;
+    ASSERT(!(X <  Y) ); // If !y, false; otherwise, if !x, true;
+    ASSERT( (X >  Y) ); // If !x, false; otherwise, if !y, true;
+    ASSERT(!(X <= Y) ); // If !x, true; otherwise, if !y, false;
+    ASSERT( (X >= Y) ); // If !y, true; otherwise, if !x, false;
+
+    //both engaged, compare the values
+    X.emplace(1);
+    Y.emplace(3);
+    ASSERT(!(X == Y) ); // If bool(x) != bool(y), false;
+    ASSERT( (X != Y) ); // If bool(x) != bool(y), true;
+                        // otherwise, if bool(x) == false, false;
+    ASSERT( (X <  Y) ); // If !y, false; otherwise, if !x, true;
+    ASSERT(!(X >  Y) ); // If !x, false; otherwise, if !y, true;
+    ASSERT( (X <= Y) ); // If !x, true; otherwise, if !y, false;
+    ASSERT(!(X >= Y) ); // If !y, true; otherwise, if !x, false;
+  }
+  {
+    typedef bsl::optional<my_Class2>                    OptT;
+    typedef std::optional<int>                          OptV;
+
+    OptT X;
+    OptV Y;
+
+    //comparing two disengaged optionals
+    ASSERT(  X == Y  ); // If bool(x) != bool(y), false;
+    ASSERT(!(X != Y) ); // If bool(x) != bool(y), true;
+                        // otherwise, if bool(x) == false, false;
+    ASSERT(!(X <  Y) ); // If !y, false;
+    ASSERT(!(X >  Y) ); // If !x, false;
+    ASSERT(  X <= Y  ); // If !x, true;
+    ASSERT(  X >= Y  ); // If !y, true;
+
+    //rhs disengaged, lhs engaged
+    Y.emplace(3);
+    ASSERT(!(X == Y) ); // If bool(x) != bool(y), false;
+    ASSERT( (X != Y) ); // If bool(x) != bool(y), true;
+                        // otherwise, if bool(x) == false, false;
+    ASSERT( (X <  Y) ); // If !y, false; otherwise, if !x, true;
+    ASSERT(!(X >  Y) ); // If !x, false;
+    ASSERT(  X <= Y  ); // If !x, true;
+    ASSERT(!(X >= Y) ); // If !y, true; otherwise, if !x, false;
+
+    //rhs engaged, lhs disengaged
+    X.emplace(5);
+    Y.reset();
+    ASSERT(!(X == Y) ); // If bool(x) != bool(y), false;
+    ASSERT( (X != Y) ); // If bool(x) != bool(y), true;
+                        // otherwise, if bool(x) == false, false;
+    ASSERT(!(X <  Y) ); // If !y, false; otherwise, if !x, true;
+    ASSERT( (X >  Y) ); // If !x, false; otherwise, if !y, true;
+    ASSERT(!(X <= Y) ); // If !x, true; otherwise, if !y, false;
+    ASSERT( (X >= Y) ); // If !y, true; otherwise, if !x, false;
+
+    //both engaged, compare the values
+    X.emplace(1);
+    Y.emplace(3);
+    ASSERT(!(X == Y) ); // If bool(x) != bool(y), false;
+    ASSERT( (X != Y) ); // If bool(x) != bool(y), true;
+                        // otherwise, if bool(x) == false, false;
+    ASSERT( (X <  Y) ); // If !y, false; otherwise, if !x, true;
+    ASSERT(!(X >  Y) ); // If !x, false; otherwise, if !y, true;
+    ASSERT( (X <= Y) ); // If !x, true; otherwise, if !y, false;
+    ASSERT(!(X >= Y) ); // If !y, true; otherwise, if !x, false;
+  }
+}
+#endif //__cpp_lib_optional
+
 int main(int argc, char **argv)
 {
     const int                 test = argc > 1 ? atoi(argv[1]) : 0;
@@ -14935,6 +15363,11 @@ int main(int argc, char **argv)
     bslma::Default::setGlobalAllocator(&globalAllocator);
 
     switch (test) { case 0:
+#ifdef __cpp_lib_optional
+      case 32:
+        bslstl_optional_test32();
+        break;
+#endif // __cpp_lib_optional
       case 31:
         bslstl_optional_test31();
         break;
