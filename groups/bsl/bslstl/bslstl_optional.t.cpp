@@ -16,7 +16,6 @@
 #include <bslma_testallocator.h>
 #include <bslma_testallocatormonitor.h>
 
-#define BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING true
 // A list of disabled tests :
 //
 //BSLSTL_OPTIONAL_TEST_BAD_VALUE
