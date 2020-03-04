@@ -34,9 +34,6 @@ BSLS_IDENT("$Id: $")
 //   optional.
 //
 //known limitations :
-//  - move semantics depend on changes to
-//    BloombergLP::bslalg::ScalarPrimitives::construct to allow for
-//    perfect fowarding of construct arguments
 //  - MoveableRef can not be used where the argument is a deduced type.
 //    This means that rvalue overloads taking optional<OTHER_TYPE>
 //    must use optional<OTHER_TYPE> &&
@@ -406,7 +403,7 @@ void optional_data_imp<TYPE, UsesBslmaAllocator>::emplace(
     bsl::allocator_arg_t, allocator_type allocator)
 {
     reset();
-    BloombergLP::bslalg::ScalarPrimitives::construct(d_buffer.address(),
+    BloombergLP::bslma::ConstructionUtil::construct(d_buffer.address(),
                                                      allocator.mechanism());
     d_hasValue = true;
 }
@@ -419,9 +416,10 @@ void optional_data_imp<TYPE, UsesBslmaAllocator>::emplace(
     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args)
 {
     reset();
-    BloombergLP::bslalg::ScalarPrimitives::construct(d_buffer.address(),
-                                  BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...,
-                                  allocator.mechanism());
+    BloombergLP::bslma::ConstructionUtil::construct(d_buffer.address(),
+                                  allocator.mechanism(),
+                                  BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...
+                                  );
     d_hasValue = true;
 }
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
@@ -434,10 +432,11 @@ void optional_data_imp<TYPE, UsesBslmaAllocator>::emplace(
     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args)
 {
     reset();
-    BloombergLP::bslalg::ScalarPrimitives::construct(d_buffer.address(),
+    BloombergLP::bslma::ConstructionUtil::construct(d_buffer.address(),
+                                  allocator.mechanism(),
                                   il,
-                                  BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...,
-                                  allocator.mechanism());
+                                  BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...
+                                  );
     d_hasValue = true;
 }
 #endif//BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
@@ -511,8 +510,8 @@ inline
 void optional_data_imp<TYPE, false>::emplace()
 {
     reset();
-    BloombergLP::bslalg::ScalarPrimitives::construct(d_buffer.address(),
-                                                     (void *) 0);
+    BloombergLP::bslma::ConstructionUtil::construct(d_buffer.address(),
+                                                    (void *) 0);
     d_hasValue = true;
 }
 #if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES
@@ -523,9 +522,10 @@ void optional_data_imp<TYPE, false>::emplace(
                       BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args)
 {
     reset();
-    BloombergLP::bslalg::ScalarPrimitives::construct(d_buffer.address(),
-                                  BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...,
-                                  (void *) 0);
+    BloombergLP::bslma::ConstructionUtil::construct(d_buffer.address(),
+                                  (void *) 0,
+                                  BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...
+                                  );
     d_hasValue = true;
 }
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
@@ -536,10 +536,11 @@ void optional_data_imp<TYPE, false>::emplace(
     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args)
 {
     reset();
-    BloombergLP::bslalg::ScalarPrimitives::construct(d_buffer.address(),
+    BloombergLP::bslma::ConstructionUtil::construct(d_buffer.address(),
+                                  (void *) 0,
                                   il,
-                                  BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...,
-                                  (void *) 0);
+                                  BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...
+                                  );
     d_hasValue = true;
 }
 #endif//BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
