@@ -106,7 +106,6 @@ BSLS_IDENT("$Id: $")
 //..
 
 #include <bslalg_constructusingallocator.h>
-#include <bslalg_scalarprimitives.h>
 #include <bslalg_swaputil.h>
 
 #include <bslma_stdallocator.h>
