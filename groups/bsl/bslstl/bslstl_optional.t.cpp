@@ -16,12 +16,7 @@
 #include <bslma_testallocator.h>
 #include <bslma_testallocatormonitor.h>
 
-#define BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING true
 // A list of disabled tests :
-// BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING
-//      Tests in this group rely on perfect forwarding of arguments in
-//      BloombergLP::bslalg::ScalarPrimitives::construct to correctly
-//      support move semantics in bsl:optional.
 //
 //BSLSTL_OPTIONAL_TEST_BAD_VALUE
 //      Tests in this group check that value categorie and cv qualification
@@ -6173,10 +6168,8 @@ void bslstl_optional_test8()
             mX.emplace(MovUtl::move(third));
             ASSERT(mX.has_value());
             ASSERT(mX->d_def.d_value == 4 );
-            #if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
             ASSERT(CCI == ValueType::copyConstructorInvocations );
             ASSERT(MCI == ValueType::moveConstructorInvocations -1);
-            #endif
 
             CCI = ValueType::copyConstructorInvocations;
             MCI = ValueType::moveConstructorInvocations;
@@ -6229,10 +6222,8 @@ void bslstl_optional_test8()
            ASSERT(third.d_def.d_allocator_p == &da );
            ASSERT(mX.has_value());
            ASSERT(mX->d_def.d_value == 4 );
-  #if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
            ASSERT(CCI == ValueType::copyConstructorInvocations);
            ASSERT(MCI == ValueType::moveConstructorInvocations -1);
-  #endif
            ASSERT(mX.get_allocator().mechanism() == &oa );
            ASSERT(mX->d_def.d_allocator_p == &oa );
 
@@ -6289,10 +6280,8 @@ void bslstl_optional_test8()
            ASSERT(third.d_data.d_def.d_allocator_p == &da );
            ASSERT(mX.has_value());
            ASSERT(mX->d_data.d_def.d_value == 4 );
-  #if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
            ASSERT(CCI == ValueType::copyConstructorInvocations);
            ASSERT(MCI == ValueType::moveConstructorInvocations -1);
-  #endif
            ASSERT(mX.get_allocator().mechanism() == &oa );
            ASSERT(mX->d_data.d_def.d_allocator_p == &oa );
 
@@ -7252,17 +7241,13 @@ void bslstl_optional_test11()
           ASSERT(!mX.has_value());
           mX = MovUtl::move(vi);
           ASSERT(mX.value().value() == 1);
-#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
           ASSERT(vi.value() == MOVED_FROM_VAL);
-#endif
 
           mX.reset();
           ASSERT(!mX.has_value());
           mX = MovUtl::move(i);
           ASSERT(mX.value().value() == 3);
-#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
           ASSERT(i.value() == MOVED_FROM_VAL);
-#endif
 
           mX.reset();
           ASSERT(!mX.has_value());
@@ -7428,9 +7413,7 @@ void bslstl_optional_test11()
             ASSERT(mX.value().value() == 1);
             ASSERT(mX.value().d_data.d_def.d_allocator_p == &oa);
             ASSERT(mX.get_allocator().mechanism() == &oa);
-#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
             ASSERT(vi.value() == MOVED_FROM_VAL);
-#endif
 
             mX.reset();
             ASSERT(!mX.has_value());
@@ -7438,9 +7421,7 @@ void bslstl_optional_test11()
             ASSERT(mX.value().value() == 3);
             ASSERT(mX.value().d_data.d_def.d_allocator_p == &oa);
             ASSERT(mX.get_allocator().mechanism() == &oa);
-#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
             ASSERT(vi.value() == MOVED_FROM_VAL);
-#endif
 
             mX.reset();
             ASSERT(!mX.has_value());
@@ -7851,10 +7832,8 @@ void bslstl_optional_test13()
             mX.reset();
             TEST_EQUAL_ENGAGED(mX, COtherObjC, OtherType,  7);
 
-#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
             mX.reset();
             TEST_EQUAL_ENGAGED_MOVE(mX, Obj, ValueType, 7, MOVED_FROM_VAL);
-#endif
             mX.reset();
             TEST_EQUAL_ENGAGED_MOVE(mX, CObj, ValueType, 7, 7);
 
@@ -7864,11 +7843,9 @@ void bslstl_optional_test13()
             mX.reset();
             TEST_EQUAL_ENGAGED_MOVE(mX, CObjC, ValueType, 7, 7);
 
-#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
             mX.reset();
             TEST_EQUAL_ENGAGED_MOVE(mX, OtherObj, OtherType, 7,
                                     MOVED_FROM_VAL);
-#endif
 
             mX.reset();
             TEST_EQUAL_ENGAGED_MOVE(mX, COtherObj, OtherType, 7, 7);
@@ -8076,10 +8053,8 @@ void bslstl_optional_test13()
             mX.reset();
             TEST_EQUAL_ENGAGED_A(mX, COtherObjC, OtherType,  7);
 
-#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
             mX.reset();
             TEST_EQUAL_ENGAGED_MOVE_A(mX, Obj, ValueType, 7, MOVED_FROM_VAL);
-#endif
             mX.reset();
             TEST_EQUAL_ENGAGED_MOVE_A(mX, CObj, ValueType, 7, 7);
 
@@ -8089,11 +8064,9 @@ void bslstl_optional_test13()
             mX.reset();
             TEST_EQUAL_ENGAGED_MOVE_A(mX, CObjC, ValueType, 7, 7);
 
-#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
             mX.reset();
             TEST_EQUAL_ENGAGED_MOVE_A(mX, OtherObj, OtherType, 7,
                                       MOVED_FROM_VAL);
-#endif
 
             mX.reset();
             TEST_EQUAL_ENGAGED_MOVE_A(mX, COtherObj, OtherType, 7, 7);
@@ -8721,11 +8694,9 @@ void bslstl_optional_test16()
             ASSERT(dest.has_value());
             ASSERT(dest.value().value() == 1);
             ASSERT(source.has_value());
-#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
             ASSERT(CCI == ValueType::copyConstructorInvocations);
             ASSERT(MCI == ValueType::moveConstructorInvocations-1);
             ASSERT(source.value().value() == MOVED_FROM_VAL);
-#endif
 
             const Obj source2(ValueType(2));
             ASSERT(source2.has_value());
@@ -8781,11 +8752,9 @@ void bslstl_optional_test16()
           ASSERT(dest.value().value() == 1);
           ASSERT(dest.get_allocator().mechanism() == &oa);
           ASSERT(source.has_value());
-#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
           ASSERT(source.value().value() == MOVED_FROM_VAL);
           ASSERT(CCI == ValueType::copyConstructorInvocations);
           ASSERT(MCI == ValueType::moveConstructorInvocations-1);
-#endif
           ASSERT(source.get_allocator().mechanism() == &oa);
 
           const Obj source2(bsl::allocator_arg, &oa, ValueType(2));
@@ -8816,11 +8785,9 @@ void bslstl_optional_test16()
           ASSERT(dest3.value().value() == 3);
           ASSERT(dest3.get_allocator().mechanism() == &ta);
           ASSERT(source3.has_value());
-#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
           ASSERT(source3.value().value() == MOVED_FROM_VAL);
           ASSERT(CCI == ValueType::copyConstructorInvocations);
           ASSERT(MCI == ValueType::moveConstructorInvocations-1);
-#endif
           ASSERT(source3.get_allocator().mechanism() == &oa);
 
           const Obj source4(bsl::allocator_arg, &oa, ValueType(4));
@@ -8901,12 +8868,9 @@ void bslstl_optional_test16()
           ASSERT(dest.value().value() == 1);
           ASSERT(dest.get_allocator().mechanism() == &oa);
           ASSERT(source.has_value());
-#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
           ASSERT(source.value().value() == MOVED_FROM_VAL);
           ASSERT(CCI == ValueType::copyConstructorInvocations);
           ASSERT(MCI == ValueType::moveConstructorInvocations-1);
-
-#endif
           ASSERT(source.get_allocator().mechanism() == &oa);
 
           const Obj source2(bsl::allocator_arg, &oa, ValueType(2));
@@ -8936,11 +8900,9 @@ void bslstl_optional_test16()
           ASSERT(dest3.value().value() == 3);
           ASSERT(dest3.get_allocator().mechanism() == &ta);
           ASSERT(source3.has_value());
-#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
           ASSERT(source3.value().value() == MOVED_FROM_VAL);
           ASSERT(CCI == ValueType::copyConstructorInvocations);
           ASSERT(MCI == ValueType::moveConstructorInvocations-1);
-#endif
           ASSERT(source3.get_allocator().mechanism() == &oa);
 
           const Obj source4(bsl::allocator_arg, &oa, ValueType(4));
@@ -9324,11 +9286,9 @@ void bslstl_optional_test18()
             Obj dest = MovUtl::move(source);
             ASSERT(dest.has_value());
             ASSERT(dest.value().value() == 1);
-#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
             ASSERT(source.value() == MOVED_FROM_VAL);
             ASSERT(CCI == ValueType::copyConstructorInvocations);
             ASSERT(MCI == ValueType::moveConstructorInvocations-1);
-#endif
 
             const ValueType source2(2);
             CCI = ValueType::copyConstructorInvocations;
@@ -9360,11 +9320,9 @@ void bslstl_optional_test18()
           ASSERT(dest.has_value());
           ASSERT(dest.value().value() == 1);
           ASSERT(dest.get_allocator().mechanism() == &da);
-#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
           ASSERT(source.value() == MOVED_FROM_VAL);
           ASSERT(CCI == ValueType::copyConstructorInvocations);
           ASSERT(MCI == ValueType::moveConstructorInvocations-1);
-#endif
           ASSERT(source.d_def.d_allocator_p == &oa);
 
           const ValueType source2(2, &oa);
@@ -9386,11 +9344,9 @@ void bslstl_optional_test18()
           ASSERT(dest3.has_value());
           ASSERT(dest3.value().value() == 3);
           ASSERT(dest3.get_allocator().mechanism() == &ta);
-#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
           ASSERT(source3.value() == MOVED_FROM_VAL);
           ASSERT(CCI == ValueType::copyConstructorInvocations);
           ASSERT(MCI == ValueType::moveConstructorInvocations-1);
-#endif
           ASSERT(source3.d_def.d_allocator_p == &oa);
 
           const ValueType source4(4, &oa);
@@ -9426,11 +9382,9 @@ void bslstl_optional_test18()
           ASSERT(dest.has_value());
           ASSERT(dest.value().value() == 1);
           ASSERT(dest.get_allocator().mechanism() == &da);
-#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
           ASSERT(source.value() == MOVED_FROM_VAL);
           ASSERT(CCI == ValueType::copyConstructorInvocations);
           ASSERT(MCI == ValueType::moveConstructorInvocations-1);
-#endif
           ASSERT(source.d_data.d_def.d_allocator_p == &oa);
 
           const ValueType source2(bsl::allocator_arg, &oa, 2);
@@ -9452,11 +9406,9 @@ void bslstl_optional_test18()
           ASSERT(dest3.has_value());
           ASSERT(dest3.value().value() == 3);
           ASSERT(dest3.get_allocator().mechanism() == &ta);
-#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
           ASSERT(source3.value() == MOVED_FROM_VAL);
           ASSERT(CCI == ValueType::copyConstructorInvocations);
           ASSERT(MCI == ValueType::moveConstructorInvocations-1);
-#endif
           ASSERT(source3.d_data.d_def.d_allocator_p == &oa);
 
 
@@ -10113,11 +10065,9 @@ void bslstl_optional_test20()
             Obj dest = MovUtl::move(source);
             ASSERT(dest.has_value());
             ASSERT(dest.value().value() == 1);
-#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
             ASSERT(source.value().value() == MOVED_FROM_VAL);
             ASSERT(CCI == ValueType::copyConstructorInvocations);
             ASSERT(MCI == ValueType::moveConstructorInvocations);
-#endif
 
             const SrcObj csource(SourceType(2));
 
@@ -10175,9 +10125,7 @@ void bslstl_optional_test20()
           ASSERT(dest.has_value());
           ASSERT(dest.value().value() == 1);
           ASSERT(dest.get_allocator().mechanism() == &da);
-#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
           ASSERT(source.value().value() == MOVED_FROM_VAL);
-#endif
           ASSERT(CCI == ValueType::copyConstructorInvocations);
           ASSERT(MCI == ValueType::moveConstructorInvocations);
 
@@ -10200,9 +10148,7 @@ void bslstl_optional_test20()
           ASSERT(dest3.value().value() == 3);
           ASSERT(dest3.value().d_def.d_allocator_p == &ta);
           ASSERT(dest3.get_allocator().mechanism() == &ta);
-#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
           ASSERT(source3.value().value() == MOVED_FROM_VAL);
-#endif
           ASSERT(CCI == ValueType::copyConstructorInvocations);
           ASSERT(MCI == ValueType::moveConstructorInvocations);
 
@@ -10279,9 +10225,7 @@ void bslstl_optional_test20()
             ASSERT(dest.has_value());
             ASSERT(dest.value().value() == 1);
             ASSERT(&da == dest.get_allocator().mechanism());
-#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
             ASSERT(source.value().value() == MOVED_FROM_VAL);
-#endif
             ASSERT(CCI == ValueType::copyConstructorInvocations);
             ASSERT(MCI == ValueType::moveConstructorInvocations);
 
@@ -10302,9 +10246,7 @@ void bslstl_optional_test20()
             ASSERT(dest3.has_value());
             ASSERT(dest3.value().value() == 3);
             ASSERT(&ta == dest3.get_allocator().mechanism());
-#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
             ASSERT(source3.value().value() == MOVED_FROM_VAL);
-#endif
             ASSERT(CCI == ValueType::copyConstructorInvocations);
             ASSERT(MCI == ValueType::moveConstructorInvocations);
 
@@ -10734,9 +10676,7 @@ void bslstl_optional_test22()
             Obj dest = MovUtl::move(source);
             ASSERT(dest.has_value());
             ASSERT(dest.value().value() == 1);
-#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
             ASSERT(source.value() == MOVED_FROM_VAL);
-#endif
             ASSERT(CCI == ValueType::copyConstructorInvocations);
             ASSERT(MCI == ValueType::moveConstructorInvocations);
 
@@ -10771,9 +10711,7 @@ void bslstl_optional_test22()
           ASSERT(dest.has_value());
           ASSERT(dest.value().value() == 1);
           ASSERT(dest.get_allocator().mechanism() == &da);
-#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
           ASSERT(source.value() == MOVED_FROM_VAL);
-#endif
           ASSERT(source.d_def.d_allocator_p == &oa);
           ASSERT(CCI == ValueType::copyConstructorInvocations);
           ASSERT(MCI == ValueType::moveConstructorInvocations);
@@ -10797,9 +10735,7 @@ void bslstl_optional_test22()
           ASSERT(dest3.has_value());
           ASSERT(dest3.value().value() == 3);
           ASSERT(dest3.get_allocator().mechanism() == &ta);
-#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
           ASSERT(source3.value() == MOVED_FROM_VAL);
-#endif
           ASSERT(source3.d_def.d_allocator_p == &oa);
           ASSERT(CCI == ValueType::copyConstructorInvocations);
           ASSERT(MCI == ValueType::moveConstructorInvocations);
@@ -10837,9 +10773,7 @@ void bslstl_optional_test22()
           ASSERT(dest.has_value());
           ASSERT(dest.value().value() == 1);
           ASSERT(dest.get_allocator().mechanism() == &da);
-#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
           ASSERT(source.value() == MOVED_FROM_VAL);
-#endif
           ASSERT(source.d_def.d_allocator_p == &oa);
           ASSERT(CCI == ValueType::copyConstructorInvocations);
           ASSERT(MCI == ValueType::moveConstructorInvocations);
@@ -10863,9 +10797,7 @@ void bslstl_optional_test22()
           ASSERT(dest3.has_value());
           ASSERT(dest3.value().value() == 3);
           ASSERT(dest3.get_allocator().mechanism() == &ta);
-#if defined(BSLS_SCALAR_PRIMITIVES_PERFECT_FORWARDING)
           ASSERT(source3.value() == MOVED_FROM_VAL);
-#endif
           ASSERT(source3.d_def.d_allocator_p == &oa);
           ASSERT(CCI == ValueType::copyConstructorInvocations);
           ASSERT(MCI == ValueType::moveConstructorInvocations);
