@@ -15270,6 +15270,153 @@ void bslstl_optional_test32()
     ASSERT(!(X >= Y) ); // If !y, true; otherwise, if !x, false;
   }
 }
+void bslstl_optional_test33()
+{
+    // --------------------------------------------------------------------
+    // TESTING swap FACILITY between bsl::optional and std::optional for a
+    // non AA type
+    // Concerns:
+    //   1. Swap of two disengaged objects is a no-op,
+    //   2. Swap of an engaged and a disengaged optional moves the value
+    //      from the engaged object to another without calling swap for the
+    //      value type.
+    //   3. Swap of two engaged objects calls swap for the value type.
+    //
+    // Plan:
+    //   Conduct the test using 'Swappable' (doesn't use allocator) for 'TYPE'.
+    //
+    //   Swap two disengaged optional objects and verify swap has not been
+    //   called.
+    //
+    //   Swap two engaged optional objects and verify swap has been called.
+    //
+    //   Swap an engaged and disengaged optional object. Check swap has not
+    //   been called. Check the correct values of swapped optional objects.
+    //
+    //   Execute the tests for both swap member function and free
+    //   function. Execute the tests for bsl::optional on lhs and on rhs
+    //
+    // Testing:
+    //   void swap(std::optional<TYPE>& other);
+    //   void swap(std::optional<TYPE>& lhs,bsl::optional<TYPE>& rhs);
+    //   void swap(bsl::optional<TYPE>& lhs,std::optional<TYPE>& rhs);
+    // --------------------------------------------------------------------
+
+    if (verbose) printf("\nTESTING SWAP METHOD"
+                        "\n===================\n");
+
+    using bsl::swap;
+    {
+
+        bsl::optional<Swappable> a;
+        std::optional<Swappable> b;
+
+        Swappable::swapReset();
+        swap(a, b);
+
+        ASSERT(!Swappable::swapCalled());
+        ASSERT(!a.has_value());
+        ASSERT(!b.has_value());
+
+        Swappable::swapReset();
+        a.swap(b);
+
+        ASSERT(!Swappable::swapCalled());
+        ASSERT(!a.has_value());
+        ASSERT(!b.has_value());
+
+        Swappable::swapReset();
+        swap(b, a);
+
+        ASSERT(!Swappable::swapCalled());
+        ASSERT(!a.has_value());
+        ASSERT(!b.has_value());
+
+        Swappable::swapReset();
+        b.swap(a);
+
+        ASSERT(!Swappable::swapCalled());
+        ASSERT(!a.has_value());
+        ASSERT(!b.has_value());
+    }
+    {
+        Swappable obj1(1);
+        Swappable obj2(2);
+
+        const Swappable Zobj1(obj1);
+        const Swappable Zobj2(obj2);
+
+        bsl::optional<Swappable> a = obj1;
+        std::optional<Swappable> b = obj2;
+        ASSERT(a.value() == Zobj1);
+        ASSERT(b.value() == Zobj2);
+
+        Swappable::swapReset();
+        ASSERT(!Swappable::swapCalled());
+        swap(a, b);
+        ASSERT( Swappable::swapCalled());
+
+        ASSERT(b.value() == Zobj1);
+        ASSERT(a.value() == Zobj2);
+
+        Swappable::swapReset();
+        ASSERT(!Swappable::swapCalled());
+        a.swap(b);
+        ASSERT( Swappable::swapCalled());
+
+        ASSERT(a.value() == Zobj1);
+        ASSERT(b.value() == Zobj2);
+
+        Swappable::swapReset();
+        ASSERT(!Swappable::swapCalled());
+        swap(b, a);
+        ASSERT( Swappable::swapCalled());
+
+        ASSERT(b.value() == Zobj1);
+        ASSERT(a.value() == Zobj2);
+
+        Swappable::swapReset();
+        ASSERT(!Swappable::swapCalled());
+        b.swap(a);
+        ASSERT( Swappable::swapCalled());
+
+        ASSERT(a.value() == Zobj1);
+        ASSERT(b.value() == Zobj2);
+    }
+    {
+        bsl::optional<Swappable> nonNullObj(Swappable(10));
+        bsl::optional<Swappable> nonNullObjCopy(nonNullObj);
+        std::optional<Swappable> nullObj;
+
+        Swappable::swapReset();
+        swap(nonNullObj, nullObj);
+
+        ASSERT(!SwappableAA::swapCalled());
+        ASSERT(nonNullObjCopy == nullObj);
+        ASSERT(!nonNullObj.has_value());
+
+        Swappable::swapReset();
+        nonNullObj.swap(nullObj);
+
+        ASSERT(!Swappable::swapCalled());
+        ASSERT(nonNullObjCopy == nonNullObj);
+        ASSERT(!nullObj.has_value());
+
+        Swappable::swapReset();
+        swap(nullObj, nonNullObj);
+
+        ASSERT(!SwappableAA::swapCalled());
+        ASSERT(nonNullObjCopy == nullObj);
+        ASSERT(!nonNullObj.has_value());
+
+        Swappable::swapReset();
+        nullObj.swap(nonNullObj);
+
+        ASSERT(!Swappable::swapCalled());
+        ASSERT(nonNullObjCopy == nonNullObj);
+        ASSERT(!nullObj.has_value());
+    }
+}
 #endif //__cpp_lib_optional
 
 int main(int argc, char **argv)
@@ -15296,6 +15443,9 @@ int main(int argc, char **argv)
 
     switch (test) { case 0:
 #ifdef __cpp_lib_optional
+      case 33:
+        bslstl_optional_test33();
+        break;
       case 32:
         bslstl_optional_test32();
         break;
