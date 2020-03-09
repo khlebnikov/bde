@@ -105,7 +105,6 @@ BSLS_IDENT("$Id: $")
 //  assert( !optionalInt.has_value());
 //..
 
-#include <bslalg_constructusingallocator.h>
 #include <bslalg_swaputil.h>
 
 #include <bslma_stdallocator.h>
@@ -2039,11 +2038,11 @@ optional<TYPE, UsesBslmaAllocator>::value_or(
 BSLS_KEYWORD_LVREF_QUAL
 {
     if (this->has_value())
-        return BloombergLP::bslalg::AllocatorUtil<TYPE>::construct(
+        return BloombergLP::bslma::ConstructionUtil::make<TYPE>(
                                BloombergLP::bslma::Default::defaultAllocator(),
                                this->value());
     else
-        return BloombergLP::bslalg::AllocatorUtil<TYPE>::construct(
+        return BloombergLP::bslma::ConstructionUtil::make<TYPE>(
                                BloombergLP::bslma::Default::defaultAllocator(),
                                BSLS_COMPILERFEATURES_FORWARD(ANY_TYPE, rhs));
 
@@ -2058,11 +2057,11 @@ optional<TYPE, UsesBslmaAllocator>::value_or(bsl::allocator_arg_t,
 BSLS_KEYWORD_LVREF_QUAL
 {
     if (has_value())
-        return BloombergLP::bslalg::AllocatorUtil<TYPE>::construct(
+        return BloombergLP::bslma::ConstructionUtil::make<TYPE>(
                                                          allocator.mechanism(),
                                                          this->value());
     else
-        return BloombergLP::bslalg::AllocatorUtil<TYPE>::construct(
+        return BloombergLP::bslma::ConstructionUtil::make<TYPE>(
                                  allocator.mechanism(),
                                  BSLS_COMPILERFEATURES_FORWARD(ANY_TYPE, rhs));
 
@@ -2076,11 +2075,11 @@ optional<TYPE, UsesBslmaAllocator>::value_or(ANY_TYPE&& rhs)
 BSLS_KEYWORD_RVREF_QUAL
 {
     if (has_value())
-        return BloombergLP::bslalg::AllocatorUtil<TYPE>::construct(
+        return BloombergLP::bslma::ConstructionUtil::make<TYPE>(
                                BloombergLP::bslma::Default::defaultAllocator(),
                                std::move(this->value()));
     else
-        return BloombergLP::bslalg::AllocatorUtil<TYPE>::construct(
+        return BloombergLP::bslma::ConstructionUtil::make<TYPE>(
                                BloombergLP::bslma::Default::defaultAllocator(),
                                std::forward<ANY_TYPE>(rhs));
 }
@@ -2094,11 +2093,11 @@ optional<TYPE, UsesBslmaAllocator>::value_or(bsl::allocator_arg_t,
 BSLS_KEYWORD_RVREF_QUAL
 {
     if (has_value())
-        return BloombergLP::bslalg::AllocatorUtil<TYPE>::construct(
+        return BloombergLP::bslma::ConstructionUtil::make<TYPE>(
                                                      allocator.mechanism(),
                                                      std::move(this->value()));
     else
-        return BloombergLP::bslalg::AllocatorUtil<TYPE>::construct(
+        return BloombergLP::bslma::ConstructionUtil::make<TYPE>(
                                                   allocator.mechanism(),
                                                   std::forward<ANY_TYPE>(rhs));
 }
@@ -2365,11 +2364,11 @@ optional<TYPE, false>::value_or(
 const BSLS_KEYWORD_LVREF_QUAL
 {
     if (has_value())
-        return BloombergLP::bslalg::AllocatorUtil<TYPE>::construct(
+        return BloombergLP::bslma::ConstructionUtil::make<TYPE>(
                                BloombergLP::bslma::Default::defaultAllocator(),
                                this->value());
     else
-        return BloombergLP::bslalg::AllocatorUtil<TYPE>::construct(
+        return BloombergLP::bslma::ConstructionUtil::make<TYPE>(
                                BloombergLP::bslma::Default::defaultAllocator(),
                                BSLS_COMPILERFEATURES_FORWARD(ANY_TYPE, rhs));
 
@@ -2382,11 +2381,11 @@ TYPE
 optional<TYPE, false>::value_or(ANY_TYPE&& rhs) BSLS_KEYWORD_RVREF_QUAL
 {
     if (has_value())
-        return BloombergLP::bslalg::AllocatorUtil<TYPE>::construct(
+        return BloombergLP::bslma::ConstructionUtil::make<TYPE>(
                                BloombergLP::bslma::Default::defaultAllocator(),
                                std::move(this->value()));
     else
-        return BloombergLP::bslalg::AllocatorUtil<TYPE>::construct(
+        return BloombergLP::bslma::ConstructionUtil::make<TYPE>(
                                BloombergLP::bslma::Default::defaultAllocator(),
                                std::forward<ANY_TYPE>(rhs));
 }
