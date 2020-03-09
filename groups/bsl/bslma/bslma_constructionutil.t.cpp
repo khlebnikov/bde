@@ -158,6 +158,67 @@ void dumpClassDefState(const my_ClassDef& def)
     }
 }
 
+                             // =================
+                             // class my_SrcClass
+                             // =================
+
+class my_SrcClass {
+    // Class to be used as a 'convert from' type.
+
+  public:
+    // DATA
+    my_ClassDef d_def;
+
+    // DATA
+    static int copyConstructorInvocations;
+    static int moveConstructorInvocations;
+
+    // CREATORS
+    explicit
+    my_SrcClass(int v = 0)
+    {
+        d_def.d_value = v;
+        d_def.d_allocator_p = 0;
+    }
+
+    my_SrcClass(const my_SrcClass& rhs)
+    {
+        d_def.d_value = rhs.d_def.d_value;
+        d_def.d_allocator_p = 0;
+        ++copyConstructorInvocations;
+    }
+
+    my_SrcClass(bslmf::MovableRef<my_SrcClass> rhs)
+    {
+        my_SrcClass& lvalue = rhs;
+        d_def.d_value = lvalue.d_def.d_value;
+        lvalue.d_def.d_value = MOVED_FROM_VAL;
+        d_def.d_allocator_p = 0;
+        ++moveConstructorInvocations;
+    }
+
+    ~my_SrcClass()
+    {
+        ASSERT(d_def.d_value != 91);
+        d_def.d_value = 91;
+        d_def.d_allocator_p = 0;
+        dumpClassDefState(d_def);
+    }
+
+    my_SrcClass& operator=(const my_SrcClass& rhs)
+    {
+        d_def.d_value = rhs.d_def.d_value;
+        return *this;
+    }
+
+    // ACCESSORS
+    int value() const { return d_def.d_value; }
+};
+
+// CLASS DATA
+int my_SrcClass::copyConstructorInvocations       = 0;
+int my_SrcClass::moveConstructorInvocations       = 0;
+
                              // ===============
                              // class my_Class1
                              // ===============
@@ -169,6 +230,11 @@ class my_Class1 {
     my_ClassDef d_def;
 
   public:
+
+    // DATA
+    static int copyConstructorInvocations;
+    static int moveConstructorInvocations;
+
     // CREATORS
     explicit
     my_Class1(int v = 0)
@@ -181,12 +247,28 @@ class my_Class1 {
     {
         d_def.d_value = rhs.d_def.d_value;
         d_def.d_allocator_p = 0;
+        ++copyConstructorInvocations;
     }
 
     my_Class1(bslmf::MovableRef<my_Class1> rhs)
     {
         my_Class1& lvalue = rhs;
         d_def.d_value = lvalue.d_def.d_value;
+        lvalue.d_def.d_value = MOVED_FROM_VAL;
+        d_def.d_allocator_p = 0;
+        ++moveConstructorInvocations;
+    }
+
+    my_Class1(const my_SrcClass& rhs)
+    {
+        d_def.d_value = rhs.value();
+        d_def.d_allocator_p = 0;
+    }
+
+    my_Class1(bslmf::MovableRef<my_SrcClass> rhs)
+    {
+        my_SrcClass& lvalue = rhs;
+        d_def.d_value = lvalue.value();
         lvalue.d_def.d_value = MOVED_FROM_VAL;
         d_def.d_allocator_p = 0;
     }
@@ -209,6 +291,10 @@ class my_Class1 {
     int value() const { return d_def.d_value; }
 };
 
+// CLASS DATA
+int my_Class1::copyConstructorInvocations       = 0;
+int my_Class1::moveConstructorInvocations       = 0;
+
                              // ===============
                              // class my_Class2
                              // ===============
@@ -220,6 +306,11 @@ class my_Class2 {
     my_ClassDef d_def;
 
   public:
+
+    // DATA
+    static int copyConstructorInvocations;
+    static int moveConstructorInvocations;
+
     // CREATORS
     explicit
     my_Class2(bslma::Allocator *a = 0)
@@ -239,6 +330,7 @@ class my_Class2 {
     {
         d_def.d_value = rhs.d_def.d_value;
         d_def.d_allocator_p = a;
+        ++copyConstructorInvocations;
     }
 
     my_Class2(bslmf::MovableRef<my_Class2> rhs, bslma::Allocator *a = 0)
@@ -252,6 +344,21 @@ class my_Class2 {
         else {
             d_def.d_allocator_p = lvalue.d_def.d_allocator_p;
         }
+        ++moveConstructorInvocations;
+    }
+
+    my_Class2(const my_SrcClass& rhs, bslma::Allocator *a = 0)
+    {
+        d_def.d_value = rhs.d_def.d_value;
+        d_def.d_allocator_p = a;
+    }
+
+    my_Class2(bslmf::MovableRef<my_SrcClass> rhs, bslma::Allocator *a = 0)
+    {
+        my_SrcClass& lvalue = rhs;
+        d_def.d_value = lvalue.d_def.d_value;
+        lvalue.d_def.d_value = MOVED_FROM_VAL;
+        d_def.d_allocator_p = a;
     }
 
     ~my_Class2()
@@ -272,7 +379,12 @@ class my_Class2 {
 
     // ACCESSORS
     int value() const { return d_def.d_value; }
+    bslma::Allocator *allocator() const { return d_def.d_allocator_p; }
 };
+
+// CLASS DATA
+int my_Class2::copyConstructorInvocations       = 0;
+int my_Class2::moveConstructorInvocations       = 0;
 
 // TRAITS
 namespace BloombergLP {
@@ -297,6 +409,11 @@ class my_Class2a {
     my_Class2 d_data;
 
   public:
+
+    // DATA
+    static int copyConstructorInvocations;
+    static int moveConstructorInvocations;
+
     // CREATORS
     my_Class2a()
     : d_data()
@@ -322,6 +439,7 @@ class my_Class2a {
     my_Class2a(const my_Class2a& rhs)
     : d_data(rhs.d_data)
     {
+        ++copyConstructorInvocations;
     }
 
     my_Class2a(bsl::allocator_arg_t  ,
@@ -329,17 +447,34 @@ class my_Class2a {
                const my_Class2a&     rhs)
     : d_data(rhs.d_data, a)
     {
+        ++copyConstructorInvocations;
     }
 
     my_Class2a(bslmf::MovableRef<my_Class2a> rhs)                   // IMPLICIT
     : d_data(MoveUtil::move(MoveUtil::access(rhs).d_data))
     {
+        ++moveConstructorInvocations;
     }
 
     my_Class2a(bsl::allocator_arg_t,
                bslma::Allocator              *a,
                bslmf::MovableRef<my_Class2a>  rhs)
     : d_data(MoveUtil::move(MoveUtil::access(rhs).d_data), a)
+    {
+        ++moveConstructorInvocations;
+    }
+
+    my_Class2a(bsl::allocator_arg_t  ,
+               bslma::Allocator     *a,
+               const my_SrcClass&     rhs)
+    : d_data(rhs, a)
+    {
+    }
+
+    my_Class2a(bsl::allocator_arg_t,
+               bslma::Allocator              *a,
+               bslmf::MovableRef<my_SrcClass>  rhs)
+    : d_data(MoveUtil::move(rhs), a)
     {
     }
 
@@ -358,7 +493,12 @@ class my_Class2a {
 
     // ACCESSORS
     int value() const { return d_data.value(); }
+    bslma::Allocator *allocator() const { return d_data.allocator(); }
 };
+
+// CLASS DATA
+int my_Class2a::copyConstructorInvocations       = 0;
+int my_Class2a::moveConstructorInvocations       = 0;
 
 // TRAITS
 namespace BloombergLP {
@@ -370,6 +510,7 @@ namespace bslma {
 template <> struct UsesBslmaAllocator<my_Class2a> : bsl::true_type {};
 }  // close package namespace
 }  // close enterprise namespace
+
 
                              // ===============
                              // class my_Class3
@@ -384,6 +525,10 @@ class my_Class3 {
     my_ClassDef d_def;
 
   public:
+
+    // DATA
+    static int copyConstructorInvocations;
+
     // CREATORS
     explicit
     my_Class3(bslma::Allocator *a = 0)
@@ -400,6 +545,13 @@ class my_Class3 {
     }
 
     my_Class3(const my_Class3& rhs, bslma::Allocator *a = 0)
+    {
+        d_def.d_value = rhs.d_def.d_value;
+        d_def.d_allocator_p = a;
+        ++copyConstructorInvocations;
+    }
+
+    my_Class3(const my_SrcClass& rhs, bslma::Allocator *a = 0)
     {
         d_def.d_value = rhs.d_def.d_value;
         d_def.d_allocator_p = a;
@@ -423,7 +575,10 @@ class my_Class3 {
 
     // ACCESSORS
     int value() const { return d_def.d_value; }
+    bslma::Allocator *allocator() const { return d_def.d_allocator_p; }
 };
+// CLASS DATA
+int my_Class3::copyConstructorInvocations       = 0;
 
 // TRAITS
 namespace BloombergLP {
@@ -2740,6 +2895,371 @@ int main(int argc, char *argv[])
     printf("TEST " __FILE__ " CASE %d\n", test);
 
     switch (test) { case 0:  // Zero is always the leading case.
+      case 12: {
+          // --------------------------------------------------------------------
+          // TESTING 'make' conversion
+          //
+          // Concerns:
+          //   o That the make utility uses move when appropriate.
+          //   o That no unnecessary copies are created.
+          //
+          // Plan:
+          //
+          //   Create a new object using make facility by copying from an
+          //   object of a different type.
+          //   Check the value and the allocator of the newly created object
+          //   are correct. Check no unnecessary copies of source and
+          //   destination type are created.
+          //
+          //   Create a new object using make facility by moving from an
+          //   object of a different type. Check the source object has been
+          //   moved from.
+          //   Check the value and the allocator of the newly created object
+          //   are correct. Check no unnecessary copies of source and
+          //   destination type are created.
+          //
+          // Testing:
+          //   make (ANY_TYPE&&, bslma::Allocator*)
+          //   make (ANY_TYPE&&, void*)
+          // --------------------------------------------------------------------
+
+          if (verbose) printf("\nTESTING 'make' conversion"
+                              "\n=========================\n");
+
+          bslma::TestAllocator testAllocator(veryVeryVeryVerbose);
+          bslma::TestAllocator *const TA = &testAllocator;
+          int                  dummyAllocator;  // not a 'bslma' allocator
+          int                  *const XA = &dummyAllocator;
+          {
+              my_SrcClass src = my_SrcClass(1);
+              int SCCI = my_SrcClass::copyConstructorInvocations;
+              int SMCI = my_SrcClass::moveConstructorInvocations;
+              int CCI = my_Class1::copyConstructorInvocations;
+              int MCI = my_Class1::moveConstructorInvocations;
+
+              my_Class1 dest1 = Util::make<my_Class1>(TA, src);
+              ASSERTV(dest1.value(), 1 == dest1.value());
+              ASSERT(CCI == my_Class1::copyConstructorInvocations);
+              ASSERT(MCI == my_Class1::moveConstructorInvocations);
+              ASSERTV(src.value(), 1 == src.value());
+              ASSERT(SCCI == my_SrcClass::copyConstructorInvocations);
+              ASSERT(SMCI == my_SrcClass::moveConstructorInvocations);
+
+              my_Class1 dest2 = Util::make<my_Class1>(TA, MoveUtil::move(src));
+              ASSERTV(dest2.value(), 1 == dest2.value());
+              ASSERT(CCI == my_Class1::copyConstructorInvocations);
+              ASSERT(MCI == my_Class1::moveConstructorInvocations);
+              ASSERTV(src.value(), MOVED_FROM_VAL == src.value());
+              ASSERT(SCCI == my_SrcClass::copyConstructorInvocations);
+              ASSERT(SMCI == my_SrcClass::moveConstructorInvocations);
+          }
+          {
+              my_SrcClass src = my_SrcClass(1);
+              int SCCI = my_SrcClass::copyConstructorInvocations;
+              int SMCI = my_SrcClass::moveConstructorInvocations;
+              int CCI = my_Class1::copyConstructorInvocations;
+              int MCI = my_Class1::moveConstructorInvocations;
+
+              my_Class1 dest1 = Util::make<my_Class1>(XA, src);
+              ASSERTV(dest1.value(), 1 == dest1.value());
+              ASSERT(CCI == my_Class1::copyConstructorInvocations);
+              ASSERT(MCI == my_Class1::moveConstructorInvocations);
+              ASSERTV(src.value(), 1 == src.value());
+              ASSERT(SCCI == my_SrcClass::copyConstructorInvocations);
+              ASSERT(SMCI == my_SrcClass::moveConstructorInvocations);
+
+              my_Class1 dest2 = Util::make<my_Class1>(XA, MoveUtil::move(src));
+              ASSERTV(dest2.value(), 1 == dest2.value());
+              ASSERT(CCI == my_Class1::copyConstructorInvocations);
+              ASSERT(MCI == my_Class1::moveConstructorInvocations);
+              ASSERTV(src.value(), MOVED_FROM_VAL == src.value());
+              ASSERT(SCCI == my_SrcClass::copyConstructorInvocations);
+              ASSERT(SMCI == my_SrcClass::moveConstructorInvocations);
+          }
+          {
+              my_SrcClass src = my_SrcClass(1);
+              int SCCI = my_SrcClass::copyConstructorInvocations;
+              int SMCI = my_SrcClass::moveConstructorInvocations;
+              int CCI = my_Class2::copyConstructorInvocations;
+              int MCI = my_Class2::moveConstructorInvocations;
+
+              my_Class2 dest1 = Util::make<my_Class2>(TA, src);
+              ASSERTV(dest1.value(), 1 == dest1.value());
+              ASSERT(CCI == my_Class2::copyConstructorInvocations);
+              ASSERT(MCI == my_Class2::moveConstructorInvocations);
+              ASSERT(TA == dest1.allocator());
+              ASSERTV(src.value(), 1 == src.value());
+              ASSERT(SCCI == my_SrcClass::copyConstructorInvocations);
+              ASSERT(SMCI == my_SrcClass::moveConstructorInvocations);
+
+              my_Class2 dest2 = Util::make<my_Class2>(TA, MoveUtil::move(src));
+              ASSERTV(dest2.value(), 1 == dest2.value());
+              ASSERT(CCI == my_Class2::copyConstructorInvocations);
+              ASSERT(MCI == my_Class2::moveConstructorInvocations);
+              ASSERT(TA == dest2.allocator());
+              ASSERTV(src.value(), MOVED_FROM_VAL == src.value());
+              ASSERT(SCCI == my_SrcClass::copyConstructorInvocations);
+              ASSERT(SMCI == my_SrcClass::moveConstructorInvocations);
+          }
+          {
+              my_SrcClass src = my_SrcClass(1);
+              int SCCI = my_SrcClass::copyConstructorInvocations;
+              int SMCI = my_SrcClass::moveConstructorInvocations;
+              int CCI = my_Class2a::copyConstructorInvocations;
+              int MCI = my_Class2a::moveConstructorInvocations;
+
+              my_Class2a dest1 = Util::make<my_Class2a>(TA, src);
+              ASSERTV(dest1.value(), 1 == dest1.value());
+              ASSERT(CCI == my_Class2a::copyConstructorInvocations);
+              ASSERT(MCI == my_Class2a::moveConstructorInvocations);
+              ASSERT(TA == dest1.allocator());
+              ASSERTV(src.value(), 1 == src.value());
+              ASSERT(SCCI == my_SrcClass::copyConstructorInvocations);
+              ASSERT(SMCI == my_SrcClass::moveConstructorInvocations);
+
+              my_Class2a dest2 = Util::make<my_Class2a>(TA,
+                                                        MoveUtil::move(src));
+              ASSERTV(dest2.value(), 1 == dest2.value());
+              ASSERT(CCI == my_Class2a::copyConstructorInvocations);
+              ASSERT(MCI == my_Class2a::moveConstructorInvocations);
+              ASSERT(TA == dest2.allocator());
+              ASSERTV(src.value(), MOVED_FROM_VAL == src.value());
+              ASSERT(SCCI == my_SrcClass::copyConstructorInvocations);
+              ASSERT(SMCI == my_SrcClass::moveConstructorInvocations);
+          }
+          {
+              my_SrcClass src = my_SrcClass(1);
+              int SCCI = my_SrcClass::copyConstructorInvocations;
+              int SMCI = my_SrcClass::moveConstructorInvocations;
+              int CCI = my_Class3::copyConstructorInvocations;
+
+              my_Class3 dest1 = Util::make<my_Class3>(TA, src);
+              ASSERTV(dest1.value(), 1 == dest1.value());
+              ASSERT(CCI == my_Class3::copyConstructorInvocations);
+              ASSERT(TA == dest1.allocator());
+              ASSERTV(src.value(), 1 == src.value());
+              ASSERT(SCCI == my_SrcClass::copyConstructorInvocations);
+              ASSERT(SMCI == my_SrcClass::moveConstructorInvocations);
+
+              // my_Class3 doesn't support move conversion.
+              my_Class3 dest2 = Util::make<my_Class3>(TA, MoveUtil::move(src));
+              ASSERTV(dest2.value(), 1 == dest2.value());
+              ASSERT(CCI == my_Class3::copyConstructorInvocations);
+              ASSERT(TA == dest2.allocator());
+              ASSERTV(src.value(), 1 == src.value());
+              ASSERT(SCCI == my_SrcClass::copyConstructorInvocations);
+              ASSERT(SMCI == my_SrcClass::moveConstructorInvocations);
+          }
+      } break;
+      case 11: {
+          // --------------------------------------------------------------------
+          // TESTING 'make' move construction
+          //
+          // Concerns:
+          //   o That the make utility uses move when appropriate.
+          //   o That no unnecessary copies are created.
+          //
+          // Plan:
+          //
+          //   Create a new object using make facility by moving from an object
+          //   of same type.
+          //   Check the value and the allocator of the newly created object
+          //   are correct. Check no unnecessary copies are created. Check
+          //   move constructor has been called.
+          //
+          // Testing:
+          //   make (ANY_TYPE&&, bslma::Allocator*)
+          //   make (ANY_TYPE&&, void*)
+          // --------------------------------------------------------------------
+
+          if (verbose) printf("\nTESTING 'make' move construction"
+                              "\n================================\n");
+
+          bslma::TestAllocator testAllocator(veryVeryVeryVerbose);
+          bslma::TestAllocator *const TA = &testAllocator;
+          int                  dummyAllocator;  // not a 'bslma' allocator
+          int                  *const XA = &dummyAllocator;
+          {
+              my_Class1 src = V1;
+              int CCI = my_Class1::copyConstructorInvocations;
+              int MCI = my_Class1::moveConstructorInvocations;
+              my_Class1 dest = Util::make<my_Class1>(TA, MoveUtil::move(src));
+              ASSERTV(dest.value(), V1.value() == dest.value());
+              ASSERT(CCI == my_Class1::copyConstructorInvocations);
+              ASSERT(MCI == my_Class1::moveConstructorInvocations -1);
+          }
+          {
+              my_Class1 src = V1;
+              int CCI = my_Class1::copyConstructorInvocations;
+              int MCI = my_Class1::moveConstructorInvocations;
+              my_Class1 dest = Util::make<my_Class1>(XA, MoveUtil::move(src));
+              ASSERTV(dest.value(), V1.value() == dest.value());
+              ASSERT(CCI == my_Class1::copyConstructorInvocations);
+              ASSERT(MCI == my_Class1::moveConstructorInvocations -1);
+          }
+          {
+              my_Class2 src = V2;
+              int CCI = my_Class2::copyConstructorInvocations;
+              int MCI = my_Class2::moveConstructorInvocations;
+              my_Class2 dest = Util::make<my_Class2>(TA, MoveUtil::move(src));
+              ASSERTV(dest.value(), V2.value() == dest.value());
+              ASSERT(TA == dest.allocator());
+              ASSERT(CCI == my_Class2::copyConstructorInvocations);
+              ASSERT(MCI == my_Class2::moveConstructorInvocations -1);
+          }
+          {
+              my_Class2a src = V2A;
+              int CCI = my_Class2a::copyConstructorInvocations;
+              int MCI = my_Class2a::moveConstructorInvocations;
+              my_Class2a dest = Util::make<my_Class2a>(TA,
+                                                       MoveUtil::move(src));
+              ASSERTV(dest.value(), V2A.value() == dest.value());
+              ASSERT(TA == dest.allocator());
+              ASSERT(CCI == my_Class2a::copyConstructorInvocations);
+              ASSERT(MCI == my_Class2a::moveConstructorInvocations -1);
+          }
+          {
+              my_Class3 src = V3;
+              int CCI = my_Class3::copyConstructorInvocations;
+              my_Class3 dest = Util::make<my_Class3>(TA,MoveUtil::move(src));
+              ASSERTV(dest.value(), V3.value() == dest.value());
+              ASSERT(TA == dest.allocator());
+              ASSERT(CCI == my_Class3::copyConstructorInvocations -1);
+          }
+      } break;
+     case 10: {
+          // --------------------------------------------------------------------
+          // TESTING 'make' copy construction
+          //
+          // Concerns:
+          //   o That the make facility properly forwards the allocator
+          //     and the value.
+          //   o That no unnecessary copies are created.
+          //
+          // Plan:
+          //
+          //   Create a new object using make facility by passing an lvalue
+          //   object of same type.
+          //   Check the value and the allocator of the newly created object
+          //   are correct. Check no unnecessary copies are created.
+          //
+          // Testing:
+          //   make (ANY_TYPE&&, bslma::Allocator*)
+          //   make (ANY_TYPE&&, void*)
+          // --------------------------------------------------------------------
+
+          if (verbose) printf("\nTESTING 'make' copy construction"
+                              "\n================================\n");
+
+          bslma::TestAllocator testAllocator(veryVeryVeryVerbose);
+          bslma::TestAllocator *const TA = &testAllocator;
+          int                  dummyAllocator;  // not a 'bslma' allocator
+          int                  *const XA = &dummyAllocator;
+          {
+              int CCI = my_Class1::copyConstructorInvocations;
+              int MCI = my_Class1::moveConstructorInvocations;
+              my_Class1 dest = Util::make<my_Class1>(TA, V1);
+              ASSERTV(dest.value(), V1.value() == dest.value());
+              ASSERT(CCI == my_Class1::copyConstructorInvocations -1);
+              ASSERT(MCI == my_Class1::moveConstructorInvocations);
+          }
+          {
+              int CCI = my_Class1::copyConstructorInvocations;
+              int MCI = my_Class1::moveConstructorInvocations;
+              my_Class1 dest = Util::make<my_Class1>(XA, V1);
+              ASSERTV(dest.value(), V1.value() == dest.value());
+              ASSERT(CCI == my_Class1::copyConstructorInvocations -1);
+              ASSERT(MCI == my_Class1::moveConstructorInvocations);
+          }
+          {
+              int CCI = my_Class2::copyConstructorInvocations;
+              int MCI = my_Class2::moveConstructorInvocations;
+              my_Class2 dest = Util::make<my_Class2>(TA, V2);
+              ASSERTV(dest.value(), V2.value() == dest.value());
+              ASSERT(TA == dest.allocator());
+              ASSERT(CCI == my_Class2::copyConstructorInvocations -1);
+              ASSERT(MCI == my_Class2::moveConstructorInvocations);
+          }
+          {
+              int CCI = my_Class2a::copyConstructorInvocations;
+              int MCI = my_Class2a::moveConstructorInvocations;
+              my_Class2a dest = Util::make<my_Class2a>(TA, V2A);
+              ASSERTV(dest.value(), V2A.value() == dest.value());
+              ASSERT(TA == dest.allocator());
+              ASSERT(CCI == my_Class2a::copyConstructorInvocations -1);
+              ASSERT(MCI == my_Class2a::moveConstructorInvocations);
+          }
+      } break;
+      case 9: {
+          // --------------------------------------------------------------------
+          // TESTING 'make default construction'
+          //
+          // Concerns:
+          //   o That the default constructor properly forwards the allocator
+          //     when appropriate.
+          //   o That no unnecessary copies are created.
+          //
+          // Plan: Construct an object using make utility taking only an
+          //    allocator, and verify that the value and allocator of the
+          //    object are as expected. Check no unnecessary copies are
+          //    created.
+          //
+          // Testing:
+          //   make(bslma::Allocator*)
+          //   make(void*)
+          // --------------------------------------------------------------------
+
+          if (verbose) printf("\nTESTING 'default make'"
+                              "\n==========================\n");
+
+          bslma::TestAllocator testAllocator(veryVeryVeryVerbose);
+          bslma::TestAllocator *const TA = &testAllocator;
+          int                  dummyAllocator;  // not a 'bslma' allocator
+          int                  *const XA = &dummyAllocator;
+
+          {
+              int CCI = my_Class1::copyConstructorInvocations;
+              int MCI = my_Class1::moveConstructorInvocations;
+              my_Class1 dest = Util::make<my_Class1>(XA);
+              ASSERTV(dest.value(), 0 == dest.value());
+              ASSERT(CCI == my_Class1::copyConstructorInvocations);
+              ASSERT(MCI == my_Class1::moveConstructorInvocations);
+          }
+          {
+              int CCI = my_Class1::copyConstructorInvocations;
+              int MCI = my_Class1::moveConstructorInvocations;
+              my_Class1 dest = Util::make<my_Class1>(TA);
+              ASSERTV(dest.value(), 0 == dest.value());
+              ASSERT(CCI == my_Class1::copyConstructorInvocations);
+              ASSERT(MCI == my_Class1::moveConstructorInvocations);
+          }
+          {
+              int CCI = my_Class2::copyConstructorInvocations;
+              int MCI = my_Class2::moveConstructorInvocations;
+              my_Class2 dest = Util::make<my_Class2>(TA);
+              ASSERTV(dest.value(), 0 == dest.value());
+              ASSERT(TA == dest.allocator());
+              ASSERT(CCI == my_Class2::copyConstructorInvocations);
+              ASSERT(MCI == my_Class2::moveConstructorInvocations);
+          }
+          {
+              int CCI = my_Class2a::copyConstructorInvocations;
+              int MCI = my_Class2a::moveConstructorInvocations;
+              my_Class2a dest = Util::make<my_Class2a>(TA);
+              ASSERTV(dest.value(), 0 == dest.value());
+              ASSERT(TA == dest.allocator());
+              ASSERT(CCI == my_Class2a::copyConstructorInvocations);
+              ASSERT(MCI == my_Class2a::moveConstructorInvocations);
+          }
+          {
+              int CCI = my_Class3::copyConstructorInvocations;
+              my_Class3 dest = Util::make<my_Class3>(TA);
+              ASSERTV(dest.value(), 0 == dest.value());
+              ASSERT(TA == dest.allocator());
+              ASSERT(CCI == my_Class3::copyConstructorInvocations);
+          }
+
+      } break;
       case 8: {
         // --------------------------------------------------------------------
         // USAGE EXAMPLE
