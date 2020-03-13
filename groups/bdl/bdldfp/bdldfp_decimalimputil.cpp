@@ -198,8 +198,9 @@ int formatFixed(char                      *buffer,
                      s);
 
     int pointPos     = (s != 0) ? len + exponent : 0;
-    int outputLength = static_cast<int>((pointPos > 0 ? pointPos : sizeof('0'))
-                                    + (cfg.precision() > 0) + cfg.precision());
+    int outputLength = static_cast<int>(
+        (pointPos > 0 ? pointPos : sizeof('0')) +
+        (cfg.precision() > 0 || cfg.showpoint()) + cfg.precision());
 
     if (outputLength <= length) {
 
@@ -223,9 +224,11 @@ int formatFixed(char                      *buffer,
             }
         }
 
-        if (cfg.precision()) {
+        if (cfg.precision() || cfg.showpoint()) {
             *oi++ = cfg.decimalPoint();
+        }
 
+        if (cfg.precision()) {
             const char *end = bsl::min(oi - pointPos, oe);
             while (oi < end) {
                 *oi++ = '0';
@@ -280,13 +283,14 @@ int formatScientific(char                      *buffer,
         if (maxDigit - 1 > cfg.precision()) {
             // round to the specified precision after point in scientific
             // format
-            int roundExp = -exponent - maxDigit + 1 + cfg.precision();
+            int roundExp = cfg.precision() - maxDigit + 1;
 
-            value = DecimalImpUtil::scaleB(value, roundExp);
-            value = DecimalImpUtil::round(value);
-            value = DecimalImpUtil::scaleB(value, -roundExp);
+            value = DecimalImpUtil::scaleB(value, -exponent);
+            value = DecimalImpUtil::round(value, roundExp);
 
-            cls = DecimalImpUtil::decompose(&sign, &s, &exponent, value);
+            cls = DecimalImpUtil::decompose(&sign, &s, &roundExp, value);
+            exponent += roundExp;
+
             BSLS_ASSERT(cls == FP_ZERO   ||
                         cls == FP_NORMAL ||
                         cls == FP_SUBNORMAL);
@@ -304,12 +308,14 @@ int formatScientific(char                      *buffer,
 
     const int k_MAX_EXPONENT_LENGTH = 6;
     char      exp[k_MAX_EXPONENT_LENGTH];
-    int       exponentLength = bsl::sprintf(&exp[0], "%+d", exponent);
-    int       outputLength   = 1
-                               + (cfg.precision() > 0) + cfg.precision()
-                               + static_cast<int>(sizeof 'E')
-                               + exponentLength;
-    char     *i              = buffer;
+    int       exponentLength =
+        bsl::sprintf(&exp[0], "%+.*d", cfg.expWidth(), exponent);
+
+    int outputLength = 1 + (cfg.precision() > 0 || cfg.showpoint()) +
+                       cfg.precision() + static_cast<int>(sizeof 'E') +
+                       exponentLength;
+
+    char *i = buffer;
 
     if (outputLength <= length) {
 
@@ -318,9 +324,11 @@ int formatScientific(char                      *buffer,
 
         *i++ = *j++;
 
-        if (cfg.precision()) {
+        if (cfg.precision() || cfg.showpoint()) {
             *i++ = cfg.decimalPoint();
+        }
 
+        if (cfg.precision()) {
             const char *end = bsl::min(j + cfg.precision(), e);
             if (j <= end) {
                 i = bsl::copy(j, end, i);

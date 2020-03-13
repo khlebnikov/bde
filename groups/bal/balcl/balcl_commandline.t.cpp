@@ -1,5 +1,4 @@
 // balcl_commandline.t.cpp                                            -*-C++-*-
-
 #include <balcl_commandline.h>
 
 #include <balcl_constraint.h>
@@ -27,8 +26,6 @@
 #include <bsls_platform.h>
 #include <bsls_types.h> // 'bsls::Types::Int64'
 
-#include <bslalg_typetraits.h>
-
 #include <bsl_algorithm.h>  // 'bsl::fill'
 #include <bsl_functional.h> // 'bsl::function'
 #include <bsl_iostream.h>
@@ -43,11 +40,11 @@
 #include <bsl_cstddef.h> // 'bsl::size_t'
 #include <bsl_cstring.h> // 'bsl::strcmp'
 
-
 using namespace BloombergLP;
 using bsl::cerr;
 using bsl::cout;
 using bsl::endl;
+using bsl::flush;
 
 // ============================================================================
 //                                   TEST PLAN
@@ -174,7 +171,7 @@ using bsl::endl;
 // [ 3] bool operator!=(const CommandLineOptionsHandle& lhs, rhs);
 // ----------------------------------------------------------------------------
 // [ 1] BREATHING TEST
-// [ 2] TESTING 'parseCommandLine' TESTING UTILITY
+// [ 2] TESTING 'u::parseCommandLine' TESTING UTILITY
 // [ 3] TESTING 'balcl::CommandLine'
 // [ 3] TESTING 'balcl::CommandLineOptionsHandle'
 // [ 4] TESTING INVALID OPTION SPECS
@@ -237,6 +234,7 @@ void aSsErT(bool condition, const char *message, int line)
 
 typedef balcl::CommandLine                Obj;
 
+typedef balcl::Constraint                 Constraint;
 typedef balcl::OccurrenceInfo             OccurrenceInfo;
 typedef OccurrenceInfo::OccurrenceType    OccurrenceType;
 typedef balcl::Option                     Option;
@@ -265,7 +263,6 @@ BSLMF_ASSERT(bdlb::HasPrintMethod<Obj>::value);
 enum { k_DATETIME_FIELD_WIDTH = 25
      ,     k_DATE_FIELD_WIDTH =  9
      ,     k_TIME_FIELD_WIDTH = 15 };
-
 
 // ATTRIBUTES FOR 'balcl::Option'
 static const struct {
@@ -311,102 +308,105 @@ bsl::vector<bdlt::Datetime> linkedDatetimeArray(
 bsl::vector<bdlt::Date>     linkedDateArray(bslma::Default::globalAllocator());
 bsl::vector<bdlt::Time>     linkedTimeArray(bslma::Default::globalAllocator());
 
-struct OptConstraint {
+                        // =====================
+                        // struct TestConstraint
+                        // =====================
 
-    // CLASS DATA
+struct TestConstraint {
+    // This 'struct' provides a namespace for functions, one for each
+    // constraint type, used to initialize 'Constraint' objects for testing.
+
+  private:
+    static bool commonLogic(bsl::ostream& stream);
+        // Return 's_constraintValue' and if 'false == s_contraintValue' output
+        // an error message to the specified 'stream'.
+
+  public:
+    // PUBLIC CLASS DATA
     static bool s_constraintValue;
         // Global return value (for easier control).
 
-    // DATA
-    char d_buffer[1 + sizeof(bsl::function<bool(const void   *,
-                                                bsl::ostream *)>)];
-         // This data member ensures that the 'bsl::function' object that
-         // contains this object has to allocate.
+    static bool     charFunc(const char           *, bsl::ostream& stream);
+    static bool      intFunc(const int            *, bsl::ostream& stream);
+    static bool    int64Func(const Int64          *, bsl::ostream& stream);
+    static bool   doubleFunc(const double         *, bsl::ostream& stream);
+    static bool   stringFunc(const bsl::string    *, bsl::ostream& stream);
+    static bool datetimeFunc(const bdlt::Datetime *, bsl::ostream& stream);
+    static bool     dateFunc(const bdlt::Date     *, bsl::ostream& stream);
+    static bool     timeFunc(const bdlt::Time     *, bsl::ostream& stream);
+        // Return 's_constraintValue' and if 'false == s_contraintValue' output
+        // an error message to the specified 'stream'.  Note that the first
+        // argument is ignored.
 };
 
-bool OptConstraint::s_constraintValue = true;
+                        // ---------------------
+                        // struct TestConstraint
+                        // ---------------------
 
-struct OptCharConstraint : public OptConstraint {
-    bool operator()(const char *, bsl::ostream&) const
-        // Return 'true'.
-    {
-        return s_constraintValue;
+bool TestConstraint::commonLogic(bsl::ostream& stream)
+{
+    if (!s_constraintValue) {
+        stream << "error" << flush;
     }
-} optCharConstraint;
+    return s_constraintValue;
+}
 
-struct OptShortConstraint : public OptConstraint {
-    bool operator()(const short *, bsl::ostream&) const
-        // Return 'true'.
-    {
-        return s_constraintValue;
-    }
-} optShortConstraint;
+// PUBLIC CLASS DATA
+bool TestConstraint::s_constraintValue = true;
 
-struct OptIntConstraint : public OptConstraint {
-    bool operator()(const int *, bsl::ostream&) const
-        // Return 'true'.
-    {
-        return s_constraintValue;
-    }
-} optIntConstraint;
+// CLASS METHODS
+bool TestConstraint::charFunc(const char *, bsl::ostream& stream)
+{
+    return commonLogic(stream);
+}
 
-struct OptInt64Constraint : public OptConstraint {
-    bool operator()(const bsls::Types::Int64 *, bsl::ostream&) const
-        // Return 'true'.
-    {
-        return s_constraintValue;
-    }
-} optInt64Constraint;
+bool TestConstraint::intFunc(const int *, bsl::ostream& stream)
+{
+    return commonLogic(stream);
+}
 
-struct OptFloatConstraint : public OptConstraint {
-    bool operator()(const float *, bsl::ostream&) const
-        // Return 'true'.
-    {
-        return s_constraintValue;
-    }
-} optFloatConstraint;
+bool TestConstraint::int64Func(const Int64 *, bsl::ostream& stream)
+{
+    return commonLogic(stream);
+}
 
-struct OptDoubleConstraint : public OptConstraint {
-    bool operator()(const double *, bsl::ostream&) const
-        // Return 'true'.
-    {
-        return s_constraintValue;
-    }
-} optDoubleConstraint;
+bool TestConstraint::doubleFunc(const double *, bsl::ostream& stream)
+{
+    return commonLogic(stream);
+}
 
-struct OptStringConstraint : public OptConstraint {
-    bool operator()(const bsl::string *, bsl::ostream&) const
-        // Return 'true'.
-    {
-        return s_constraintValue;
-    }
-} optStringConstraint;
+bool TestConstraint::stringFunc(const bsl::string *, bsl::ostream& stream)
+{
+    return commonLogic(stream);
+}
 
-struct OptDatetimeConstraint : public OptConstraint {
+bool TestConstraint::datetimeFunc(const bdlt::Datetime *, bsl::ostream& stream)
+{
+    return commonLogic(stream);
+}
 
-    bool operator()(const bdlt::Datetime *, bsl::ostream&) const
-        // Return 'true'.
-    {
-        return s_constraintValue;
-    }
-} optDatetimeConstraint;
+bool TestConstraint::dateFunc(const bdlt::Date *, bsl::ostream& stream)
+{
+    return commonLogic(stream);
+}
 
-struct OptDateConstraint : public OptConstraint {
+bool TestConstraint::timeFunc(const bdlt::Time *, bsl::ostream& stream)
+{
+    return commonLogic(stream);
+}
 
-    bool operator()(const bdlt::Date *, bsl::ostream&) const
-        // Return 'true'.
-    {
-        return s_constraintValue;
-    }
-} optDateConstraint;
+#define TC TestConstraint
 
-struct OptTimeConstraint : public OptConstraint {
-    bool operator()(const bdlt::Time *, bsl::ostream&) const
-        // Return 'true'.
-    {
-        return s_constraintValue;
-    }
-} optTimeConstraint;
+Constraint::    CharConstraint     testCharConstraint(&TC::    charFunc);
+Constraint::     IntConstraint      testIntConstraint(&TC::     intFunc);
+Constraint::   Int64Constraint    testInt64Constraint(&TC::   int64Func);
+Constraint::  DoubleConstraint   testDoubleConstraint(&TC::  doubleFunc);
+Constraint::  StringConstraint   testStringConstraint(&TC::  stringFunc);
+Constraint::DatetimeConstraint testDatetimeConstraint(&TC::datetimeFunc);
+Constraint::    DateConstraint     testDateConstraint(&TC::    dateFunc);
+Constraint::    TimeConstraint     testTimeConstraint(&TC::    timeFunc);
+
+#undef TC  // TestConstraint
 
 const struct {
     int       d_line;              // line number
@@ -414,75 +414,74 @@ const struct {
     void     *d_linkedVariable_p;  // linked variable attribute(s)
     void     *d_constraint_p;      // linked variable attribute(s)
 } OPTION_TYPEINFO[] = {
-   { L_, Ot::e_BOOL,           0,                    0                     }
- , { L_, Ot::e_CHAR,           0,                    0                     }
- , { L_, Ot::e_INT,            0,                    0                     }
- , { L_, Ot::e_INT64,          0,                    0                     }
- , { L_, Ot::e_DOUBLE,         0,                    0                     }
- , { L_, Ot::e_STRING,         0,                    0                     }
- , { L_, Ot::e_DATETIME,       0,                    0                     }
- , { L_, Ot::e_DATE,           0,                    0                     }
- , { L_, Ot::e_TIME,           0,                    0                     }
- , { L_, Ot::e_CHAR_ARRAY,     0,                    0                     }
- , { L_, Ot::e_INT_ARRAY,      0,                    0                     }
- , { L_, Ot::e_INT64_ARRAY,    0,                    0                     }
- , { L_, Ot::e_DOUBLE_ARRAY,   0,                    0                     }
- , { L_, Ot::e_STRING_ARRAY,   0,                    0                     }
- , { L_, Ot::e_DATETIME_ARRAY, 0,                    0                     }
- , { L_, Ot::e_DATE_ARRAY,     0,                    0                     }
- , { L_, Ot::e_TIME_ARRAY,     0,                    0                     }
- , { L_, Ot::e_BOOL,           &linkedBool,          0                     }
- , { L_, Ot::e_CHAR,           &linkedChar,          0                     }
- , { L_, Ot::e_INT,            &linkedInt,           0                     }
- , { L_, Ot::e_INT64,          &linkedInt64,         0                     }
- , { L_, Ot::e_DOUBLE,         &linkedDouble,        0                     }
- , { L_, Ot::e_STRING,         &linkedString,        0                     }
- , { L_, Ot::e_DATETIME,       &linkedDatetime,      0                     }
- , { L_, Ot::e_DATE,           &linkedDate,          0                     }
- , { L_, Ot::e_TIME,           &linkedTime,          0                     }
- , { L_, Ot::e_CHAR_ARRAY,     &linkedCharArray,     0                     }
- , { L_, Ot::e_INT_ARRAY,      &linkedIntArray,      0                     }
- , { L_, Ot::e_INT64_ARRAY,    &linkedInt64Array,    0                     }
- , { L_, Ot::e_DOUBLE_ARRAY,   &linkedDoubleArray,   0                     }
- , { L_, Ot::e_STRING_ARRAY,   &linkedStringArray,   0                     }
- , { L_, Ot::e_DATETIME_ARRAY, &linkedDatetimeArray, 0                     }
- , { L_, Ot::e_DATE_ARRAY,     &linkedDateArray,     0                     }
- , { L_, Ot::e_TIME_ARRAY,     &linkedTimeArray,     0                     }
- , { L_, Ot::e_BOOL,           0,                    // &optBoolConstraint }
-                                                        0                     }
- , { L_, Ot::e_CHAR,           0,                    &optCharConstraint    }
- , { L_, Ot::e_INT,            0,                    &optIntConstraint     }
- , { L_, Ot::e_INT64,          0,                    &optInt64Constraint   }
- , { L_, Ot::e_DOUBLE,         0,                    &optDoubleConstraint  }
- , { L_, Ot::e_STRING,         0,                    &optStringConstraint  }
- , { L_, Ot::e_DATETIME,       0,                    &optDatetimeConstraint}
- , { L_, Ot::e_DATE,           0,                    &optDateConstraint    }
- , { L_, Ot::e_TIME,           0,                    &optTimeConstraint    }
- , { L_, Ot::e_CHAR_ARRAY,     0,                    &optCharConstraint    }
- , { L_, Ot::e_INT_ARRAY,      0,                    &optIntConstraint     }
- , { L_, Ot::e_INT64_ARRAY,    0,                    &optInt64Constraint   }
- , { L_, Ot::e_DOUBLE_ARRAY,   0,                    &optDoubleConstraint  }
- , { L_, Ot::e_STRING_ARRAY,   0,                    &optStringConstraint  }
- , { L_, Ot::e_DATETIME_ARRAY, 0,                    &optDatetimeConstraint}
- , { L_, Ot::e_DATE_ARRAY,     0,                    &optDateConstraint    }
- , { L_, Ot::e_TIME_ARRAY,     0,                    &optTimeConstraint    }
- , { L_, Ot::e_BOOL,           &linkedBool,          0                     }
- , { L_, Ot::e_CHAR,           &linkedChar,          &optCharConstraint    }
- , { L_, Ot::e_INT,            &linkedInt,           &optIntConstraint     }
- , { L_, Ot::e_INT64,          &linkedInt64,         &optInt64Constraint   }
- , { L_, Ot::e_DOUBLE,         &linkedDouble,        &optDoubleConstraint  }
- , { L_, Ot::e_STRING,         &linkedString,        &optStringConstraint  }
- , { L_, Ot::e_DATETIME,       &linkedDatetime,      &optDatetimeConstraint}
- , { L_, Ot::e_DATE,           &linkedDate,          &optDateConstraint    }
- , { L_, Ot::e_TIME,           &linkedTime,          &optTimeConstraint    }
- , { L_, Ot::e_CHAR_ARRAY,     &linkedCharArray,     &optCharConstraint    }
- , { L_, Ot::e_INT_ARRAY,      &linkedIntArray,      &optIntConstraint     }
- , { L_, Ot::e_INT64_ARRAY,    &linkedInt64Array,    &optInt64Constraint   }
- , { L_, Ot::e_DOUBLE_ARRAY,   &linkedDoubleArray,   &optDoubleConstraint  }
- , { L_, Ot::e_STRING_ARRAY,   &linkedStringArray,   &optStringConstraint  }
- , { L_, Ot::e_DATETIME_ARRAY, &linkedDatetimeArray, &optDatetimeConstraint}
- , { L_, Ot::e_DATE_ARRAY,     &linkedDateArray,     &optDateConstraint    }
- , { L_, Ot::e_TIME_ARRAY,     &linkedTimeArray,     &optTimeConstraint    }
+   { L_, Ot::e_BOOL,           0,                    0                      }
+ , { L_, Ot::e_CHAR,           0,                    0                      }
+ , { L_, Ot::e_INT,            0,                    0                      }
+ , { L_, Ot::e_INT64,          0,                    0                      }
+ , { L_, Ot::e_DOUBLE,         0,                    0                      }
+ , { L_, Ot::e_STRING,         0,                    0                      }
+ , { L_, Ot::e_DATETIME,       0,                    0                      }
+ , { L_, Ot::e_DATE,           0,                    0                      }
+ , { L_, Ot::e_TIME,           0,                    0                      }
+ , { L_, Ot::e_CHAR_ARRAY,     0,                    0                      }
+ , { L_, Ot::e_INT_ARRAY,      0,                    0                      }
+ , { L_, Ot::e_INT64_ARRAY,    0,                    0                      }
+ , { L_, Ot::e_DOUBLE_ARRAY,   0,                    0                      }
+ , { L_, Ot::e_STRING_ARRAY,   0,                    0                      }
+ , { L_, Ot::e_DATETIME_ARRAY, 0,                    0                      }
+ , { L_, Ot::e_DATE_ARRAY,     0,                    0                      }
+ , { L_, Ot::e_TIME_ARRAY,     0,                    0                      }
+ , { L_, Ot::e_BOOL,           &linkedBool,          0                      }
+ , { L_, Ot::e_CHAR,           &linkedChar,          0                      }
+ , { L_, Ot::e_INT,            &linkedInt,           0                      }
+ , { L_, Ot::e_INT64,          &linkedInt64,         0                      }
+ , { L_, Ot::e_DOUBLE,         &linkedDouble,        0                      }
+ , { L_, Ot::e_STRING,         &linkedString,        0                      }
+ , { L_, Ot::e_DATETIME,       &linkedDatetime,      0                      }
+ , { L_, Ot::e_DATE,           &linkedDate,          0                      }
+ , { L_, Ot::e_TIME,           &linkedTime,          0                      }
+ , { L_, Ot::e_CHAR_ARRAY,     &linkedCharArray,     0                      }
+ , { L_, Ot::e_INT_ARRAY,      &linkedIntArray,      0                      }
+ , { L_, Ot::e_INT64_ARRAY,    &linkedInt64Array,    0                      }
+ , { L_, Ot::e_DOUBLE_ARRAY,   &linkedDoubleArray,   0                      }
+ , { L_, Ot::e_STRING_ARRAY,   &linkedStringArray,   0                      }
+ , { L_, Ot::e_DATETIME_ARRAY, &linkedDatetimeArray, 0                      }
+ , { L_, Ot::e_DATE_ARRAY,     &linkedDateArray,     0                      }
+ , { L_, Ot::e_TIME_ARRAY,     &linkedTimeArray,     0                      }
+ , { L_, Ot::e_BOOL,           0,                    0                      }
+ , { L_, Ot::e_CHAR,           0,                    &testCharConstraint    }
+ , { L_, Ot::e_INT,            0,                    &testIntConstraint     }
+ , { L_, Ot::e_INT64,          0,                    &testInt64Constraint   }
+ , { L_, Ot::e_DOUBLE,         0,                    &testDoubleConstraint  }
+ , { L_, Ot::e_STRING,         0,                    &testStringConstraint  }
+ , { L_, Ot::e_DATETIME,       0,                    &testDatetimeConstraint}
+ , { L_, Ot::e_DATE,           0,                    &testDateConstraint    }
+ , { L_, Ot::e_TIME,           0,                    &testTimeConstraint    }
+ , { L_, Ot::e_CHAR_ARRAY,     0,                    &testCharConstraint    }
+ , { L_, Ot::e_INT_ARRAY,      0,                    &testIntConstraint     }
+ , { L_, Ot::e_INT64_ARRAY,    0,                    &testInt64Constraint   }
+ , { L_, Ot::e_DOUBLE_ARRAY,   0,                    &testDoubleConstraint  }
+ , { L_, Ot::e_STRING_ARRAY,   0,                    &testStringConstraint  }
+ , { L_, Ot::e_DATETIME_ARRAY, 0,                    &testDatetimeConstraint}
+ , { L_, Ot::e_DATE_ARRAY,     0,                    &testDateConstraint    }
+ , { L_, Ot::e_TIME_ARRAY,     0,                    &testTimeConstraint    }
+ , { L_, Ot::e_BOOL,           &linkedBool,          0                      }
+ , { L_, Ot::e_CHAR,           &linkedChar,          &testCharConstraint    }
+ , { L_, Ot::e_INT,            &linkedInt,           &testIntConstraint     }
+ , { L_, Ot::e_INT64,          &linkedInt64,         &testInt64Constraint   }
+ , { L_, Ot::e_DOUBLE,         &linkedDouble,        &testDoubleConstraint  }
+ , { L_, Ot::e_STRING,         &linkedString,        &testStringConstraint  }
+ , { L_, Ot::e_DATETIME,       &linkedDatetime,      &testDatetimeConstraint}
+ , { L_, Ot::e_DATE,           &linkedDate,          &testDateConstraint    }
+ , { L_, Ot::e_TIME,           &linkedTime,          &testTimeConstraint    }
+ , { L_, Ot::e_CHAR_ARRAY,     &linkedCharArray,     &testCharConstraint    }
+ , { L_, Ot::e_INT_ARRAY,      &linkedIntArray,      &testIntConstraint     }
+ , { L_, Ot::e_INT64_ARRAY,    &linkedInt64Array,    &testInt64Constraint   }
+ , { L_, Ot::e_DOUBLE_ARRAY,   &linkedDoubleArray,   &testDoubleConstraint  }
+ , { L_, Ot::e_STRING_ARRAY,   &linkedStringArray,   &testStringConstraint  }
+ , { L_, Ot::e_DATETIME_ARRAY, &linkedDatetimeArray, &testDatetimeConstraint}
+ , { L_, Ot::e_DATE_ARRAY,     &linkedDateArray,     &testDateConstraint    }
+ , { L_, Ot::e_TIME_ARRAY,     &linkedTimeArray,     &testTimeConstraint    }
 };
 enum { NUM_OPTION_TYPEINFO = sizeof  OPTION_TYPEINFO
                            / sizeof *OPTION_TYPEINFO };
@@ -649,8 +648,9 @@ enum { NUM_SPECS = sizeof SPECS / sizeof *SPECS };
 // ----------------------------------------------------------------------------
 
 namespace {
+namespace u {
 
-static int getArgc(const char * const *argv)
+int getArgc(const char * const *argv)
     // Return the number of arguments (non-null pointers) found starting at
     // the specified 'argv'.
 {
@@ -667,9 +667,9 @@ static int getArgc(const char * const *argv)
                          // function generateArgument
                          // =========================
 
-static int generateArgument(bsl::string       *argString,
-                            const OptionInfo&  optionInfo,
-                            int                seed = 0)
+int generateArgument(bsl::string       *argString,
+                     const OptionInfo&  optionInfo,
+                     int                seed = 0)
     // Generate into the specified 'argString' a command-line string suitable
     // to be parsed by a 'balcl::CommandLine' object having the specified
     // 'optionInfo'.  Optionally specified a 'seed' for changing the return
@@ -780,7 +780,6 @@ static int generateArgument(bsl::string       *argString,
 
     ASSERT(OccurrenceInfo::e_REQUIRED != occurrenceInfo.occurrenceType()
                                                        || !argString->empty());
-
     return 0;
 }
 
@@ -790,10 +789,10 @@ static int generateArgument(bsl::string       *argString,
 
 const int MAX_ARGS = 512;
 
-static int parseCommandLine(char       *cmdLine,
-                            int&        argc,
-                            const char *argv[],
-                            int         maxArgs = MAX_ARGS)
+int parseCommandLine(char       *cmdLine,
+                     int&        argc,
+                     const char *argv[],
+                     int         maxArgs = MAX_ARGS)
     // Parse the specified modifiable 'cmdLine' as would a Unix shell, by
     // replacing every space by a character '\0' and recording the beginning of
     // each field into an array that is loaded into the specified 'argv', and
@@ -867,21 +866,27 @@ static int parseCommandLine(char       *cmdLine,
 
 // BDE_VERIFY pragma: +FABC01  // Function ... not in alphabetic order
 
-                           // ======================
-                           // function setConstraint
-                           // ======================
+                        // ======================
+                        // function setConstraint
+                        // ======================
 
-void setConstraint(TypeInfo *typeInfo, ElemType type, void *address)
+void setConstraint(TypeInfo *typeInfo, ElemType type, const void *address)
     // Set the constraint of the specified 'typeInfo' to the function at the
     // specified 'address' of the signature corresponding to the specified
-    // 'type'.  The behavior is undefined unless
-    // 'balcl::OptionType::e_VOID != type' and
-    // 'balcl::OptionType::e_BOOL != type'.
+    // 'type'.  The behavior is undefined unless 'Ot::e_VOID != type' and
+    // 'Ot::e_BOOL != type'.
 {
     BSLS_ASSERT(typeInfo);
-    BSLS_ASSERT(balcl::OptionType::e_VOID != type);
-    BSLS_ASSERT(balcl::OptionType::e_BOOL != type);
+    BSLS_ASSERT(Ot::e_VOID != type);
+    BSLS_ASSERT(Ot::e_BOOL != type);
     BSLS_ASSERT(address);
+
+#define CASE(ENUM, CONSTRAINT)                                                \
+    case ENUM:                                                                \
+    case ENUM##_ARRAY: {                                                      \
+      typeInfo->setConstraint(                                                \
+                      *static_cast<const Constraint::CONSTRAINT *>(address)); \
+    } break;                                                                  \
 
     switch (type) {
       case Ot::e_VOID: {
@@ -890,48 +895,23 @@ void setConstraint(TypeInfo *typeInfo, ElemType type, void *address)
       case Ot::e_BOOL: {
         ASSERT(!"Reached");
       } break;
-      case Ot::e_CHAR:
-      case Ot::e_CHAR_ARRAY: {
-        typeInfo->setConstraint(balcl::Constraint::CharConstraint(
-                             *reinterpret_cast<OptCharConstraint *>(address)));
-      } break;
-      case Ot::e_INT:
-      case Ot::e_INT_ARRAY: {
-        typeInfo->setConstraint(balcl::Constraint::IntConstraint(
-                              *reinterpret_cast<OptIntConstraint *>(address)));
-      } break;
-      case Ot::e_INT64:
-      case Ot::e_INT64_ARRAY: {
-        typeInfo->setConstraint(balcl::Constraint::Int64Constraint(
-                            *reinterpret_cast<OptInt64Constraint *>(address)));
-      } break;
-      case Ot::e_DOUBLE:
-      case Ot::e_DOUBLE_ARRAY: {
-        typeInfo->setConstraint(balcl::Constraint::DoubleConstraint(
-                           *reinterpret_cast<OptDoubleConstraint *>(address)));
-      } break;
-      case Ot::e_STRING:
-      case Ot::e_STRING_ARRAY: {
-        typeInfo->setConstraint(balcl::Constraint::StringConstraint(
-                           *reinterpret_cast<OptStringConstraint *>(address)));
-      } break;
-      case Ot::e_DATETIME:
-      case Ot::e_DATETIME_ARRAY: {
-        typeInfo->setConstraint(
-                               balcl::Constraint::DatetimeConstraint(
-                         *reinterpret_cast<OptDatetimeConstraint *>(address)));
-      } break;
-      case Ot::e_DATE:
-      case Ot::e_DATE_ARRAY: {
-        typeInfo->setConstraint(balcl::Constraint::DateConstraint(
-                             *reinterpret_cast<OptDateConstraint *>(address)));
-      } break;
-      case Ot::e_TIME:
-      case Ot::e_TIME_ARRAY: {
-        typeInfo->setConstraint(balcl::Constraint::TimeConstraint(
-                             *reinterpret_cast<OptTimeConstraint *>(address)));
+
+      CASE(Ot::e_CHAR,         CharConstraint)
+      CASE(Ot::e_INT,           IntConstraint)
+      CASE(Ot::e_INT64,       Int64Constraint)
+      CASE(Ot::e_DOUBLE,     DoubleConstraint)
+      CASE(Ot::e_STRING,     StringConstraint)
+      CASE(Ot::e_DATETIME, DatetimeConstraint)
+      CASE(Ot::e_DATE,         DateConstraint)
+      CASE(Ot::e_TIME,         TimeConstraint)
+
+      default: {
+        BSLS_ASSERT(!"Reached");
       } break;
     };
+
+#undef CASE
+
 }
 
                          // ==========================
@@ -1247,7 +1227,7 @@ void throwInvalidSpec(const char *text, const char *file, int line)
     errorMsg += "\nAn invalid 'balcl::OptionInfo' was encountered.";
     errorMsg += "\nThe following assertion failed: ";
     errorMsg += text;
-    throw InvalidSpec(errorMsg.c_str());
+    throw u::InvalidSpec(errorMsg.c_str());
 }
 
 #endif // BDE_BUILD_TARGET_EXC
@@ -1307,11 +1287,14 @@ bool isCompatibleOrdering(const char *const *argv1,
     }
     return true;
 }
+
+}  // close namespace u
 }  // close unnamed namespace
 
 // ============================================================================
 //                  USAGE EXAMPLE CLASSES AND FUNCTIONS
 // ----------------------------------------------------------------------------
+
 namespace BALCL_COMMANDLINE_USAGE_EXAMPLE {
 
 // BDE_VERIFY pragma: -FD01  // Avoid contract for 'main' below.
@@ -1566,8 +1549,8 @@ int main(int argc, const char *argv[])  {
             if (veryVerbose) { T_ P_(LINE) P(cmdLine) }
 
             int         argc;
-            const char *argv[MAX_ARGS];
-            parseCommandLine(cmdLine, argc, argv);
+            const char *argv[u::MAX_ARGS];
+            u::parseCommandLine(cmdLine, argc, argv);
 
             const int    ARGC = argc;
             const char **ARGV = argv;
@@ -1769,32 +1752,28 @@ int main(int argc, const char *argv[])  {
                 "r|reverse",
                 "isReverse",
                 "sort in reverse order",
-                balcl::TypeInfo(
-                                     balcl::OptionType::k_BOOL),
+                balcl::TypeInfo(balcl::OptionType::k_BOOL),
                 balcl::OccurrenceInfo()
               },
               {
                 "i|insensitivetocase",
                 "isCaseInsensitive",
                 "be case insensitive while sorting",
-                balcl::TypeInfo(
-                                     balcl::OptionType::k_BOOL),
+                balcl::TypeInfo(balcl::OptionType::k_BOOL),
                 balcl::OccurrenceInfo()
               },
               {
                 "u|uniq",
                 "isUniq",
                 "discard duplicate lines",
-                balcl::TypeInfo(
-                                     balcl::OptionType::k_BOOL),
+                balcl::TypeInfo(balcl::OptionType::k_BOOL),
                 balcl::OccurrenceInfo()
               },
               {
                 "a|algorithm",
                 "sortAlgo",
                 "sorting algorithm",
-                balcl::TypeInfo(
-                                   balcl::OptionType::k_STRING),
+                balcl::TypeInfo(balcl::OptionType::k_STRING),
                 balcl::OccurrenceInfo(bsl::string("quickSort"))
               },
               {
@@ -1802,16 +1781,14 @@ int main(int argc, const char *argv[])  {
                 "outputFile",
                 "output file with a very long option description so we can "
                 "see the line wrapping behavior",
-                balcl::TypeInfo(
-                                   balcl::OptionType::k_STRING),
+                balcl::TypeInfo(balcl::OptionType::k_STRING),
                 balcl::OccurrenceInfo::e_REQUIRED
               },
               {
                 "",
                 "fileList",
                 "files to be sorted",
-                balcl::TypeInfo(
-                             balcl::OptionType::k_STRING_ARRAY),
+                balcl::TypeInfo(balcl::OptionType::k_STRING_ARRAY),
                 balcl::OccurrenceInfo::e_REQUIRED
               }
             };
@@ -2590,7 +2567,6 @@ int main(int argc, const char *argv[])  {
 
         }
 
-
       } break;
       case 9: {
         // --------------------------------------------------------------------
@@ -2662,7 +2638,7 @@ int main(int argc, const char *argv[])  {
             const int           LINE        = ARGS[i].d_line;
             const int           SPEC_IDX    = ARGS[i].d_specIdx;
             const char * const *ARGV        = ARGS[i].d_argv_p;
-            const int           ARGC        = getArgc(ARGV);
+            const int           ARGC        = u::getArgc(ARGV);
             const bsl::size_t   SIZE        = ARGS[i].d_sizeNonOption2;
 
             const int           NUM_SPEC    = SPECS[SPEC_IDX].d_numSpecTable;
@@ -2762,7 +2738,7 @@ int main(int argc, const char *argv[])  {
             const int          LINE        = ARGS[i].d_line;
             const int          SPEC_IDX    = ARGS[i].d_specIdx;
             const char *const *ARGV        = ARGS[i].d_argv_p;
-            const int          ARGC        = getArgc(ARGV);
+            const int          ARGC        = u::getArgc(ARGV);
             const char        *EXP         = ARGS[i].d_expLinkedString_p;
 
             const int          NUM_SPEC    = SPECS[SPEC_IDX].d_numSpecTable;
@@ -2807,7 +2783,7 @@ int main(int argc, const char *argv[])  {
         const int MAX_ARGC = 16;
 
         if (verbose)
-            cout << "\n\tTesting 'isCompatibleOrdering' helper." << endl;
+            cout << "\n\tTesting 'u::isCompatibleOrdering' helper." << endl;
 
         static const struct {
             int          d_line;
@@ -2838,13 +2814,13 @@ int main(int argc, const char *argv[])  {
         // Compare every line above to the first one.
 
         const char *const *ARGV_REFERENCE = DUMMY_ARGS[0].d_argv_p;
-        const int          ARGC_REFERENCE = getArgc(ARGV_REFERENCE);
+        const int          ARGC_REFERENCE = u::getArgc(ARGV_REFERENCE);
 
         for (int i = 0; i < NUM_DUMMY_ARGS; ++i) {
             const int          LINE          = DUMMY_ARGS[i].d_line;
             const bool          IS_COMPATIBLE = DUMMY_ARGS[i].d_isCompatible;
             const char *const *ARGV          = DUMMY_ARGS[i].d_argv_p;
-            const int          ARGC          = getArgc(ARGV);
+            const int          ARGC          = u::getArgc(ARGV);
 
             if (veryVerbose) {
                 T_ P_(LINE) P(IS_COMPATIBLE)
@@ -2864,9 +2840,9 @@ int main(int argc, const char *argv[])  {
 
             LOOP_ASSERT(LINE, ARGC_REFERENCE == ARGC);
             LOOP_ASSERT(LINE,
-                        IS_COMPATIBLE == isCompatibleOrdering(ARGV,
-                                                              ARGV_REFERENCE,
-                                                              ARGC));
+                        IS_COMPATIBLE == u::isCompatibleOrdering(ARGV,
+                                                                ARGV_REFERENCE,
+                                                                ARGC));
         }
 
         if (verbose) cout << "\n\tTesting order of arguments." << endl;
@@ -2899,7 +2875,7 @@ int main(int argc, const char *argv[])  {
             const int          LINE        = ARGS[i].d_line;
             const int          SPEC_IDX    = ARGS[i].d_specIdx;
             const char *const *ARGV        = ARGS[i].d_argv_p;
-            const int          ARGC        = getArgc(ARGV);
+            const int          ARGC        = u::getArgc(ARGV);
             const int          NUM_SPEC    = SPECS[SPEC_IDX].d_numSpecTable;
             const OptionInfo  *SPEC        = SPECS[SPEC_IDX].d_specTable;
 
@@ -2945,7 +2921,7 @@ int main(int argc, const char *argv[])  {
 
             int iterations = 0, compatibleIterations = 0;
             do {
-                if (isCompatibleOrdering(argv, ARGV, ARGC)) {
+                if (u::isCompatibleOrdering(argv, ARGV, ARGC)) {
                     bsl::ostringstream oss;
                     Obj                mY(SPEC, NUM_SPEC, oss);
                     const Obj&         Y = mY;
@@ -3205,7 +3181,7 @@ int main(int argc, const char *argv[])  {
                           << "TESTING INVALID OPTION SPECS" << endl
                           << "============================" << endl;
 
-        bsls::Assert::setFailureHandler(&throwInvalidSpec);
+        bsls::Assert::setFailureHandler(&u::throwInvalidSpec);
 
         if (verbose) cout << "\tTesting invalid tags." << endl;
 
@@ -3252,22 +3228,33 @@ int main(int argc, const char *argv[])  {
                 TAG,                 // non-option
                 "SomeValidName",     // name
                 "Some description",  // description
-                createTypeInfo(Ot::e_BOOL),
+                u::createTypeInfo(Ot::e_BOOL),
                 OccurrenceInfo::e_OPTIONAL
               }
             };
 
             if (veryVerbose) { T_ T_ P_(LINE) P_(IS_VALID) P(TAG) }
 
+            bsl::stringstream ossValidate; ossValidate << endl; // match 'oss'
+
+            ASSERT(IS_VALID == Obj::isValidOptionSpecificationTable(
+                                                                 SPEC,
+                                                                 1,
+                                                                 ossValidate));
+            ASSERT(IS_VALID == Obj::isValidOptionSpecificationTable(
+                                                                 SPEC,
+                                                                 1));
+
             try {
                 Obj mX(SPEC, 1, oss);
             }
-            catch (const InvalidSpec& e) {
+            catch (const u::InvalidSpec& e) {
                 if (veryVerbose) { T_ T_ P(oss.str()) }
                 exceptionCaught = true;
             }
 
-            LOOP_ASSERT(LINE, !IS_VALID == exceptionCaught);
+            LOOP_ASSERT(LINE, !IS_VALID         == exceptionCaught);
+            LOOP_ASSERT(LINE, ossValidate.str() == oss.str());
         }
 
         if (verbose) cout << "\n\tTesting invalid specs." << endl;
@@ -3282,7 +3269,7 @@ int main(int argc, const char *argv[])  {
                               "",                              // non-option
                               "",                              // name
                               "Some description.",             // description
-                              createTypeInfo(Ot::e_BOOL),
+                              u::createTypeInfo(Ot::e_BOOL),
                               OccurrenceInfo::e_OPTIONAL
                           }  // Invalid name
                       }
@@ -3292,7 +3279,7 @@ int main(int argc, const char *argv[])  {
                               "",                              // non-option
                               "SomeName",                      // name
                               "",                              // description
-                              createTypeInfo(Ot::e_BOOL),
+                              u::createTypeInfo(Ot::e_BOOL),
                               OccurrenceInfo::e_OPTIONAL
                           }  // Invalid description
                       }
@@ -3302,7 +3289,7 @@ int main(int argc, const char *argv[])  {
                               "",                              // non-option
                               "SomeName",                      // name
                               "Some description",              // description
-                              createTypeInfo(Ot::e_BOOL),
+                              u::createTypeInfo(Ot::e_BOOL),
                               OccurrenceInfo::e_OPTIONAL
                           }  // Non-options cannot be of type 'bool'.
                       }
@@ -3312,11 +3299,11 @@ int main(int argc, const char *argv[])  {
                               "",                                // non-option
                               "SomeName",                        // name
                               "Some description",                // description
-                              createTypeInfo(Ot::e_CHAR),
-                              createOccurrenceInfo(
-                                               OccurrenceInfo::e_OPTIONAL,
-                                                 Ot::e_INT,
-                                                 &defaultInt)
+                              u::createTypeInfo(Ot::e_CHAR),
+                              u::createOccurrenceInfo(
+                                                    OccurrenceInfo::e_OPTIONAL,
+                                                    Ot::e_INT,
+                                                    &defaultInt)
                           }  // Type of default value does not match type info.
                       }
             },
@@ -3325,14 +3312,14 @@ int main(int argc, const char *argv[])  {
                               "s|long1",                         // non-option
                               "SomeName",                        // name
                               "Some description",                // description
-                              createTypeInfo(Ot::e_BOOL),
+                              u::createTypeInfo(Ot::e_BOOL),
                               OccurrenceInfo::e_OPTIONAL
                           },
                           {
                               "s|long2",                         // non-option
                               "SomeOtherName",                   // name
                               "Some description",                // description
-                              createTypeInfo(Ot::e_BOOL),
+                              u::createTypeInfo(Ot::e_BOOL),
                               OccurrenceInfo::e_OPTIONAL
                           }
                       }  // Short tags must be unique.
@@ -3342,14 +3329,14 @@ int main(int argc, const char *argv[])  {
                               "a|long",                          // non-option
                               "SomeName",                        // name
                               "Some description",                // description
-                              createTypeInfo(Ot::e_BOOL),
+                              u::createTypeInfo(Ot::e_BOOL),
                               OccurrenceInfo::e_OPTIONAL
                           },
                           {
                               "b|long",                          // non-option
                               "SomeOtherName",                   // name
                               "Some description",                // description
-                              createTypeInfo(Ot::e_BOOL),
+                              u::createTypeInfo(Ot::e_BOOL),
                               OccurrenceInfo::e_OPTIONAL
                           }
                       }  // Long tags must be unique.
@@ -3359,14 +3346,14 @@ int main(int argc, const char *argv[])  {
                               "",                                // non-option
                               "SomeCommonName",                  // name
                               "Some description",                // description
-                              createTypeInfo(Ot::e_BOOL),
+                              u::createTypeInfo(Ot::e_BOOL),
                               OccurrenceInfo::e_OPTIONAL
                           },
                           {
                               "",                                // non-option
                               "SomeCommonName",                  // name
                               "Some description",                // description
-                              createTypeInfo(Ot::e_BOOL),
+                              u::createTypeInfo(Ot::e_BOOL),
                               OccurrenceInfo::e_OPTIONAL
                           }
                       }  // Names must be unique.
@@ -3376,17 +3363,17 @@ int main(int argc, const char *argv[])  {
                               "",                                // non-option
                               "SomeCommonName",                  // name
                               "Some description",                // description
-                              createTypeInfo(Ot::e_INT),
-                              createOccurrenceInfo(
-                                               OccurrenceInfo::e_OPTIONAL,
-                                                 Ot::e_INT,
-                                                 &defaultInt)
+                              u::createTypeInfo(Ot::e_INT),
+                              u::createOccurrenceInfo(
+                                                    OccurrenceInfo::e_OPTIONAL,
+                                                    Ot::e_INT,
+                                                    &defaultInt)
                           },
                           {
                               "",                                // non-option
                               "SomeCommonName",                  // name
                               "Some description",                // description
-                              createTypeInfo(Ot::e_INT),
+                              u::createTypeInfo(Ot::e_INT),
                               OccurrenceInfo::e_REQUIRED
                           }
                       }  // Defaulted non-option argument cannot be followed by
@@ -3397,14 +3384,14 @@ int main(int argc, const char *argv[])  {
                               "",                                // non-option
                               "SomeCommonName",                  // name
                               "Some description",                // description
-                              createTypeInfo(Ot::e_INT_ARRAY),
+                              u::createTypeInfo(Ot::e_INT_ARRAY),
                               OccurrenceInfo::e_REQUIRED
                           },
                           {
                               "",                                // non-option
                               "SomeCommonName",                  // name
                               "Some description",                // description
-                              createTypeInfo(Ot::e_INT),
+                              u::createTypeInfo(Ot::e_INT),
                               OccurrenceInfo::e_REQUIRED
                           }
                       }  // Array non-options cannot be followed by other
@@ -3431,15 +3418,24 @@ int main(int argc, const char *argv[])  {
             bsl::stringstream oss; oss << endl; // for cleaner presentation
             bool              exceptionCaught = false;
 
+            bsl::stringstream ossValidate; ossValidate << endl; // match 'oss'
+
+            ASSERT(false == Obj::isValidOptionSpecificationTable(SPEC,
+                                                                 NUM_SPEC,
+                                                                 ossValidate));
+            ASSERT(false == Obj::isValidOptionSpecificationTable(SPEC,
+                                                                 NUM_SPEC));
+
             try {
                 Obj mX(SPEC, NUM_SPEC, oss);
             }
-            catch (const InvalidSpec& e) {
+            catch (const u::InvalidSpec& e) {
                 if (veryVerbose) { T_ T_ P(oss.str()) }
                 exceptionCaught = true;
             }
 
             LOOP_ASSERT(LINE, exceptionCaught);
+            LOOP_ASSERT(LINE, ossValidate.str() == oss.str());
         }
 #else
         if (verbose) cout << endl
@@ -3565,8 +3561,6 @@ int main(int argc, const char *argv[])  {
                           << "TESTING 'balcl::CommandLine'" << endl
                           << "===========================" << endl;
 
-        typedef balcl::CommandLine Obj;
-
         bslma::TestAllocator testAllocator(veryVeryVeryVerbose);
 
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -3590,29 +3584,31 @@ int main(int argc, const char *argv[])  {
 // BDE_VERIFY pragma: -TP21    // Loops must contain very verbose action
 // BDE_VERIFY pragma: -IND01   // Possibly mis-indented line
         for (int i = 0; i < 4;                          ++i) {
-        for (int l = 0; l < NUM_OPTION_TYPEINFO;        ++l) {
+        for (int t = 0; t < NUM_OPTION_TYPEINFO;        ++t) {
         for (int m = 0; m < NUM_OPTION_OCCURRENCES - 1; ++m) {
 
-            if (veryVerbose) { T_ P_(i) P_(l) P(m) }
+            if (veryVerbose) { T_ P_(i) P_(t) P(m) }
 
-            const int n = l % NUM_OPTION_DEFAULT_VALUES;
+            const int n = t % NUM_OPTION_DEFAULT_VALUES;
                 // Instead of:
                 //..
                 //  for (int n = 0; n < NUM_OPTION_DEFAULT_VALUES; ++n)
                 //..
                 // Valid only because of the way we organized the table data:
                 //..
-                   ASSERT(OPTION_TYPEINFO[l].d_type ==
+                   ASSERT(OPTION_TYPEINFO[t].d_type ==
                                               OPTION_DEFAULT_VALUES[n].d_type);
                 //..
             const char     *TAG        = OPTION_TAGS[i].d_tag_p;
             const char     *NAME       = "SOME UNIQUE NAME";
             const char     *DESC       = "SOME VERY LONG DESCRIPTION...";
-            const ElemType  TYPE       = OPTION_TYPEINFO[l].d_type;
-            void           *VARIABLE   = OPTION_TYPEINFO[l].d_linkedVariable_p;
-            void           *CONSTRAINT = OPTION_TYPEINFO[l].d_constraint_p;
+            const ElemType  TYPE       = OPTION_TYPEINFO[t].d_type;
+            void           *VARIABLE   = OPTION_TYPEINFO[t].d_linkedVariable_p;
+            void           *CONSTRAINT = OPTION_TYPEINFO[t].d_constraint_p;
 
-            const OccurrenceType OTYPE = OPTION_OCCURRENCES[l].d_type;
+            const OccurrenceType OTYPE = OPTION_OCCURRENCES[
+                                                    t % NUM_OPTION_OCCURRENCES]
+                                                                       .d_type;
 
             const void  *DEFAULT_VALUE = OPTION_DEFAULT_VALUES[n].d_value_p;
 
@@ -3620,10 +3616,14 @@ int main(int argc, const char *argv[])  {
                 continue;
             }
 
-            const TypeInfo       TYPE_INFO =
-                                    createTypeInfo(TYPE, VARIABLE, CONSTRAINT);
-            const OccurrenceInfo OCCURRENCE_INFO =
-                              createOccurrenceInfo(OTYPE, TYPE, DEFAULT_VALUE);
+            const TypeInfo       TYPE_INFO       = u::createTypeInfo(
+                                                                   TYPE,
+                                                                   VARIABLE,
+                                                                   CONSTRAINT);
+            const OccurrenceInfo OCCURRENCE_INFO = u::createOccurrenceInfo(
+                                                                OTYPE,
+                                                                TYPE,
+                                                                DEFAULT_VALUE);
 
             const balcl::OptionInfo OPTION_INFO = {
                 TAG,
@@ -3633,16 +3633,14 @@ int main(int argc, const char *argv[])  {
                 OCCURRENCE_INFO
             };
 
-            if (Ot::e_BOOL == TYPE_INFO.type()
-             && OPTION_INFO.d_tag.empty()) {
+            if (Ot::e_BOOL == TYPE_INFO.type() && OPTION_INFO.d_tag.empty()) {
                 // Flags cannot have an empty tag, or in other words
                 // non-options cannot be of type 'bool'.  Skip this.
 
                 continue;
             }
 
-            if (OccurrenceInfo::e_HIDDEN ==
-                                               OCCURRENCE_INFO.occurrenceType()
+            if (OccurrenceInfo::e_HIDDEN == OCCURRENCE_INFO.occurrenceType()
              && OPTION_INFO.d_tag.empty()) {
                 // A non-option argument cannot be hidden.  Skip this.
 
@@ -3657,7 +3655,7 @@ int main(int argc, const char *argv[])  {
 
             bsl::string arg;  const bsl::string& ARG = arg;
 
-            generateArgument(&arg, OPTION_INFO, i);
+            u::generateArgument(&arg, OPTION_INFO, i);
             arguments.push_back(ARG);
 
             // Guarantee unique names.
@@ -3676,7 +3674,7 @@ int main(int argc, const char *argv[])  {
         if (verbose) cout << "\n\tBuilt " << NUM_OPTIONS << " options."
                           << endl;
 
-        int  limit;
+        int  limit            = 0;
         bool arrayNonOption   = false;
         bool defaultNonOption = false;
 
@@ -3685,17 +3683,17 @@ int main(int argc, const char *argv[])  {
         for (int i = 0; i < NUM_OPTIONS; ++i) {
             if (veryVerbose) { T_ P(i) }
             limit = 0;
-            arrayNonOption = options[i].d_tag.empty() &&
-                                 Ot::isArrayType(options[i].d_typeInfo.type());
-            defaultNonOption = options[i].d_tag.empty() &&
-                                    options[i].d_defaultInfo.hasDefaultValue();
+              arrayNonOption = options[i].d_tag.empty()
+                             && Ot::isArrayType(options[i].d_typeInfo.type());
+            defaultNonOption =  options[i].d_tag.empty()
+                             && options[i].d_defaultInfo.hasDefaultValue();
 
             int j = ((i + 37) * (i + 101)) % NUM_OPTIONS;
-            while ((options[i].d_tag[0] == options[j].d_tag[0] &&
-                                                     !options[j].d_tag.empty())
-                || (arrayNonOption && options[j].d_tag.empty())
-                || (defaultNonOption && options[j].d_tag.empty() &&
-                                !options[j].d_defaultInfo.hasDefaultValue())) {
+            while ((options[i].d_tag[0] == options[j].d_tag[0]
+                                       && !options[j].d_tag.empty())
+                || (  arrayNonOption && options[j].d_tag.empty())
+                || (defaultNonOption && options[j].d_tag.empty()
+                 && !options[j].d_defaultInfo.hasDefaultValue())) {
                 // Tags (long and short, if not empty) must be distinct; if
                 // there is a previous non-option argument of array type then
                 // this cannot be a non-option; and if a previous non-option
@@ -3712,7 +3710,7 @@ int main(int argc, const char *argv[])  {
             if (limit == NUM_OPTIONS) {
                 break;
             }
-            options.push_back(options[j]);
+              options.push_back(  options[j]);
             arguments.push_back(arguments[j]);
         }
         if (limit == NUM_OPTIONS) {
@@ -3723,30 +3721,36 @@ int main(int argc, const char *argv[])  {
         if (verbose) cout << "\tAdded another (shuffled) "
                           << NUM_OPTIONS << " options." << endl;
 
+        ASSERT(static_cast<bsl::size_t>(2 * NUM_OPTIONS) ==   options.size());
+        ASSERT(static_cast<bsl::size_t>(2 * NUM_OPTIONS) == arguments.size());
+
         // Add third layer (for 3-option specs).
 
         for (int i = 0, j = NUM_OPTIONS; i < NUM_OPTIONS; ++i, ++j) {
             if (veryVerbose) { T_ P(i) }
             limit = 0;
-            arrayNonOption = (options[i].d_tag.empty() &&
-                                Ot::isArrayType(options[i].d_typeInfo.type()))
-                          || (options[j].d_tag.empty() &&
-                                Ot::isArrayType(options[j].d_typeInfo.type()));
-            defaultNonOption = (options[i].d_tag.empty() &&
-                                   options[i].d_defaultInfo.hasDefaultValue())
-                            || (options[j].d_tag.empty() &&
-                                   options[j].d_defaultInfo.hasDefaultValue());
+              arrayNonOption = (options[i].d_tag.empty()
+                             && Ot::isArrayType(options[i].d_typeInfo.type()))
+                            || (options[j].d_tag.empty()
+                             && Ot::isArrayType(options[j].d_typeInfo.type()));
+
+            defaultNonOption = (options[i].d_tag.empty()
+                             && options[i].d_defaultInfo.hasDefaultValue())
+                            || (options[j].d_tag.empty()
+                             && options[j].d_defaultInfo.hasDefaultValue());
 
             int k = ((i + 107) * (i + 293)) % NUM_OPTIONS;
-            while (options[i].d_name == options[k].d_name
-                || options[j].d_name == options[k].d_name
-                || (options[i].d_tag[0] == options[k].d_tag[0] &&
-                                                     !options[k].d_tag.empty())
-                || (options[j].d_tag[0] == options[k].d_tag[0] &&
-                                                     !options[k].d_tag.empty())
-                || (arrayNonOption && options[k].d_tag.empty())
-                || (defaultNonOption && options[k].d_tag.empty() &&
-                                !options[k].d_defaultInfo.hasDefaultValue())) {
+
+            while (  options[i].d_name == options[k].d_name
+                ||   options[j].d_name == options[k].d_name
+                || ( options[i].d_tag[0] == options[k].d_tag[0]
+                 && !options[k].d_tag.empty())
+                || ( options[j].d_tag[0] == options[k].d_tag[0]
+                 && !options[k].d_tag.empty())
+                || (   arrayNonOption && options[k].d_tag.empty())
+                || ( defaultNonOption && options[k].d_tag.empty()
+                 && !options[k].d_defaultInfo.hasDefaultValue())) {
+
                 // Names and tags must be distinct, if there is a previous
                 // non-option argument of array type then this cannot be a
                 // non-option argument, and if a previous non-option argument
@@ -3763,7 +3767,7 @@ int main(int argc, const char *argv[])  {
             if (limit == NUM_OPTIONS) {
                 break;
             }
-            options.push_back(options[k]);
+              options.push_back(  options[k]);
             arguments.push_back(arguments[k]);
         }
         if (limit == NUM_OPTIONS) {
@@ -3773,6 +3777,11 @@ int main(int argc, const char *argv[])  {
 
         if (verbose) cout << "\tAdded another (shuffled) "
                           << NUM_OPTIONS << " options." << endl;
+
+        ASSERT(static_cast<bsl::size_t>(3 * NUM_OPTIONS) ==   options.size());
+        ASSERT(static_cast<bsl::size_t>(3 * NUM_OPTIONS) == arguments.size());
+
+        const int MAX_OPTIONS = static_cast<int>(options.size());
 
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         // CASE 2 OF VALUE-SEMANTIC TEST DRIVER
@@ -3785,6 +3794,7 @@ int main(int argc, const char *argv[])  {
 // BDE_VERIFY pragma: -IND01   // Possibly mis-indented line
         for (int n = 0; n < 4;                         ++n) {
         for (int i = 0; i < (n ? NUM_OPTIONS - n : 1); ++i) {
+
             OptionInfo        specTable[4];
             const OptionInfo *SPEC_TABLE = specTable;
 
@@ -3798,18 +3808,23 @@ int main(int argc, const char *argv[])  {
             argPtrs.push_back(&(argStrings.back()[0]));
 
             for (int j = 0; j < n; ++j) {
-                specTable[j] = OPTIONS[i + j * NUM_OPTIONS];
+                int index = i + j * NUM_OPTIONS;
 
-                if (!ARGUMENTS[i + j * NUM_OPTIONS].empty()) {
+                ASSERTV(index, MAX_OPTIONS, 0     <= index);
+                ASSERTV(index, MAX_OPTIONS, index <  MAX_OPTIONS);
+
+                specTable[j] = OPTIONS[index];
+
+                if (!ARGUMENTS[index].empty()) {
                     const int   MAX_ARGC = 16;
                     const char *argv[MAX_ARGC];
 
                     int argc = -1;
-                    argStrings.push_back(ARGUMENTS[i + j * NUM_OPTIONS]);
-                    ASSERT(0 == parseCommandLine(&(argStrings.back()[0]),
-                                                 argc,
-                                                 argv,
-                                                 MAX_ARGC));
+                    argStrings.push_back(ARGUMENTS[index]);
+                    ASSERT(0 == u::parseCommandLine(&(argStrings.back()[0]),
+                                                    argc,
+                                                    argv,
+                                                    MAX_ARGC));
 
                     for (int k = 0; k < argc; ++k) {
                         argString += " ";
@@ -3831,6 +3846,8 @@ int main(int argc, const char *argv[])  {
                     T_ T_ T_ P_(k) P(argPtrs[k])
                 }
             }
+
+            ASSERT(Obj::isValidOptionSpecificationTable(SPEC_TABLE, n));
 
             Obj mX(SPEC_TABLE, n);  const Obj& X = mX;  // TEST HERE
 
@@ -3859,7 +3876,8 @@ int main(int argc, const char *argv[])  {
                            << "\t\t\tWith no exceptions." << endl;
 
         const bool HAS_BSLMA_ALLOCATOR_TRAIT =
-             bslalg::HasTrait<Obj, bslalg::TypeTraitUsesBslmaAllocator>::VALUE;
+                                         bslma::UsesBslmaAllocator<Obj>::value;
+
 
         ASSERT(HAS_BSLMA_ALLOCATOR_TRAIT);
 
@@ -3886,10 +3904,11 @@ int main(int argc, const char *argv[])  {
 
                         int argc = -1;
                         argStrings.push_back(ARGUMENTS[i + j * NUM_OPTIONS]);
-                        ASSERT(0 == parseCommandLine(&(argStrings.back()[0]),
-                                                     argc,
-                                                     argv,
-                                                     MAX_ARGC));
+                        ASSERT(0 == u::parseCommandLine(
+                                                       &(argStrings.back()[0]),
+                                                       argc,
+                                                       argv,
+                                                       MAX_ARGC));
 
                         for (int k = 0; k < argc; ++k) {
                             argString += " ";
@@ -3964,10 +3983,10 @@ int main(int argc, const char *argv[])  {
 
                     int argc = -1;
                     argStrings.push_back(ARGUMENTS[i + j * NUM_OPTIONS]);
-                    ASSERT(0 == parseCommandLine(&(argStrings.back()[0]),
-                                                 argc,
-                                                 argv,
-                                                 MAX_ARGC));
+                    ASSERT(0 == u::parseCommandLine(&(argStrings.back()[0]),
+                                                    argc,
+                                                    argv,
+                                                    MAX_ARGC));
 
                     for (int k = 0; k < argc; ++k) {
                         argPtrs.push_back(argv[k]);
@@ -3995,8 +4014,8 @@ int main(int argc, const char *argv[])  {
 
             }  BSLMA_TESTALLOCATOR_EXCEPTION_TEST_END
 
-            ASSERT(0 == testAllocator.numMismatches());
-            ASSERT(0 == testAllocator.numBytesInUse());
+            ASSERT(0 ==    testAllocator.numBytesInUse());
+            ASSERT(0 ==    testAllocator.numMismatches());
             ASSERT(0 == defaultAllocator.numMismatches());
         }
 
@@ -4027,10 +4046,11 @@ int main(int argc, const char *argv[])  {
 
                         int argc = -1;
                         argStrings.push_back(ARGUMENTS[i + j * NUM_OPTIONS]);
-                        ASSERT(0 == parseCommandLine(&(argStrings.back()[0]),
-                                                     argc,
-                                                     argv,
-                                                     MAX_ARGC));
+                        ASSERT(0 == u::parseCommandLine(
+                                                       &(argStrings.back()[0]),
+                                                       argc,
+                                                       argv,
+                                                       MAX_ARGC));
 
                         for (int k = 0; k < argc; ++k) {
                             argString += " ";
@@ -4096,10 +4116,11 @@ int main(int argc, const char *argv[])  {
 
                         int argc = -1;
                         argStrings.push_back(ARGUMENTS[i + j * NUM_OPTIONS]);
-                        ASSERT(0 == parseCommandLine(&(argStrings.back()[0]),
-                                                     argc,
-                                                     argv,
-                                                     MAX_ARGC));
+                        ASSERT(0 == u::parseCommandLine(
+                                                       &(argStrings.back()[0]),
+                                                       argc,
+                                                       argv,
+                                                       MAX_ARGC));
 
                         for (int k = 0; k < argc; ++k) {
                             argString += " ";
@@ -4169,10 +4190,10 @@ int main(int argc, const char *argv[])  {
 
                     int argc = -1;
                     argStrings.push_back(ARGUMENTS[i + j * NUM_OPTIONS]);
-                    ASSERT(0 == parseCommandLine(&(argStrings.back()[0]),
-                                                 argc,
-                                                 argv,
-                                                 MAX_ARGC));
+                    ASSERT(0 == u::parseCommandLine(&(argStrings.back()[0]),
+                                                    argc,
+                                                    argv,
+                                                    MAX_ARGC));
 
                     for (int k = 0; k < argc; ++k) {
                         argString += " ";
@@ -4214,7 +4235,7 @@ int main(int argc, const char *argv[])  {
                             int argc = -1;
                             argStrings2.push_back(
                                                ARGUMENTS[h + j * NUM_OPTIONS]);
-                            ASSERT(0 == parseCommandLine(
+                            ASSERT(0 == u::parseCommandLine(
                                                       &(argStrings2.back()[0]),
                                                       argc,
                                                       argv,
@@ -4310,10 +4331,10 @@ int main(int argc, const char *argv[])  {
 
                     int argc = -1;
                     argStrings.push_back(ARGUMENTS[i + j * NUM_OPTIONS]);
-                    ASSERT(0 == parseCommandLine(&(argStrings.back()[0]),
-                                                 argc,
-                                                 argv,
-                                                 MAX_ARGC));
+                    ASSERT(0 == u::parseCommandLine(&(argStrings.back()[0]),
+                                                    argc,
+                                                    argv,
+                                                    MAX_ARGC));
 
                     for (int k = 0; k < argc; ++k) {
                         argString += " ";
@@ -4382,10 +4403,10 @@ int main(int argc, const char *argv[])  {
 
                     int argc = -1;
                     argStrings.push_back(ARGUMENTS[i + j * NUM_OPTIONS]);
-                    ASSERT(0 == parseCommandLine(&(argStrings.back()[0]),
-                                                 argc,
-                                                 argv,
-                                                 MAX_ARGC));
+                    ASSERT(0 == u::parseCommandLine(&(argStrings.back()[0]),
+                                                    argc,
+                                                    argv,
+                                                    MAX_ARGC));
 
                     for (int k = 0; k < argc; ++k) {
                         argString += " ";
@@ -4459,10 +4480,10 @@ int main(int argc, const char *argv[])  {
 
                     int argc = -1;
                     argStrings.push_back(ARGUMENTS[i + j * NUM_OPTIONS]);
-                    ASSERT(0 == parseCommandLine(&(argStrings.back()[0]),
-                                                 argc,
-                                                 argv,
-                                                 MAX_ARGC));
+                    ASSERT(0 == u::parseCommandLine(&(argStrings.back()[0]),
+                                                    argc,
+                                                    argv,
+                                                    MAX_ARGC));
 
                     for (int k = 0; k < argc; ++k) {
                         argPtrs.push_back(argv[k]);
@@ -4546,10 +4567,10 @@ int main(int argc, const char *argv[])  {
 
                     int argc = -1;
                     argStrings.push_back(ARGUMENTS[i + j * NUM_OPTIONS]);
-                    ASSERT(0 == parseCommandLine(&(argStrings.back()[0]),
-                                                 argc,
-                                                 argv,
-                                                 MAX_ARGC));
+                    ASSERT(0 == u::parseCommandLine(&(argStrings.back()[0]),
+                                                    argc,
+                                                    argv,
+                                                    MAX_ARGC));
 
                     for (int k = 0; k < argc; ++k) {
                         argString += " ";
@@ -4589,7 +4610,7 @@ int main(int argc, const char *argv[])  {
                             int argc = -1;
                             argStrings2.push_back(
                                                ARGUMENTS[h + j * NUM_OPTIONS]);
-                            ASSERT(0 == parseCommandLine(
+                            ASSERT(0 == u::parseCommandLine(
                                                       &(argStrings2.back()[0]),
                                                       argc,
                                                       argv,
@@ -4689,10 +4710,10 @@ int main(int argc, const char *argv[])  {
 
                     int argc = -1;
                     argStrings.push_back(ARGUMENTS[i + j * NUM_OPTIONS]);
-                    ASSERT(0 == parseCommandLine(&(argStrings.back()[0]),
-                                                 argc,
-                                                 argv,
-                                                 MAX_ARGC));
+                    ASSERT(0 == u::parseCommandLine(&(argStrings.back()[0]),
+                                                    argc,
+                                                    argv,
+                                                    MAX_ARGC));
 
                     for (int k = 0; k < argc; ++k) {
                         argString += " ";
@@ -4858,10 +4879,11 @@ int main(int argc, const char *argv[])  {
                         const char *argv[MAX_ARGC];
 
                         int argc = -1;
-                        ASSERT(0 == parseCommandLine(&(argStrings.back()[0]),
-                                                     argc,
-                                                     argv,
-                                                     MAX_ARGC));
+                        ASSERT(0 == u::parseCommandLine(
+                                                       &(argStrings.back()[0]),
+                                                       argc,
+                                                       argv,
+                                                       MAX_ARGC));
 
                         for (int k = 0; k < argc; ++k) {
                             argString += " ";
@@ -5177,26 +5199,40 @@ int main(int argc, const char *argv[])  {
 
         if (verbose) cout << "\n\tTesting additional constructors." << endl;
 
+        const int INDEX0 = NUM_OPTIONS * 0;
+        const int INDEX1 = NUM_OPTIONS * 1;
+        const int INDEX2 = NUM_OPTIONS * 2;
+
+        const char *ARGS[] = { "E"                 // OPTIONS[INDEX0]
+                             , "--bb"              // OPTIONS[INDEX1]
+                             , "987654321"         // "             "
+                             , "--bb"              // "             "
+                             , "192837465"         // "             "
+                             , "--cdefghijklmab"   // OPTIONS[INDEX2]
+                             };
+
         if (veryVerbose) cout << "\tLength 1" << endl;
         {
             bsl::ostringstream ossX, ossY;
 
-            OptionInfo       mTable[] = { OPTIONS[0] };
-            const OptionInfo  Table[] = { OPTIONS[0] };
+            OptionInfo       mTable[] = { OPTIONS[INDEX0] };
+            const OptionInfo  Table[] = { OPTIONS[INDEX0] };
 
             int NUM_OPTIONS = sizeof Table / sizeof *Table;
+
+            ASSERT(Obj::isValidOptionSpecificationTable(mTable));
+            ASSERT(Obj::isValidOptionSpecificationTable( Table));
 
             Obj mX(mTable, ossX);         const Obj& X = mX;
             Obj mY( Table, ossY);         const Obj& Y = mY;
             Obj mZ( Table, NUM_OPTIONS);  const Obj& Z = mZ;
-
 
             ASSERT("" == ossX.str());
             ASSERT("" == ossY.str());
 
             // Selected to satisfy 'OPTIONS[0]'.
             const char *Argv[] = { "aProgramName"
-                                 , "A"
+                                 , ARGS[0]
                                  };
 
             const bsl::size_t Argc = sizeof Argv / sizeof *Argv;
@@ -5217,14 +5253,17 @@ int main(int argc, const char *argv[])  {
         {
             bsl::ostringstream ossX, ossY;
 
-            OptionInfo       mTable[] = { OPTIONS[0]
-                                        , OPTIONS[1]
+            OptionInfo       mTable[] = { OPTIONS[INDEX0]
+                                        , OPTIONS[INDEX1]
                                         };
-            const OptionInfo  Table[] = { OPTIONS[0]
-                                        , OPTIONS[1]
+            const OptionInfo  Table[] = { OPTIONS[INDEX0]
+                                        , OPTIONS[INDEX1]
                                         };
 
             int NUM_OPTIONS = sizeof Table / sizeof *Table;
+
+            ASSERT(Obj::isValidOptionSpecificationTable(mTable));
+            ASSERT(Obj::isValidOptionSpecificationTable( Table));
 
             Obj mX(mTable, ossX);         const Obj& X = mX;
             Obj mY( Table, ossY);         const Obj& Y = mY;
@@ -5235,7 +5274,11 @@ int main(int argc, const char *argv[])  {
 
             // Selected to satisfy 'OPTIONS[1]'.
             const char *Argv[] = { "anotherProgramName"
-                                 , "Z"
+                                 , ARGS[0]
+                                 , ARGS[1]
+                                 , ARGS[2]
+                                 , ARGS[3]
+                                 , ARGS[4]
                                  };
 
             const bsl::size_t Argc = sizeof Argv / sizeof *Argv;
@@ -5254,24 +5297,21 @@ int main(int argc, const char *argv[])  {
 
         if (veryVerbose) cout << "\tLength 3" << endl;
         {
-#if  defined(BSLS_PLATFORM_CPU_64_BIT) || defined(BSLS_PLATFORM_CMP_MSVC)
-            if (veryVerbose) cout << "\t\tSkipped for 64-bit platforms or MSVC"
-	                          << endl;
-#else
             bsl::ostringstream ossX, ossY;
 
-            OptionInfo       mTable[] = { OPTIONS[0]
-                                        , OPTIONS[1]
-                                        , OPTIONS[4]
+            OptionInfo       mTable[] = { OPTIONS[INDEX0]
+                                        , OPTIONS[INDEX1]
+                                        , OPTIONS[INDEX2]
                                         };
-            const OptionInfo  Table[] = { OPTIONS[0]
-                                        , OPTIONS[1]
-                                        , OPTIONS[4]
+            const OptionInfo  Table[] = { OPTIONS[INDEX0]
+                                        , OPTIONS[INDEX1]
+                                        , OPTIONS[INDEX2]
                                         };
-                // Note that 'OPTIONS' 2 and 3' (both required non-options) are
-                // incompatible with 'OPTIONS' 0 and 1.
 
             int  NUM_OPTIONS = sizeof Table / sizeof *Table;
+
+            ASSERT(Obj::isValidOptionSpecificationTable(mTable));
+            ASSERT(Obj::isValidOptionSpecificationTable( Table));
 
             Obj mX(mTable, ossX);         const Obj& X = mX;
             Obj mY( Table, ossY);         const Obj& Y = mY;
@@ -5280,9 +5320,13 @@ int main(int argc, const char *argv[])  {
             ASSERT("" == ossX.str());
             ASSERT("" == ossY.str());
 
-            // Selected to satisfy 'OPTIONS[4]'.
             const char *Argv[] = { "yetAnotherProgramName"
-                                 , "3.14"
+                                 , ARGS[0]
+                                 , ARGS[1]
+                                 , ARGS[2]
+                                 , ARGS[3]
+                                 , ARGS[4]
+                                 , ARGS[5]
                                  };
 
             const bsl::size_t Argc = sizeof Argv / sizeof *Argv;
@@ -5297,19 +5341,18 @@ int main(int argc, const char *argv[])  {
 
             ASSERT(X == Y);
             ASSERT(Y == Z);
-#endif // 'BSLS_PLATFORM_CPU_64_BIT'
         }
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
       } break;
       case 2: {
         // --------------------------------------------------------------------
-        // TESTING 'parseCommandLine' TESTING UTILITY
+        // TESTING 'u::parseCommandLine' TESTING UTILITY
         //   Exercise the basic functionality.
         //
         // Concerns:
-        //: 1 That the 'parseCommandLine' testing utility function separates a
-        //:   command line as needed into its argc and argv.
+        //: 1 That the 'u::parseCommandLine' testing utility function separates
+        //:   a command line as needed into its 'argc' and 'argv'.
         //
         // Plan:
         //: 1 It is enough to test with zero, one, or two arguments on the
@@ -5318,13 +5361,13 @@ int main(int argc, const char *argv[])  {
         //:   trailer or both.
         //
         // Testing:
-        //   TESTING 'parseCommandLine' TESTING UTILITY
+        //   TESTING 'u::parseCommandLine' TESTING UTILITY
         // --------------------------------------------------------------------
 
         if (verbose) cout
-                       << endl
-                       << "TESTING 'parseCommandLine' TESTING UTILITY" << endl
-                       << "==========================================" << endl;
+                    << endl
+                    << "TESTING 'u::parseCommandLine' TESTING UTILITY" << endl
+                    << "=============================================" << endl;
 
         const char *ONECMD[] = { "oneCommand" };
         const char *TWOCMD[] = { "two", "commands" };
@@ -5374,8 +5417,8 @@ int main(int argc, const char *argv[])  {
                 if (veryVerbose) { T_ P_(LINE) P(cmdLine) }
 
                 int         argc;
-                const char *argv[MAX_ARGS];
-                const int   ret = parseCommandLine(cmdLine, argc, argv, 10);
+                const char *argv[u::MAX_ARGS];
+                const int   ret = u::parseCommandLine(cmdLine, argc, argv, 10);
 
                 LOOP_ASSERT(LINE, RET  == ret);
                 if (0 == ret) {
@@ -5395,8 +5438,8 @@ int main(int argc, const char *argv[])  {
                 if (veryVerbose) { T_ P_(LINE) P(cmdLine) }
 
                 int         argc;
-                const char *argv[MAX_ARGS];
-                const int   ret = parseCommandLine(cmdLine, argc, argv, 10);
+                const char *argv[u::MAX_ARGS];
+                const int   ret = u::parseCommandLine(cmdLine, argc, argv, 10);
 
                 LOOP_ASSERT(LINE, RET  == ret);
                 if (0 == ret) {
@@ -5416,8 +5459,8 @@ int main(int argc, const char *argv[])  {
                 if (veryVerbose) { T_ P_(LINE) P(cmdLine) }
 
                 int         argc;
-                const char *argv[MAX_ARGS];
-                const int   ret = parseCommandLine(cmdLine, argc, argv, 10);
+                const char *argv[u::MAX_ARGS];
+                const int   ret = u::parseCommandLine(cmdLine, argc, argv, 10);
 
                 LOOP_ASSERT(LINE, RET  == ret);
                 if (0 == ret) {
@@ -5438,9 +5481,9 @@ int main(int argc, const char *argv[])  {
                 if (veryVerbose) { T_ P_(LINE) P(cmdLine) }
 
                 int         argc;
-                const char *argv[MAX_ARGS];
+                const char *argv[u::MAX_ARGS];
 
-                const int ret = parseCommandLine(cmdLine, argc, argv, 10);
+                const int ret = u::parseCommandLine(cmdLine, argc, argv, 10);
                 LOOP_ASSERT(LINE, RET  == ret);
                 if (0 == ret) {
                     LOOP_ASSERT(LINE, ARGC == argc);

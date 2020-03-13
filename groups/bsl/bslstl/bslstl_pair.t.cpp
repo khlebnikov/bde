@@ -71,6 +71,23 @@
 # define BSLSTL_PAIR_DISABLE_MOVEONLY_TESTING_ON_VC2013 1
 #endif
 
+#if !defined(BSLSTL_PAIR_DO_NOT_DEFAULT_THE_DEFAULT_CONSTRUCTOR)              \
+  && defined(BSLS_COMPILERFEATURES_SUPPORT_TRAITS_HEADER)
+// The presence of a default constructor of a pair is determined by the
+// default-constructibility of its consituent parts on sufficiently complete
+// C++11 or later compilers (in C++11 or later mode).  We need the presence of
+// the 'is_default_constructible' type trait to be able to test the
+// conditional presence of the 'pair' default constructor.  We should have
+// checked for 'BSLS_LIBRARYFEATURES_HAS_IS_DEFAULT_CONSTRUCTIBLE' instead of
+// 'BSLS_COMPILERFEATURES_SUPPORT_TRAITS_HEADER', but there is no such thing.
+// So if you are trying to build this on a new C++11 compiler (like an AIX or
+// a Solaris) and you get that 'std::is_default_constructible' does not exist,
+// you will need to add some more conditions above.  On all C++11 compilers we
+// support in 2020, if '<type_traits>' exists it does define the required
+// 'is_default_constructible' trait and it is sufficiently functional.
+# define BSLSTL_PAIR_TEST_CONDITIONAL_DEFAULT_CTOR 1
+#endif
+
 using namespace BloombergLP;
 using bsls::NameOf;
 
@@ -412,6 +429,8 @@ template <class TYPE, int ALLOCATOR_ACCESSOR_CLASS =
               || bsl::is_same<TYPE, bsltf::AllocTestType>::value
               || bsl::is_same<TYPE, bsltf::MovableAllocTestType>::value
               || bsl::is_same<TYPE, bsltf::MoveOnlyAllocTestType>::value
+              || bsl::is_same<TYPE,
+                                bsltf::WellBehavedMoveOnlyAllocTestType>::value
               || bsl::is_same<TYPE, AlBase>::value
               || bsl::is_same<TYPE, AlDerived>::value)
               ? 1    // 'allocator()'
@@ -457,10 +476,12 @@ bool allocatorMatches(const bsl::pair<U, V>& object, bslma::Allocator *alloc)
 
 template <class TYPE>
 struct IsMoveAware : bsl::integral_constant<
-                      bool,
-                      bsl::is_same<TYPE, bsltf::MovableTestType>::value      ||
-                      bsl::is_same<TYPE, bsltf::MovableAllocTestType>::value ||
-                      bsl::is_same<TYPE, bsltf::MoveOnlyAllocTestType>::value>
+                     bool,
+                     bsl::is_same<TYPE, bsltf::MovableTestType>::value      ||
+                     bsl::is_same<TYPE, bsltf::MovableAllocTestType>::value ||
+                     bsl::is_same<TYPE, bsltf::MoveOnlyAllocTestType>::value ||
+                     bsl::is_same<TYPE,
+                               bsltf::WellBehavedMoveOnlyAllocTestType>::value>
 {};
 
 template <class TYPE>
@@ -5494,6 +5515,46 @@ struct TupleConversionDriver
 };
 #endif
 
+#if defined(BSLSTL_PAIR_TEST_CONDITIONAL_DEFAULT_CTOR)
+
+namespace IsDefaultConstructibleTestTypes {
+
+                // Types to Test Default Constructibility
+
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_DELETED_FUNCTIONS
+    struct DeletedDefault {
+        DeletedDefault() = delete;
+    };
+
+    struct DeletedDefault2 : DeletedDefault {
+    };
+#endif
+
+    struct NoDefault {
+        NoDefault(int);
+    };
+
+    struct NoDefault2 : NoDefault {};
+
+    struct Empty {};
+
+    struct DefArgDefault {
+        DefArgDefault(int * = 0);
+    };
+
+    struct ExpDefArgDef {
+        explicit ExpDefArgDef(int * = 0);
+    };
+
+    class PrivDefault {
+        PrivDefault();
+    };
+
+    class PrivDefault2 : public PrivDefault {
+    };
+}  // close namespace IsDefaultConstructibleTestTypes
+#endif
+
 //=============================================================================
 //                              MAIN PROGRAM
 //-----------------------------------------------------------------------------
@@ -6076,6 +6137,74 @@ int main(int argc, char *argv[])
             ASSERTV(F.second.data(), 42 == F.second.data());
 
         }
+
+        if (verbose) printf(
+                         "\t\twith well behaved move-only type as 'second'\n");
+        {
+            typedef bsltf::WellBehavedMoveOnlyAllocTestType WBMoveOnly;
+
+            typedef bsl::pair<int&, WBMoveOnly>    ObjL;
+
+            bslma::Allocator *const pDA = &defaultMainAllocator;
+            bslma::TestAllocator    ta("Managed 'first'", veryVeryVeryVerbose);
+
+            int a = 13;
+            int b = 42;
+
+            if (veryVerbose) printf("\t\t... without allocators\n");
+
+            if (veryVerbose) printf("\t\tconstruct with two arguments\n");
+
+            ObjL mB(a, WBMoveOnly(b, &ta));  const ObjL& B = mB;
+
+            ASSERTV(B.first,  13 == B.first);
+            ASSERTV(pDA, B.second.allocator(), pDA == B.second.allocator());
+            ASSERTV(&ta, B.second.allocator(), &ta != B.second.allocator());
+            ASSERTV(B.second.data(), 42 == B.second.data());
+
+            if (veryVerbose) printf("\t\tmove constructor\n");
+
+            ObjL mE = MoveUtil::move(mB);     const ObjL& E = mE;
+
+            ASSERTV(E.first,  13 == E.first);
+            ASSERTV(pDA, E.second.allocator(), pDA == E.second.allocator());
+            ASSERTV(E.second.data(), 42 == E.second.data());
+
+            if (veryVerbose) printf("\t\tmove-assign from 'pair'\n");
+
+            mB = MoveUtil::move(mE);
+
+            ASSERTV(B.first,  13 == B.first);
+            ASSERTV(B.second.data(), 42 == B.second.data());
+            ASSERTV(E.first,  13 == E.first);
+            ASSERTV(E.second.data(), 0 == E.second.data());
+
+            if (veryVerbose) printf("\t\tcomparison operators\n");
+
+            ASSERT( (B == B));
+            ASSERT(!(B != B));
+
+
+            if (veryVerbose) printf("\t\t... passing allocators\n");
+
+            if (veryVerbose) printf("\t\tconstruct with two arguments\n");
+
+            ObjL mC(a, WBMoveOnly(b), &ta);  const ObjL& C = mC;
+
+            ASSERTV(C.first,  13 == C.first);
+            ASSERTV(pDA, C.second.allocator(), pDA != C.second.allocator());
+            ASSERTV(&ta, C.second.allocator(), &ta == C.second.allocator());
+            ASSERTV(C.second.data(), 42 == C.second.data());
+
+            if (veryVerbose) printf("\t\tmove constructor\n");
+
+            ObjL mF(MoveUtil::move(mC), &ta);     const ObjL& F = mF;
+
+            ASSERTV(F.first,  13 == F.first);
+            ASSERTV(&ta, F.second.allocator(), &ta == F.second.allocator());
+            ASSERTV(F.second.data(), 42 == F.second.data());
+
+        }
 #endif
 
         if (verbose) printf("\t\twith move-optimized type as 'second'\n");
@@ -6450,6 +6579,92 @@ int main(int argc, char *argv[])
         if (verbose) printf("\t\twith array of 'int' for 'first'\n");
         {
             typedef bsl::pair<int[3], bsltf::MoveOnlyAllocTestType> ObjL;
+
+            bslma::Allocator *const pDA = &defaultMainAllocator;
+            bslma::TestAllocator    ta("'first' array", veryVeryVeryVerbose);
+
+            if (veryVerbose) printf("\t\tdefault constructor\n");
+
+            ObjL mA;  const ObjL& A = mA;
+
+            for (int i = 0; i != 3; ++i) {
+                ASSERTV(i, A.first[i],  0 == A.first[i]);
+            }
+            ASSERTV(pDA, A.second.allocator(), pDA == A.second.allocator());
+            ASSERTV(A.second.data(), 0 == A.second.data());
+
+            mA.first[0] = 9;
+            mA.first[1] = 99;
+            mA.first[2] = 999;
+            mA.second.setData(9999);
+
+            if (veryVerbose) printf("\t\tmove constructor\n");
+
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES)
+            // Arrays do not move using BDE emulated move semantics, so this
+            // test would fail to compile.
+
+            ObjL mC = MoveUtil::move(mA);     const ObjL& C = mC;
+
+            // moving an array of 'int's is the same as a copy
+            for (int i = 0; i != 3; ++i) {
+                ASSERTV(i, A.first[i], C.first[i], A.first[i] == C.first[i]);
+            }
+            // verify 'second' has moved correctly
+            ASSERTV(pDA, C.second.allocator(), pDA == C.second.allocator());
+            ASSERTV(C.second.data(), 9999 == C.second.data());
+            ASSERTV(pDA, A.second.allocator(), pDA == A.second.allocator());
+            ASSERTV(A.second.data(), 0 == A.second.data());
+#endif // BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+
+            if (veryVerbose) printf(
+                                  "\t\tallocator-aware default constructor\n");
+
+            ObjL mD(&ta);  const ObjL& D = mD;
+
+            for (int i = 0; i != 3; ++i) {
+                ASSERTV(i, D.first[i],  0 == D.first[i]);
+            }
+            ASSERTV(pDA, D.second.allocator(), &ta == D.second.allocator());
+            ASSERTV(D.second.data(), 0 == D.second.data());
+
+            mD.first[0] = 8;
+            mD.first[1] = 88;
+            mD.first[2] = 888;
+            mD.second.setData(8888);
+
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES)
+            // Arrays do not move using BDE emulated move semantics, so this
+            // test would fail to compile.
+
+#if 0   //  TBD: need to forward directly to the move-constructor for the
+        //  'FirstBase' class and not try to pass an array by reference as an
+        //  argument, or this case will not compile.  Requires more work in the
+        //  component header.
+
+            if (veryVerbose) printf("\t\tallocator-aware move constructor\n");
+
+            ObjL mF(MoveUtil::move(mD), &ta);   const ObjL& F = mF;
+
+            // moving an array of 'int's is the same as a copy
+            for (int i = 0; i != 3; ++i) {
+                ASSERTV(i, D.first[i], F.first[i], D.first[i] == F.first[i]);
+            }
+            // verify 'second' has moved correctly
+            ASSERTV(pDA, F.second.allocator(), pDA == F.second.allocator());
+            ASSERTV(F.second.data(), 8888 == F.second.data());
+            ASSERTV(pDA, D.second.allocator(), pDA == D.second.allocator());
+            ASSERTV(D.second.data(), 0 == D.second.data());
+#endif
+#endif // BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+        }
+#endif // BSLSTL_PAIR_DISABLE_MOVEONLY_TESTING_ON_VC2013
+
+#if !defined(BSLSTL_PAIR_DISABLE_MOVEONLY_TESTING_ON_VC2013)
+        if (verbose) printf("\t\twith array of 'int' for 'first'\n");
+        {
+            typedef bsl::pair<int[3], bsltf::WellBehavedMoveOnlyAllocTestType>
+                                                                          ObjL;
 
             bslma::Allocator *const pDA = &defaultMainAllocator;
             bslma::TestAllocator    ta("'first' array", veryVeryVeryVerbose);
@@ -6985,6 +7200,55 @@ int main(int argc, char *argv[])
             ASSERTV(&ta, X.second.allocator(), &ta == X.second.allocator());
             ASSERTV(X.second.data(), 0 == X.second.data());
 
+            int *pI = new(ta) int(13);
+
+            bslma::ManagedPtr<int> managed(pI, &ta);
+
+            ObjL mY(managed, 42, &ta);   const ObjL& Y = mY;
+
+            ASSERTV(Y.first.get(), pI == Y.first.get());
+            ASSERTV(&ta, Y.second.allocator(), &ta == Y.second.allocator());
+            ASSERTV(Y.second.data(), 42 == Y.second.data());
+
+            mX = MoveUtil::move(mY);
+            ASSERTV(&ta, X.second.allocator(), &ta == X.second.allocator());
+
+            ASSERTV(X.first.get(), pI == X.first.get());
+            ASSERTV(X.second.data(), 42 == X.second.data());
+            ASSERTV(Y.first.get(), 0 == Y.first.get());
+            ASSERTV(Y.second.data(), 0 == Y.second.data());
+
+            mX.swap(mY);
+            ASSERTV(&ta, X.second.allocator(), &ta == X.second.allocator());
+            ASSERTV(&ta, Y.second.allocator(), &ta == Y.second.allocator());
+
+            ASSERTV(X.first.get(), 0 == X.first.get());
+            ASSERTV(X.second.data(), 0 == X.second.data());
+            ASSERTV(Y.first.get(), pI == Y.first.get());
+            ASSERTV(Y.second.data(), 42 == Y.second.data());
+
+            ObjL mZ(MoveUtil::move(mY), &ta);   const ObjL& Z = mZ;
+
+            ASSERTV(Z.first.get(), pI == Z.first.get());
+            ASSERTV(&ta, Z.second.allocator(), &ta == Z.second.allocator());
+            ASSERTV(Z.second.data(), 42 == Z.second.data());
+            ASSERTV(Y.first.get(), 0 == Y.first.get());
+            ASSERTV(Y.second.data(), 0 == Y.second.data());
+        }
+
+        if (verbose) printf(
+                         "\t\twith well-behaved move-only type as 'second'\n");
+        {
+            typedef bsl::pair<bslma::ManagedPtr<int>,
+                              bsltf::WellBehavedMoveOnlyAllocTestType>  ObjL;
+
+            bslma::TestAllocator ta("Managed 'first'", veryVeryVeryVerbose);
+
+            ObjL mX(&ta);   const ObjL& X = mX;
+
+            ASSERTV(X.first.get(), 0 == X.first.get());
+            ASSERTV(&ta, X.second.allocator(), &ta == X.second.allocator());
+            ASSERTV(X.second.data(), 0 == X.second.data());
 
             int *pI = new(ta) int(13);
 
@@ -7079,6 +7343,46 @@ int main(int argc, char *argv[])
         if (verbose) printf("\t\twith move-only type as 'first'\n");
         {
             typedef bsl::pair<bsltf::MoveOnlyAllocTestType,
+                              bslma::ManagedPtr<int> >      ObjR;
+
+            bslma::TestAllocator ta("Managed 'second'", veryVeryVeryVerbose);
+
+            ObjR mX(&ta);   const ObjR& X = mX;
+
+            ASSERTV(&ta, X.first.allocator(), &ta == X.first.allocator());
+            ASSERTV(X.first.data(), 0 == X.first.data());
+            ASSERTV(X.second.get(), 0 == X.second.get());
+
+            int *pI = new(ta) int(13);
+
+            bslma::ManagedPtr<int> managed(pI, &ta);
+
+            ObjR mY(42, managed, &ta);   const ObjR& Y = mY;
+
+            ASSERTV(&ta, Y.first.allocator(), &ta == Y.first.allocator());
+            ASSERTV(Y.first.data(), 42 == Y.first.data());
+            ASSERTV(Y.second.get(), pI == Y.second.get());
+
+            mX = MoveUtil::move(mY);
+
+            ASSERTV(X.first.data(), 42 == X.first.data());
+            ASSERTV(X.second.get(), pI == X.second.get());
+            ASSERTV(Y.first.data(), 0 == Y.first.data());
+            ASSERTV(Y.second.get(), 0 == Y.second.get());
+
+            ObjR mZ(MoveUtil::move(mX), &ta);   const ObjR& Z = mZ;
+
+            ASSERTV(&ta, Z.first.allocator(), &ta == Z.first.allocator());
+            ASSERTV(Z.first.data(), 42 == Z.first.data());
+            ASSERTV(Z.second.get(), pI == Z.second.get());
+            ASSERTV(X.first.data(), 0 == X.first.data());
+            ASSERTV(X.second.get(), 0 == X.second.get());
+        }
+
+        if (verbose) printf(
+                          "\t\twith well behaved move-only type as 'first'\n");
+        {
+            typedef bsl::pair<bsltf::WellBehavedMoveOnlyAllocTestType,
                               bslma::ManagedPtr<int> >      ObjR;
 
             bslma::TestAllocator ta("Managed 'second'", veryVeryVeryVerbose);
@@ -7524,13 +7828,8 @@ int main(int argc, char *argv[])
                       testCase14,
                       BSLTF_TEMPLATETESTFACILITY_TEST_TYPES_REGULAR);
 
-        RUN_EACH_TYPE(MetaTestDriver,
-                      testCase14,
-                      bsltf::MovableTestType,
-                      bsltf::MovableAllocTestType);
-
-                   // bsltf::MoveOnlyAllocTestType -- test case
-                   // needs copy c'tor.
+                      // 'bsltf::MoveOnlyAllocTestType' test disabled as
+                      // copy-assign is needed
       } break;
       case 13: {
         // --------------------------------------------------------------------
@@ -8078,21 +8377,15 @@ int main(int argc, char *argv[])
 
         RUN_EACH_TYPE(MetaTestDriver,
                       testCase12_move,
-                      bsltf::MovableTestType,
-                      bsltf::MovableAllocTestType,
-                      bsltf::MoveOnlyAllocTestType);
+                      bsltf::MoveOnlyAllocTestType,
+                      bsltf::WellBehavedMoveOnlyAllocTestType);
 
         RUN_EACH_TYPE(MetaTestDriver,
                       testCase12_copy,
                       BSLTF_TEMPLATETESTFACILITY_TEST_TYPES_REGULAR);
 
-        RUN_EACH_TYPE(MetaTestDriver,
-                      testCase12_copy,
-                      bsltf::MovableTestType,
-                      bsltf::MovableAllocTestType);
-
-                   // bsltf::MoveOnlyAllocTestType
-                   // test disabled as copy-assign is needed
+                      // 'bsltf::MoveOnlyAllocTestType' test disabled as
+                      // copy-assign is needed
       } break;
       case 11: {
         // --------------------------------------------------------------------
@@ -8153,13 +8446,8 @@ int main(int argc, char *argv[])
                       testCase11,
                       BSLTF_TEMPLATETESTFACILITY_TEST_TYPES_REGULAR);
 
-        RUN_EACH_TYPE(MetaTestDriver,
-                      testCase11,
-                      bsltf::MovableTestType,
-                      bsltf::MovableAllocTestType);
-
-        // Cannot do 'bsltf::MoveOnlyAllocTestType'
-        // -- would need a copy constructor.
+                      // 'bsltf::MoveOnlyAllocTestType' test disabled as
+                      // copy-assign is needed
       } break;
       case 10: {
         // --------------------------------------------------------------------
@@ -8203,9 +8491,8 @@ int main(int argc, char *argv[])
 
         RUN_EACH_TYPE( MetaTestDriver
                      , testCase10
-                     , bsltf::MovableTestType
-                     , bsltf::MovableAllocTestType
                      , bsltf::MoveOnlyAllocTestType
+                     , bsltf::WellBehavedMoveOnlyAllocTestType
                      );
       } break;
       case 9: {
@@ -8249,9 +8536,8 @@ int main(int argc, char *argv[])
 
         RUN_EACH_TYPE(MetaTestDriver,
                       testCase9,
-                      bsltf::MovableTestType,
-                      bsltf::MovableAllocTestType,
-                      bsltf::MoveOnlyAllocTestType);
+                      bsltf::MoveOnlyAllocTestType,
+                      bsltf::WellBehavedMoveOnlyAllocTestType);
       } break;
       case 8: {
         // --------------------------------------------------------------------
@@ -9056,6 +9342,319 @@ int main(int argc, char *argv[])
         ASSERT(  (bslmf::IsBitwiseEqualityComparable<     Pair13>::value));
         ASSERT(  (bslmf::IsPair<                          Pair13>::value));
 
+#if defined(BSLSTL_PAIR_TEST_CONDITIONAL_DEFAULT_CTOR)
+
+        if (verbose)
+            printf("Testing various pair's default constructibility\n");
+
+        using namespace IsDefaultConstructibleTestTypes;
+
+        if (veryVerbose)
+            printf("Testing components (first/second) constructibility\n");
+
+#define ASSERT_NOT_DEFAULT_CONSTRUCTIBLE(TYPE)                                \
+        ASSERT(false == native_std::is_default_constructible<TYPE>::value)
+
+#define ASSERT_DEFAULT_CONSTRUCTIBLE(TYPE)                                    \
+        ASSERT(true == native_std::is_default_constructible<TYPE>::value)
+
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_DELETED_FUNCTIONS
+        ASSERT_NOT_DEFAULT_CONSTRUCTIBLE(DeletedDefault);
+        ASSERT_NOT_DEFAULT_CONSTRUCTIBLE(DeletedDefault2);
+#endif
+        ASSERT_NOT_DEFAULT_CONSTRUCTIBLE(NoDefault);
+        ASSERT_NOT_DEFAULT_CONSTRUCTIBLE(NoDefault2);
+        ASSERT_NOT_DEFAULT_CONSTRUCTIBLE(PrivDefault);
+        ASSERT_NOT_DEFAULT_CONSTRUCTIBLE(PrivDefault2);
+
+        ASSERT_DEFAULT_CONSTRUCTIBLE(Empty);
+        ASSERT_DEFAULT_CONSTRUCTIBLE(DefArgDefault);
+        ASSERT_DEFAULT_CONSTRUCTIBLE(ExpDefArgDef);
+        ASSERT_DEFAULT_CONSTRUCTIBLE(int);
+
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_DELETED_FUNCTIONS
+        ASSERT_NOT_DEFAULT_CONSTRUCTIBLE(DeletedDefault&);
+        ASSERT_NOT_DEFAULT_CONSTRUCTIBLE(DeletedDefault2&);
+#endif
+        ASSERT_NOT_DEFAULT_CONSTRUCTIBLE(NoDefault&);
+        ASSERT_NOT_DEFAULT_CONSTRUCTIBLE(NoDefault2&);
+
+        ASSERT_NOT_DEFAULT_CONSTRUCTIBLE(Empty&);
+        ASSERT_NOT_DEFAULT_CONSTRUCTIBLE(DefArgDefault&);
+        ASSERT_NOT_DEFAULT_CONSTRUCTIBLE(ExpDefArgDef&);
+        ASSERT_NOT_DEFAULT_CONSTRUCTIBLE(int&);
+
+#undef ASSERT_NOT_DEFAULT_CONSTRUCTIBLE
+#undef ASSERT_DEFAULT_CONSTRUCTIBLE
+
+        if (veryVerbose)
+            printf("All default constuctible pair combinations.\n");
+
+#define ASSERT_PAIR_DEFAULT_CONSTRUCTIBLE(TYPE1, TYPE2)                       \
+        ASSERT((true == native_std::is_default_constructible<                 \
+                                              bsl::pair<TYPE1, TYPE2>>::value))
+
+        ASSERT_PAIR_DEFAULT_CONSTRUCTIBLE(Empty, Empty);
+        ASSERT_PAIR_DEFAULT_CONSTRUCTIBLE(Empty, DefArgDefault);
+        ASSERT_PAIR_DEFAULT_CONSTRUCTIBLE(Empty, ExpDefArgDef);
+        ASSERT_PAIR_DEFAULT_CONSTRUCTIBLE(Empty, int);
+
+        ASSERT_PAIR_DEFAULT_CONSTRUCTIBLE(DefArgDefault, Empty);
+        ASSERT_PAIR_DEFAULT_CONSTRUCTIBLE(DefArgDefault, DefArgDefault);
+        ASSERT_PAIR_DEFAULT_CONSTRUCTIBLE(DefArgDefault, ExpDefArgDef);
+        ASSERT_PAIR_DEFAULT_CONSTRUCTIBLE(DefArgDefault, int);
+
+        ASSERT_PAIR_DEFAULT_CONSTRUCTIBLE(ExpDefArgDef, Empty);
+        ASSERT_PAIR_DEFAULT_CONSTRUCTIBLE(ExpDefArgDef, DefArgDefault);
+        ASSERT_PAIR_DEFAULT_CONSTRUCTIBLE(ExpDefArgDef, ExpDefArgDef);
+        ASSERT_PAIR_DEFAULT_CONSTRUCTIBLE(ExpDefArgDef, int);
+
+        ASSERT_PAIR_DEFAULT_CONSTRUCTIBLE(int, Empty);
+        ASSERT_PAIR_DEFAULT_CONSTRUCTIBLE(int, DefArgDefault);
+        ASSERT_PAIR_DEFAULT_CONSTRUCTIBLE(int, ExpDefArgDef);
+        ASSERT_PAIR_DEFAULT_CONSTRUCTIBLE(int, int);
+
+#undef ASSERT_PAIR_DEFAULT_CONSTRUCTIBLE
+
+        if (veryVerbose)
+            printf("All not default constuctible pair combinations.\n");
+
+#define ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(TYPE1, TYPE2)                   \
+        ASSERT((false == native_std::is_default_constructible<                \
+                                              bsl::pair<TYPE1, TYPE2>>::value))
+
+        if (veryVeryVerbose)
+            printf("pair<..>::second is not default constructible.\n");
+
+        #ifdef BSLS_COMPILERFEATURES_SUPPORT_DELETED_FUNCTIONS
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(Empty, DeletedDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(Empty, DeletedDefault2);
+#endif
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(Empty, NoDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(Empty, NoDefault2);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(Empty, PrivDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(Empty, PrivDefault2);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(Empty, Empty&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(Empty, DefArgDefault&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(Empty, ExpDefArgDef&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(Empty, int&);
+
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_DELETED_FUNCTIONS
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DefArgDefault, DeletedDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DefArgDefault, DeletedDefault2);
+#endif
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DefArgDefault, NoDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DefArgDefault, NoDefault2);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DefArgDefault, PrivDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DefArgDefault, PrivDefault2);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DefArgDefault, Empty&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DefArgDefault, DefArgDefault&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DefArgDefault, ExpDefArgDef&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DefArgDefault, int&);
+
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_DELETED_FUNCTIONS
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(ExpDefArgDef, DeletedDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(ExpDefArgDef, DeletedDefault2);
+#endif
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(ExpDefArgDef, NoDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(ExpDefArgDef, NoDefault2);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(ExpDefArgDef, PrivDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(ExpDefArgDef, PrivDefault2);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(ExpDefArgDef, Empty&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(ExpDefArgDef, DefArgDefault&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(ExpDefArgDef, ExpDefArgDef&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(ExpDefArgDef, int&);
+
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_DELETED_FUNCTIONS
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(int, DeletedDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(int, DeletedDefault2);
+#endif
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(int, NoDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(int, NoDefault2);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(int, PrivDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(int, PrivDefault2);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(int, Empty&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(int, DefArgDefault&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(int, ExpDefArgDef&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(int, int&);
+
+        if (veryVeryVerbose)
+            printf("pair<..>::first is not default constructible.\n");
+
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_DELETED_FUNCTIONS
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DeletedDefault , Empty);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DeletedDefault2, Empty);
+#endif
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(NoDefault      , Empty);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(NoDefault2     , Empty);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(PrivDefault    , Empty);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(PrivDefault2   , Empty);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(Empty&         , Empty);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DefArgDefault& , Empty);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(ExpDefArgDef&  , Empty);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(int&           , Empty);
+
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_DELETED_FUNCTIONS
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DeletedDefault , DefArgDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DeletedDefault2, DefArgDefault);
+#endif
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(NoDefault      , DefArgDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(NoDefault2     , DefArgDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(PrivDefault    , DefArgDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(PrivDefault2   , DefArgDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(Empty&         , DefArgDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DefArgDefault& , DefArgDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(ExpDefArgDef&  , DefArgDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(int&           , DefArgDefault);
+
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_DELETED_FUNCTIONS
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DeletedDefault , ExpDefArgDef);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DeletedDefault2, ExpDefArgDef);
+#endif
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(NoDefault      , ExpDefArgDef);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(NoDefault2     , ExpDefArgDef);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(PrivDefault    , ExpDefArgDef);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(PrivDefault2   , ExpDefArgDef);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(Empty&         , ExpDefArgDef);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DefArgDefault& , ExpDefArgDef);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(ExpDefArgDef&  , ExpDefArgDef);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(int&           , ExpDefArgDef);
+
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_DELETED_FUNCTIONS
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DeletedDefault , int);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DeletedDefault2, int);
+#endif
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(NoDefault      , int);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(NoDefault2     , int);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(PrivDefault    , int);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(PrivDefault2   , int);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(Empty&         , int);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DefArgDefault& , int);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(ExpDefArgDef&  , int);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(int&           , int);
+
+        if (veryVeryVerbose)
+            printf("Neither 'first' or 'second' is default constructible.\n");
+
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_DELETED_FUNCTIONS
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DeletedDefault, DeletedDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DeletedDefault, DeletedDefault2);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DeletedDefault, NoDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DeletedDefault, NoDefault2);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DeletedDefault, PrivDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DeletedDefault, PrivDefault2);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DeletedDefault, Empty&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DeletedDefault, DefArgDefault&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DeletedDefault, ExpDefArgDef&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DeletedDefault, int&);
+#endif
+
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_DELETED_FUNCTIONS
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DeletedDefault2, DeletedDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DeletedDefault2,DeletedDefault2);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DeletedDefault2, NoDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DeletedDefault2, NoDefault2);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DeletedDefault2, PrivDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DeletedDefault2, PrivDefault2);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DeletedDefault2, Empty&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DeletedDefault2, DefArgDefault&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DeletedDefault2, ExpDefArgDef&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DeletedDefault2, int&);
+#endif
+
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_DELETED_FUNCTIONS
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(NoDefault, DeletedDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(NoDefault, DeletedDefault2);
+#endif
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(NoDefault, NoDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(NoDefault, NoDefault2);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(NoDefault, PrivDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(NoDefault, PrivDefault2);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(NoDefault, Empty&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(NoDefault, DefArgDefault&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(NoDefault, ExpDefArgDef&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(NoDefault, int&);
+
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_DELETED_FUNCTIONS
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(NoDefault2, DeletedDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(NoDefault2, DeletedDefault2);
+#endif
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(NoDefault2, NoDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(NoDefault2, NoDefault2);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(NoDefault2, PrivDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(NoDefault2, PrivDefault2);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(NoDefault2, Empty&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(NoDefault2, DefArgDefault&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(NoDefault2, ExpDefArgDef&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(NoDefault2, int&);
+
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_DELETED_FUNCTIONS
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(Empty&, DeletedDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(Empty&, DeletedDefault2);
+#endif
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(Empty&, NoDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(Empty&, NoDefault2);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(Empty&, PrivDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(Empty&, PrivDefault2);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(Empty&, Empty&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(Empty&, DefArgDefault&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(Empty&, ExpDefArgDef&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(Empty&, int&);
+
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_DELETED_FUNCTIONS
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(Empty&, DeletedDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(Empty&, DeletedDefault2);
+#endif
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(Empty&, NoDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(Empty&, NoDefault2);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(Empty&, PrivDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(Empty&, PrivDefault2);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(Empty&, Empty&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(Empty&, DefArgDefault&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(Empty&, ExpDefArgDef&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(Empty&, int&);
+
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_DELETED_FUNCTIONS
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DefArgDefault&, DeletedDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DefArgDefault&, DeletedDefault2);
+#endif
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DefArgDefault&, NoDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DefArgDefault&, NoDefault2);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DefArgDefault&, PrivDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DefArgDefault&, PrivDefault2);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DefArgDefault&, Empty&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DefArgDefault&, DefArgDefault&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DefArgDefault&, ExpDefArgDef&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(DefArgDefault&, int&);
+
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_DELETED_FUNCTIONS
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(ExpDefArgDef&, DeletedDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(ExpDefArgDef&, DeletedDefault2);
+#endif
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(ExpDefArgDef&, NoDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(ExpDefArgDef&, NoDefault2);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(ExpDefArgDef&, PrivDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(ExpDefArgDef&, PrivDefault2);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(ExpDefArgDef&, Empty&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(ExpDefArgDef&, DefArgDefault&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(ExpDefArgDef&, ExpDefArgDef&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(ExpDefArgDef&, int&);
+
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_DELETED_FUNCTIONS
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(int&, DeletedDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(int&, DeletedDefault2);
+#endif
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(int&, NoDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(int&, NoDefault2);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(int&, PrivDefault);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(int&, PrivDefault2);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(int&, Empty&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(int&, DefArgDefault&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(int&, ExpDefArgDef&);
+        ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE(int&, int&);
+
+#undef ASSERT_PAIR_NOT_DEFAULT_CONSTRUCTIBLE
+#endif
       } break;
 
       case 2: {
