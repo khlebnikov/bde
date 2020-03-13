@@ -424,7 +424,8 @@ BSLS_IDENT("$Id: $")
 //
 // First we define wrapper class that hold an object and a functor and
 // calls the functor (called the listener) each time the wrapped object is
-// assigned to:
+// assigned to. We store the object directly as a member variable, instead of
+// using an uninitialised buffer, to avoid the separate construction step :
 //..
 //  template <class TYPE, class FUNC>
 //  class MyTriggeredWrapper {
@@ -472,7 +473,7 @@ BSLS_IDENT("$Id: $")
 //  MyTriggeredWrapper<TYPE, FUNC>::MyTriggeredWrapper(const TYPE&       v,
 //                                                     const FUNC&       f,
 //                                                     bslma::Allocator *alloc)
-//      : d_value(bslma::ConstructionUtil::make<TYPE>(alloc), v)
+//      : d_value(bslma::ConstructionUtil::make<TYPE>(alloc, v))
 //      , d_listener(f)
 //  {
 //  }
@@ -481,7 +482,7 @@ BSLS_IDENT("$Id: $")
 //  MyTriggeredWrapper<TYPE, FUNC>::MyTriggeredWrapper(
 //                                            const MyTriggeredWrapper&  other,
 //                                            bslma::Allocator          *alloc)
-//      : d_value(bslma::ConstructionUtil::make<TYPE>(alloc), other.value())
+//      : d_value(bslma::ConstructionUtil::make<TYPE>(alloc, other.value()))
 //      , d_listener(other.d_listener)
 //  {
 //  }
@@ -1349,8 +1350,9 @@ struct ConstructionUtil {
         // propagated to the newly created object; otherwise 'allocator' is
         // ignored. Note that returning a result with the correct allocator is
         // dependent on the compiler reliably implementing copy/move elision
-        // (i.e., RVO) on the returned object, which is required in C++17, but
-        // supported in all of the compilers currently used at Bloomberg.
+        // (i.e., RVO) on the returned object, which was optional prior to
+        // C++17, but supported in all of the compilers currently used at
+        // Bloomberg.
 
 
     template <class TARGET_TYPE, class ANY_TYPE>
@@ -1367,8 +1369,8 @@ struct ConstructionUtil {
         // otherwise 'allocator' is  ignored. Note that returning a result with
         // the correct allocator is dependent on the compiler reliably
         // implementing copy/move elision i.e., RVO) on the returned object,
-        // which is required in C++17, but supported in all of the compilers
-        // currently used at Bloomberg.
+        // which was optional prior to C++17, but supported in all of the
+        // compilers currently used at Bloomberg.
 };
                         // ===========================
                         // struct ConstructionUtil_Imp

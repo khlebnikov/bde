@@ -2786,23 +2786,13 @@ void TestDriver<TYPE>::testCase5NoAlloc(
     template <class TYPE>
     MyContainer<TYPE>& MyContainer<TYPE>::operator=(const TYPE& rhs)
     {
-        d_value_p->~TYPE();
-        MyContainerProctor<TYPE> proctor(d_allocator_p, d_value_p);
-        bslma::ConstructionUtil::construct(d_value_p, d_allocator_p, rhs);
-        proctor.release();
+        *d_value_p  = rhs;
         return *this;
     }
     template <class TYPE>
     MyContainer<TYPE>& MyContainer<TYPE>::operator=(const MyContainer& rhs)
     {
-        if (&rhs != this)
-        {
-            d_value_p->~TYPE();
-            MyContainerProctor<TYPE> proctor(d_allocator_p, d_value_p);
-            bslma::ConstructionUtil::construct(d_value_p, d_allocator_p,
-                                               *rhs.d_value_p);
-            proctor.release();
-        }
+        *d_value_p  = *rhs.d_value_p;
         return *this;
     }
 
@@ -2911,33 +2901,34 @@ void TestDriver<TYPE>::testCase5NoAlloc(
 //
 // First we define wrapper class that hold an object and a functor and
 // calls the functor (called the listener) each time the wrapped object is
-// assigned to. Instead of using an uninitialised buffer and :
+// assigned to. We store the object directly as a member variable, instead of
+// using an uninitialised buffer, to avoid the separate construction step :
 //..
-  template <class TYPE, class FUNC>
-  class MyTriggeredWrapper {
-      // PRIVATE DATA
-      TYPE d_value;
-      FUNC d_listener;
+    template <class TYPE, class FUNC>
+    class MyTriggeredWrapper {
+        // PRIVATE DATA
+        TYPE d_value;
+        FUNC d_listener;
 
-  public:
-      // CREATORS
-      MyTriggeredWrapper(const FUNC& f, bslma::Allocator *alloc = 0);
-      MyTriggeredWrapper(const TYPE& v, const FUNC& f,
-                         bslma::Allocator *alloc = 0);
-      MyTriggeredWrapper(const MyTriggeredWrapper& other,
-                         bslma::Allocator *alloc = 0);
-      ~MyTriggeredWrapper() { }
+    public:
+        // CREATORS
+        MyTriggeredWrapper(const FUNC& f, bslma::Allocator *alloc = 0);
+        MyTriggeredWrapper(const TYPE& v, const FUNC& f,
+                           bslma::Allocator *alloc = 0);
+        MyTriggeredWrapper(const MyTriggeredWrapper& other,
+                           bslma::Allocator *alloc = 0);
+        ~MyTriggeredWrapper() { }
 
-      // MANIPULATORS
-      MyTriggeredWrapper& operator=(const TYPE& rhs);
-      MyTriggeredWrapper& operator=(const MyTriggeredWrapper& rhs);
-          // Assign this object a new value and call the listner with the
-          // new value after assignment.
+        // MANIPULATORS
+        MyTriggeredWrapper& operator=(const TYPE& rhs);
+        MyTriggeredWrapper& operator=(const MyTriggeredWrapper& rhs);
+            // Assign this object a new value and call the listner with the
+            // new value after assignment.
 
-      // ACCESSORS
-      const TYPE& value() const { return d_value; }
-      const FUNC& listener() const { return d_listener; }
-  };
+        // ACCESSORS
+        const TYPE& value() const { return d_value; }
+        const FUNC& listener() const { return d_listener; }
+    };
 //..
 // Next we define the constructors such that they initialize 'd_value' using
 // the specified allocator if and only if 'TYPE' accepts an allocator. The
@@ -2947,31 +2938,31 @@ void TestDriver<TYPE>::testCase5NoAlloc(
 // the back of the argument list), making all three constructors straight-
 // forward:
 //..
-  template <class TYPE, class FUNC>
-  MyTriggeredWrapper<TYPE, FUNC>::MyTriggeredWrapper(const FUNC&       f,
-                                                     bslma::Allocator *alloc)
-      : d_value(bslma::ConstructionUtil::make<TYPE>(alloc))
-      , d_listener(f)
-  {
-  }
+    template <class TYPE, class FUNC>
+    MyTriggeredWrapper<TYPE, FUNC>::MyTriggeredWrapper(const FUNC&       f,
+                                                       bslma::Allocator *alloc)
+        : d_value(bslma::ConstructionUtil::make<TYPE>(alloc))
+        , d_listener(f)
+    {
+    }
 
-  template <class TYPE, class FUNC>
-  MyTriggeredWrapper<TYPE, FUNC>::MyTriggeredWrapper(const TYPE&       v,
-                                                     const FUNC&       f,
-                                                     bslma::Allocator *alloc)
-      : d_value(bslma::ConstructionUtil::make<TYPE>(alloc), v)
-      , d_listener(f)
-  {
-  }
+    template <class TYPE, class FUNC>
+    MyTriggeredWrapper<TYPE, FUNC>::MyTriggeredWrapper(const TYPE&       v,
+                                                       const FUNC&       f,
+                                                       bslma::Allocator *alloc)
+        : d_value(bslma::ConstructionUtil::make<TYPE>(alloc, v))
+        , d_listener(f)
+    {
+    }
 
-  template <class TYPE, class FUNC>
-  MyTriggeredWrapper<TYPE, FUNC>::MyTriggeredWrapper(
-                                            const MyTriggeredWrapper&  other,
-                                            bslma::Allocator          *alloc)
-      : d_value(bslma::ConstructionUtil::make<TYPE>(alloc), other.value())
-      , d_listener(other.d_listener)
-  {
-  }
+    template <class TYPE, class FUNC>
+    MyTriggeredWrapper<TYPE, FUNC>::MyTriggeredWrapper(
+                                              const MyTriggeredWrapper&  other,
+                                              bslma::Allocator          *alloc)
+        : d_value(bslma::ConstructionUtil::make<TYPE>(alloc, other.value()))
+        , d_listener(other.d_listener)
+    {
+    }
 //..
 // Note that, in order for 'd_value' to be constructed with the correct
 // allocator, the compiler must construct the result of 'make' directly into
@@ -2982,40 +2973,41 @@ void TestDriver<TYPE>::testCase5NoAlloc(
 //
 // Next, we implement the assignment operators, which call the listener:
 //..
-  template <class TYPE, class FUNC>
-  MyTriggeredWrapper<TYPE, FUNC>&
-  MyTriggeredWrapper<TYPE, FUNC>::operator=(const TYPE& rhs)
-  {
-      d_value = rhs;
-      d_listener(d_value);
-      return *this;
-  }
+    template <class TYPE, class FUNC>
+    MyTriggeredWrapper<TYPE, FUNC>&
+    MyTriggeredWrapper<TYPE, FUNC>::operator=(const TYPE& rhs)
+    {
+        d_value = rhs;
+        d_listener(d_value);
+        return *this;
+    }
 
-  template <class TYPE, class FUNC>
-  MyTriggeredWrapper<TYPE, FUNC>&
-  MyTriggeredWrapper<TYPE, FUNC>::operator=(const MyTriggeredWrapper& rhs)
-  {
-      return operator=(rhs.value());
-  }
+    template <class TYPE, class FUNC>
+    MyTriggeredWrapper<TYPE, FUNC>&
+    MyTriggeredWrapper<TYPE, FUNC>::operator=(const MyTriggeredWrapper& rhs)
+    {
+        return operator=(rhs.value());
+    }
 //..
 // Finally, we check our work by creating a listener for 'MyContainer<int>'
 // that stores its last-seen value in a known location and creating a wrapper
 // around 'MyContainer<int>' to test it.
 //..
-  int lastSeen = 0;
-  void myListener(const MyContainer<int>& c) {
-      lastSeen = c.front();
-  }
+    int lastSeen = 0;
+    void myListener(const MyContainer<int>& c) {
+        lastSeen = c.front();
+    }
 
-  void usageExample3() {
-      bslma::TestAllocator testAlloc;
-      MyTriggeredWrapper<MyContainer<int>, void (*)(const MyContainer<int> &) >
-                    wrappedContainer(myListener, &testAlloc);
-      ASSERT(&testAlloc == wrappedContainer.value().allocator());
+    void usageExample3() {
+        bslma::TestAllocator testAlloc;
+        MyTriggeredWrapper<MyContainer<int>, void (*)(const MyContainer<int> &) >
+                      wrappedContainer(myListener, &testAlloc);
+        ASSERT(&testAlloc == wrappedContainer.value().allocator());
 
-      wrappedContainer = MyContainer<int>(99);
-      ASSERT(99 == lastSeen);
-  }
+        wrappedContainer = MyContainer<int>(99);
+
+        ASSERT(99 == lastSeen);
+    }
 //=============================================================================
 //                              MAIN PROGRAM
 //-----------------------------------------------------------------------------
@@ -3072,37 +3064,44 @@ int main(int argc, char *argv[])
           //
           // Concerns:
           //: 1 When constructing from an object of a different type, 'make'
-          //:    moves from the source object if the source object is an
-          //:    rvalue, and copies from the source object if the source object
-          //:    is an lvalue.
-          //: 2  That the allocator is forwarded appropriately according to the
-          //:    traits and to the type ('bslma::Allocator *' or 'void *').
-          //: 3  That no unnecessary copies are created.
+          //:   moves from the source object if the source object is an
+          //:   rvalue, and copies from the source object if the source object
+          //:   is an lvalue.
+          //: 2 That the 'allocator' is ignored if 'UsesBslmaAllocator' is
+          //:   'false' for the type being constructed.
+          //: 3 That the 'allocator' is passed to the constructor if it
+          //:   is a pointer to a class derived from 'bslma::Allocator*' and
+          //:   is 'UsesBslmaAllocator' is 'true' for the type being
+          //:   constructed, either as the first argument (with
+          //:   'bsl::allocator_arg') if 'UsesAllocatorArgT' is 'true' for
+          //:   the type being tested; otherwise as the last argument.
+          //: 4 That no unnecessary copies are created.
           //
           // Plan:
-          //
-          //: 1 Create a new object using make method by copying from an
-          //:   object of a different type. For concern 1, check that the value
-          //:   of the newly created object is correct and that source object
-          //:   was copied from. For concern 3, check that no unnecessary
-          //:   copies of source and destination type were created. For
-          //:   concern 2, use different destination types and check that the
-          //:   destination object's allocator is correct.
-          //
-          //: 2  Create a new object using make method by moving from an
-          //:   object of a different type. For concern 1, check that the value
-          //:   of the newly created object is correct and that source object
-          //:   was moved from. For concern 3, check that no unnecessary
-          //:   copies of source and destination type were created. For
-          //:   concern 2, use different destination types and check that the
-          //:   destination object's allocator is correct.
+          //: 1 For concern 1, call the two-argument 'make' passing a test
+          //:   allocator for the first argument and an lvalue object of a
+          //:   different type as the second argument. Verify that the source
+          //:   object is copied from. Repeat, passing an rvalue reference as
+          //:   second argument and verify that the source object is moved
+          //:   from.
+          //: 2 For concern 2, perform step 1 using a target type for which
+          //:   'UsesBslmaAllocator' is 'false'. Verify that the 'allocator'
+          //:   is ignored.
+          //: 3 For concern 3, perform step 1 using a target type for which
+          //:   'UsesBslmaAllocator' is 'true' and a target type for which
+          //:   'UsesAllocatorArgT' is 'true'. Using an 'allocator' which
+          //:   is a pointer to a class derived from 'bslma::Allocator*',
+          //:   check that the allocator is forwarded to the extended
+          //:   constructor as described above.
+          //: 4 For concern 4, perform steps 1-3 and verify that no unnecessary
+          //:   copies of the source type and target type are made.
           //
           // Testing:
           //   make(bslma::Allocator                          *allocator,
           //        BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) original)
           //   make(void                                      *allocator,
           //        BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) original)
-          // --------------------------------------------------------------------
+          // ------------------------------------------------------------------
 
           if (verbose) printf("\nTESTING 'make' FROM A DIFFERENT TYPE"
                               "\n====================================\n");
@@ -3242,41 +3241,53 @@ int main(int argc, char *argv[])
       } break;
       case 10: {
         // --------------------------------------------------------------------
-        // TESTING 'make' FOR (EXTENDED) move CONSTRUCTION
+        // TESTING 'make' FOR (EXTENDED) MOVE CONSTRUCTION
         //
-        //: 1  When creating an object using 'make' method with an rvalue
-        //:    of the same type, the resulting object is created by invoking
-        //:    the (possibly extended) move constructor. If the type doesn't
-        //:    support move construction, copy constructor is invoked instead.
-        //: 2  That the allocator is forwarded appropriately according to the
-        //:    traits and to the type ('bslma::Allocator *' or 'void *').
-        //: 3  That no unnecessary copies are created.
+        //: 1 When creating an object using 'make' method with an rvalue
+        //:   of the same type, the resulting object is created by invoking
+        //:   the (possibly extended) move constructor. If the type doesn't
+        //:   support move construction, copy constructor is invoked instead.
+        //: 2 That the 'allocator' is ignored if 'UsesBslmaAllocator' is
+        //:   'false' for the type being constructed.
+        //: 3 That the 'allocator' is passed to the constructor if it
+        //:   is a pointer to a class derived from 'bslma::Allocator*' and
+        //:   is 'UsesBslmaAllocator' is 'true' for the type being
+        //:   constructed, either as the first argument (with
+        //:   'bsl::allocator_arg') if 'UsesAllocatorArgT' is 'true' for
+        //:   the type being tested; otherwise as the last argument.
+        //: 4 That no unnecessary copies are created.
         //
         // Plan:
+        //: 1 For concern 1, using a type that supports move construction,
+        //:   call the two-argument 'make' passing a test allocator for the
+        //:   first argument and an rvalue object of the same type as the
+        //:   second argument. Verify that the source object is moved from.
+        //: 2 For concern 2, perform step 1 using a target type for which
+        //:   'UsesBslmaAllocator' is 'false'. Verify that the 'allocator'
+        //:   is ignored.
+        //: 3 For concern 3, perform step 1 using a target type for which
+        //:   'UsesBslmaAllocator' is 'true' and a target type for which
+        //:   'UsesAllocatorArgT' is 'true'. Using an 'allocator' which
+        //:   is a pointer to a class derived from 'bslma::Allocator*',
+        //:   check that the allocator is forwarded to the extended
+        //:   constructor as described above.
+        //: 3 For concern 1, perform step 1 using a target type that only
+        //:   supports copy construction. Verify that the source object is
+        //:   copied from.
+        //: 4 For concern 4, perform steps 1-4 and verify that no unnecessary
+        //:   copies of the target type are made.
         //
-        //: 1 Create a new object using make method by moving from an
-        //:   object of the same type. For concern 1, check that the value
-        //:   of the newly created object is correct and that source object
-        //:   was moved from. For concern 3, check that no unnecessary
-        //:   copies of test type were created. For concern 2, use different
-        //:   test types and check that the destination object's allocator is
-        //:   correct.
-        //: 2 Create a new object of type which does not support move
-        //:   construction by using 'make' method and and an rvalue of the
-        //:   same type. For concern 1, check that the value of the newly
-        //:   created object is correct and that source object was copied from.
-        //:   For concern 3, check that no unnecessary copies of test type were
-        //:   created.
-         //
-         // Testing:
-         //   make (bslma::Allocator                          *allocator,
-         //        BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) original)
-         //   make (void                                      *allocator,
-         //        BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) original)
-         // --------------------------------------------------------------------
+        // Testing:
+        //   make (bslma::Allocator                          *allocator,
+        //        BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) original)
+        //   make (void                                      *allocator,
+        //        BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) original)
+        // --------------------------------------------------------------------
 
-          if (verbose) printf("\nTESTING 'make' move construction"
-                              "\n================================\n");
+          if (verbose) printf("\nTESTING 'make' FOR (EXTENDED) MOVE "
+                              "CONSTRUCTION"
+                              "\n==================================="
+                              "============\n");
 
           bslma::TestAllocator testAllocator(veryVeryVeryVerbose);
           bslma::TestAllocator *const TA = &testAllocator;
@@ -3332,22 +3343,35 @@ int main(int argc, char *argv[])
           // --------------------------------------------------------------------
           // TESTING 'make' FOR (EXTENDED) COPY CONSTRUCTION
           //
-          //: 1  When creating an object using 'make' method with an lvalue
-          //:    of the same type, the resulting object is created by invoking
-          //:    the (possibly extended) copy constructor.
-          //: 2  That the allocator is forwarded appropriately according to the
-          //:    traits and to the type ('bslma::Allocator *' or 'void *').
-          //: 3  That no unnecessary copies are created.
+          //: 1 When creating an object using 'make' method with an lvalue
+          //:   of the same type, the resulting object is created by invoking
+          //:   the (possibly extended) copy constructor.
+          //: 2 That the 'allocator' is ignored if 'UsesBslmaAllocator' is
+          //:   'false' for the type being constructed.
+          //: 3 That the 'allocator' is passed to the constructor if it
+          //:   is a pointer to a class derived from 'bslma::Allocator*' and
+          //:   is 'UsesBslmaAllocator' is 'true' for the type being
+          //:   constructed, either as the first argument (with
+          //:   'bsl::allocator_arg') if 'UsesAllocatorArgT' is 'true' for
+          //:   the type being tested; otherwise as the last argument.
+          //: 4 That no unnecessary copies are created.
           //
           // Plan:
-          //
-          //: 1 Create a new object using make method by copying from an
-          //:   object of the same type. For concern 1, check that the value
-          //:   of the newly created object is correct and that source object
-          //:   was copied from. For concern 3, check that no unnecessary
-          //:   copies of source and destination type were created. For
-          //:   concern 2, use different destination types and check that the
-          //:   destination object's allocator is correct.
+          //: 1 For concern 1, call the two-argument 'make' passing a test
+          //    allocator for the first argument and an lvalue object of the
+          //    same type as the second argument. Verify that the source object
+          //    is copied from.
+          //: 2 For concern 2, perform step 1 using a target type for which
+          //:   'UsesBslmaAllocator' is 'false'. Verify that the 'allocator'
+          //:   is ignored.
+          //: 3 For concern 3, perform step 1 using a target type for which
+          //:   'UsesBslmaAllocator' is 'true' and a target type for which
+          //:   'UsesAllocatorArgT' is 'true'. Using an 'allocator' which
+          //:   is a pointer to a class derived from 'bslma::Allocator*',
+          //:   check that the allocator is forwarded to the extended
+          //:   constructor as described above.
+          //: 4 For concern 4, perform steps 1-3 and verify that no unnecessary
+          //:   copies of the target type are made.
           //
           //
           // Testing:
@@ -3409,7 +3433,7 @@ int main(int argc, char *argv[])
       } break;
       case 8: {
           // --------------------------------------------------------------------
-          // "TESTING 'make' WITH DEFAULT CONSTRUCTION"
+          // TESTING 'make' WITH DEFAULT CONSTRUCTION
           //
           // Concerns:
           //: 1 That 'make' with only an allocator argument will
@@ -3421,18 +3445,20 @@ int main(int argc, char *argv[])
           //: 3 That no unnecessary copies are created.
           //
           // Plan:
-          //
           //: 1 Construct an object using 'make' method taking only an
-          //:   allocator. For concern 1, use a type that does not use
-          //:   allocators and create an object by invoking 'make' with a
-          //:   pointer to a type derived from 'bslma::alocator' and with a
-          //:   pointer to a type which is not derived from 'bslma::allocator'.
-          //:   For concern 3, check no unnecessary copies are created.
-          //: 2 Next, for concern 2, construct an object of a type that uses an
-          //:   allocator by invoking the 'make' method taking only a
-          //:   'bslma::allocator' pointer. Check the value and allocator are
-          //:   correct. For concern 3, check no unnecessary copies are
-          //:   created.
+          //:   allocator. Verify that the target object is default
+          //:   constructed.
+          //: 2 For concern 2, perform step 1 using a target type for which
+          //:   'UsesBslmaAllocator' is 'false'. Verify that the 'allocator'
+          //:   is ignored.
+          //: 3 For concern 3, perform step 1 using a target type for which
+          //:   'UsesBslmaAllocator' is 'true' and a target type for which
+          //:   'UsesAllocatorArgT' is 'true'. Using an 'allocator' which
+          //:   is a pointer to a class derived from 'bslma::Allocator*',
+          //:   check that the allocator is forwarded to the extended
+          //:   constructor as described above.
+          //: 4 For concern 4, perform steps 1-3 and verify that no unnecessary
+          //:   copies of the target type are made.
           //
           // Testing:
           //   make(bslma::Allocator*)
