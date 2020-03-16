@@ -19,7 +19,7 @@
 // A list of disabled tests :
 //
 //BSLSTL_OPTIONAL_TEST_BAD_VALUE
-//      Tests in this group check that value categorie and cv qualification
+//      Tests in this group check that value category and cv qualification
 //      of the return value from value() member function is correct.
 //
 //BSLSTL_OPTIONAL_TEST_BAD_EQUAL_NONOPT
@@ -128,11 +128,11 @@ const int MOVED_FROM_VAL = 0x01d;
 //-----------------------------------------------------------------------------
 
                              // =================
-                             // class my_ClassDef
+                             // class MyClassDef
                              // =================
 
-struct my_ClassDef {
-    // Data members that give my_ClassX size and alignment.  This class is a
+struct MyClassDef {
+    // Data members that give MyClassX size and alignment.  This class is a
     // simple aggregate, use to provide a common data layout to subsequent test
     // types.  There are no semantics associated with any of the members, in
     // particular the allocator pointer is not used directly by this aggregate
@@ -148,14 +148,14 @@ struct my_ClassDef {
 // destructors of the test classes defined below.  In order to force the
 // compiler to retain all of the code in the destructors, we provide the
 // following function that can be used to (conditionally) print out the state
-// of a 'my_ClassDef' data member.  If the destructor calls this function as
+// of a 'MyClassDef' data member.  If the destructor calls this function as
 // its last operation, then all values set in the destructor have visible
 // side-effects, but non-verbose test runs do not have to be burdened with
 // additional output.
 
 static bool forceDestructorCall = false;
 
-void dumpClassDefState(const my_ClassDef& def)
+void dumpClassDefState(const MyClassDef& def)
 {
     if (forceDestructorCall) {
         printf("%p: %d %p %p\n",
@@ -164,12 +164,12 @@ void dumpClassDefState(const my_ClassDef& def)
 }
 
                              // ===============
-                             // class my_Class1
+                             // class MyClass1
                              // ===============
 
-class my_Class1 {
+class MyClass1 {
     // This 'class' is a simple type that does not take allocators.  Its
-    // implementation owns a 'my_ClassDef' aggregate, but uses only the
+    // implementation owns a 'MyClassDef' aggregate, but uses only the
     // 'd_value' data member, to support the 'value' attribute.  The
     // 'd_allocator_p' pointer is always initialized to a null pointer, while
     // the 'd_data_p' pointer is never initialized
@@ -178,51 +178,51 @@ class my_Class1 {
  public:
 
     // DATA
-    my_ClassDef d_def;
+    MyClassDef d_def;
 
     static int copyConstructorInvocations;
     static int moveConstructorInvocations;
 
     // CREATORS
     explicit
-    my_Class1(int v = 0) {
+    MyClass1(int v = 0) {
         d_def.d_value = v;
         d_def.d_allocator_p = 0;
     }
-    my_Class1(const my_Class1& rhs) {
+    MyClass1(const MyClass1& rhs) {
         d_def.d_value = rhs.d_def.d_value;
         d_def.d_allocator_p = 0;
         ++copyConstructorInvocations;
     }
 
-    my_Class1(bslmf::MovableRef<my_Class1> other) {
-        my_Class1& otherRef = MovUtl::access(other);
+    MyClass1(bslmf::MovableRef<MyClass1> other) {
+        MyClass1& otherRef = MovUtl::access(other);
         d_def.d_value = otherRef.d_def.d_value;
         otherRef.d_def.d_value = MOVED_FROM_VAL;
         d_def.d_allocator_p = 0;
         ++moveConstructorInvocations;
     }
 
-    ~my_Class1() {
+    ~MyClass1() {
         ASSERT(d_def.d_value != 91);
         d_def.d_value = 91;
         d_def.d_allocator_p = 0;
         dumpClassDefState(d_def);
     }
 
-    my_Class1& operator=(const my_Class1& rhs) {
+    MyClass1& operator=(const MyClass1& rhs) {
         d_def.d_value = rhs.d_def.d_value;
         return *this;
     }
 
-    my_Class1& operator=(bslmf::MovableRef<my_Class1> rhs) {
-        my_Class1& otherRef = MovUtl::access(rhs);
+    MyClass1& operator=(bslmf::MovableRef<MyClass1> rhs) {
+        MyClass1& otherRef = MovUtl::access(rhs);
         d_def.d_value = otherRef.d_def.d_value;
         otherRef.d_def.d_value = MOVED_FROM_VAL;
         return *this;
     }
 
-    my_Class1& operator=(int rhs) {
+    MyClass1& operator=(int rhs) {
         d_def.d_value = rhs;
         return *this;
     }
@@ -230,58 +230,59 @@ class my_Class1 {
     // ACCESSORS
     int value() const { return d_def.d_value; }
 };
-bool operator==(const my_Class1& lhs,
-                const my_Class1& rhs)
+bool operator==(const MyClass1& lhs,
+                const MyClass1& rhs)
 {
  return (lhs.value()==rhs.value());
 }
 // CLASS DATA
-int my_Class1::copyConstructorInvocations       = 0;
-int my_Class1::moveConstructorInvocations       = 0;
+int MyClass1::copyConstructorInvocations       = 0;
+int MyClass1::moveConstructorInvocations       = 0;
+
                              // ===============
-                             // class my_Class1a
+                             // class MyClass1a
                              // ===============
 
-class my_Class1a {
-// This 'class' is a simple type that does not take allocators.  Its
-// implementation owns a 'my_Class1' aggregate, but uses only the
-// 'd_value' data member, to support the 'value' attribute.  The
-// 'd_allocator_p' pointer is always initialized to a null pointer.
-// The class is both constructable and asignable from my_Class1.
+class MyClass1a {
+    // This 'class' is a simple type that does not take allocators.  Its
+    // implementation owns a 'MyClass1' aggregate, but uses only the
+    // 'd_value' data member, to support the 'value' attribute.  The
+    // 'd_allocator_p' pointer is always initialized to a null pointer.
+    // The class is both constructable and asignable from MyClass1.
   public:
-    my_Class1 d_data;
+    MyClass1 d_data;
     static int copyConstructorInvocations;
     static int moveConstructorInvocations;
 
     // CREATORS
 
     explicit
-    my_Class1a(int v)  : d_data(v) {}
+    MyClass1a(int v)  : d_data(v) {}
 
-    my_Class1a(const my_Class1& v)
+    MyClass1a(const MyClass1& v)
     : d_data(v) {}
 
-    my_Class1a(bslmf::MovableRef<my_Class1> v)
+    MyClass1a(bslmf::MovableRef<MyClass1> v)
     : d_data(MovUtl::move(v)) {}
 
-    my_Class1a(const my_Class1a& rhs) : d_data(rhs.d_data)
+    MyClass1a(const MyClass1a& rhs) : d_data(rhs.d_data)
     {
         ++copyConstructorInvocations;
     }
 
-    my_Class1a(bslmf::MovableRef<my_Class1a> rhs)
+    MyClass1a(bslmf::MovableRef<MyClass1a> rhs)
     : d_data(MovUtl::move(MovUtl::access(rhs).d_data))
     {
         ++moveConstructorInvocations;
     }
 
   // MANIPULATORS
-    my_Class1a& operator=(const my_Class1a& rhs) {
+    MyClass1a& operator=(const MyClass1a& rhs) {
         d_data.operator=(rhs.d_data);
         return *this;
     }
 
-    my_Class1a& operator=(bslmf::MovableRef<my_Class1a> rhs) {
+    MyClass1a& operator=(bslmf::MovableRef<MyClass1a> rhs) {
         d_data.operator=(MovUtl::move(MovUtl::access(rhs).d_data));
         return *this;
     }
@@ -290,55 +291,55 @@ class my_Class1a {
     int value() const { return d_data.value(); }
 };
 // CLASS DATA
-int my_Class1a::copyConstructorInvocations       = 0;
-int my_Class1a::moveConstructorInvocations       = 0;
-bool operator==(const my_Class1a& lhs,
-                const my_Class1a& rhs)
+int MyClass1a::copyConstructorInvocations       = 0;
+int MyClass1a::moveConstructorInvocations       = 0;
+bool operator==(const MyClass1a& lhs,
+                const MyClass1a& rhs)
 {
  return (lhs.value()==rhs.value());
 }
                              // ===============
-                             // class my_Class1b
+                             // class MyClass1b
                              // ===============
 
-class my_Class1b {
+class MyClass1b {
     // This 'class' is a simple type that does not take allocators.  Its
-    // implementation owns a 'my_Class1' aggregate, but uses only the
+    // implementation owns a 'MyClass1' aggregate, but uses only the
     // 'd_value' data member, to support the 'value' attribute.  The
     // 'd_allocator_p' pointer is always initialized to a null pointer.
-    // The class is assignable from my_Class1, but not constructable from
-    // my_Class1
+    // The class is assignable from MyClass1, but not constructable from
+    // MyClass1
   public:
-    my_Class1 d_data;
+    MyClass1 d_data;
 
     // CREATORS
-    my_Class1b() : d_data() { }
+    MyClass1b() : d_data() { }
 
     explicit
-    my_Class1b(int v)  : d_data(v) {}
+    MyClass1b(int v)  : d_data(v) {}
 
-    my_Class1b(const my_Class1b& rhs) : d_data(rhs.d_data) {}
+    MyClass1b(const MyClass1b& rhs) : d_data(rhs.d_data) {}
 
-    my_Class1b(bslmf::MovableRef<my_Class1b> rhs)
+    MyClass1b(bslmf::MovableRef<MyClass1b> rhs)
     : d_data(MovUtl::move(MovUtl::access(rhs).d_data)) {}
 
     // MANIPULATORS
-    my_Class1b& operator=(const my_Class1b& rhs) {
+    MyClass1b& operator=(const MyClass1b& rhs) {
     d_data.operator=(rhs.d_data);
         return *this;
     }
 
-    my_Class1b& operator=(bslmf::MovableRef<my_Class1b> rhs) {
+    MyClass1b& operator=(bslmf::MovableRef<MyClass1b> rhs) {
         d_data.operator=(MovUtl::move(MovUtl::access(rhs).d_data));
         return *this;
     }
 
-    my_Class1b& operator=(const my_Class1& rhs) {
+    MyClass1b& operator=(const MyClass1& rhs) {
         d_data.operator=(rhs);
         return *this;
     }
 
-    my_Class1b& operator=(bslmf::MovableRef<my_Class1> rhs) {
+    MyClass1b& operator=(bslmf::MovableRef<MyClass1> rhs) {
         d_data.operator=(MovUtl::move(MovUtl::access(rhs)));
         return *this;
     }
@@ -346,50 +347,50 @@ class my_Class1b {
     // ACCESSORS
     int value() const { return d_data.value(); }
 };
-bool operator==(const my_Class1b& lhs,
-                const my_Class1b& rhs)
+bool operator==(const MyClass1b& lhs,
+                const MyClass1b& rhs)
 {
     return (lhs.value()==rhs.value());
 }
                              // ================
-                             // class my_Class1c
+                             // class MyClass1c
                              // ================
 
-class my_Class1c {
-  // This 'class' is a simple type that does not take allocators.  Its
-  // implementation owns a 'my_Class1' aggregate, but uses only the
-  // 'd_value' data member, to support the 'value' attribute.  The
-  // 'd_allocator_p' pointer is always initialized to a null pointer.
-  // The class is constructable from my_Class1, but not assignable from
-  // my_Class1
+class MyClass1c {
+    // This 'class' is a simple type that does not take allocators.  Its
+    // implementation owns a 'MyClass1' aggregate, but uses only the
+    // 'd_value' data member, to support the 'value' attribute.  The
+    // 'd_allocator_p' pointer is always initialized to a null pointer.
+    // The class is constructable from MyClass1, but not assignable from
+    // MyClass1
   public:
-    my_Class1 d_data;
+    MyClass1 d_data;
 
     // CREATORS
-    my_Class1c() : d_data() { }
+    MyClass1c() : d_data() { }
 
-    my_Class1c(int v)  : d_data(v) {}
+    MyClass1c(int v)  : d_data(v) {}
 
     explicit
-    my_Class1c(const my_Class1& v)
+    MyClass1c(const MyClass1& v)
     : d_data(v) {}
 
     explicit
-    my_Class1c(bslmf::MovableRef<my_Class1> v)
+    MyClass1c(bslmf::MovableRef<MyClass1> v)
     : d_data(MovUtl::move(v)) {}
 
-    my_Class1c(const my_Class1c& rhs) : d_data(rhs.d_data) {}
+    MyClass1c(const MyClass1c& rhs) : d_data(rhs.d_data) {}
 
-    my_Class1c(bslmf::MovableRef<my_Class1c> rhs)
+    MyClass1c(bslmf::MovableRef<MyClass1c> rhs)
     : d_data(MovUtl::move(MovUtl::access(rhs).d_data)) {}
 
     // MANIPULATORS
-    my_Class1c& operator=(const my_Class1c& rhs) {
+    MyClass1c& operator=(const MyClass1c& rhs) {
     d_data.operator=(rhs.d_data);
     return *this;
     }
 
-    my_Class1c& operator=(bslmf::MovableRef<my_Class1c> rhs) {
+    MyClass1c& operator=(bslmf::MovableRef<MyClass1c> rhs) {
     d_data.operator=(MovUtl::move(MovUtl::access(rhs).d_data));
     return *this;
     }
@@ -397,55 +398,55 @@ class my_Class1c {
     // ACCESSORS
     int value() const { return d_data.value(); }
 };
-bool operator==(const my_Class1c& lhs,
-                const my_Class1c& rhs)
+bool operator==(const MyClass1c& lhs,
+                const MyClass1c& rhs)
 {
     return (lhs.value()==rhs.value());
 }
 
                              // ===============
-                             // class my_Class2
+                             // class MyClass2
                              // ===============
 
-class my_Class2 {
+class MyClass2 {
     // This 'class' supports the 'bslma::UsesBslmaAllocator' trait, providing
     // an allocator-aware version of every constructor.  While it holds an
     // allocator and has the expected allocator propagation properties of a
     // 'bslma::Allocator'-aware type, it does not actually allocate any memory.
     // In many ways, this is similar to a 'std::string' object that never grows
     // beyond the small string optimization.  The 'd_data_p' member of the
-    // wrapper 'my_ClassDef' implementation type is never initialized, nor
+    // wrapper 'MyClassDef' implementation type is never initialized, nor
     // used.  A signal value, 'MOVED_FROM_VAL', is used to detect an object in
     // a moved-from state.
 
  public:
 
     // DATA
-    my_ClassDef d_def;
+    MyClassDef d_def;
 
     static int copyConstructorInvocations;
     static int moveConstructorInvocations;
 
     // CREATORS
     explicit
-    my_Class2(bslma::Allocator *a = 0) {
+    MyClass2(bslma::Allocator *a = 0) {
         d_def.d_value = 0;
         d_def.d_allocator_p = a;
     }
 
-    my_Class2(int v, bslma::Allocator *a = 0) {
+    MyClass2(int v, bslma::Allocator *a = 0) {
         d_def.d_value = v;
         d_def.d_allocator_p = a;
     }
-    my_Class2(const my_Class2& rhs, bslma::Allocator *a = 0) {
+    MyClass2(const MyClass2& rhs, bslma::Allocator *a = 0) {
         d_def.d_value = rhs.d_def.d_value;
         d_def.d_allocator_p = a;
         copyConstructorInvocations++;
     }
 
-    my_Class2(bslmf::MovableRef<my_Class2> other, bslma::Allocator *a = 0) {
+    MyClass2(bslmf::MovableRef<MyClass2> other, bslma::Allocator *a = 0) {
 
-        my_Class2& otherRef = MovUtl::access(other);
+        MyClass2& otherRef = MovUtl::access(other);
         d_def.d_value = otherRef.d_def.d_value;
         otherRef.d_def.d_value = MOVED_FROM_VAL;
         if (a) {
@@ -457,20 +458,20 @@ class my_Class2 {
         moveConstructorInvocations++;
     }
 
-    my_Class2(const my_Class1& rhs, bslma::Allocator *a = 0) {
+    MyClass2(const MyClass1& rhs, bslma::Allocator *a = 0) {
         d_def.d_value = rhs.d_def.d_value;
         d_def.d_allocator_p = a;
     }
 
-    my_Class2(bslmf::MovableRef<my_Class1> other, bslma::Allocator *a = 0) {
+    MyClass2(bslmf::MovableRef<MyClass1> other, bslma::Allocator *a = 0) {
 
-        my_Class1& otherRef = MovUtl::access(other);
+        MyClass1& otherRef = MovUtl::access(other);
         d_def.d_value = otherRef.d_def.d_value;
         otherRef.d_def.d_value = MOVED_FROM_VAL;
         d_def.d_allocator_p = a;
     }
 
-    ~my_Class2() {
+    ~MyClass2() {
         ASSERT(d_def.d_value != 92);
         d_def.d_value = 92;
         d_def.d_allocator_p = 0;
@@ -478,29 +479,23 @@ class my_Class2 {
     }
 
     // MANIPULATORS
-    my_Class2& operator=(const my_Class2& rhs) {
+    MyClass2& operator=(const MyClass2& rhs) {
         d_def.d_value = rhs.d_def.d_value;
-
         // do not touch allocator!
-
         return *this;
     }
 
-    my_Class2& operator=(bslmf::MovableRef<my_Class2> rhs) {
-        my_Class2& otherRef = MovUtl::access(rhs);
+    MyClass2& operator=(bslmf::MovableRef<MyClass2> rhs) {
+        MyClass2& otherRef = MovUtl::access(rhs);
         d_def.d_value = otherRef.d_def.d_value;
         otherRef.d_def.d_value = MOVED_FROM_VAL;
-
         // do not touch allocator!
-
         return *this;
     }
 
-    my_Class2& operator=(int rhs) {
+    MyClass2& operator=(int rhs) {
         d_def.d_value = rhs;
-
         // do not touch allocator!
-
         return *this;
     }
 
@@ -508,100 +503,100 @@ class my_Class2 {
     int value() const { return d_def.d_value; }
 };
 // CLASS DATA
-int my_Class2::copyConstructorInvocations       = 0;
-int my_Class2::moveConstructorInvocations       = 0;
-bool operator==(const my_Class2& lhs,
-                const my_Class2& rhs)
+int MyClass2::copyConstructorInvocations       = 0;
+int MyClass2::moveConstructorInvocations       = 0;
+bool operator==(const MyClass2& lhs,
+                const MyClass2& rhs)
 {
     return (lhs.value()==rhs.value());
 }
 
 bool operator==(const int& lhs,
-                const my_Class2& rhs)
+                const MyClass2& rhs)
 {
     return (lhs==rhs.value());
 }
-bool operator==(const my_Class2& lhs,
+bool operator==(const MyClass2& lhs,
                 const int& rhs)
 {
     return (lhs.value()==rhs);
 }
-bool operator!=(const my_Class2& lhs,
-                const my_Class2& rhs)
+bool operator!=(const MyClass2& lhs,
+                const MyClass2& rhs)
 {
     return !(lhs ==rhs);
 }
 
 bool operator!=(const int& lhs,
-                const my_Class2& rhs)
+                const MyClass2& rhs)
 {
     return !(lhs ==rhs);
 }
-bool operator!=(const my_Class2& lhs,
+bool operator!=(const MyClass2& lhs,
                 const int& rhs)
 {
     return !(lhs ==rhs);
 }
-bool operator<(const my_Class2& lhs,
-                const my_Class2& rhs)
+bool operator<(const MyClass2& lhs,
+                const MyClass2& rhs)
 {
     return (lhs.value()<rhs.value());
 }
 
 bool operator<(const int& lhs,
-                const my_Class2& rhs)
+                const MyClass2& rhs)
 {
     return (lhs<rhs.value());
 }
-bool operator<(const my_Class2& lhs,
+bool operator<(const MyClass2& lhs,
                 const int& rhs)
 {
     return (lhs.value()<rhs);
 }
-bool operator>(const my_Class2& lhs,
-                const my_Class2& rhs)
+bool operator>(const MyClass2& lhs,
+                const MyClass2& rhs)
 {
     return (lhs.value()>rhs.value());
 }
 
 bool operator>(const int& lhs,
-                const my_Class2& rhs)
+                const MyClass2& rhs)
 {
     return (lhs>rhs.value());
 }
-bool operator>(const my_Class2& lhs,
+bool operator>(const MyClass2& lhs,
                 const int& rhs)
 {
     return (lhs.value()>rhs);
 }
-bool operator<=(const my_Class2& lhs,
-                const my_Class2& rhs)
+bool operator<=(const MyClass2& lhs,
+                const MyClass2& rhs)
 {
     return (lhs.value()<=rhs.value());
 }
 
 bool operator<=(const int& lhs,
-                const my_Class2& rhs)
+                const MyClass2& rhs)
 {
     return (lhs<=rhs.value());
 }
-bool operator<=(const my_Class2& lhs,
+bool operator<=(const MyClass2& lhs,
                 const int& rhs)
 {
     return (lhs.value()<=rhs);
 }
-bool operator>=(const my_Class2& lhs,
-                const my_Class2& rhs)
+bool operator>=(const MyClass2& lhs,
+                const MyClass2& rhs)
 {
     return (lhs.value()>=rhs.value());
 }
 
 bool operator>=(const int& lhs,
-                const my_Class2& rhs)
+                const MyClass2& rhs)
 {
     return (lhs>=rhs.value());
 }
-bool operator>=(const my_Class2& lhs,
+bool operator>=(const MyClass2& lhs,
                 const int& rhs)
 {
     return (lhs.value()>=rhs);
@@ -612,91 +607,89 @@ namespace BloombergLP {
 namespace bslma {
 
 template <>
-struct UsesBslmaAllocator<my_Class2> : bsl::true_type { };
+struct UsesBslmaAllocator<MyClass2> : bsl::true_type { };
 
 }  // close namespace bslma
 }  // close enterprise namespace
 
                                  // ==========
-                                 // my_Class2a
+                                 // MyClass2a
                                  // ==========
 
-class my_Class2a {
-    // This 'class' behaves the same as 'my_Class2' (allocator-aware type that
+class MyClass2a {
+    // This 'class' behaves the same as 'MyClass2' (allocator-aware type that
     // never actually allocates memory) except that it uses the
     // 'allocator_arg_t' idiom for passing an allocator to constructors.
-    // This class is constructable and assignable from my_Class2
-
-
+    // This class is constructable and assignable from MyClass2
   public:
-    my_Class2 d_data;
+    MyClass2 d_data;
 
     static int copyConstructorInvocations;
     static int moveConstructorInvocations;
 
     // CREATORS
-    my_Class2a() : d_data() { }
+    MyClass2a() : d_data() { }
 
-    my_Class2a(bsl::allocator_arg_t, bslma::Allocator *a) : d_data(a) {}
+    MyClass2a(bsl::allocator_arg_t, bslma::Allocator *a) : d_data(a) {}
 
     explicit
-    my_Class2a(int v)  : d_data(v) {}
+    MyClass2a(int v)  : d_data(v) {}
 
-    my_Class2a(const my_Class2& rhs) : d_data(rhs) {}
+    MyClass2a(const MyClass2& rhs) : d_data(rhs) {}
 
-    my_Class2a(bslmf::MovableRef<my_Class2> rhs)
+    MyClass2a(bslmf::MovableRef<MyClass2> rhs)
       : d_data(MovUtl::move(rhs)) {}
 
-    my_Class2a(bsl::allocator_arg_t, bslma::Allocator *a, int v)
+    MyClass2a(bsl::allocator_arg_t, bslma::Allocator *a, int v)
         : d_data(v, a) {}
 
-    my_Class2a(bsl::allocator_arg_t, bslma::Allocator *a,const my_Class2& v)
+    MyClass2a(bsl::allocator_arg_t, bslma::Allocator *a,const MyClass2& v)
             : d_data(v, a) {}
 
-    my_Class2a(bsl::allocator_arg_t, bslma::Allocator *a,
-                bslmf::MovableRef<my_Class2> v)
+    MyClass2a(bsl::allocator_arg_t, bslma::Allocator *a,
+              bslmf::MovableRef<MyClass2> v)
             : d_data(MovUtl::move(v), a) {}
 
 
-    my_Class2a(const my_Class2a& rhs) : d_data(rhs.d_data)
+    MyClass2a(const MyClass2a& rhs) : d_data(rhs.d_data)
     {
         ++copyConstructorInvocations;
     }
 
-    my_Class2a(bsl::allocator_arg_t  ,
-               bslma::Allocator     *a,
-               const my_Class2a&     rhs)
+    MyClass2a(bsl::allocator_arg_t  ,
+              bslma::Allocator     *a,
+              const MyClass2a&     rhs)
         : d_data(rhs.d_data, a)
     {
         ++copyConstructorInvocations;
     }
 
-    my_Class2a(bslmf::MovableRef<my_Class2a> rhs)
+    MyClass2a(bslmf::MovableRef<MyClass2a> rhs)
         : d_data(MovUtl::move(MovUtl::access(rhs).d_data))
     {
         ++moveConstructorInvocations;
     }
 
-    my_Class2a(bsl::allocator_arg_t,
-               bslma::Allocator              *a,
-               bslmf::MovableRef<my_Class2a>  rhs)
+    MyClass2a(bsl::allocator_arg_t,
+              bslma::Allocator              *a,
+              bslmf::MovableRef<MyClass2a>  rhs)
         : d_data(MovUtl::move(MovUtl::access(rhs).d_data), a)
     {
         ++moveConstructorInvocations;
     }
 
     // MANIPULATORS
-    my_Class2a& operator=(const my_Class2a& rhs) {
+    MyClass2a& operator=(const MyClass2a& rhs) {
         d_data.operator=(rhs.d_data);
         return *this;
     }
 
-    my_Class2a& operator=(bslmf::MovableRef<my_Class2a> rhs) {
+    MyClass2a& operator=(bslmf::MovableRef<MyClass2a> rhs) {
         d_data.operator=(MovUtl::move(MovUtl::access(rhs).d_data));
         return *this;
     }
 
-    my_Class2a& operator=(int rhs) {
+    MyClass2a& operator=(int rhs) {
         d_data.operator=(rhs);
         return *this;
     }
@@ -704,86 +697,84 @@ class my_Class2a {
     int value() const { return d_data.value(); }
 };
 
-bool operator==(const my_Class2a& lhs,
-                const my_Class2a& rhs)
+bool operator==(const MyClass2a& lhs,
+                const MyClass2a& rhs)
 {
     return (lhs.value()==rhs.value());
 }
-int my_Class2a::copyConstructorInvocations       = 0;
-int my_Class2a::moveConstructorInvocations       = 0;
+int MyClass2a::copyConstructorInvocations       = 0;
+int MyClass2a::moveConstructorInvocations       = 0;
 // TRAITS
 namespace BloombergLP {
 
 namespace bslma {
-template <> struct UsesBslmaAllocator<my_Class2a> : bsl::true_type { };
+template <> struct UsesBslmaAllocator<MyClass2a> : bsl::true_type { };
 }  // close namespace bslma
 
 namespace bslmf {
-template <> struct UsesAllocatorArgT<my_Class2a> : bsl::true_type { };
+template <> struct UsesAllocatorArgT<MyClass2a> : bsl::true_type { };
 }  // close namespace bslmf
 
 }  // close enterprise namespace
 
-                                 // ==========
-                                 // my_Class2b
-                                 // ==========
+                        // ==========
+                        // MyClass2b
+                        // ==========
 
-class my_Class2b {
-  // This 'class' behaves the same as 'my_Class2' (allocator-aware type that
-  // never actually allocates memory) except that it uses the
-  // 'allocator_arg_t' idiom for passing an allocator to constructors.
-  // This class is assignable from my_Class2, but not constructible from
-  // my_Class2
-
-
+class MyClass2b {
+    // This 'class' behaves the same as 'MyClass2' (allocator-aware type that
+    // never actually allocates memory) except that it uses the
+    // 'allocator_arg_t' idiom for passing an allocator to constructors.
+    // This class is assignable from MyClass2, but not constructible from
+    // MyClass2
   public:
-    my_Class2 d_data;
+    MyClass2 d_data;
 
     // CREATORS
-    my_Class2b() : d_data() { }
+    MyClass2b() : d_data() { }
 
-    my_Class2b(bsl::allocator_arg_t, bslma::Allocator *a) : d_data(a) {}
+    MyClass2b(bsl::allocator_arg_t, bslma::Allocator *a) : d_data(a) {}
 
-    my_Class2b(const my_Class2b& rhs) : d_data(rhs.d_data) {}
+    MyClass2b(const MyClass2b& rhs) : d_data(rhs.d_data) {}
 
-    my_Class2b(bsl::allocator_arg_t  ,
+    MyClass2b(bsl::allocator_arg_t  ,
                 bslma::Allocator     *a,
-                const my_Class2b&     rhs)
+                const MyClass2b&     rhs)
     : d_data(rhs.d_data, a) {}
 
-    my_Class2b(bslmf::MovableRef<my_Class2b> rhs)
+    MyClass2b(bslmf::MovableRef<MyClass2b> rhs)
     : d_data(MovUtl::move(MovUtl::access(rhs).d_data)) {}
 
-    my_Class2b(bsl::allocator_arg_t,
+    MyClass2b(bsl::allocator_arg_t,
                 bslma::Allocator              *a,
-                bslmf::MovableRef<my_Class2b>  rhs)
+                bslmf::MovableRef<MyClass2b>  rhs)
     : d_data(MovUtl::move(MovUtl::access(rhs).d_data), a) {}
 
     // MANIPULATORS
-    my_Class2b& operator=(const my_Class2b& rhs) {
+    MyClass2b& operator=(const MyClass2b& rhs) {
         d_data.operator=(rhs.d_data);
         return *this;
     }
 
-    my_Class2b& operator=(bslmf::MovableRef<my_Class2b> rhs) {
+    MyClass2b& operator=(bslmf::MovableRef<MyClass2b> rhs) {
         d_data.operator=(MovUtl::move(MovUtl::access(rhs).d_data));
         return *this;
     }
 
-    my_Class2b& operator=(const my_Class2& rhs) {
+    MyClass2b& operator=(const MyClass2& rhs) {
        d_data.operator=(rhs);
        return *this;
     }
 
-    my_Class2b& operator=(bslmf::MovableRef<my_Class2> rhs) {
+    MyClass2b& operator=(bslmf::MovableRef<MyClass2> rhs) {
        d_data.operator=(MovUtl::move(MovUtl::access(rhs)));
        return *this;
     }
     // ACCESSORS
     int value() const { return d_data.value(); }
 };
-bool operator==(const my_Class2b& lhs,
-                const my_Class2b& rhs)
+bool operator==(const MyClass2b& lhs,
+                const MyClass2b& rhs)
 {
     return (lhs.value()==rhs.value());
 }
@@ -792,84 +783,84 @@ bool operator==(const my_Class2b& lhs,
 namespace BloombergLP {
 
 namespace bslma {
-template <> struct UsesBslmaAllocator<my_Class2b> : bsl::true_type { };
+template <> struct UsesBslmaAllocator<MyClass2b> : bsl::true_type { };
 }  // close namespace bslma
 
 namespace bslmf {
-template <> struct UsesAllocatorArgT<my_Class2b> : bsl::true_type { };
+template <> struct UsesAllocatorArgT<MyClass2b> : bsl::true_type { };
 }  // close namespace bslmf
 
 }  // close enterprise namespace
 
 
-                                 // ==========
-                                 // my_Class2c
-                                 // ==========
+                        // ==========
+                        // MyClass2c
+                        // ==========
 
-class my_Class2c {
-  // This 'class' behaves the same as 'my_Class2' (allocator-aware type that
+class MyClass2c {
+  // This 'class' behaves the same as 'MyClass2' (allocator-aware type that
   // never actually allocates memory) except that it uses the
   // 'allocator_arg_t' idiom for passing an allocator to constructors.
-  // This class is constructable from my_Class2, but not assignable from
-  // my_Class2
+  // This class is constructable from MyClass2, but not assignable from
+  // MyClass2
 
   public:
-    my_Class2 d_data;
+    MyClass2 d_data;
 
     // CREATORS
-    my_Class2c() : d_data() { }
+    MyClass2c() : d_data() { }
 
-    my_Class2c(bsl::allocator_arg_t, bslma::Allocator *a) : d_data(a) {}
+    MyClass2c(bsl::allocator_arg_t, bslma::Allocator *a) : d_data(a) {}
 
     explicit
-    my_Class2c(int v)  : d_data(v) {}
+    MyClass2c(int v)  : d_data(v) {}
 
-    my_Class2c(bsl::allocator_arg_t, bslma::Allocator *a, int v)
+    MyClass2c(bsl::allocator_arg_t, bslma::Allocator *a, int v)
     : d_data(v, a) {}
 
-    my_Class2c(bsl::allocator_arg_t, bslma::Allocator *a,const my_Class2& v)
+    MyClass2c(bsl::allocator_arg_t, bslma::Allocator *a,const MyClass2& v)
     : d_data(v, a) {}
 
-    my_Class2c(bsl::allocator_arg_t, bslma::Allocator *a,
-    bslmf::MovableRef<my_Class2> v)
+    MyClass2c(bsl::allocator_arg_t, bslma::Allocator *a,
+    bslmf::MovableRef<MyClass2> v)
     : d_data(MovUtl::move(v), a) {}
 
 
-    my_Class2c(const my_Class2c& rhs) : d_data(rhs.d_data) {}
+    MyClass2c(const MyClass2c& rhs) : d_data(rhs.d_data) {}
 
-    my_Class2c(bsl::allocator_arg_t  ,
+    MyClass2c(bsl::allocator_arg_t  ,
     bslma::Allocator     *a,
-    const my_Class2c&     rhs)
+    const MyClass2c&     rhs)
     : d_data(rhs.d_data, a) {}
 
-    my_Class2c(bslmf::MovableRef<my_Class2c> rhs)
+    MyClass2c(bslmf::MovableRef<MyClass2c> rhs)
     : d_data(MovUtl::move(MovUtl::access(rhs).d_data)) {}
 
-    my_Class2c(bsl::allocator_arg_t,
+    MyClass2c(bsl::allocator_arg_t,
               bslma::Allocator              *a,
-              bslmf::MovableRef<my_Class2c>  rhs)
+              bslmf::MovableRef<MyClass2c>  rhs)
     : d_data(MovUtl::move(MovUtl::access(rhs).d_data), a) {}
 
     // MANIPULATORS
-    my_Class2c& operator=(const my_Class2c& rhs) {
+    MyClass2c& operator=(const MyClass2c& rhs) {
         d_data.operator=(rhs.d_data);
         return *this;
     }
 
-    my_Class2c& operator=(bslmf::MovableRef<my_Class2c> rhs) {
+    MyClass2c& operator=(bslmf::MovableRef<MyClass2c> rhs) {
         d_data.operator=(MovUtl::move(MovUtl::access(rhs).d_data));
         return *this;
     }
 
-    my_Class2c& operator=(int rhs) {
+    MyClass2c& operator=(int rhs) {
         d_data.operator=(rhs);
         return *this;
     }
     // ACCESSORS
     int value() const { return d_data.value(); }
 };
-bool operator==(const my_Class2c& lhs,
-                const my_Class2c& rhs)
+bool operator==(const MyClass2c& lhs,
+                const MyClass2c& rhs)
 {
     return (lhs.value()==rhs.value());
 }
@@ -877,51 +868,51 @@ bool operator==(const my_Class2c& lhs,
 namespace BloombergLP {
 
 namespace bslma {
-template <> struct UsesBslmaAllocator<my_Class2c> : bsl::true_type { };
+template <> struct UsesBslmaAllocator<MyClass2c> : bsl::true_type { };
 }  // close namespace bslma
 
 namespace bslmf {
-template <> struct UsesAllocatorArgT<my_Class2c> : bsl::true_type { };
+template <> struct UsesAllocatorArgT<MyClass2c> : bsl::true_type { };
 }  // close namespace bslmf
 
 }  // close enterprise namespace
 
-                              // ===============
-                              // class my_Class3
-                              // ===============
+                        // ===============
+                        // class MyClass3
+                        // ===============
 
-class my_Class3 {
-// This 'class' takes allocators similarly to 'my_Class2'. In addition,
-// it has overloads taking const rvalues.
+class MyClass3 {
+    // This 'class' takes allocators similarly to 'MyClass2'. In addition,
+    // it has overloads taking const rvalues.
 
-public:
+  public:
 
       // DATA
-      my_ClassDef d_def;
+      MyClassDef d_def;
 
       // CREATORS
       explicit
-      my_Class3(bslma::Allocator *a = 0) {
+      MyClass3(bslma::Allocator *a = 0) {
           d_def.d_value = 0;
           d_def.d_allocator_p = a;
       }
-      my_Class3(int v, bslma::Allocator *a = 0) {
+      MyClass3(int v, bslma::Allocator *a = 0) {
           d_def.d_value = v;
           d_def.d_allocator_p = a;
       }
-      my_Class3(const my_Class3& rhs, bslma::Allocator *a = 0) {
+      MyClass3(const MyClass3& rhs, bslma::Allocator *a = 0) {
           d_def.d_value = rhs.d_def.d_value;
           d_def.d_allocator_p = a;
       }
 
-      my_Class3(const my_Class2& rhs, bslma::Allocator *a = 0) {
+      MyClass3(const MyClass2& rhs, bslma::Allocator *a = 0) {
           d_def.d_value = rhs.d_def.d_value;
           d_def.d_allocator_p = a;
       }
 
-      my_Class3(bslmf::MovableRef<my_Class3> other, bslma::Allocator *a = 0) {
+      MyClass3(bslmf::MovableRef<MyClass3> other, bslma::Allocator *a = 0) {
 
-          my_Class3& otherRef = MovUtl::access(other);
+          MyClass3& otherRef = MovUtl::access(other);
           d_def.d_value = otherRef.d_def.d_value + 10;
           otherRef.d_def.d_value = MOVED_FROM_VAL;
           if (a) {
@@ -932,7 +923,7 @@ public:
           }
       }
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
-      my_Class3(const my_Class3&& other, bslma::Allocator *a = 0) {
+      MyClass3(const MyClass3&& other, bslma::Allocator *a = 0) {
           d_def.d_value = other.d_def.d_value + 20;
           if (a) {
               d_def.d_allocator_p = a;
@@ -942,7 +933,7 @@ public:
           }
       }
 #endif
-      ~my_Class3() {
+      ~MyClass3() {
           ASSERT(d_def.d_value != 93);
           d_def.d_value = 93;
           d_def.d_allocator_p = 0;
@@ -950,7 +941,7 @@ public:
       }
 
       // MANIPULATORS
-      my_Class3& operator=(const my_Class3& rhs) {
+      MyClass3& operator=(const MyClass3& rhs) {
           d_def.d_value = rhs.d_def.d_value;
           // do not touch allocator!
           return *this;
@@ -965,56 +956,56 @@ namespace BloombergLP {
 namespace bslma {
 
 template <>
-struct UsesBslmaAllocator<my_Class3> : bsl::true_type { };
+struct UsesBslmaAllocator<MyClass3> : bsl::true_type { };
 
 }  // close namespace bslma
 }  // close enterprise namespace
 
                       // ===============
-                      // class my_Class4
+                      // class MyClass4
                       // ===============
 
-class my_Class4 {
+class MyClass4 {
 
-    // This 'class' is the same as my_Class3, except it doesn't use
+    // This 'class' is the same as MyClass3, except it doesn't use
     // allocators.
 
 public:
 
     // DATA
-    my_ClassDef d_def;
+    MyClassDef d_def;
 
     // CREATORS
     explicit
-    my_Class4() {
+    MyClass4() {
         d_def.d_value = 0;
         d_def.d_allocator_p = 0;
     }
-    my_Class4(int v) {
+    MyClass4(int v) {
         d_def.d_value = v;
         d_def.d_allocator_p = 0;
     }
-    my_Class4(const my_Class4& rhs) {
+    MyClass4(const MyClass4& rhs) {
         d_def.d_value = rhs.d_def.d_value;
         d_def.d_allocator_p = 0;
     }
 
-    my_Class4(const my_Class2& rhs) {
+    MyClass4(const MyClass2& rhs) {
         d_def.d_value = rhs.d_def.d_value;
         d_def.d_allocator_p = 0;
     }
 
-    my_Class4(bslmf::MovableRef<my_Class4> other) {
-        my_Class4& otherRef = MovUtl::access(other);
+    MyClass4(bslmf::MovableRef<MyClass4> other) {
+        MyClass4& otherRef = MovUtl::access(other);
         d_def.d_value = otherRef.d_def.d_value + 10;
         otherRef.d_def.d_value = MOVED_FROM_VAL;
     }
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
-    my_Class4(const my_Class4&& other) {
+    MyClass4(const MyClass4&& other) {
         d_def.d_value = other.d_def.d_value + 20;
     }
 #endif //BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS
-    ~my_Class4() {
+    ~MyClass4() {
         ASSERT(d_def.d_value != 93);
         d_def.d_value = 93;
         d_def.d_allocator_p = 0;
@@ -1022,7 +1013,7 @@ public:
     }
 
     // MANIPULATORS
-    my_Class4& operator=(const my_Class4& rhs) {
+    MyClass4& operator=(const MyClass4& rhs) {
         d_def.d_value = rhs.d_def.d_value;
         return *this;
     }
@@ -4323,10 +4314,10 @@ bool createdAlike(const ConstructTestTypeAllocArgTIL& lhs,
         lhs.d_a14.d_copied_count == rhs.d_a14.d_copied_count;
 }
 
-const my_Class1     V1(1);
-const my_Class2     V2(2);
-const my_Class3     V4(4);
-const my_Class4     V5(5);
+const MyClass1     V1(1);
+const MyClass2     V2(2);
+const MyClass3     V4(4);
+const MyClass4     V5(5);
 ConstructTestArg<1>    VA1(1);
 ConstructTestArg<2>    VA2(2);
 ConstructTestArg<3>    VA3(3);
@@ -4390,7 +4381,7 @@ struct SwappableAA {
     static int s_swapCalled;
 
     // PUBLIC DATA
-    my_ClassDef d_def;
+    MyClassDef d_def;
 
     // CLASS METHODS
     static bool swapCalled()
@@ -4713,27 +4704,28 @@ void bslstl_optional_test1()
     //   working as expected.
     //
     // Concerns:
-    //   * The default constructor must create a disengaged object.
-    //   * Constructor taking nullopt_T must create a disengaged object
-    //   * Optional's allocator is the default allocator
+    //: 1 That the default constructor creates a disengaged object. If the
+    //:   value type is allocator aware, the allocator class member is the
+    //:   default allocator .
+    //: 2 That the constructor taking 'nullopt_t' object creates a disengaged
+    //:   object with a default allocator. If the value type is allocator
+    //:   aware, the allocator class member is the default allocator.
     //
     // Plan:
-    //   Conduct the test using 'int' (does not use allocator) and
-    //   'bsl::string' (uses allocator) for 'TYPE'.  (Check that
-    //   'ValueType' is the right size in each case.)
-    //
-    //   First, verify the default constructor by testing that the
-    //   resulting object is null. For bsl::string, verify that the
-    //   resulting object's allocator is the default allocator.
-    //
-    //   Next, verify the constructor taking nullopt_t by testing that the
-    //   resulting object is null. For bsl::string, verify that the
-    //   resulting object's allocator is the default allocator.
-    //
-    //   Note that the destructor is exercised on each configuration as the
-    //   object being tested leaves scope.
-    //
-    //   Invoke all const methods on a const object.
+    //: 1 Construct an 'optional' object of a non allocator aware type using
+    //:   default construction and, for concern 1, verify that the 'optional'
+    //:   object is disengaged.
+    //: 2 Construct an 'optional' object of an allocator aware type using
+    //:   default construction and, for concern 1, verify that the 'optional'
+    //:   object is disengaged and that the 'get_allocator' method returns the
+    //:   default allocator.
+    //: 3 Construct an 'optional' object of a non allocator aware type using
+    //:   the constructor that takes 'nullopt_t' argument and, for concern 2,
+    //:   verify that the 'optional' object is disengaged.
+    //: 4 Construct an 'optional' object of an allocator aware type using
+    //:   using the constructor that takes 'nullopt_t' argument, and for
+    //:   concern 2, verify that the 'optional' bject is disengaged and that
+    //:   the 'get_allocator' method returns the default allocator.
     //
     // Testing:
     //   typedef TYPE value_type;
@@ -4745,8 +4737,9 @@ void bslstl_optional_test1()
     // --------------------------------------------------------------------
 
     if (verbose) printf(
-                       "\nTESTING PRIMARY MANIPULATORS AND BASIC ACCESSORS"
-                       "\n================================================\n");
+                       "\nTESTING DISENGAGED CONSTRUCTORS AND BASIC ACCESSORS"
+                       "\n==================================================="
+                       "\n");
 
     if (verbose) printf( "\nUsing 'bsl::optional<int>'.\n");
     {
@@ -4828,34 +4821,43 @@ void bslstl_optional_test2()
 {
     // --------------------------------------------------------------------
     // TESTING CONVERSION TO BOOL
-    //   This test will verify that the conversion to bool works as expected.
+    //   This test will verify that the conversion to 'bool' works as expected.
     //   The test relies on reset and emplace member functions, as well as
-    //   construction from a value_type.
+    //   construction from a value type.
     //
     // Concerns:
-    //   * A disengaged optional when converted to bool evaluates to false
-    //   * An engaged optional when converted to bool evaluates to true
+    //: 1 A disengaged 'optional' when converted to 'bool' evaluates to 'false'
+    //: 2 An engaged 'optional' when converted to 'bool' evaluates to 'true'
+    //: 3 Conversion to 'bool' can be performed on a 'const optional' object.
+    //: 4 'has_value' method returns 'true' if the 'optional' object evaluates
+    //:   to 'true. Otherwise, it returns 'false'.
+    //: 5 'has_value' method can be invoked on a 'const optional' object.
+    //: 6 That the above applies to an 'optional' object of 'const' qualified
+    //:   value type.
     //
     // Plan:
-    //   Conduct the test using 'int' (does not use allocator) and
-    //   'bsl::string' (uses allocator) for 'TYPE'.
-    //
-    //   Create disengaged optional of each type and verify they
-    //   evaluate to false when converted to bool.
-    //
-    //   Emplace a value in each optional and verify they evaluate to true
-    //   when converted to bool.
-    //
-    //   Call reset() on each optional and verify they evaluate to false
-    //   when converted to bool.
-    //
-    //   Finally, create engaged optional of each type and verify they
-    //   evaluate to true when converted to bool.
-    //
-    //   Note that the destructor is exercised on each configuration as the
-    //   object being tested leaves scope.
-    //
-    //   Invoke const methods on a const object.
+    //: 1 Create a disengaged 'optional' of a non allocator aware type and,
+    //:   for concern 1, verify that it evaluates to 'false' when converted to
+    //:   'bool'. For concern 4, verify that 'has_value' returns 'false'.
+    //: 2 Emplace a value in the 'optional' object and, for concern 2, verify
+    //:   that it evaluates to 'true' when converted to 'bool'. For concern 4,
+    //:   verify that 'has_value' returns 'true'.
+    //: 3 Call 'reset' method and, for concern 1, verify that the 'optional'
+    //:   object evaluates to 'false' when converted to 'bool'. For concern 4,
+    //:   verify that 'has_value' returns 'true'.
+    //: 4 Create an engaged 'optional' of a non allocator aware type and,
+    //:   for concern 1, verify that it evaluates to 'true' when converted to
+    //:   'bool'. For concern 4, verify that 'has_value' returns 'true'.
+    //: 5 Repeat steps 1-4 with an 'optional' of an allocator aware value type.
+    //: 6 Using a 'const' qualified 'optional' object of a non allocator aware
+    //:   value type and, for concern 3, confirm the conversion to 'bool' is
+    //:   possible. Repeat the step for an 'optional' object of an allocator
+    //:   aware value type.
+    //: 7 using a 'const' qualified 'optional' object of a non allocator aware
+    //:   value type and, for concern 5, confirm the 'has_value' method can be
+    //:   invoked. Repeat the step for an 'optional' object of an allocator
+    //:   aware value type.
+    //: 8 for concern 6, repeat steps 1-7 using a 'const' qualified value type.
     //
     // Testing:
     //   operator bool() const;
@@ -4869,7 +4871,7 @@ void bslstl_optional_test2()
 
     if (verbose) printf(
                        "\nTESTING CONVERSION TO BOOL "
-                       "\n================================================\n");
+                       "\n==========================\n");
 
     if (verbose) printf( "\nUsing 'bsl::optional<int>'.\n");
     {
@@ -4881,12 +4883,7 @@ void bslstl_optional_test2()
             ASSERT(!X);
             ASSERT(false == X.has_value());
 
-            if (veryVerbose) printf( "\templacing a value.\n");
             mX.emplace(1);
-            ASSERT(mX);
-            ASSERT(true == mX.has_value());
-
-            mX.emplace(3);
             ASSERT(mX);
             ASSERT(true == mX.has_value());
 
@@ -4898,10 +4895,6 @@ void bslstl_optional_test2()
             Obj mX = Obj(2);
             ASSERT(mX);
             ASSERT(true == mX.has_value());
-
-            mX.reset();
-            ASSERT(!mX);
-            ASSERT(false == mX.has_value());
         }
     }
     if (verbose) printf( "\nUsing 'bsl::optional< const int>'.\n");
@@ -4914,12 +4907,7 @@ void bslstl_optional_test2()
             ASSERT(!X);
             ASSERT(false == X.has_value());
 
-            if (veryVerbose) printf( "\templacing a value.\n");
             mX.emplace(1);
-            ASSERT(mX);
-            ASSERT(true == mX.has_value());
-
-            mX.emplace(3);
             ASSERT(mX);
             ASSERT(true == mX.has_value());
 
@@ -4931,10 +4919,6 @@ void bslstl_optional_test2()
             Obj mX = Obj(2);
             ASSERT(mX);
             ASSERT(true == mX.has_value());
-
-            mX.reset();
-            ASSERT(!mX);
-            ASSERT(false == mX.has_value());
         }
     }
 
@@ -4958,11 +4942,7 @@ void bslstl_optional_test2()
             ASSERT(mX);
             ASSERT(true == mX.has_value());
 
-            mX.emplace("");
-            ASSERT(mX);
-            ASSERT(true == mX.has_value());
-
-            mX.reset();
+             mX.reset();
             ASSERT(!mX);
             ASSERT(false == mX.has_value());
         }
@@ -4970,10 +4950,6 @@ void bslstl_optional_test2()
             Obj mX = Obj(ValueType("tralala"));
             ASSERT(mX);
             ASSERT(true == mX.has_value());
-
-            mX.reset();
-            ASSERT(!mX);
-            ASSERT(false == mX.has_value());
         }
     }
     if (verbose) printf( "\nUsing 'bsl::optional<const bsl::string>'.\n");
@@ -4996,10 +4972,6 @@ void bslstl_optional_test2()
             ASSERT(mX);
             ASSERT(true == mX.has_value());
 
-            mX.emplace("");
-            ASSERT(mX);
-            ASSERT(true == mX.has_value());
-
             mX.reset();
             ASSERT(!mX);
             ASSERT(false == mX.has_value());
@@ -5009,38 +4981,35 @@ void bslstl_optional_test2()
             ASSERT(mX);
             ASSERT(true == mX.has_value());
 
-            mX.reset();
-            ASSERT(!mX);
-            ASSERT(false == mX.has_value());
         }
     }
 }
 void bslstl_optional_test3()
 {
     // --------------------------------------------------------------------
-    // TESTING RESET FUNCTIONALITY
+    // TESTING 'reset' MEMBER FUNCTION
     //   This test will verify that the reset function works as expected.
-    //   The test relies on constructors, has_value and emplace member functions.
+    //   The test relies on constructors, has_value and emplace member
+    //   functions.
     //
     // Concerns:
-    //   * A disengaged optional can be reset.
-    //   * An engaged optional after reset is disengaged.
-    //   * Calling reset does not modify the allocator
-    //   * Reset works on optional containing a constant type
+    //: 1 Calling 'reset' on an disengaged 'optional' leaves it disengaged.
+    //: 2 Calling 'reset' on an engaged 'optional' makes it disengaged.
+    //: 3 Calling 'reset' does not modify the allocator.
+    //: 4 An 'optional' object of 'const' qualified value type can be reset.
     //
     // Plan:
-    //   Conduct the test using 'int' (does not use allocator) and
-    //   'bsl::string' (uses allocator) for 'TYPE'. Run tests for const vesions
-    //   of the two types.
-    //
-    //   Create disengaged optional of each type. Call reset on an disengaged
-    //   optional. Check that the optional is disengaged by calling has_value.
-    //
-    //   Emplace a value in each optional. Call reset on an engaged
-    //   optional. Check that the optional is disengaged by calling has_value.
-    //
-    //   Create a optional<bsl::string> with an allocator. Call reset. Check
-    //   that the allocator has not changed.
+    //: 1 Create disengaged 'optional' of a non-allocator aware value type. For
+    //:   concern 1, call 'reset' on the created object and verify that it is
+    //:   still disengaged.
+    //: 2 Emplace a value in the 'optional' object. Call 'reset' on the test
+    //:   object and verify that it has been disengaged.
+    //: 3 Repeat steps 1-2 with an 'optional' object of an allocator aware
+    //:   value type. For concern 3, verify that the allocator does not change
+    //:   after invoking the 'reset' method.
+    //: 4 Repeat steps 1-3 with an 'optional' object of a 'const' qualified
+    //:   value type. For concern 4, verify that 'reset' method behaves the
+    //:   same as for non 'const' qualified value type.
     //
     // Testing:
     //   void reset();
@@ -5055,8 +5024,8 @@ void bslstl_optional_test3()
     // --------------------------------------------------------------------
 
     if (verbose) printf(
-                       "\nTESTING RESET MEMBER FUNCTION "
-                       "\n================================================\n");
+                       "\nTESTING 'reset' MEMBER FUNCTION "
+                       "\n===============================\n");
 
     if (verbose) printf( "\nUsing 'bsl::optional<int>'.\n");
     {
@@ -5195,69 +5164,88 @@ void bslstl_optional_test3()
 void bslstl_optional_test4()
 {
     // --------------------------------------------------------------------
-    // TESTING VALUE FUNCTIONALITY
-    //   This test will verify that the value function works as expected.
-    //   The test relies on constructors and emplace member functions.
+    // TESTING 'value' METHOD
+    //   This test will verify that the 'value' method works as expected.
+    //   The test relies on constructors and 'emplace' method.
     //
     //   MSVC2015 has a bug which removes constness from temporaries in certain
     //   situations. For example :
     //
     //       bsl::string = CObj("s").value();
     //
-    //   invokes non const qualified overload of value(), despite the fact the
-    //   temporary is of a const qualified bsl::optional. In the following
+    //   invokes non const qualified overload of 'value', despite the fact the
+    //   temporary is of a const qualified 'bsl::optional'. In the following
     //   example, the constness is preserved:
     //
     //       Cobj temp = Cobj("s");
     //       bsl::string = std::move(temp).value();
     //
-    //    The tests have ben written to take this issue into account.
+    //    The tests have been written to take this issue into account.
     //
     // Concerns:
-    //   * Calling value() on a engaged optional returns the value.
-    //   * Calling value() on a disengaged optional throws bad_optional_access
-    //     exception.
-    //   * It is possible to call value() on a constant optional object
-    //   * It is possible to call value() on a temporary optional object
-    //   * It is possible to modify non constant optional through call of
-    //     value()
-    //   * It is not possible to modify non constant optional through call of
-    //     value().
-    //     Note that this requires tests which check for compilation errors.
-    //   * It is possible to call value() on a temporary optional object
-    //   * It is not possible to modify non constant optional of const type
-    //     through call of value(). Note that this requires tests which check
-    //     for compilation errors.
-    //   * It is not possible to modify a constant optional of const type
-    //     through call of value(). Note that this requires tests which check
-    //     for compilation errors.
+    //: 1 Calling 'value()' on a disengaged 'optional' throws
+    //:   'bad_optional_access' exception.
+    //: 2 Calling 'value()' on a engaged 'optional' returns the reference
+    //:   to the value type object.
+    //: 3 It is possible to call 'value()' on a constant 'optional' object.
+    //:   The return reference is const qualified.
+    //: 4 It is possible to call 'value()' on a temporary 'optional' object. In
+    //:   C++11 and onwards, the returned reference is an rvalue reference.
+    //: 5 It is possible to modify non constant 'optional' of non constant
+    //:   value type through the reference returned by 'value' method.
+    //: 6 It is not possible to modify constant 'optional' object or a non
+    //:   constant 'optional' object of constant value type through the
+    //:   reference returned by 'value' method.
+    //:   Note that this requires tests which check for compilation errors and
+    //:   which need to be manually enabled and checked.
+    //: 7 That 'value' method behave sthe same for allocator aware types and
+    //:   non allocator aware types.
     //
     // Plan:
-    //   Conduct the test using 'int' (does not use allocator) and
-    //   'bsl::string' (uses allocator) for 'TYPE'.
-    //
-    //   Create disengaged optional of each type. Call value on a disengaged
-    //   optional. Check that the bad_optional_access exception is thrown.
-    //
-    //   Emplace a value in each optional. Call value on an engaged
-    //   optional. Check that the value is correct.
-    //
-    //   Bind const optional reference to optional object. Call value and check
-    //   that the value is correct.
-    //
-    //   Modify the retrieved value through the returned reference. Call value
-    //   on the optional object and check that the value is correct.
-    //
-    //   Call reset on the optional object. Call value() and check that the
-    //   the correct exception is thrown.
-    //
-    //   Call value on a disengaged temporary optional object. Check that the
-    //   correct exception is thrown.
-    //
-    //   Call value on an engaged temporary optional object. Check that the
-    //   correct value is returned.
-    //
-    //   Make sure no unexpected exception is thrown.
+    //: 1 Create a disengaged 'optional' of non allocator aware type. Call
+    //:   the 'value' method and, for concern 1, check that the
+    //:   'bad_optional_access' exception is thrown.
+    //: 2 Emplace a value in the 'optional' object. Call the 'value' method
+    //:   and, for concern 2, check that the returned object has the expected
+    //:   value.
+    //: 4 Modify the value of the 'optional' object through the reference
+    //:   returned from the 'value' method. For concern 5, call 'value' method
+    //:   check that the value of the 'optional' object has been modified.
+    //: 5 Call 'reset' on the 'optional' object. For concern 1, call 'value'
+    //:   method and check that the 'bad_optional_access' exception is thrown.
+    //: 6 Bind 'const optional' reference to the 'optional' object. For concern
+    //:   3, call the 'value' method through the const reference and check
+    //:   the value of the returned object.
+    //: 7 For concern 6, attempt to bind a non const reference to the result of
+    //:   invoking the 'value' method on a 'const optional' object. Note that
+    //:   this step should not compile and needs to be enabled and checked
+    //:   manually.
+    //: 8 For concern 6, attempt to bind a non const reference to the result of
+    //:   invoking the 'value' method on a 'optional' object of a const
+    //:   qualified value type. Note that this step should not compile and
+    //:   needs to be enabled and checked manually.
+    //: 9 For concern 4, call 'value' method on a disengaged temporary
+    //:   'optional' object. For concern 1, check that the
+    //:   'bad_optional_access' exception is thrown.
+    //:10 For concern 4, call 'value' method on an engaged temporary
+    //:   'optional' object. For concern 2, check that the returned value is
+    //:   as expected.
+    //:11 Using a move constructible value type, create a value type object
+    //:   initialised by a call to 'value' method on a temporary 'optional'
+    //:   object. For concern 5, check that value type was move constructed.
+    //:12 If ref qualifiers are supported, for concern 5, attempt to bind a
+    //:   non const rvalue reference to the result of invoking the 'value'
+    //:   method on a temporary 'const optional' object. Note that this step
+    //:   should not compile and needs to be enabled and checked manually.
+    //:13 If ref qualifiers are supported, for concern 5, attempt to bind a
+    //:   non const rvalue reference to the result of invoking the 'value'
+    //:   method on a temporary 'optional' object of const qualified value
+    //:   type. Note that this step should not compile and needs to be enabled
+    //:   and checked manually.
+    //:14 For concern 7, repeat steps 1-13 with an 'optional' object of an
+    //:   allocator aware type.
+    //:15 For concern 1, in steps 1-14, make sure no unexpected exception is
+    //:   thrown.
     //
     // Testing:
     //   TYPE& value() &;
@@ -5274,8 +5262,8 @@ void bslstl_optional_test4()
     // --------------------------------------------------------------------
 
     if (verbose) printf(
-                       "\nTESTING VALUE MEMBER FUNCTION "
-                       "\n=============================\n");
+                       "\nTESTING 'value' METHOD"
+                       "\n======================\n");
 
     if (verbose) printf( "\nUsing 'bsl::optional<int>'.\n");
     bool unexpected_exception_thrown = false;
@@ -5487,8 +5475,6 @@ void bslstl_optional_test4()
 
         bsl::string j = CObj(bsl::allocator_arg, &oa, "test string 6").value();
         ASSERT(j == "test string 6");
-        // todo : add a test that check const move returns a const && objects
-        // and what ever allocator is deemed appropriate
         ASSERT(j.get_allocator().mechanism() == &da);
 
 #if defined(BSLSTL_OPTIONAL_TEST_BAD_VALUE)
@@ -5618,10 +5604,11 @@ void bslstl_optional_test4()
 #endif
 
     unexpected_exception_thrown = false;
-    if (verbose) printf( "\nUsing 'my_Class3'.\n");
+    if (verbose) printf( "\nUsing allocator aware move constructible value"
+                         "type.\n");
     try {
 
-        typedef my_Class3                   ValueType;
+        typedef MyClass3                   ValueType;
         typedef bsl::optional<ValueType> Obj;
         typedef const Obj CObj;
 
@@ -5637,10 +5624,12 @@ void bslstl_optional_test4()
     ASSERT(unexpected_exception_thrown == false);
 
     unexpected_exception_thrown = false;
-    if (verbose) printf( "\nUsing 'my_Class4'.\n");
+    if (verbose) printf( "\nUsing non allocator aware move constructible value"
+                         "type.\n");
+    if (verbose) printf( "\nUsing 'MyClass4'.\n");
     try {
 
-        typedef my_Class4   ValueType;
+        typedef MyClass4   ValueType;
         typedef bsl::optional<ValueType> Obj;
         typedef const Obj CObj;
 
@@ -5660,51 +5649,44 @@ void bslstl_optional_test4()
 void bslstl_optional_test5()
 {
     // --------------------------------------------------------------------
-    // TESTING VALUE_OR FUNCTIONALITY
-    //   This test will verify that the value_or function works as expected.
-    //   The test relies on constructors and emplace member functions.
+    // TESTING 'value_or' METHOD
+    //   This test will verify that the 'value_or' method works as expected.
+    //   The test relies on constructors and 'emplace' method.
     //
     // Concerns:
-    //   * Calling value_or() on a engaged optional returns the value in
-    //     optional.
-    //   * Calling value_or() on a disengaged optional returns the specified
-    //     value.
-    //   * It is possible to call value_or() on a constant optional object
-    //   * It is possible to call value_or() on a temporary optional object
-    //   * if no allocator is specified, the default allocator is used.
-    //   * if an allocator is specified, that allocator is used
-    //   * calling value_or does not modify the allocator of optional
-    //   * It is not possible to modify non constant optional through call of
-    //     value_or()
-    //     Note that this requires tests which check for compilation errors.
+    //: 1 Calling 'value_or' on a disengaged 'optional' object returns the
+    //:   specified value converted to the value type of the 'optional' object.
+    //:   If no allocator is provided, the allocator is determined by the value
+    //:   type's copy/move/conversion constructor. If allocator is supplied,
+    //:   it is forwarded to the allocator extended copy/move/conversion
+    //:   constructor of the value type.
+    //: 2 Calling 'value_or' on a engaged 'optional' object returns the value
+    //:   in the 'optional' object. If no allocator is provided, the allocator
+    //:   is determined by the value type's copy/move constructor. If allocator
+    //:   is supplied, it is forwarded to the allocator extended copy/move
+    //:   constructor of the value type.
+    //: 3 It is possible to call 'value_or' on a constant 'optional' object.
+    //: 4 It is possible to call 'value_or' on a temporary 'optional' object
     //
     // Plan:
-    //   Conduct the test using 'int' (does not use allocator) and
-    //   'bsl::string' (uses allocator) for 'TYPE'.
     //
-    //   Create disengaged optional of each type. Call value_or on a disengaged
-    //   optional. Check that the value returned and the allocator used is
-    //   correct.
-    //   Check that the optional object has not changed.
-    //
-    //   Emplace a value in each optional. Call value_or on an engaged
-    //   optional. Check that the value is correct. Check that the value
-    //   returned and the allocator used is correct. Check that the optional
-    //   object has not changed.
-    //
-    //   Bind const optional reference to optional object. Call value_or and
-    //   check that the value is correct.
-    //
-    //   Call value_or on a disengaged temporary optional object. Check that
-    //   the value returned and the allocator used is correct.
-    //
-    //   Call value_or on an engaged temporary optional object. Check that the
-    //   value returned and the allocator used is correct.
-    //
-    //   Call value_or on engaged optional object using move semantic. Check
-    //   that the value returned and the allocator used is correct. Check the
-    //   original optional's value has been moved from.
-    //
+    //: 1 Create a disengaged 'optional' of non allocator aware type.
+    //:   For concern 1, call 'value_or' and check that the return object
+    //:   matches the argument given to 'value_or'.
+    //: 2 Emplace a value in the 'optional' object. Call 'value_or' and, for
+    //:   concern 2, check that the returned value matches the value in the
+    //:   'optional' object.
+    //: 3 Bind 'const optional' reference to the 'optional object'. For
+    //:   concern 6, check that 'value_or' method can be called.
+    //: 4 Call 'value_or' on a disengaged temporary 'optional' object. For
+    //:   concern 4, check that the value returned is correct.
+    //: 5 Call 'value_or' on a engaged temporary 'optional' object. For
+    //:   concern 4, check that the value returned is correct.
+    //: 6 Repeat steps 1-5 using an allocator aware value type. For concerns
+    //:   1 and 2, check that the alloctor used is correct.
+    //: 7 Repeat steps 1-5 using an allocator aware value type and the
+    //:   allocator extended 'value_or' method. For concerns 1 and 2, check
+    //:   that the alloctor used is correct.
     //
     // Testing:
     //   bool value_or() const;
@@ -5718,7 +5700,7 @@ void bslstl_optional_test5()
     // --------------------------------------------------------------------
 
     if (verbose) printf(
-                       "\nTESTING VALUE_OR MEMBER FUNCTION "
+                       "\nTESTING 'value_or' METHOD "
                        "\n=================================\n");
 
     if (verbose) printf( "\nUsing 'bsl::optional<int>'.\n");
@@ -5728,9 +5710,6 @@ void bslstl_optional_test5()
         {
             Obj mX; const Obj& X = mX;
 
-#if defined(BSLSTL_OPTIONAL_TEST_BAD_VALUEOR)
-            ValueType &i0 = mX.value_or(2); // this should not compile 1
-#endif
             const ValueType &i1 = X.value_or(2);
             ASSERT(!X.has_value());
             ASSERT(i1 == 2);
@@ -5764,10 +5743,6 @@ void bslstl_optional_test5()
         {
              Obj mX; const Obj& X = mX;
 
-#if defined(BSLSTL_OPTIONAL_TEST_BAD_VALUEOR)
-             ValueType &i0 = mX.value_or("some string");
-               // this should not compile 2
-#endif
              const ValueType &i1 = X.value_or("string1");
              ASSERT(!X.has_value());
              ASSERT(i1 == "string1");
@@ -5859,22 +5834,20 @@ void bslstl_optional_test5()
 void bslstl_optional_test6()
 {
     // --------------------------------------------------------------------
-    // TESTING operator-> FUNCTIONALITY
-    //   This test will verify that the operator-> works as expected.
+    // TESTING 'operator->' MEMBER FUNCTION
+    //   This test will verify that the 'operator->' works as expected.
     //
     // Concerns:
-    //   * Calling operator-> on an engaged optional returns a pointer to the
-    //     contained value. It is possible to modify the value through to the
-    //     acquired pointer.
-    //   * Calling operator-> on an engaged const optional returns a pointer
-    //     the contained value. It is not possible to modify the value through
-    //     to the acquired pointer.
-    //     Note that the last test requires a compilation failure and needs to
-    //     be explicitly enabled.
+    //: 1 Calling 'operator->' on an engaged 'optional' object returns a
+    //:   pointer to the contained value object. It is possible to modify the
+    //:   value through to the acquired pointer.
+    //: 2 Calling 'operator->' on an engaged 'const optional' returns a pointer
+    //:   to the contained value. It is not possible to modify the value
+    //:   through the acquired pointer.
     //
     // Plan:
-    //   Conduct the test using 'my_class1', 'const my_class1' (does not use
-    //   allocator) and 'my_class1' and 'const my_class1' (uses allocator) for
+    //   Conduct the test using 'Myclass1', 'const Myclass1' (does not use
+    //   allocator) and 'Myclass1' and 'const Myclass1' (uses allocator) for
     //   'TYPE'.
     //
     //   Create engaged optional of each type. Call operator-> and check that
@@ -5900,13 +5873,13 @@ void bslstl_optional_test6()
     // --------------------------------------------------------------------
 
     if (verbose) printf(
-                       "\nTESTING operator-> MEMBER FUNCTION "
-                       "\n==================================\n");
+                       "\nTESTING 'operator->' MEMBER FUNCTION"
+                       "\n====================================\n");
 
-    if (verbose) printf( "\nUsing 'my_Class1'.\n");
+    if (verbose) printf( "\nUsing 'MyClass1'.\n");
     {
-        typedef my_Class1                            ValueType;
-        typedef const my_Class1                      ConstValueType;
+        typedef MyClass1                            ValueType;
+        typedef const MyClass1                      ConstValueType;
         typedef bsl::optional<ValueType> Obj;
         typedef const Obj CObj;
         typedef bsl::optional<ConstValueType> ObjC;
@@ -5934,15 +5907,15 @@ void bslstl_optional_test6()
             ASSERT(mX.value().d_def.d_value == 6);
        }
     }
-    if (verbose) printf( "\nUsing 'my_Class2'.\n");
+    if (verbose) printf( "\nUsing 'MyClass2'.\n");
     {
         bslma::TestAllocator da("default", veryVeryVeryVerbose);
         bslma::TestAllocator oa("other", veryVeryVeryVerbose);
         bslma::TestAllocator ta("third", veryVeryVeryVerbose);
 
         bslma::DefaultAllocatorGuard dag(&da);
-        typedef my_Class2                            ValueType;
-        typedef const my_Class2                      ConstValueType;
+        typedef MyClass2                            ValueType;
+        typedef const MyClass2                      ConstValueType;
         typedef bsl::optional<ValueType> Obj;
         typedef const Obj CObj;
         typedef bsl::optional<ConstValueType> ObjC;
@@ -5993,8 +5966,8 @@ void bslstl_optional_test7()
     //     optional object was an rvalue.
     //
     // Plan:
-    //   Conduct the test using 'my_class1', 'const my_class1' (does not use
-    //   allocator) and 'my_class1' and 'const my_class1' (uses allocator) for
+    //   Conduct the test using 'Myclass1', 'const Myclass1' (does not use
+    //   allocator) and 'Myclass1' and 'const Myclass1' (uses allocator) for
     //   'TYPE'.
     //
     //   Create engaged optional of each type. Call operator* and check that
@@ -6024,10 +5997,10 @@ void bslstl_optional_test7()
                        "\nTESTING operator* MEMBER FUNCTION "
                        "\n==================================\n");
 
-    if (verbose) printf( "\nUsing 'my_Class1'.\n");
+    if (verbose) printf( "\nUsing 'MyClass1'.\n");
     {
-        typedef my_Class1                            ValueType;
-        typedef const my_Class1                      ConstValueType;
+        typedef MyClass1                            ValueType;
+        typedef const MyClass1                      ConstValueType;
         typedef bsl::optional<ValueType> Obj;
         typedef const Obj CObj;
         typedef bsl::optional<ConstValueType> ObjC;
@@ -6055,15 +6028,15 @@ void bslstl_optional_test7()
             ASSERT(mX.value().d_def.d_value == 6);
        }
     }
-    if (verbose) printf( "\nUsing 'my_Class2'.\n");
+    if (verbose) printf( "\nUsing 'MyClass2'.\n");
     {
        bslma::TestAllocator da("default", veryVeryVeryVerbose);
        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
        bslma::TestAllocator ta("third", veryVeryVeryVerbose);
 
        bslma::DefaultAllocatorGuard dag(&da);
-       typedef my_Class2                            ValueType;
-       typedef const my_Class2                      ConstValueType;
+       typedef MyClass2                            ValueType;
+       typedef const MyClass2                      ConstValueType;
        typedef bsl::optional<ValueType> Obj;
        typedef const Obj CObj;
        typedef bsl::optional<ConstValueType> ObjC;
@@ -6133,9 +6106,9 @@ void bslstl_optional_test8()
                        "\nTESTING emplace MEMBER FUNCTION "
                        "\n==================================\n");
 
-    if (verbose) printf( "\nUsing 'my_Class1'.\n");
+    if (verbose) printf( "\nUsing 'MyClass1'.\n");
     {
-        typedef my_Class1                  ValueType;
+        typedef MyClass1                  ValueType;
         typedef bsl::optional<ValueType> Obj;
 
         {
@@ -6172,11 +6145,11 @@ void bslstl_optional_test8()
             mX.emplace(6);
             ASSERT(mX.has_value());
             ASSERT(mX->d_def.d_value == 6 );
-            ASSERT(CCI == my_Class1::copyConstructorInvocations);
-            ASSERT(MCI == my_Class1::moveConstructorInvocations);
+            ASSERT(CCI == MyClass1::copyConstructorInvocations);
+            ASSERT(MCI == MyClass1::moveConstructorInvocations);
         }
     }
-    if (verbose) printf( "\nUsing 'my_Class2'.\n");
+    if (verbose) printf( "\nUsing 'MyClass2'.\n");
     {
         bslma::TestAllocator da("default", veryVeryVeryVerbose);
         bslma::TestAllocator oa("other", veryVeryVeryVerbose);
@@ -6184,7 +6157,7 @@ void bslstl_optional_test8()
 
         bslma::DefaultAllocatorGuard dag(&da);
 
-       typedef my_Class2                 ValueType;
+       typedef MyClass2                 ValueType;
        typedef bsl::optional<ValueType> Obj;
 
        {
@@ -6234,7 +6207,7 @@ void bslstl_optional_test8()
            ASSERT(MCI == ValueType::moveConstructorInvocations);
        }
     }
-    if (verbose) printf( "\nUsing 'my_Class2a'.\n");
+    if (verbose) printf( "\nUsing 'MyClass2a'.\n");
     {
         bslma::TestAllocator da("default", veryVeryVeryVerbose);
         bslma::TestAllocator oa("other", veryVeryVeryVerbose);
@@ -6242,7 +6215,7 @@ void bslstl_optional_test8()
 
         bslma::DefaultAllocatorGuard dag(&da);
 
-       typedef my_Class2a                 ValueType;
+       typedef MyClass2a                 ValueType;
        typedef bsl::optional<ValueType> Obj;
 
        {
@@ -7117,8 +7090,8 @@ void bslstl_optional_test11()
   //
   // Plan:
   //
-  //   Conduct the test using 'my_class1' (does not use allocator) and
-  //   'my_class2'/'my_class2a (uses allocator) for 'TYPE'.
+  //   Conduct the test using 'Myclass1' (does not use allocator) and
+  //   'Myclass2'/'Myclass2a (uses allocator) for 'TYPE'.
   //
   //   Create an engaged optional of each type. Assign a value type value to
   //   the optional. Check the value of the optional and allocator, if any,
@@ -7156,9 +7129,9 @@ void bslstl_optional_test11()
                     "\nTESTING operator=(non_optional_type) MEMBER FUNCTION "
                     "\n===================================================\n");
 
-    if (verbose) printf( "\nUsing 'my_Class1'.\n");
+    if (verbose) printf( "\nUsing 'MyClass1'.\n");
     {
-        typedef my_Class1a                  ValueType;
+        typedef MyClass1a                  ValueType;
         typedef const ValueType            ConstValueType;
         typedef bsl::optional<ValueType> Obj;
         typedef bsl::optional<ConstValueType> ObjC;
@@ -7170,7 +7143,7 @@ void bslstl_optional_test11()
           ASSERT(mX.value().value() == 1);
           ASSERT(vi.value() == 1);
 
-          my_Class1 i = my_Class1(3);
+          MyClass1 i = MyClass1(3);
           ASSERT(mX.has_value());
           mX = i;
           ASSERT(mX.value().value() == 3);
@@ -7181,7 +7154,7 @@ void bslstl_optional_test11()
           mX = cvi;
           ASSERT(mX.value().value() == 1);
 
-          const my_Class1 ci = my_Class1(3);
+          const MyClass1 ci = MyClass1(3);
           ASSERT(mX.has_value());
           mX = ci;
           ASSERT(mX.value().value() == 3);
@@ -7216,7 +7189,7 @@ void bslstl_optional_test11()
 
           mX.reset();
           ASSERT(!mX.has_value());
-          my_Class1 i = my_Class1(3);
+          MyClass1 i = MyClass1(3);
           mX = i;
           ASSERT(mX.value().value() == 3);
           ASSERT( i.value() == 3);
@@ -7227,7 +7200,7 @@ void bslstl_optional_test11()
           mX = cvi;
           ASSERT(mX.value().value() == 1);
 
-          const my_Class1 ci = my_Class1(3);
+          const MyClass1 ci = MyClass1(3);
           mX.reset();
           ASSERT(!mX.has_value());
           mX = ci;
@@ -7260,9 +7233,9 @@ void bslstl_optional_test11()
       {
           const Obj mX = ValueType(0);
           ValueType vi = ValueType(1);
-          my_Class1 i = my_Class1(3);
+          MyClass1 i = MyClass1(3);
           ConstValueType cvi = ValueType(1);
-          const my_Class1 ci = my_Class1(3);
+          const MyClass1 ci = MyClass1(3);
 #if defined(BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST)
           mX = vi; // this should not compile 3/8
           mX = i; // this should not compile 4/8
@@ -7277,9 +7250,9 @@ void bslstl_optional_test11()
       {
           ObjC mX = ValueType(0);
           ValueType vi = ValueType(1);
-          my_Class1 i = my_Class1(3);
+          MyClass1 i = MyClass1(3);
           ConstValueType cvi = ValueType(1);
-          const my_Class1 ci = my_Class1(3);
+          const MyClass1 ci = MyClass1(3);
 #if defined(BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST)
           mX = vi; // this should not compile 11/18
           mX = i; // this should not compile 12/18
@@ -7292,7 +7265,7 @@ void bslstl_optional_test11()
 #endif //BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST
       }
     }
-    if (verbose) printf( "\nUsing 'my_Class2a'.\n");
+    if (verbose) printf( "\nUsing 'MyClass2a'.\n");
     {
         bslma::TestAllocator da("default", veryVeryVeryVerbose);
         bslma::TestAllocator oa("other", veryVeryVeryVerbose);
@@ -7300,7 +7273,7 @@ void bslstl_optional_test11()
 
         bslma::DefaultAllocatorGuard dag(&da);
 
-        typedef my_Class2a                  ValueType;
+        typedef MyClass2a                  ValueType;
         typedef const ValueType            ConstValueType;
         typedef bsl::optional<ValueType> Obj;
         typedef bsl::optional<ConstValueType> ObjC;
@@ -7316,7 +7289,7 @@ void bslstl_optional_test11()
             ASSERT(vi.value() == 1);
             ASSERT(vi.d_data.d_def.d_allocator_p == &ta);
 
-            my_Class2 i = my_Class2(3, &da);
+            MyClass2 i = MyClass2(3, &da);
             ASSERT(mX.has_value());
             mX = i;
             ASSERT(mX.value().value() == 3);
@@ -7331,7 +7304,7 @@ void bslstl_optional_test11()
             ASSERT(mX.value().d_data.d_def.d_allocator_p == &oa);
             ASSERT(mX.get_allocator().mechanism() == &oa);
 
-            const my_Class2 ci = my_Class2(3, &da);
+            const MyClass2 ci = MyClass2(3, &da);
             ASSERT(mX.has_value());
             mX = ci;
             ASSERT(mX.value().value() == 3);
@@ -7380,7 +7353,7 @@ void bslstl_optional_test11()
 
             mX.reset();
             ASSERT(!mX.has_value());
-            my_Class2 i = my_Class2(3, &da);
+            MyClass2 i = MyClass2(3, &da);
             mX = i;
             ASSERT(mX.value().value() == 3);
             ASSERT(mX.value().d_data.d_def.d_allocator_p == &oa);
@@ -7395,7 +7368,7 @@ void bslstl_optional_test11()
             ASSERT(mX.value().d_data.d_def.d_allocator_p == &oa);
             ASSERT(mX.get_allocator().mechanism() == &oa);
 
-            const my_Class2 ci = my_Class2(3, &da);
+            const MyClass2 ci = MyClass2(3, &da);
             mX.reset();
             ASSERT(!mX.has_value());
             mX = ci;
@@ -7438,9 +7411,9 @@ void bslstl_optional_test11()
         {
             const Obj mX = ValueType(0);
             ValueType vi = ValueType(1);
-            my_Class1 i = my_Class1(3);
+            MyClass1 i = MyClass1(3);
             ConstValueType cvi = ValueType(1);
-            const my_Class1 ci = my_Class1(3);
+            const MyClass1 ci = MyClass1(3);
 #if defined(BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST)
             mX = vi; // this should not compile 19
             mX = i; // this should not compile 20
@@ -7455,9 +7428,9 @@ void bslstl_optional_test11()
         {
             ObjC mX = ValueType(0);
             ValueType vi = ValueType(1);
-            my_Class1 i = my_Class1(3);
+            MyClass1 i = MyClass1(3);
             ConstValueType cvi = ValueType(1);
-            const my_Class1 ci = my_Class1(3);
+            const MyClass1 ci = MyClass1(3);
 #if defined(BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST)
              mX = vi; // this should not compile 27
             mX = i; // this should not compile 28
@@ -7487,16 +7460,16 @@ void bslstl_optional_test12()
   //
   // Plan:
   //
-  //   Create an optional of type my_Class1b. Verify that lvalue and rvalue
+  //   Create an optional of type MyClass1b. Verify that lvalue and rvalue
   //   of type myClass1 can not be assigned to the optional.
   //
-  //   Create an optional of type my_Class1c. Verify that lvalue and rvalue
+  //   Create an optional of type MyClass1c. Verify that lvalue and rvalue
   //   of type myClass1 can not be assigned to the optional.
   //
-  //   Create an optional of type my_Class2b. Verify that lvalue and rvalue
+  //   Create an optional of type MyClass2b. Verify that lvalue and rvalue
   //   of type myClass2 can not be assigned to the optional.
   //
-  //   Create an optional of type my_Class2c. Verify that lvalue and rvalue
+  //   Create an optional of type MyClass2c. Verify that lvalue and rvalue
   //   of type myClass2 can not be assigned to the optional.
   //
   //
@@ -7511,52 +7484,52 @@ void bslstl_optional_test12()
                     "\n===================================================\n");
 #if defined(BSLSTL_OPTIONAL_TEST_BAD_EQUAL_NONOPT)
 
-    if (verbose) printf( "\nUsing 'my_Class1b'.\n");
+    if (verbose) printf( "\nUsing 'MyClass1b'.\n");
     {
-        typedef my_Class1b                  ValueType;
+        typedef MyClass1b                  ValueType;
         typedef bsl::optional<ValueType> Obj;
         {
           Obj mX = ValueType(0);
-          my_Class1 mc1 = my_Class1(2);
+          MyClass1 mc1 = MyClass1(2);
 
           mX = mc1;             //this should not compile 1/
-          mX = my_Class1(0);    // this should not compile 2/
+          mX = MyClass1(0);    // this should not compile 2/
         }
     }
-    if (verbose) printf( "\nUsing 'my_Class1c'.\n");
+    if (verbose) printf( "\nUsing 'MyClass1c'.\n");
     {
-       typedef my_Class1c                  ValueType;
+       typedef MyClass1c                  ValueType;
        typedef bsl::optional<ValueType> Obj;
        {
          Obj mX = ValueType(0);
-         my_Class1 mc1 = my_Class1(2);
+         MyClass1 mc1 = MyClass1(2);
 
          mX = mc1;             //this should not compile 3/
-         mX = my_Class1(0);    // this should not compile 4/
+         mX = MyClass1(0);    // this should not compile 4/
        }
     }
-    if (verbose) printf( "\nUsing 'my_Class2b'.\n");
+    if (verbose) printf( "\nUsing 'MyClass2b'.\n");
     {
-        typedef my_Class2b                  ValueType;
+        typedef MyClass2b                  ValueType;
         typedef bsl::optional<ValueType> Obj;
         {
           Obj mX;
-          my_Class2 mc1 = my_Class2(2);
+          MyClass2 mc1 = MyClass2(2);
 
           mX = mc1;             //this should not compile 1/
-          mX = my_Class2(0);    // this should not compile 2/
+          mX = MyClass2(0);    // this should not compile 2/
         }
     }
-    if (verbose) printf( "\nUsing 'my_Class2c'.\n");
+    if (verbose) printf( "\nUsing 'MyClass2c'.\n");
     {
-       typedef my_Class2c                  ValueType;
+       typedef MyClass2c                  ValueType;
        typedef bsl::optional<ValueType> Obj;
        {
          Obj mX;
-         my_Class2 mc1 = my_Class2(2);
+         MyClass2 mc1 = MyClass2(2);
 
          mX = mc1;             //this should not compile 3/
-         mX = my_Class2(0);    // this should not compile 4/
+         mX = MyClass2(0);    // this should not compile 4/
        }
     }
 #endif
@@ -7581,8 +7554,8 @@ void bslstl_optional_test13()
   //
   // Plan:
   //
-  //   Conduct the test using 'my_class1' (does not use allocator) and
-  //   'my_class2'/'my_Class2a' (uses allocator) for 'TYPE'.
+  //   Conduct the test using 'Myclass1' (does not use allocator) and
+  //   'Myclass2'/'MyClass2a' (uses allocator) for 'TYPE'.
   //
   //   Create an engaged optional of each type. Assign a disengaged optional
   //   of the same type to it. Check the value of the optional and allocator,
@@ -7636,14 +7609,14 @@ void bslstl_optional_test13()
                     "\nTESTING operator=(optional_type) MEMBER FUNCTION "
                     "\n===================================================\n");
 
-    if (verbose) printf( "\nUsing 'my_Class1a'.\n");
+    if (verbose) printf( "\nUsing 'MyClass1a'.\n");
     {
-        typedef my_Class1a                  ValueType;
+        typedef MyClass1a                  ValueType;
         typedef const ValueType             ConstValueType;
         typedef bsl::optional<ValueType>    Obj;
         typedef bsl::optional<ConstValueType> ObjC;
 
-        typedef my_Class1                   OtherType;
+        typedef MyClass1                   OtherType;
         typedef const OtherType             ConstOtherType;
         typedef bsl::optional<OtherType>    OtherObj;
         typedef bsl::optional<ConstOtherType> OtherObjC;
@@ -7853,18 +7826,18 @@ void bslstl_optional_test13()
             TEST_EQUAL_ENGAGED_MOVE(mX, COtherObjC, OtherType,  7, 7);
         }
     }
-    if (verbose) printf( "\nUsing 'my_Class2a'.\n");
+    if (verbose) printf( "\nUsing 'MyClass2a'.\n");
     {
         bslma::TestAllocator da("default", veryVeryVeryVerbose);
         bslma::TestAllocator oa("other", veryVeryVeryVerbose);
         bslma::TestAllocator ta("third", veryVeryVeryVerbose);
 
-        typedef my_Class2a                  ValueType;
+        typedef MyClass2a                  ValueType;
         typedef const ValueType             ConstValueType;
         typedef bsl::optional<ValueType>    Obj;
         typedef bsl::optional<ConstValueType> ObjC;
 
-        typedef my_Class2                   OtherType;
+        typedef MyClass2                   OtherType;
         typedef const OtherType             ConstOtherType;
         typedef bsl::optional<OtherType>    OtherObj;
         typedef bsl::optional<ConstOtherType> OtherObjC;
@@ -8076,18 +8049,18 @@ void bslstl_optional_test13()
         }
     }
     {
-        typedef my_Class1a                  ValueType;
+        typedef MyClass1a                  ValueType;
         typedef const ValueType             ConstValueType;
         typedef bsl::optional<ConstValueType> ObjC;
 
-        typedef my_Class1                   OtherType;
+        typedef MyClass1                   OtherType;
         typedef const OtherType             ConstOtherType;
 
         ObjC mX = ValueType(0);
         ValueType vi = ValueType(1);
         OtherType i = OtherType(3);
         ConstValueType cvi = ValueType(1);
-        ConstOtherType ci = my_Class1(3);
+        ConstOtherType ci = MyClass1(3);
 #if defined(BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST)
         mX = vi; // this should not compile 27
         mX = i; // this should not compile 29
@@ -8100,18 +8073,18 @@ void bslstl_optional_test13()
 #endif //BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST
     }
     {
-        typedef my_Class2a                  ValueType;
+        typedef MyClass2a                  ValueType;
         typedef const ValueType             ConstValueType;
         typedef bsl::optional<ConstValueType> ObjC;
 
-        typedef my_Class2                   OtherType;
+        typedef MyClass2                   OtherType;
         typedef const OtherType             ConstOtherType;
 
         ObjC mX = ValueType(0);
         ValueType vi = ValueType(1);
         OtherType i = OtherType(3);
         ConstValueType cvi = ValueType(1);
-        ConstOtherType ci = my_Class1(3);
+        ConstOtherType ci = MyClass1(3);
 #if defined(BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST)
         mX = vi; // this should not compile 35
         mX = i; // this should not compile 36
@@ -8141,16 +8114,16 @@ void bslstl_optional_test14()
   //
   // Plan:
   //
-  //   Create an optional of type my_Class1b. Verify that lvalue and rvalue
+  //   Create an optional of type MyClass1b. Verify that lvalue and rvalue
   //   of type optional<myClass1> can not be assigned to the optional.
   //
-  //   Create an optional of type my_Class1c. Verify that lvalue and rvalue
+  //   Create an optional of type MyClass1c. Verify that lvalue and rvalue
   //   of type optional<myClass1> can not be assigned to the optional.
   //
-  //   Create an optional of type my_Class2b. Verify that lvalue and rvalue
+  //   Create an optional of type MyClass2b. Verify that lvalue and rvalue
   //   of type optional<myClass2> can not be assigned to the optional.
   //
-  //   Create an optional of type my_Class2c. Verify that lvalue and rvalue
+  //   Create an optional of type MyClass2c. Verify that lvalue and rvalue
   //   of type optional<myClass2> can not be assigned to the optional.
   //
   //
@@ -8165,52 +8138,52 @@ void bslstl_optional_test14()
                     "\n===================================================\n");
 #if defined(BSLSTL_OPTIONAL_TEST_BAD_EQUAL_OPT)
 
-    if (verbose) printf( "\nUsing 'my_Class1b'.\n");
+    if (verbose) printf( "\nUsing 'MyClass1b'.\n");
     {
-        typedef my_Class1b                  ValueType;
+        typedef MyClass1b                  ValueType;
         typedef bsl::optional<ValueType> Obj;
         {
           Obj mX = ValueType(0);
-          bsl::optional<my_Class1> mc1 = my_Class1(2);
+          bsl::optional<MyClass1> mc1 = MyClass1(2);
 
           mX = mc1;             //this should not compile
-          mX = my_Class1(0);    // this should not compile
+          mX = MyClass1(0);    // this should not compile
         }
     }
-    if (verbose) printf( "\nUsing 'my_Class1c'.\n");
+    if (verbose) printf( "\nUsing 'MyClass1c'.\n");
     {
-       typedef my_Class1c                  ValueType;
+       typedef MyClass1c                  ValueType;
        typedef bsl::optional<ValueType> Obj;
        {
          Obj mX = ValueType(0);
-         bsl::optional<my_Class1> mc1 = my_Class1(2);
+         bsl::optional<MyClass1> mc1 = MyClass1(2);
 
          mX = mc1;             //this should not compile
-         mX = my_Class1(0);    // this should not compile
+         mX = MyClass1(0);    // this should not compile
        }
     }
-    if (verbose) printf( "\nUsing 'my_Class2b'.\n");
+    if (verbose) printf( "\nUsing 'MyClass2b'.\n");
     {
-        typedef my_Class2b                  ValueType;
+        typedef MyClass2b                  ValueType;
         typedef bsl::optional<ValueType> Obj;
         {
           Obj mX;
-          bsl::optional<my_Class2> mc1 = my_Class2(2);
+          bsl::optional<MyClass2> mc1 = MyClass2(2);
 
           mX = mc1;             //this should not compile
-          mX = my_Class2(0);    // this should not compile
+          mX = MyClass2(0);    // this should not compile
         }
     }
-    if (verbose) printf( "\nUsing 'my_Class2c'.\n");
+    if (verbose) printf( "\nUsing 'MyClass2c'.\n");
     {
-       typedef my_Class2c                  ValueType;
+       typedef MyClass2c                  ValueType;
        typedef bsl::optional<ValueType> Obj;
        {
          Obj mX;
-         bsl::optional<my_Class2> mc1 = my_Class2(2);
+         bsl::optional<MyClass2> mc1 = MyClass2(2);
 
          mX = mc1;             //this should not compile
-         mX = my_Class2(0);    // this should not compile
+         mX = MyClass2(0);    // this should not compile
        }
     }
 #endif
@@ -8234,37 +8207,37 @@ void bslstl_optional_test15()
   //   * no unnecessary copies are created.
   //
   // Plan:
-  //   Conduct the test using 'my_class1' (does not use allocator) and
-  //   'my_class2'/'my_Class2a' (uses allocator) for 'TYPE'.
+  //   Conduct the test using 'Myclass1' (does not use allocator) and
+  //   'Myclass2'/'MyClass2a' (uses allocator) for 'TYPE'.
   //
-  //   Create an engaged optional of my_class1 type. Create another optional
-  //   of my_class1 type using the first object as the initialization object.
+  //   Create an engaged optional of Myclass1 type. Create another optional
+  //   of Myclass1 type using the first object as the initialization object.
   //   Check the value of the newly created object is as expected.
   //   Check the source object has not changed.
   //   Bind a const reference to the original object. Create another optional
-  //   of my_class1 type using the const reference as the initialization
+  //   of Myclass1 type using the const reference as the initialization
   //   object.
   //   Check the value of the newly created object is as expected.
   //
-  //   Create a disengaged optional of my_class1 type. Create another optional
-  //   of my_class1 type using the disengaged object as the initialization
+  //   Create a disengaged optional of Myclass1 type. Create another optional
+  //   of Myclass1 type using the disengaged object as the initialization
   //   object.
   //   Check the newly created object is disengaged.
   //   Bind a const reference to the original object. Create another optional
-  //   of my_class1 type using the const reference as the initialization
+  //   of Myclass1 type using the const reference as the initialization
   //   object.
   //   Check the newly created object is disengaged.
   //
-  //   Create an engaged optional of my_class2 type using a non default
+  //   Create an engaged optional of Myclass2 type using a non default
   //   allocator.
-  //   Create another optional of my_class2 type using the first object as
+  //   Create another optional of Myclass2 type using the first object as
   //   the initialization object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //   Check the source object has not changed.
   //
-  //   Create another optional of my_class2 type using the first object as
+  //   Create another optional of Myclass2 type using the first object as
   //   the initialization object and a non default allocator as the allocator
   //   argument.
   //   Check the value of the newly created object is as expected.
@@ -8273,21 +8246,21 @@ void bslstl_optional_test15()
   //   Check the source object has not changed.
   //
   //   Bind a const reference to the original object. Create another optional
-  //   of my_class2 type using the const reference as the initialization object
+  //   of Myclass2 type using the const reference as the initialization object
   //   and a non default allocator as the allocator argument.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the one used
   //   as the allocator argument.
   //
-  //   Create a disengaged optional of my_class2 type using a non default
+  //   Create a disengaged optional of Myclass2 type using a non default
   //   allocator.
-  //   Create another optional of my_class2 type using the disengaged
+  //   Create another optional of Myclass2 type using the disengaged
   //   object as the initialization object.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //
-  //   Create another optional of my_class2 type using the disengaged
+  //   Create another optional of Myclass2 type using the disengaged
   //   object as the initialization object and non default allocator
   //   as the allocator argument.
   //   Check the newly created object is disengaged.
@@ -8295,13 +8268,13 @@ void bslstl_optional_test15()
   //   used in the construction call.
   //
   //   Bind a const reference to the original object. Create another optional
-  //   of my_class2 type using the const reference as the initialization object
+  //   of Myclass2 type using the const reference as the initialization object
   //   and non default allocator as the allocator argument.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the one
   //   used in the construction call.
   //
-  //   Repeat the above tests with my_class2a type.
+  //   Repeat the above tests with Myclass2a type.
   //
   //
   // Testing:
@@ -8319,9 +8292,9 @@ void bslstl_optional_test15()
                        "\nTESTING copy construction "
                        "\n=========================\n");
 
-    if (verbose) printf( "\nUsing 'my_Class1'.\n");
+    if (verbose) printf( "\nUsing 'MyClass1'.\n");
     {
-        typedef my_Class1                  ValueType;
+        typedef MyClass1                  ValueType;
         typedef bsl::optional<ValueType> Obj;
 
         {
@@ -8365,7 +8338,7 @@ void bslstl_optional_test15()
             ASSERT(!dest2.has_value());
         }
     }
-    if (verbose) printf( "\nUsing 'my_Class2'.\n");
+    if (verbose) printf( "\nUsing 'MyClass2'.\n");
     {
         bslma::TestAllocator da("default", veryVeryVeryVerbose);
         bslma::TestAllocator oa("other", veryVeryVeryVerbose);
@@ -8373,7 +8346,7 @@ void bslstl_optional_test15()
 
         bslma::DefaultAllocatorGuard dag(&da);
 
-        typedef my_Class2                  ValueType;
+        typedef MyClass2                  ValueType;
         typedef bsl::optional<ValueType> Obj;
 
         {
@@ -8453,7 +8426,7 @@ void bslstl_optional_test15()
           ASSERT(&ta == dest4.get_allocator().mechanism());
        }
     }
-    if (verbose) printf( "\nUsing 'my_Class2a'.\n");
+    if (verbose) printf( "\nUsing 'MyClass2a'.\n");
    {
        bslma::TestAllocator da("default", veryVeryVeryVerbose);
        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
@@ -8461,7 +8434,7 @@ void bslstl_optional_test15()
 
        bslma::DefaultAllocatorGuard dag(&da);
 
-       typedef my_Class2a                  ValueType;
+       typedef MyClass2a                  ValueType;
        typedef bsl::optional<ValueType> Obj;
 
        {
@@ -8564,51 +8537,51 @@ void bslstl_optional_test16()
   //
   //
   // Plan:
-  //   Conduct the test using 'my_class1' (does not use allocator) and
-  //   'my_class2'/'my_Class2a' (uses allocator) for 'TYPE'.
+  //   Conduct the test using 'Myclass1' (does not use allocator) and
+  //   'Myclass2'/'MyClass2a' (uses allocator) for 'TYPE'.
   //
-  //   Create an engaged optional of my_class1 type. Create another optional
-  //   of my_class1 type by move construction from the original object.
+  //   Create an engaged optional of Myclass1 type. Create another optional
+  //   of Myclass1 type by move construction from the original object.
   //   Check the value of the newly created object is as expected.
   //   Check the source object's value type is in a moved from state.
   //
-  //   Create a const engaged optional of my_class1 type. Create another
-  //   optional of my_class1 type by move construction from the original
+  //   Create a const engaged optional of Myclass1 type. Create another
+  //   optional of Myclass1 type by move construction from the original
   //   object.
   //   Check the value of the newly created object is as expected.
   //   Check the source object has not changed.
   //
-  //   Create a disengaged optional of my_class1 type. Create another optional
-  //   of my_class1 type by move construction from the original object.
+  //   Create a disengaged optional of Myclass1 type. Create another optional
+  //   of Myclass1 type by move construction from the original object.
   //   Check the newly created object is disengaged.
   //
-  //   Create a const disengaged optional of my_class1 type. Create another
-  //   optional of my_class1 type by move construction from the original
+  //   Create a const disengaged optional of Myclass1 type. Create another
+  //   optional of Myclass1 type by move construction from the original
   //   object.
   //   Check the newly created object is disengaged.
   //   Check the source object has not changed.
   //
-  //   Create an engaged optional of my_class2 type using a non default
+  //   Create an engaged optional of Myclass2 type using a non default
   //   allocator.
-  //   Create another optional of my_class2 type by move construction from
+  //   Create another optional of Myclass2 type by move construction from
   //   the first object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the one from
   //   the source optional object.
   //   Check the source object's value type is in a moved from state.
   //
-  //   Create an engaged const optional of my_class2 type using a non default
+  //   Create an engaged const optional of Myclass2 type using a non default
   //   allocator.
-  //   Create another optional of my_class2 type  by move construction from
+  //   Create another optional of Myclass2 type  by move construction from
   //   the first object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the
   //   default allocator.
   //   Check the source object's value type has not changed.
   //
-  //   Create an engaged optional of my_class2 type using a non default
+  //   Create an engaged optional of Myclass2 type using a non default
   //   allocator.
-  //   Create another optional of my_class2 type  by move construction from
+  //   Create another optional of Myclass2 type  by move construction from
   //   the first object and a non default allocator as the allocator
   //   argument.
   //   Check the value of the newly created object is as expected.
@@ -8616,49 +8589,49 @@ void bslstl_optional_test16()
   //   as the one used for the source object.
   //   Check the source object's value type is in a moved from state.
   //
-  //   Create an engaged const optional of my_class2 type using a non default
+  //   Create an engaged const optional of Myclass2 type using a non default
   //   allocator.
-  //   Create another optional of my_class2 type by move construction from
+  //   Create another optional of Myclass2 type by move construction from
   //   the first object and a non default allocator as the allocator argument.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the one used
   //   as the allocator argument.
   //   Check the source object has not changed.
   //
-  //   Create a disengaged optional of my_class2 type using a non default
+  //   Create a disengaged optional of Myclass2 type using a non default
   //   allocator.
-  //   Create another optional of my_class2 type by move construction from
+  //   Create another optional of Myclass2 type by move construction from
   //   the first object.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the same as
   //   the source optional object.
   //
-  //   Create a disengaged const optional of my_class2 type using a non default
+  //   Create a disengaged const optional of Myclass2 type using a non default
   //   allocator.
-  //   Create another optional of my_class2 type by move construction from
+  //   Create another optional of Myclass2 type by move construction from
   //   the first object.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //
-  //   Create a disengaged optional of my_class2 type using a non default
+  //   Create a disengaged optional of Myclass2 type using a non default
   //   allocator.
-  //   Create another optional of my_class2 type by move construction from
+  //   Create another optional of Myclass2 type by move construction from
   //   the first object and with non default allocator as the allocator
   //   argument.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the one
   //   used in the construction call.
   //
-  //   Create a disengaged const optional of my_class2 type using a non
+  //   Create a disengaged const optional of Myclass2 type using a non
   //   default allocator.
-  //   Create another optional of my_class2 type by move construction from
+  //   Create another optional of Myclass2 type by move construction from
   //   the first object.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the default
   //   allocator
   //
-  //   Repeat the above tests with my_class2a type.
+  //   Repeat the above tests with Myclass2a type.
   //
   //
   // Testing:
@@ -8676,9 +8649,9 @@ void bslstl_optional_test16()
                        "\nTESTING move construction "
                        "\n=========================\n");
 
-    if (verbose) printf( "\nUsing 'my_Class1'.\n");
+    if (verbose) printf( "\nUsing 'MyClass1'.\n");
     {
-        typedef my_Class1                  ValueType;
+        typedef MyClass1                  ValueType;
         typedef bsl::optional<ValueType> Obj;
 
         {
@@ -8726,7 +8699,7 @@ void bslstl_optional_test16()
             ASSERT(!source2.has_value());
         }
     }
-    if (verbose) printf( "\nUsing 'my_Class2'.\n");
+    if (verbose) printf( "\nUsing 'MyClass2'.\n");
     {
         bslma::TestAllocator da("default", veryVeryVeryVerbose);
         bslma::TestAllocator oa("other", veryVeryVeryVerbose);
@@ -8734,7 +8707,7 @@ void bslstl_optional_test16()
 
         bslma::DefaultAllocatorGuard dag(&da);
 
-        typedef my_Class2                  ValueType;
+        typedef MyClass2                  ValueType;
         typedef bsl::optional<ValueType> Obj;
 
         {
@@ -8842,7 +8815,7 @@ void bslstl_optional_test16()
           ASSERT(&ta == dest4.get_allocator().mechanism());
        }
     }
-    if (verbose) printf( "\nUsing 'my_Class2a'.\n");
+    if (verbose) printf( "\nUsing 'MyClass2a'.\n");
     {
         bslma::TestAllocator da("default", veryVeryVeryVerbose);
         bslma::TestAllocator oa("other", veryVeryVeryVerbose);
@@ -8850,7 +8823,7 @@ void bslstl_optional_test16()
 
         bslma::DefaultAllocatorGuard dag(&da);
 
-        typedef my_Class2a                  ValueType;
+        typedef MyClass2a                  ValueType;
         typedef bsl::optional<ValueType> Obj;
 
         {
@@ -8976,28 +8949,28 @@ void bslstl_optional_test17()
   //
   //
   // Plan:
-  //   Conduct the test using 'my_class1' (does not use allocator) and
-  //   'my_class2'/'my_Class2a' (uses allocator) for 'TYPE'.
+  //   Conduct the test using 'Myclass1' (does not use allocator) and
+  //   'Myclass2'/'MyClass2a' (uses allocator) for 'TYPE'.
   //
-  //   Create an object of my_class1 type.
-  //   Create an optional of my_class1 type using the first object as the
+  //   Create an object of Myclass1 type.
+  //   Create an optional of Myclass1 type using the first object as the
   //   initialization object.
   //   Check the value of the newly created object is as expected.
   //   Check the source object has not changed.
   //
   //   Bind a const reference to the original object. Create another optional
-  //   of my_class1 type using the const reference as the initialization object.
+  //   of Myclass1 type using the const reference as the initialization object.
   //   Check the value of the newly created object is as expected.
   //
-  //   Create an object of my_class2 type using a non default allocator.
-  //   Create an optional of my_class2 type using the first object as
+  //   Create an object of Myclass2 type using a non default allocator.
+  //   Create an optional of Myclass2 type using the first object as
   //   the initialization object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //   Check the source object has not changed.
   //
-  //   Create an optional of my_class2 type using the original my_class2
+  //   Create an optional of Myclass2 type using the original Myclass2
   //   object as the initialization object and a non default allocator
   //   as the allocator argument.
   //   Check the value of the newly created object is as expected.
@@ -9005,8 +8978,8 @@ void bslstl_optional_test17()
   //   as the allocator argument.
   //   Check the source object has not changed.
   //
-  //   Bind a const reference to the original my_class2 object. Create an
-  //   optional of my_class2 type using the const reference as the
+  //   Bind a const reference to the original Myclass2 object. Create an
+  //   optional of Myclass2 type using the const reference as the
   //   initialization object and a non default allocator as the allocator
   //   argument.
   //   Check the value of the newly created object is as expected.
@@ -9014,7 +8987,7 @@ void bslstl_optional_test17()
   //   as the allocator argument.
   //
   //
-  //   Repeat the above tests with my_class2a type.
+  //   Repeat the above tests with Myclass2a type.
   //
   //
   // Testing:
@@ -9032,9 +9005,9 @@ void bslstl_optional_test17()
                        "\nTESTING copy construction from value type "
                        "\n=========================================\n");
 
-    if (verbose) printf( "\nUsing 'my_Class1'.\n");
+    if (verbose) printf( "\nUsing 'MyClass1'.\n");
     {
-        typedef my_Class1                  ValueType;
+        typedef MyClass1                  ValueType;
         typedef bsl::optional<ValueType> Obj;
 
         {
@@ -9061,7 +9034,7 @@ void bslstl_optional_test17()
             ASSERT(MCI == ValueType::moveConstructorInvocations);
         }
     }
-    if (verbose) printf( "\nUsing 'my_Class2'.\n");
+    if (verbose) printf( "\nUsing 'MyClass2'.\n");
     {
         bslma::TestAllocator da("default", veryVeryVeryVerbose);
         bslma::TestAllocator oa("other", veryVeryVeryVerbose);
@@ -9069,7 +9042,7 @@ void bslstl_optional_test17()
 
         bslma::DefaultAllocatorGuard dag(&da);
 
-        typedef my_Class2                  ValueType;
+        typedef MyClass2                  ValueType;
         typedef bsl::optional<ValueType> Obj;
 
         {
@@ -9123,7 +9096,7 @@ void bslstl_optional_test17()
           ASSERT(MCI == ValueType::moveConstructorInvocations);
        }
      }
-    if (verbose) printf( "\nUsing 'my_Class2a'.\n");
+    if (verbose) printf( "\nUsing 'MyClass2a'.\n");
     {
         bslma::TestAllocator da("default", veryVeryVeryVerbose);
         bslma::TestAllocator oa("other", veryVeryVeryVerbose);
@@ -9131,7 +9104,7 @@ void bslstl_optional_test17()
 
         bslma::DefaultAllocatorGuard dag(&da);
 
-        typedef my_Class2a                  ValueType;
+        typedef MyClass2a                  ValueType;
         typedef bsl::optional<ValueType> Obj;
 
         {
@@ -9204,56 +9177,56 @@ void bslstl_optional_test18()
   //
   //
   // Plan:
-  //   Conduct the test using 'my_class1' (does not use allocator) and
-  //   'my_class2'/'my_Class2a' (uses allocator) for 'TYPE'.
+  //   Conduct the test using 'Myclass1' (does not use allocator) and
+  //   'Myclass2'/'MyClass2a' (uses allocator) for 'TYPE'.
   //
-  //   Create an object of my_class1 type.
-  //   Create an optional of my_class1 type by move construction from the
+  //   Create an object of Myclass1 type.
+  //   Create an optional of Myclass1 type by move construction from the
   //   original object.
   //   Check the value of the newly created object is as expected.
   //   Check the source object's value type is in a moved from state.
   //
-  //   Create a const object of my_class1 type.
-  //   Create an optional of my_class1 type by move construction from the
+  //   Create a const object of Myclass1 type.
+  //   Create an optional of Myclass1 type by move construction from the
   //   original object.
   //   Check the value of the newly created object is as expected.
   //   Check the source object has not changed.
   //
   //
-  //   Create an object of my_class2 type using a non default allocator.
-  //   Create an optional of my_class2 type by move construction from the
-  //   my_class2 object.
+  //   Create an object of Myclass2 type using a non default allocator.
+  //   Create an optional of Myclass2 type by move construction from the
+  //   Myclass2 object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //   Check the source object is in a moved from state.
   //
-  //   Create a const object of my_class2 type using a non default allocator.
-  //   Create an optional of my_class2 type by move construction from the
-  //   my_class2 object.
+  //   Create a const object of Myclass2 type using a non default allocator.
+  //   Create an optional of Myclass2 type by move construction from the
+  //   Myclass2 object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //   Check the source object has not changed.
   //
-  //   Create an object of my_class2 type using a non default allocator.
-  //   Create an optional of my_class2 type  by move construction from
-  //   the my_class2 object and a non default allocator as the allocator
+  //   Create an object of Myclass2 type using a non default allocator.
+  //   Create an optional of Myclass2 type  by move construction from
+  //   the Myclass2 object and a non default allocator as the allocator
   //   argument.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the same
   //   as the one used for the source object.
   //   Check the source object is in a moved from state.
   //
-  //   Create a const object of my_class2 type using a non default allocator.
-  //   Create an optional of my_class2 type by move construction from
+  //   Create a const object of Myclass2 type using a non default allocator.
+  //   Create an optional of Myclass2 type by move construction from
   //   the first object and a non default allocator as the allocator argument.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the one used
   //   as the allocator argument.
   //   Check the source object has not changed.
   //
-  //   Repeat the above tests with my_class2a type.
+  //   Repeat the above tests with Myclass2a type.
   //
   //
   // Testing:
@@ -9271,9 +9244,9 @@ void bslstl_optional_test18()
                        "\nTESTING move construction from value type "
                        "\n=========================================\n");
 
-    if (verbose) printf( "\nUsing 'my_Class1'.\n");
+    if (verbose) printf( "\nUsing 'MyClass1'.\n");
     {
-        typedef my_Class1                  ValueType;
+        typedef MyClass1                  ValueType;
         typedef bsl::optional<ValueType> Obj;
 
         {
@@ -9298,7 +9271,7 @@ void bslstl_optional_test18()
             ASSERT(MCI == ValueType::moveConstructorInvocations);
         }
     }
-    if (verbose) printf( "\nUsing 'my_Class2'.\n");
+    if (verbose) printf( "\nUsing 'MyClass2'.\n");
     {
         bslma::TestAllocator da("default", veryVeryVeryVerbose);
         bslma::TestAllocator oa("other", veryVeryVeryVerbose);
@@ -9306,7 +9279,7 @@ void bslstl_optional_test18()
 
         bslma::DefaultAllocatorGuard dag(&da);
 
-        typedef my_Class2                  ValueType;
+        typedef MyClass2                  ValueType;
         typedef bsl::optional<ValueType> Obj;
 
         {
@@ -9359,7 +9332,7 @@ void bslstl_optional_test18()
           ASSERT(MCI == ValueType::moveConstructorInvocations);
        }
     }
-    if (verbose) printf( "\nUsing 'my_Class2a'.\n");
+    if (verbose) printf( "\nUsing 'MyClass2a'.\n");
     {
         bslma::TestAllocator da("default", veryVeryVeryVerbose);
         bslma::TestAllocator oa("other", veryVeryVeryVerbose);
@@ -9367,7 +9340,7 @@ void bslstl_optional_test18()
 
         bslma::DefaultAllocatorGuard dag(&da);
 
-        typedef my_Class2a                  ValueType;
+        typedef MyClass2a                  ValueType;
         typedef bsl::optional<ValueType> Obj;
 
         {
@@ -9444,41 +9417,41 @@ void bslstl_optional_test19()
   //
   //
   // Plan:
-  //   Conduct the test using 'my_class1a' (does not use allocator) and
-  //   'my_class2'/'my_Class2a' (uses allocator) for 'TYPE'.
+  //   Conduct the test using 'Myclass1a' (does not use allocator) and
+  //   'Myclass2'/'MyClass2a' (uses allocator) for 'TYPE'.
   //
-  //   Create an engaged optional of my_class1 type. Create an optional of
-  //   my_class1a type using the first object as the initialization object.
+  //   Create an engaged optional of Myclass1 type. Create an optional of
+  //   Myclass1a type using the first object as the initialization object.
   //   Check the value of the newly created object is as expected.
   //   Check the source object has not changed.
   //
-  //   Bind a const reference to the my_class1 object. Create an optional
-  //   of my_class1a type using the const reference as the initialization object.
+  //   Bind a const reference to the Myclass1 object. Create an optional
+  //   of Myclass1a type using the const reference as the initialization object.
   //   Check the value of the newly created object is as expected.
   //
-  //   Create a disengaged optional of my_class1 type. Create an optional of
-  //   my_class1a type using the disengaged object as the initialization object.
+  //   Create a disengaged optional of Myclass1 type. Create an optional of
+  //   Myclass1a type using the disengaged object as the initialization object.
   //   Check the newly created object is disengaged.
-  //   Bind a const reference to the my_class1 object. Create an optional of
-  //   my_class1a type using the const reference as the initialization object.
+  //   Bind a const reference to the Myclass1 object. Create an optional of
+  //   Myclass1a type using the const reference as the initialization object.
   //   Check the newly created object is disengaged.
   //
-  //   Create an engaged optional of my_class1 type.
-  //   Create an optional of my_class2 type using the my_class1 object as
+  //   Create an engaged optional of Myclass1 type.
+  //   Create an optional of Myclass2 type using the Myclass1 object as
   //   the initialization object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //   Check the source object has not changed.
   //
-  //   Bind a const reference to the my_class1 object. Create an optional
-  //   of my_class2 type using the const reference as the initialization
+  //   Bind a const reference to the Myclass1 object. Create an optional
+  //   of Myclass2 type using the const reference as the initialization
   //   object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the one used
   //   as the allocator argument.
   //
-  //   Create an optional of my_class2 type using the my_class1 object as
+  //   Create an optional of Myclass2 type using the Myclass1 object as
   //   the initialization object and a non default allocator as the allocator
   //   argument.
   //   Check the value of the newly created object is as expected.
@@ -9486,57 +9459,57 @@ void bslstl_optional_test19()
   //   as the allocator argument.
   //   Check the source object has not changed.
   //
-  //   Bind a const reference to the my_class1 object. Create an optional
-  //   of my_class2 type using the const reference as the initialization object
+  //   Bind a const reference to the Myclass1 object. Create an optional
+  //   of Myclass2 type using the const reference as the initialization object
   //   and a non default allocator as the allocator argument.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the one used
   //   as the allocator argument.
   //
-  //   Create a disengaged optional of my_class1 type.
-  //   Create an optional of my_class2 type using the disengaged
+  //   Create a disengaged optional of Myclass1 type.
+  //   Create an optional of Myclass2 type using the disengaged
   //   object as the initialization object.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //
-  //   Bind a const reference to the my_class1 optional object. Create an optional
-  //   of my_class2 type using the const reference as the initialization object.
+  //   Bind a const reference to the Myclass1 optional object. Create an optional
+  //   of Myclass2 type using the const reference as the initialization object.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the one
   //   used in the construction call.
   //
-  //   Create an optional of my_class2 type using the disengaged my_class1
+  //   Create an optional of Myclass2 type using the disengaged Myclass1
   //   optional object as the initialization object and non default allocator
   //   as the allocator argument.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the one
   //   used in the construction call.
   //
-  //   Bind a const reference to the my_class1 optional object. Create an optional
-  //   of my_class2 type using the const reference as the initialization object
+  //   Bind a const reference to the Myclass1 optional object. Create an optional
+  //   of Myclass2 type using the const reference as the initialization object
   //   and non default allocator as the allocator argument.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the one
   //   used in the construction call.
   //
-  //   Create an engaged optional of my_class2 type using a non default
+  //   Create an engaged optional of Myclass2 type using a non default
   //   allocator.
-  //   Create an optional of my_class2a type using the first object as
+  //   Create an optional of Myclass2a type using the first object as
   //   the initialization object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //   Check the source object has not changed.
   //
-  //   Bind a const reference to the my_class2 object.
-  //   Create an optional of my_class2a type using the const reference as
+  //   Bind a const reference to the Myclass2 object.
+  //   Create an optional of Myclass2a type using the const reference as
   //   the initialization object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //
-  //   Create an optional of my_class2a type using the my_class2 object as
+  //   Create an optional of Myclass2a type using the Myclass2 object as
   //   the initialization object and a non default allocator as the allocator
   //   argument.
   //   Check the value of the newly created object is as expected.
@@ -9545,35 +9518,35 @@ void bslstl_optional_test19()
   //   Check the source object has not changed.
   //
   //   Bind a const reference to the original object. Create an optional
-  //   of my_class2a type using the const reference as the initialization
+  //   of Myclass2a type using the const reference as the initialization
   //   object and a non default allocator as the allocator argument.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the one used
   //   as the allocator argument.
   //
-  //   Create a disengaged optional of my_class2 type using a non default
+  //   Create a disengaged optional of Myclass2 type using a non default
   //   allocator.
-  //   Create an optional of my_class2a type using the disengaged
+  //   Create an optional of Myclass2a type using the disengaged
   //   object as the initialization object.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //
-  //   Bind a const reference to the my_class2 optional object. Create an optional
-  //   of my_class2a type using the const reference as the initialization object.
+  //   Bind a const reference to the Myclass2 optional object. Create an optional
+  //   of Myclass2a type using the const reference as the initialization object.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the one
   //   used in the construction call.
   //
-  //   Create an optional of my_class2a type using the disengaged my_class2
+  //   Create an optional of Myclass2a type using the disengaged Myclass2
   //   optional object as the initialization object and non default allocator
   //   as the allocator argument.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the one
   //   used in the construction call.
   //
-  //   Bind a const reference to the my_class2 optional object. Create an optional
-  //   of my_class2a type using the const reference as the initialization object
+  //   Bind a const reference to the Myclass2 optional object. Create an optional
+  //   of Myclass2a type using the const reference as the initialization object
   //   and non default allocator as the allocator argument.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the one
@@ -9598,10 +9571,10 @@ void bslstl_optional_test19()
                        "\n================================================="
                        "===================\n");
 
-    if (verbose) printf( "\nUsing 'my_Class1'.\n");
+    if (verbose) printf( "\nUsing 'MyClass1'.\n");
     {
-        typedef my_Class1                   SourceType;
-        typedef my_Class1a                  ValueType;
+        typedef MyClass1                   SourceType;
+        typedef MyClass1a                  ValueType;
         typedef bsl::optional<SourceType> SrcObj;
         typedef bsl::optional<ValueType> Obj;
 
@@ -9651,7 +9624,7 @@ void bslstl_optional_test19()
             ASSERT(MCI == ValueType::moveConstructorInvocations);
         }
     }
-    if (verbose) printf( "\nUsing 'my_Class2'.\n");
+    if (verbose) printf( "\nUsing 'MyClass2'.\n");
     {
         bslma::TestAllocator da("default", veryVeryVeryVerbose);
         bslma::TestAllocator oa("other", veryVeryVeryVerbose);
@@ -9659,8 +9632,8 @@ void bslstl_optional_test19()
 
         bslma::DefaultAllocatorGuard dag(&da);
 
-        typedef my_Class1                   SourceType;
-        typedef my_Class2                   ValueType;
+        typedef MyClass1                   SourceType;
+        typedef MyClass2                   ValueType;
         typedef bsl::optional<SourceType>   SrcObj;
         typedef bsl::optional<ValueType>    Obj;
 
@@ -9740,7 +9713,7 @@ void bslstl_optional_test19()
           ASSERT(dest4.get_allocator().mechanism() == &ta);
        }
     }
-    if (verbose) printf( "\nUsing 'my_Class2a'.\n");
+    if (verbose) printf( "\nUsing 'MyClass2a'.\n");
     {
         bslma::TestAllocator da("default", veryVeryVeryVerbose);
         bslma::TestAllocator oa("other", veryVeryVeryVerbose);
@@ -9748,8 +9721,8 @@ void bslstl_optional_test19()
 
         bslma::DefaultAllocatorGuard dag(&da);
 
-        typedef my_Class2                   SourceType;
-        typedef my_Class2a                  ValueType;
+        typedef MyClass2                   SourceType;
+        typedef MyClass2a                  ValueType;
         typedef bsl::optional<SourceType>   SrcObj;
         typedef bsl::optional<ValueType>    Obj;
 
@@ -9868,50 +9841,50 @@ void bslstl_optional_test20()
   //
   //
   // Plan:
-  //   Conduct the test using 'my_class1a' (does not use allocator) and
-  //   'my_class2'/'my_Class2a' (uses allocator) for 'TYPE'.
+  //   Conduct the test using 'Myclass1a' (does not use allocator) and
+  //   'Myclass2'/'MyClass2a' (uses allocator) for 'TYPE'.
   //
-  //   Create an engaged optional of my_class1 type. Create an optional
-  //   of my_class1a type by move construction from the original object.
+  //   Create an engaged optional of Myclass1 type. Create an optional
+  //   of Myclass1a type by move construction from the original object.
   //   Check the value of the newly created object is as expected.
   //   Check the source object's value type is in a moved from state.
   //
-  //   Create a const engaged optional of my_class1 type. Create an
-  //   optional of my_class1a type by move construction from the original
+  //   Create a const engaged optional of Myclass1 type. Create an
+  //   optional of Myclass1a type by move construction from the original
   //   object.
   //   Check the value of the newly created object is as expected.
   //   Check the source object has not changed.
   //
-  //   Create a disengaged optional of my_class1 type. Create an optional
-  //   of my_class1a type by move construction from the original object.
+  //   Create a disengaged optional of Myclass1 type. Create an optional
+  //   of Myclass1a type by move construction from the original object.
   //   Check the newly created object is disengaged.
   //
-  //   Create a const disengaged optional of my_class1 type. Create an
-  //   optional of my_class1a type by move construction from the original
+  //   Create a const disengaged optional of Myclass1 type. Create an
+  //   optional of Myclass1a type by move construction from the original
   //   object.
   //   Check the newly created object is disengaged.
   //   Check the source object has not changed.
   //
-  //   Create an engaged optional of my_class1 type.
-  //   Create an optional of my_class2 type by move construction from the
-  //   my_class1 optional object.
+  //   Create an engaged optional of Myclass1 type.
+  //   Create an optional of Myclass2 type by move construction from the
+  //   Myclass1 optional object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
   //   allocator
   //   Check the source object's value type is in a moved from state.
   //
-  //   Create an engaged const optional of my_class1 type using a non default
+  //   Create an engaged const optional of Myclass1 type using a non default
   //   allocator.
-  //   Create an optional of my_class2 type by move construction from the
-  //   my_class1 optional object.
+  //   Create an optional of Myclass2 type by move construction from the
+  //   Myclass1 optional object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the
   //   default allocator.
   //   Check the source object's value type has not changed.
   //
-  //   Create an engaged optional of my_class1 type using a non default
+  //   Create an engaged optional of Myclass1 type using a non default
   //   allocator.
-  //   Create another optional of my_class2 type by move construction from
+  //   Create another optional of Myclass2 type by move construction from
   //   the first object and a non default allocator as the allocator
   //   argument.
   //   Check the value of the newly created object is as expected.
@@ -9919,108 +9892,108 @@ void bslstl_optional_test20()
   //   as the one used for the source object.
   //   Check the source object's value type is in a moved from state.
   //
-  //   Create an engaged const optional of my_class1 type using a non default
+  //   Create an engaged const optional of Myclass1 type using a non default
   //   allocator.
-  //   Create an optional of my_class2 type by move construction from the
+  //   Create an optional of Myclass2 type by move construction from the
   //   first object and a non default allocator as the allocator argument.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the one used
   //   as the allocator argument.
   //   Check the source object has not changed.
   //
-  //   Create a disengaged optional of my_class1 type
-  //   Create an optional of my_class2 type by move construction from the
+  //   Create a disengaged optional of Myclass1 type
+  //   Create an optional of Myclass2 type by move construction from the
   //   first object.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //
-  //   Create a disengaged const optional of my_class1 type.
-  //   Create an optional of my_class2 type by move construction from the
+  //   Create a disengaged const optional of Myclass1 type.
+  //   Create an optional of Myclass2 type by move construction from the
   //   first object.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //
-  //   Create a disengaged optional of my_class1 type.
-  //   Create an optional of my_class2 type by move construction from the
+  //   Create a disengaged optional of Myclass1 type.
+  //   Create an optional of Myclass2 type by move construction from the
   //   first object and with non default allocator as the allocator argument.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the one
   //   used in the construction call.
   //
-  //   Create a disengaged const optional of my_class1 type.
-  //   Create another optional of my_class2 type by move construction from the
+  //   Create a disengaged const optional of Myclass1 type.
+  //   Create another optional of Myclass2 type by move construction from the
   //   first object.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the default
   //   allocator
   //
-  //   Create an engaged optional of my_class2 type using a non default
+  //   Create an engaged optional of Myclass2 type using a non default
   //   allocator.
-  //   Create an optional of my_class2a type by move construction from the
-  //   my_class2 optional object.
+  //   Create an optional of Myclass2a type by move construction from the
+  //   Myclass2 optional object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //   Check the source object is in a moved from state.
   //
-  //   Create an engaged const optional of my_class2 type using a non default
+  //   Create an engaged const optional of Myclass2 type using a non default
   //   allocator.
-  //   Create an optional of my_class2a type by move construction from the
-  //   optional of my_class2.
+  //   Create an optional of Myclass2a type by move construction from the
+  //   optional of Myclass2.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //
-  //   Create an engaged optional of my_class2 type using a non default
+  //   Create an engaged optional of Myclass2 type using a non default
   //   allocator.
-  //   Create an optional of my_class2a type by move construction from the
-  //   my_class2 optional object and a non default allocator as the allocator
+  //   Create an optional of Myclass2a type by move construction from the
+  //   Myclass2 optional object and a non default allocator as the allocator
   //   argument.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the one used
   //   as the allocator argument.
   //   Check the source object is in a moved from state.
   //
-  //   Create an engaged const optional of my_class2 type using a non default
+  //   Create an engaged const optional of Myclass2 type using a non default
   //   allocator.
-  //   Create an optional by move construction from the my_class2 optional
+  //   Create an optional by move construction from the Myclass2 optional
   //   object and a non default allocator as the allocator
   //   argument.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the one used
   //   as the allocator argument.
   //
-  //   Create a disengaged optional of my_class2 type using a non default
+  //   Create a disengaged optional of Myclass2 type using a non default
   //   allocator.
-  //   Create an optional of my_class2a type by move construction from the
-  //   optional of my_class2.
+  //   Create an optional of Myclass2a type by move construction from the
+  //   optional of Myclass2.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //
-  //   Create a disengaged const optional of my_class2 type using a non default
+  //   Create a disengaged const optional of Myclass2 type using a non default
   //   allocator.
-  //   Create an optional of my_class2a type by move construction from the
-  //   optional of my_class2.
+  //   Create an optional of Myclass2a type by move construction from the
+  //   optional of Myclass2.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the one
   //   used in the construction call.
   //
-  //   Create a disengaged optional of my_class2 type using a non default
+  //   Create a disengaged optional of Myclass2 type using a non default
   //   allocator.
-  //   Create an optional of my_class2a type by move construction from the
-  //   optional of my_class2 and non default allocator as the allocator
+  //   Create an optional of Myclass2a type by move construction from the
+  //   optional of Myclass2 and non default allocator as the allocator
   //   argument.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the one
   //   used in the construction call.
   //
-  //   Create a disengaged const optional of my_class2 type using a non default
+  //   Create a disengaged const optional of Myclass2 type using a non default
   //   allocator.
-  //   Create an optional of my_class2a type by move construction from the
-  //   optional of my_class2 and non default allocator as the allocator
+  //   Create an optional of Myclass2a type by move construction from the
+  //   optional of Myclass2 and non default allocator as the allocator
   //   argument.
   //   Check the newly created object is disengaged.
   //   Check the allocator of the newly created object is the one
@@ -10046,10 +10019,10 @@ void bslstl_optional_test20()
                        "\n================================================="
                        "===================\n");
 
-    if (verbose) printf( "\nUsing 'my_Class1'.\n");
+    if (verbose) printf( "\nUsing 'MyClass1'.\n");
     {
-        typedef my_Class1                  SourceType;
-        typedef my_Class1a                  ValueType;
+        typedef MyClass1                  SourceType;
+        typedef MyClass1a                  ValueType;
         typedef bsl::optional<SourceType> SrcObj;
         typedef bsl::optional<ValueType> Obj;
 
@@ -10099,7 +10072,7 @@ void bslstl_optional_test20()
             ASSERT(MCI == ValueType::moveConstructorInvocations);
         }
     }
-    if (verbose) printf( "\nUsing 'my_Class2'.\n");
+    if (verbose) printf( "\nUsing 'MyClass2'.\n");
     {
         bslma::TestAllocator da("default", veryVeryVeryVerbose);
         bslma::TestAllocator oa("other", veryVeryVeryVerbose);
@@ -10107,8 +10080,8 @@ void bslstl_optional_test20()
 
         bslma::DefaultAllocatorGuard dag(&da);
 
-        typedef my_Class1                   SourceType;
-        typedef my_Class2                   ValueType;
+        typedef MyClass1                   SourceType;
+        typedef MyClass2                   ValueType;
         typedef bsl::optional<SourceType>   SrcObj;
         typedef bsl::optional<ValueType>    Obj;
 
@@ -10201,7 +10174,7 @@ void bslstl_optional_test20()
           ASSERT(MCI == ValueType::moveConstructorInvocations);
        }
     }
-    if (verbose) printf( "\nUsing 'my_Class2a'.\n");
+    if (verbose) printf( "\nUsing 'MyClass2a'.\n");
     {
         bslma::TestAllocator da("default", veryVeryVeryVerbose);
         bslma::TestAllocator oa("other", veryVeryVeryVerbose);
@@ -10209,8 +10182,8 @@ void bslstl_optional_test20()
 
         bslma::DefaultAllocatorGuard dag(&da);
 
-        typedef my_Class2                   SourceType;
-        typedef my_Class2a                  ValueType;
+        typedef MyClass2                   SourceType;
+        typedef MyClass2a                  ValueType;
         typedef bsl::optional<SourceType>   SrcObj;
         typedef bsl::optional<ValueType>    Obj;
 
@@ -10299,38 +10272,38 @@ void bslstl_optional_test21()
   //
   //
   // Plan:
-  //   Conduct the test using 'my_class1a' (does not use allocator) and
-  //   'my_class2'/'my_Class2a' (uses allocator) for 'TYPE'.
+  //   Conduct the test using 'Myclass1a' (does not use allocator) and
+  //   'Myclass2'/'MyClass2a' (uses allocator) for 'TYPE'.
   //
-  //   Create an object of my_class1 type.
-  //   Create an optional of my_class1a type using the first object as the
+  //   Create an object of Myclass1 type.
+  //   Create an optional of Myclass1a type using the first object as the
   //   initialization object.
   //   Check the value of the newly created object is as expected.
   //   Check the source object has not changed.
   //
   //   Bind a const reference to the original object. Create another optional
-  //   of my_class1a type using the const reference as the initialization
+  //   of Myclass1a type using the const reference as the initialization
   //   object.
   //   Check the value of the newly created object is as expected.
   //
-  //   Create an object of my_class1 type.
-  //   Create an optional of my_class2 type using the first object as
+  //   Create an object of Myclass1 type.
+  //   Create an optional of Myclass2 type using the first object as
   //   the initialization object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //   Check the source object has not changed.
   //
-  //   Create a const object of my_class1 type using a non default allocator.
-  //   Create an optional of my_class2 type using the first object as
+  //   Create a const object of Myclass1 type using a non default allocator.
+  //   Create an optional of Myclass2 type using the first object as
   //   the initialization object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //   Check the source object has not changed.
   //
-  //   Create an object of my_class1 type.
-  //   Create an optional of my_class2 type using the my_class1 object as the
+  //   Create an object of Myclass1 type.
+  //   Create an optional of Myclass2 type using the Myclass1 object as the
   //   initialization object and a non default allocator as the allocator
   //   argument.
   //   Check the value of the newly created object is as expected.
@@ -10338,32 +10311,32 @@ void bslstl_optional_test21()
   //   as the allocator argument.
   //   Check the source object has not changed.
   //
-  //   Create a const object of my_class1 type using a non default allocator.
-  //   Create an optional of my_class2 type using the my_class1 object as the
+  //   Create a const object of Myclass1 type using a non default allocator.
+  //   Create an optional of Myclass2 type using the Myclass1 object as the
   //   initialization object and a non default allocator as the allocator
   //   argument.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the one used
   //   as the allocator argument.
   //
-  //   Create an object my_class2 type using a non default allocator.
-  //   Create an optional of my_class2a type using the first object as
+  //   Create an object Myclass2 type using a non default allocator.
+  //   Create an optional of Myclass2a type using the first object as
   //   the initialization object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //   Check the source object has not changed.
   //
-  //   Create a const object my_class2 type using a non default allocator.
-  //   Bind a const reference to the my_class2 object.
-  //   Create an optional of my_class2a type using the const object as
+  //   Create a const object Myclass2 type using a non default allocator.
+  //   Bind a const reference to the Myclass2 object.
+  //   Create an optional of Myclass2a type using the const object as
   //   the initialization object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //
-  //   Create an object my_class2 type using a non default allocator.
-  //   Create an optional of my_class2a type using the my_class2 object as
+  //   Create an object Myclass2 type using a non default allocator.
+  //   Create an optional of Myclass2a type using the Myclass2 object as
   //   the initialization object and a non default allocator as the allocator
   //   argument.
   //   Check the value of the newly created object is as expected.
@@ -10371,8 +10344,8 @@ void bslstl_optional_test21()
   //   as the allocator argument.
   //   Check the source object has not changed.
   //
-  //   Create a const object my_class2 type using a non default allocator.
-  //   Create an optional of my_class2a type using the const object as
+  //   Create a const object Myclass2 type using a non default allocator.
+  //   Create an optional of Myclass2a type using the const object as
   //   the initialization object and a non default allocator as the allocator
   //   argument.
   //   Check the value of the newly created object is as expected.
@@ -10396,10 +10369,10 @@ void bslstl_optional_test21()
                        "\nTESTING copy construction from OTHER type "
                        "\n=========================================\n");
 
-    if (verbose) printf( "\nUsing 'my_Class1a'.\n");
+    if (verbose) printf( "\nUsing 'MyClass1a'.\n");
     {
-        typedef my_Class1                   SourceType;
-        typedef my_Class1a                  ValueType;
+        typedef MyClass1                   SourceType;
+        typedef MyClass1a                  ValueType;
         typedef bsl::optional<ValueType> Obj;
 
         {
@@ -10425,7 +10398,7 @@ void bslstl_optional_test21()
             ASSERT(MCI == ValueType::moveConstructorInvocations);
         }
     }
-    if (verbose) printf( "\nUsing 'my_Class2'.\n");
+    if (verbose) printf( "\nUsing 'MyClass2'.\n");
     {
         bslma::TestAllocator da("default", veryVeryVeryVerbose);
         bslma::TestAllocator oa("other", veryVeryVeryVerbose);
@@ -10433,8 +10406,8 @@ void bslstl_optional_test21()
 
         bslma::DefaultAllocatorGuard dag(&da);
 
-        typedef my_Class1                   SourceType;
-        typedef my_Class2                   ValueType;
+        typedef MyClass1                   SourceType;
+        typedef MyClass2                   ValueType;
         typedef bsl::optional<ValueType> Obj;
 
         {
@@ -10481,7 +10454,7 @@ void bslstl_optional_test21()
             ASSERT(MCI == ValueType::moveConstructorInvocations);
        }
      }
-    if (verbose) printf( "\nUsing 'my_Class2a'.\n");
+    if (verbose) printf( "\nUsing 'MyClass2a'.\n");
     {
         bslma::TestAllocator da("default", veryVeryVeryVerbose);
         bslma::TestAllocator oa("other", veryVeryVeryVerbose);
@@ -10489,8 +10462,8 @@ void bslstl_optional_test21()
 
         bslma::DefaultAllocatorGuard dag(&da);
 
-        typedef my_Class2                   SourceType;
-        typedef my_Class2a                  ValueType;
+        typedef MyClass2                   SourceType;
+        typedef MyClass2a                  ValueType;
         typedef bsl::optional<ValueType> Obj;
 
         {
@@ -10562,82 +10535,82 @@ void bslstl_optional_test22()
   //
   //
   // Plan:
-  //   Conduct the test using 'my_class1a' (does not use allocator) and
-  //   'my_class2'/'my_Class2a' (uses allocator) for 'TYPE'.
+  //   Conduct the test using 'Myclass1a' (does not use allocator) and
+  //   'Myclass2'/'MyClass2a' (uses allocator) for 'TYPE'.
   //
-  //   Create an object of my_class1 type.
-  //   Create an optional of my_class1a type by move construction from the
+  //   Create an object of Myclass1 type.
+  //   Create an optional of Myclass1a type by move construction from the
   //   original object.
   //   Check the value of the newly created object is as expected.
   //   Check the source object's value type is in a moved from state.
   //
-  //   Create a const object of my_class1 type.
-  //   Create an optional of my_class1a type by move construction from the
+  //   Create a const object of Myclass1 type.
+  //   Create an optional of Myclass1a type by move construction from the
   //   original object.
   //   Check the value of the newly created object is as expected.
   //   Check the source object has not changed.
   //
-  //   Create an object of my_class1 type.
-  //   Create an optional of my_class2 type by move construction from the
-  //   my_class1 object.
+  //   Create an object of Myclass1 type.
+  //   Create an optional of Myclass2 type by move construction from the
+  //   Myclass1 object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //   Check the source object is in a moved from state.
   //
-  //   Create a const object of my_class1 type.
-  //   Create an optional of my_class2 type by move construction from the
-  //   my_class1 object.
+  //   Create a const object of Myclass1 type.
+  //   Create an optional of Myclass2 type by move construction from the
+  //   Myclass1 object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //   Check the source object has not changed.
   //
-  //   Create an object of my_class1.
-  //   Create an optional of my_class2 type  by move construction from
-  //   the my_class1 object and a non default allocator as the allocator
+  //   Create an object of Myclass1.
+  //   Create an optional of Myclass2 type  by move construction from
+  //   the Myclass1 object and a non default allocator as the allocator
   //   argument.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the same
   //   as the one used for the source object.
   //   Check the source object is in a moved from state.
   //
-  //   Create a const object of my_class1 type.
-  //   Create an optional of my_class2 type by move construction from
+  //   Create a const object of Myclass1 type.
+  //   Create an optional of Myclass2 type by move construction from
   //   the first object and a non default allocator as the allocator argument.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the one used
   //   as the allocator argument.
   //   Check the source object has not changed.
   //
-  //   Create an object of my_class2 type using a non default allocator.
-  //   Create an optional of my_class2a type by move construction from the
-  //   my_class2 object.
+  //   Create an object of Myclass2 type using a non default allocator.
+  //   Create an optional of Myclass2a type by move construction from the
+  //   Myclass2 object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //   Check the source object is in a moved from state.
   //
-  //   Create a const object of my_class2 type using a non default allocator.
-  //   Create an optional of my_class2a type by move construction from the
-  //   my_class2 object.
+  //   Create a const object of Myclass2 type using a non default allocator.
+  //   Create an optional of Myclass2a type by move construction from the
+  //   Myclass2 object.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the default
   //   allocator.
   //   Check the source object has not changed.
   //
-  //   Create an object of my_class2 type using a non default allocator.
-  //   Create an optional of my_class2a type  by move construction from
-  //   the my_class2 object and a non default allocator as the allocator
+  //   Create an object of Myclass2 type using a non default allocator.
+  //   Create an optional of Myclass2a type  by move construction from
+  //   the Myclass2 object and a non default allocator as the allocator
   //   argument.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the same
   //   as the one used for the source object.
   //   Check the source object is in a moved from state.
   //
-  //   Create a const object of my_class2 type using a non default allocator.
-  //   Create an optional of my_class2a type by move construction from
-  //   the my_class2 object and a non default allocator as the allocator
+  //   Create a const object of Myclass2 type using a non default allocator.
+  //   Create an optional of Myclass2a type by move construction from
+  //   the Myclass2 object and a non default allocator as the allocator
   //   argument.
   //   Check the value of the newly created object is as expected.
   //   Check the allocator of the newly created object is the one used
@@ -10660,10 +10633,10 @@ void bslstl_optional_test22()
                        "\nTESTING move construction from OTHER type "
                        "\n=========================================\n");
 
-    if (verbose) printf( "\nUsing 'my_Class1a'.\n");
+    if (verbose) printf( "\nUsing 'MyClass1a'.\n");
     {
-        typedef my_Class1                   SourceType;
-        typedef my_Class1a                  ValueType;
+        typedef MyClass1                   SourceType;
+        typedef MyClass1a                  ValueType;
         typedef bsl::optional<ValueType>    Obj;
 
         {
@@ -10688,7 +10661,7 @@ void bslstl_optional_test22()
             ASSERT(MCI == ValueType::moveConstructorInvocations);
         }
     }
-    if (verbose) printf( "\nUsing 'my_Class2'.\n");
+    if (verbose) printf( "\nUsing 'MyClass2'.\n");
     {
         bslma::TestAllocator da("default", veryVeryVeryVerbose);
         bslma::TestAllocator oa("other", veryVeryVeryVerbose);
@@ -10696,8 +10669,8 @@ void bslstl_optional_test22()
 
         bslma::DefaultAllocatorGuard dag(&da);
 
-        typedef my_Class2                   SourceType;
-        typedef my_Class2a                  ValueType;
+        typedef MyClass2                   SourceType;
+        typedef MyClass2a                  ValueType;
         typedef bsl::optional<ValueType>    Obj;
 
         {
@@ -10750,7 +10723,7 @@ void bslstl_optional_test22()
           ASSERT(MCI == ValueType::moveConstructorInvocations);
        }
     }
-    if (verbose) printf( "\nUsing 'my_Class2a'.\n");
+    if (verbose) printf( "\nUsing 'MyClass2a'.\n");
     {
         bslma::TestAllocator da("default", veryVeryVeryVerbose);
         bslma::TestAllocator oa("other", veryVeryVeryVerbose);
@@ -10758,8 +10731,8 @@ void bslstl_optional_test22()
 
         bslma::DefaultAllocatorGuard dag(&da);
 
-        typedef my_Class2                   SourceType;
-        typedef my_Class2a                  ValueType;
+        typedef MyClass2                   SourceType;
+        typedef MyClass2a                  ValueType;
         typedef bsl::optional<ValueType> Obj;
 
         {
@@ -13422,8 +13395,8 @@ void bslstl_optional_test26()
   // Plan:
   //
   //   Conduct the test using 'int' (scalar type, doesn't use allocator),
-  //   'my_class1' (non scalar type, doesn't use allocator), and
-  //   'my_class2' (non scalar type, uses allocator), for 'TYPE'.
+  //   'Myclass1' (non scalar type, doesn't use allocator), and
+  //   'Myclass2' (non scalar type, uses allocator), for 'TYPE'.
   //
   //   Create a disengaged source optional of each type.
   //   Create a destination optional of optional of each type.
@@ -13756,7 +13729,7 @@ void bslstl_optional_test28()
     //:
     //
     // Plan:
-    //: 1 Execute tests for int( doesn't use allocator) and my_class2 (uses
+    //: 1 Execute tests for int( doesn't use allocator) and Myclass2 (uses
     //    allocator).
     //  2 For each relation operator, execute a combination of comparing:
     //      - two optional objects of different types
@@ -13804,7 +13777,7 @@ void bslstl_optional_test28()
     if (verbose) printf( "\nComparison with an optional.\n");
     {
         typedef bsl::optional<int>                    OptT;
-        typedef bsl::optional<my_Class2>              OptV;
+        typedef bsl::optional<MyClass2>              OptV;
 
         OptT X;
         OptV Y;
@@ -13852,7 +13825,7 @@ void bslstl_optional_test28()
     }
     if (verbose) printf( "\nComparison with a non optional .\n");
     {
-        typedef bsl::optional<my_Class2>              OptV;
+        typedef bsl::optional<MyClass2>              OptV;
 
         OptV X;
         int Y = 3;
@@ -13894,7 +13867,7 @@ void bslstl_optional_test28()
     }
     if (verbose) printf( "\nComparison with a nullopt_t .\n");
     {
-        bsl::optional<my_Class2> X;
+        bsl::optional<MyClass2> X;
 
         //comparison with a disengaged optional on rhs
         ASSERT( (X == bsl::nullopt) ); // !x
@@ -13954,7 +13927,7 @@ void bslstl_optional_test29()
     //
     //
     // Plan:
-    //: 1 Execute tests for my_class1( doesn't use allocator) and my_class2
+    //: 1 Execute tests for Myclass1( doesn't use allocator) and Myclass2
     //    (uses allocator).
     //: 2 Call make_optional with an lvalue of each type. Check the value and
     //    allocator (if any) is correct. Check there were no additional copies
@@ -13987,69 +13960,69 @@ void bslstl_optional_test29()
 
     if (verbose) printf( "\nDeduced type make optional.\n");
     {
-        my_Class1 source(2);
+        MyClass1 source(2);
 
-        int CCI = my_Class1::copyConstructorInvocations;
-        int MCI = my_Class1::moveConstructorInvocations;
+        int CCI = MyClass1::copyConstructorInvocations;
+        int MCI = MyClass1::moveConstructorInvocations;
 
-        optional<my_Class1> obj = bsl::make_optional(source);
+        optional<MyClass1> obj = bsl::make_optional(source);
         ASSERT( 2 == obj.value().value());
-        ASSERT( CCI == (my_Class1::copyConstructorInvocations -1));
-        ASSERT( MCI == my_Class1::moveConstructorInvocations);
+        ASSERT( CCI == (MyClass1::copyConstructorInvocations -1));
+        ASSERT( MCI == MyClass1::moveConstructorInvocations);
 
-        CCI = my_Class1::copyConstructorInvocations;
-        MCI = my_Class1::moveConstructorInvocations;
+        CCI = MyClass1::copyConstructorInvocations;
+        MCI = MyClass1::moveConstructorInvocations;
 
-        optional<my_Class1> obj2 = bsl::make_optional(std::move(source));
+        optional<MyClass1> obj2 = bsl::make_optional(std::move(source));
         ASSERT( 2 == obj2.value().value());
-        ASSERT( CCI == (my_Class1::copyConstructorInvocations));
-        ASSERT( MCI == (my_Class1::moveConstructorInvocations  - 1));
+        ASSERT( CCI == (MyClass1::copyConstructorInvocations));
+        ASSERT( MCI == (MyClass1::moveConstructorInvocations  - 1));
     }
     {
         bslma::TestAllocator da("default", veryVeryVeryVerbose);
         bslma::DefaultAllocatorGuard dag(&da);
-        my_Class2 source(2);
+        MyClass2 source(2);
 
-        int CCI = my_Class2::copyConstructorInvocations;
-        int MCI = my_Class2::moveConstructorInvocations;
+        int CCI = MyClass2::copyConstructorInvocations;
+        int MCI = MyClass2::moveConstructorInvocations;
 
-        optional<my_Class2> obj = bsl::make_optional(source);
+        optional<MyClass2> obj = bsl::make_optional(source);
         ASSERT( 2 == obj.value().value());
         ASSERT( &da == obj.value().d_def.d_allocator_p);
-        ASSERT( CCI == (my_Class2::copyConstructorInvocations -1));
-        ASSERT( MCI == my_Class2::moveConstructorInvocations);
+        ASSERT( CCI == (MyClass2::copyConstructorInvocations -1));
+        ASSERT( MCI == MyClass2::moveConstructorInvocations);
 
-        CCI = my_Class2::copyConstructorInvocations;
-        MCI = my_Class2::moveConstructorInvocations;
+        CCI = MyClass2::copyConstructorInvocations;
+        MCI = MyClass2::moveConstructorInvocations;
 
-        optional<my_Class2> obj2 = bsl::make_optional(std::move(source));
+        optional<MyClass2> obj2 = bsl::make_optional(std::move(source));
         ASSERT( 2 == obj2.value().value());
         ASSERT( &da == obj2.value().d_def.d_allocator_p);
-        ASSERT( CCI == (my_Class2::copyConstructorInvocations));
-        ASSERT( MCI == (my_Class2::moveConstructorInvocations  - 1));
+        ASSERT( CCI == (MyClass2::copyConstructorInvocations));
+        ASSERT( MCI == (MyClass2::moveConstructorInvocations  - 1));
     }
     {
         bslma::TestAllocator da("default", veryVeryVeryVerbose);
         bslma::DefaultAllocatorGuard dag(&da);
-        my_Class2a source(2);
+        MyClass2a source(2);
 
-        int CCI = my_Class2a::copyConstructorInvocations;
-        int MCI = my_Class2a::moveConstructorInvocations;
+        int CCI = MyClass2a::copyConstructorInvocations;
+        int MCI = MyClass2a::moveConstructorInvocations;
 
-        optional<my_Class2a> obj = bsl::make_optional(source);
+        optional<MyClass2a> obj = bsl::make_optional(source);
         ASSERT( 2 == obj.value().value());
         ASSERT( &da == obj.value().d_data.d_def.d_allocator_p);
-        ASSERT( CCI == (my_Class2a::copyConstructorInvocations -1));
-        ASSERT( MCI == my_Class2a::moveConstructorInvocations);
+        ASSERT( CCI == (MyClass2a::copyConstructorInvocations -1));
+        ASSERT( MCI == MyClass2a::moveConstructorInvocations);
 
-        CCI = my_Class2a::copyConstructorInvocations;
-        MCI = my_Class2a::moveConstructorInvocations;
+        CCI = MyClass2a::copyConstructorInvocations;
+        MCI = MyClass2a::moveConstructorInvocations;
 
-        optional<my_Class2a> obj2 = bsl::make_optional(std::move(source));
+        optional<MyClass2a> obj2 = bsl::make_optional(std::move(source));
         ASSERT( 2 == obj2.value().value());
         ASSERT( &da == obj2.value().d_data.d_def.d_allocator_p);
-        ASSERT( CCI == (my_Class2a::copyConstructorInvocations));
-        ASSERT( MCI == (my_Class2a::moveConstructorInvocations  - 1));
+        ASSERT( CCI == (MyClass2a::copyConstructorInvocations));
+        ASSERT( MCI == (MyClass2a::moveConstructorInvocations  - 1));
     }
     if (verbose) printf( "\nvar arg make optional.\n");
     {
@@ -14321,12 +14294,12 @@ void bslstl_optional_test30()
     //
     //
     // Plan:
-    //: 1 Execute tests for my_class2.
-    //: 2 Call alloc_optional with an lvalue of my_class2. Check the value and
+    //: 1 Execute tests for Myclass2.
+    //: 2 Call alloc_optional with an lvalue of Myclass2. Check the value and
     //    allocator of the created optional is correct. Check there were no
     //    additional copies created by checking the number of copy and move
     //    constructors invoked.
-    //: 3 Call alloc_optional with an rvalue of of my_class2. Check the value
+    //: 3 Call alloc_optional with an rvalue of of Myclass2. Check the value
     //    and allocator of the created optional is correct. Check the move
     //    constructor was used. Check there were no additional copies created
     //    by checking the number of copy and move constructors invoked.
@@ -14358,25 +14331,25 @@ void bslstl_optional_test30()
         bslma::TestAllocator da("default", veryVeryVeryVerbose);
         bslma::TestAllocator oa("other", veryVeryVeryVerbose);
         bslma::DefaultAllocatorGuard dag(&da);
-        my_Class2 source(2);
+        MyClass2 source(2);
 
-        int CCI = my_Class2::copyConstructorInvocations;
-        int MCI = my_Class2::moveConstructorInvocations;
+        int CCI = MyClass2::copyConstructorInvocations;
+        int MCI = MyClass2::moveConstructorInvocations;
 
-        optional<my_Class2> obj = bsl::alloc_optional(&oa, source);
+        optional<MyClass2> obj = bsl::alloc_optional(&oa, source);
         ASSERT( 2 == obj.value().value());
         ASSERT( &oa == obj.value().d_def.d_allocator_p);
-        ASSERT( CCI == (my_Class2::copyConstructorInvocations -1));
-        ASSERT( MCI == my_Class2::moveConstructorInvocations);
+        ASSERT( CCI == (MyClass2::copyConstructorInvocations -1));
+        ASSERT( MCI == MyClass2::moveConstructorInvocations);
 
-        CCI = my_Class2::copyConstructorInvocations;
-        MCI = my_Class2::moveConstructorInvocations;
+        CCI = MyClass2::copyConstructorInvocations;
+        MCI = MyClass2::moveConstructorInvocations;
 
-        optional<my_Class2> obj2 = bsl::alloc_optional(&oa, std::move(source));
+        optional<MyClass2> obj2 = bsl::alloc_optional(&oa, std::move(source));
         ASSERT( 2 == obj2.value().value());
         ASSERT( &oa == obj2.value().d_def.d_allocator_p);
-        ASSERT( CCI == (my_Class2::copyConstructorInvocations));
-        ASSERT( MCI == (my_Class2::moveConstructorInvocations  - 1));
+        ASSERT( CCI == (MyClass2::copyConstructorInvocations));
+        ASSERT( MCI == (MyClass2::moveConstructorInvocations  - 1));
     }
     if (verbose) printf( "\nvar arg alloc_optional.\n");
     {
