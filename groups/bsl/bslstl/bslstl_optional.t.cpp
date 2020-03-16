@@ -5846,23 +5846,26 @@ void bslstl_optional_test6()
     //:   through the acquired pointer.
     //
     // Plan:
-    //   Conduct the test using 'Myclass1', 'const Myclass1' (does not use
-    //   allocator) and 'Myclass1' and 'const Myclass1' (uses allocator) for
-    //   'TYPE'.
-    //
-    //   Create engaged optional of each type. Call operator-> and check that
-    //   the value and allocator, if any, of the object is correct.
-    //
-    //   Modify the optional through the return pointer. Check the value
-    //   of the optional is correct.
-    //
-    //   Bind const optional reference to optional object. Call operator-> and
-    //   check that the value of the object and the allocator is correct.
-    //
-    //   Check the value of the optional object can not be modified through
-    //   operator-> const and through operator-> for const types. This requires
-    //   compilation failures.
-    //
+    //: 1 Create an engaged 'optional' of no allocator aware type. Using
+    //:   'operator->', for concern 1 check the returned value matches the
+    //:   expected value.
+    //: 2 Assign a value to the 'optional' object through a call to
+    //:   'operator->'. For concern 1, check the value of the 'optional' object
+    //:   is as expected.
+    //: 3 Bind a 'const optional' reference to the 'optional' object. Using
+    //:   operator-> for concern 2 check the returned value matches the
+    //:   expected value.
+    //: 4 For concern 2, check the value of a 'const optional' object can not
+    //:   be modified through 'operator->' const. Note that this test should
+    //:   cause a compilation error and needs to be enabled and checked
+    //:   manually.
+    //: 5 For concern 2, check the value of an 'optional' object of const
+    //:   value type can not be modified through 'operator->' const. Note that
+    //:   this test should cause a compilation error and needs to be enabled
+    //:   and checked manually.
+    //; 6 Repeat steps 1-5 with an allocator aware value type. For concern 1
+    //:   and 2, check the allocator of the object retrieved from 'operator->'
+    //:   is the expected alloctor.
     //
     // Testing:
     //   const T* operator->() const;
