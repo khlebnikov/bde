@@ -7680,85 +7680,79 @@ void bslstl_optional_test12()
 }
 void bslstl_optional_test13()
 {
-  // --------------------------------------------------------------------
-  // TESTING operator=(optional_type) FUNCTIONALITY
-  //   This test will verify that the 'operator=(rhs)', where 'rhs' is an
-  //   'optional' type, works as expected.
-  //
-  // Concerns:
-  //: 1 That 'operator=(rhs)', invoked on an engaged optional object and where
-  //:   'rhs' is an engaged optional object, assigns the value of the 'rhs'
-  //:   'optional' to the value of the target 'optional' object.
-  //: 2 That 'operator=(rhs)', invoked on a disengaged optional object and
-  //:   where 'rhs' is an engaged optional object, constructs a value type
-  //:   object from the value of 'rhs''optional' object.
-  //: 3 That 'operator=(rhs)', where 'rhs' is a disengaged optional object,
-  //:   makes the target 'optional' object disengaged.
-
-  //   * for allocator aware types, the assignment to a disengaged optional
-  //     uses the stored allocator.
-  //   * for allocator aware types, the assignment to an engaged optional
-  //     uses the stored allocator.
-  //   * assignment of rvalues uses move assignment where available
-  //
-  // Plan:
-  //
-  //   Conduct the test using 'Myclass1' (does not use allocator) and
-  //   'Myclass2'/'MyClass2a' (uses allocator) for 'TYPE'.
-  //
-  //   Create an engaged optional of each type. Assign a disengaged optional
-  //   of the same type to it. Check the value of the optional and allocator,
-  //   if any, are correct.
-  //   Check the value of the assigned object hasn't changed.
-  //
-  //   Emplace a value into the optional. Assign an engaged optional
-  //   of the same type to it. Check the value of the optional and allocator,
-  //   if any, are correct.
-  //   Check the value of the assigned object hasn't changed.
-  //
-  //   Assign a disengaged optional of type convertible to
-  //   value type to the optional.
-  //   Check the value of the optional and allocator, if any, are correct.
-  //   Check the value of the assigned object hasn't changed.
-  //
-  //   Emplace a value into the optional. Assign an engaged optional
-  //   of type convertible to value type to the optional. Check the value
-  //   of the optional and allocator, if any, are correct.
-  //   Check the value of the assigned object hasn't changed.
-  //
-  //   Repeat the tests for an optional of const qualified value types as
-  //   the source type.
-  //
-  //   Repeat the tests for const qualified optional types as
-  //   the source type.
-  //
-  //   Repeat the tests for assignment from rvalues. Check the assigned value
-  //   was moved from.
-  //
-  //   Call assignment on a const qualified optional. This requires
-  //   compilation failure tests which are not enabled by default.
-  //
-  //   Repeat all of the above tests for a disengaged optional as the
-  //   destination. That is, call reset before each assignment.
-  //
-  // Testing:
-  //
-  //   optional& operator=(const optional&);
-  //   optional& operator=( BloombergLP::bslmf::MovableRef<optional>);
-  //
-  //
-  //   void value();
-  //   void get_allocator();
-  //   void reset();
-  //   void emplace();
-  //
-  // --------------------------------------------------------------------
+    // --------------------------------------------------------------------
+    // TESTING operator=(optional_type) MEMBER FUNCTION
+    //   This test will verify that the 'operator=(rhs)', where 'rhs' is an
+    //   'optional' type, works as expected.
+    //
+    // Concerns:
+    //: 1 That 'operator=(rhs)', where 'rhs' is a disengaged 'optional' object,
+    //:   makes the target 'optional' object disengaged.
+    //: 2 That 'operator=(rhs)', invoked on an engaged optional object and
+    //:   where 'rhs' is an engaged optional object, assigns the value of the
+    //:   'rhs''optional' to the value of the target 'optional' object.
+    //: 3 That 'operator=(rhs)', invoked on a disengaged optional object and
+    //:   where 'rhs' is an engaged optional object, constructs a value type
+    //:   object from the value of 'rhs''optional' object.
+    //: 4 An assignment operator takign an optional type will be used even if
+    //:   'rhs' is a const qualified 'optional', or on 'optional' of a const
+    //:   qualified value type.
+    //: 5 For allocator aware types, the assignment from an 'optional' object
+    //:   does not modify the allocator
+    //: 6 Assignment from rvalues uses move assignment where available
+    //: 7 Assignment to an 'optional' of const qualified value type is not
+    //:   possible.
+    //
+    // Plan:
+    //: 1 Create an engaged 'optional' of a non allocator aware value type.
+    //:   Assign a disengaged 'optional' of the same type to it. For concern 1
+    //:   check that the destination object is disengaged.
+    //: 2 Emplace a value into the test object. Assign an engaged 'optional'
+    //:   of the same type to it. For concern 2, check the value of the test
+    //:   object is the same as that of the object assigned to it.
+    //: 3 Assign a disengaged 'optional' of a value type convertible to test
+    //:   object's value type. For concern 1, check that the destination object
+    //:   is disengaged.
+    //: 4 Emplace a value into the test object. Assign an engaged 'optional'
+    //:   of a value type convertible to test object's value type. For concern
+    //:   2, check the value of the test object is the same as that of the
+    //:   object assigned to it.
+    //: 5 For concern 4, repeat steps 1-4 using a const qualified 'optional'
+    //:   object as 'rhs', and using an 'optional' of const qualified value
+    //:   type.
+    //: 6 For concern 6, repeat steps 1-5 using an rvalue as 'rhs'. Verify the
+    //:   object was moved from if rhs is a non const qualified of a non const
+    //:   value type, and copied otherwise.
+    //: 7 For concern 3, repeat steps 1-6 using a disengaged 'optional' as the
+    //:   test object in each step by calling 'reset' before each assignment.
+    //: 8 Repeat steps 1-7 using an 'optional' object of allocator aware type
+    //:   as the test object. For concern 5, check that the test object's
+    //:   allocator has not been modified.
+    //: 9 For concern 7, verify that a const qualified optional can not be
+    //:   assigned to. Note taht this test requires compilation failures and
+    //:   needs to be enabled and checked manually.
+    //
+    //   Repeat all of the above tests for a disengaged optional as the
+    //   destination. That is, call reset before each assignment.
+    //
+    // Testing:
+    //
+    //   optional& operator=(const optional&);
+    //   optional& operator=( BloombergLP::bslmf::MovableRef<optional>);
+    //
+    //
+    //   void value();
+    //   void get_allocator();
+    //   void reset();
+    //   void emplace();
+    //
+    // --------------------------------------------------------------------
 
     if (verbose) printf(
-                    "\nTESTING operator=(optional_type) MEMBER FUNCTION "
-                    "\n===================================================\n");
+                    "\nTESTING operator=(optional_type) MEMBER FUNCTION"
+                    "\n================================================\n");
 
-    if (verbose) printf( "\nUsing 'MyClass1a'.\n");
+    if (verbose) printf("\nUsing non allocator aware value type.\n");
     {
         typedef MyClass1a                  ValueType;
         typedef const ValueType             ConstValueType;
@@ -7774,7 +7768,8 @@ void bslstl_optional_test13()
         typedef const ObjC CObjC;
         typedef const OtherObj COtherObj;
         typedef const OtherObjC COtherObjC;
-
+        if (verbose) printf("\n Using an engaged 'optional' as the test "
+                            "object.\n");
         {
             Obj mX(ValueType(3));
 
@@ -7875,6 +7870,8 @@ void bslstl_optional_test13()
             mX.emplace(2);
             TEST_EQUAL_ENGAGED_MOVE(mX, COtherObjC, OtherType,  7, 7);
         }
+        if (verbose) printf("\n Using a disengaged 'optional' as the test "
+                            "object.\n");
         {
             Obj mX(ValueType(3));
 
@@ -7975,7 +7972,7 @@ void bslstl_optional_test13()
             TEST_EQUAL_ENGAGED_MOVE(mX, COtherObjC, OtherType,  7, 7);
         }
     }
-    if (verbose) printf( "\nUsing 'MyClass2a'.\n");
+    if (verbose) printf( "\nUsing allocator aware value type\n");
     {
         bslma::TestAllocator da("default", veryVeryVeryVerbose);
         bslma::TestAllocator oa("other", veryVeryVeryVerbose);
@@ -7995,6 +7992,8 @@ void bslstl_optional_test13()
         typedef const ObjC CObjC;
         typedef const OtherObj COtherObj;
         typedef const OtherObjC COtherObjC;
+        if (verbose) printf("\n Using an engaged 'optional' as the test "
+                            "object.\n");
 
         {
             Obj mX(bsl::allocator_arg, &oa, ValueType(3));
@@ -8096,6 +8095,8 @@ void bslstl_optional_test13()
             mX.emplace(2);
             TEST_EQUAL_ENGAGED_MOVE_A(mX, COtherObjC, OtherType,  7, 7);
         }
+        if (verbose) printf("\n Using a disengaged 'optional' as the test "
+                                    "object.\n");
         {
             Obj mX(bsl::allocator_arg, &oa);
 
@@ -8250,30 +8251,29 @@ void bslstl_optional_test13()
 void bslstl_optional_test14()
 {
   // --------------------------------------------------------------------
-  // TESTING operator=(optional_type) FUNCTIONALITY
-  //   This test will verify that the operator=(optional_type) function works
-  //   as expected. These test require compilation failures and will not run by
-  //   default.
+  // TESTING operator=(optional_type) MEMBER FUNCTION
+  //   This test will verify that the operator=(rhs), where rhs is an
+  //   optional type member function works as expected. These test require
+  //   compilation failures and will not run by default.
   //
   // Concerns:
-  //   * operator=(optional_type) can not be called for an optional of type
-  //     which is not assignable to value type.
-  //   * operator=(optional_type) can not be called for if value type is
-  //     not constructable from value type of optional_type
+  //: 1 'operator=(rhs)', where rhs is an optional type of a value type which
+  //:   is not assignable to target optional's value type can not be called.
+  //: 2 'operator=(rhs)', where rhs is an optional type of a value type which
+  //:   is not convertable to target optional's value type can not be called.
   //
   // Plan:
-  //
-  //   Create an optional of type MyClass1b. Verify that lvalue and rvalue
-  //   of type optional<myClass1> can not be assigned to the optional.
-  //
-  //   Create an optional of type MyClass1c. Verify that lvalue and rvalue
-  //   of type optional<myClass1> can not be assigned to the optional.
-  //
-  //   Create an optional of type MyClass2b. Verify that lvalue and rvalue
-  //   of type optional<myClass2> can not be assigned to the optional.
-  //
-  //   Create an optional of type MyClass2c. Verify that lvalue and rvalue
-  //   of type optional<myClass2> can not be assigned to the optional.
+  //: 1 Create an 'optional' object of non allocator aware value type as target
+  //:   object. For concern 1, verify that an 'optional' object of value type
+  //:   which is convertible, but not assignable to target object value type
+  //:   can not be assigned to the target object. Note that this test requires
+  //:   compilation errors and needs to be enabled and checked manually.
+  //: 2 For concern 2, verify that an 'optional' object of value type which is
+  //:   assignable, but not convertible to target object's value type can not
+  //:   be assigned to the target object. Note that this test requires
+  //:   compilation errors and needs to be enabled and checked manually.
+  //: 3 Repeat steps 1 and 2 with an optional of allocator aware value type as
+  //:   the target object.
   //
   //
   // Testing:
@@ -8283,8 +8283,8 @@ void bslstl_optional_test14()
   // --------------------------------------------------------------------
 
     if (verbose) printf(
-                    "\nTESTING operator=(optional_type) MEMBER FUNCTION "
-                    "\n===================================================\n");
+                    "\nTESTING operator=(optional_type) MEMBER FUNCTION"
+                    "\n================================================\n");
 #if defined(BSLSTL_OPTIONAL_TEST_BAD_EQUAL_OPT)
 
     if (verbose) printf( "\nUsing 'MyClass1b'.\n");
@@ -8339,106 +8339,59 @@ void bslstl_optional_test14()
 }
 void bslstl_optional_test15()
 {
-  // --------------------------------------------------------------------
-  // TESTING copy construct FUNCTIONALITY
-  //   This test will verify that the copy construction works as expected.
-  //
-  // Concerns:
-  //   * Constructing an optional from an engaged optional of the same type
-  //     creates an engaged optional. The original is not modified.
-  //   * Constructing an optional from a disengaged optional of the same type
-  //     creates a disengaged optional. The original is not modified.
-  //   * If no allocator is provided and the value type uses allocator, the
-  //     default allocator is used for the newly created optional.
-  //   * If allocator extended version of copy constructor is used, the
-  //     allocator passed to the constructor is the allocator of the newly
-  //     created optional.
-  //   * no unnecessary copies are created.
-  //
-  // Plan:
-  //   Conduct the test using 'Myclass1' (does not use allocator) and
-  //   'Myclass2'/'MyClass2a' (uses allocator) for 'TYPE'.
-  //
-  //   Create an engaged optional of Myclass1 type. Create another optional
-  //   of Myclass1 type using the first object as the initialization object.
-  //   Check the value of the newly created object is as expected.
-  //   Check the source object has not changed.
-  //   Bind a const reference to the original object. Create another optional
-  //   of Myclass1 type using the const reference as the initialization
-  //   object.
-  //   Check the value of the newly created object is as expected.
-  //
-  //   Create a disengaged optional of Myclass1 type. Create another optional
-  //   of Myclass1 type using the disengaged object as the initialization
-  //   object.
-  //   Check the newly created object is disengaged.
-  //   Bind a const reference to the original object. Create another optional
-  //   of Myclass1 type using the const reference as the initialization
-  //   object.
-  //   Check the newly created object is disengaged.
-  //
-  //   Create an engaged optional of Myclass2 type using a non default
-  //   allocator.
-  //   Create another optional of Myclass2 type using the first object as
-  //   the initialization object.
-  //   Check the value of the newly created object is as expected.
-  //   Check the allocator of the newly created object is the default
-  //   allocator.
-  //   Check the source object has not changed.
-  //
-  //   Create another optional of Myclass2 type using the first object as
-  //   the initialization object and a non default allocator as the allocator
-  //   argument.
-  //   Check the value of the newly created object is as expected.
-  //   Check the allocator of the newly created object is the one used
-  //   as the allocator argument.
-  //   Check the source object has not changed.
-  //
-  //   Bind a const reference to the original object. Create another optional
-  //   of Myclass2 type using the const reference as the initialization object
-  //   and a non default allocator as the allocator argument.
-  //   Check the value of the newly created object is as expected.
-  //   Check the allocator of the newly created object is the one used
-  //   as the allocator argument.
-  //
-  //   Create a disengaged optional of Myclass2 type using a non default
-  //   allocator.
-  //   Create another optional of Myclass2 type using the disengaged
-  //   object as the initialization object.
-  //   Check the newly created object is disengaged.
-  //   Check the allocator of the newly created object is the default
-  //   allocator.
-  //
-  //   Create another optional of Myclass2 type using the disengaged
-  //   object as the initialization object and non default allocator
-  //   as the allocator argument.
-  //   Check the newly created object is disengaged.
-  //   Check the allocator of the newly created object is the one
-  //   used in the construction call.
-  //
-  //   Bind a const reference to the original object. Create another optional
-  //   of Myclass2 type using the const reference as the initialization object
-  //   and non default allocator as the allocator argument.
-  //   Check the newly created object is disengaged.
-  //   Check the allocator of the newly created object is the one
-  //   used in the construction call.
-  //
-  //   Repeat the above tests with Myclass2a type.
-  //
-  //
-  // Testing:
-  //
-  //   optional(const optional& )
-  //   optional(bsl::allocator_arg, allocator_type, const optional&)
-  //
-  //   void value();
-  //   void has_value();
-  //   void get_allocator();
-  //
-  // --------------------------------------------------------------------
+    // --------------------------------------------------------------------
+    // TESTING COPY CONSTRUCTION
+    //   This test will verify that the copy construction works as expected.
+    //
+    // Concerns:
+    //: 1 Constructing an 'optional' from an engaged 'optional' of the same
+    //    type creates an engaged 'optional' where the value type object is
+    //:   copy constructed from the value type object of the original
+    //:   'optional' object. The original is not modified.
+    //: 2 Constructing an 'optional' from a disengaged 'optional' of the same
+    //    type creates a 'disengaged' optional. The original is not modified.
+    //: 3 If value type is allocator aware, and no allocator is provided, the
+    //:   default allocator is used for the newly created 'optional'.
+    //: 4 If allocator extended version of copy constructor is used, the
+    //:   allocator passed to the constructor is the allocator of the newly
+    //:   created optional.
+    //: 5 No unnecessary copies of the value type are created.
+    //
+    // Plan:
+    //: 1 Create an engaged 'optional' of a non allocator aware value type.
+    //:   Use the created object to copy initialize another 'optional'
+    //:   object of the same type. For concern 1, check the value of the new
+    //:   object and the value of the original object match.
+    //: 2 Bind a 'const' reference to the 'original' object. Using the const
+    //:   reference, copy initialize another 'optional' object of the same
+    //:   type. For concern 1, check the value of the new object and the value
+    //:   of the original object match.
+    //: 3 Repeat steps 1 and 2 using a disengaged optional object as the source
+    //:   object. For concern 2, check that both the source and destination
+    //:   object are disengaged.
+    //: 4 For concern 3, repeat steps 1-3 using an allocator aware type, and
+    //:   verify that the allocator of the newly created optional object is
+    //:   the default allocator.
+    //: 5 For concern 4, repeat steps 1-3 using an allocator aware type and
+    //:   an allocator extended copy constructo, and verify that the allocator
+    //:   of the newly created optional object is the allocator provided to
+    //:   the copy constructor.
+    //: 6 In steps 1-5, for concern 5, check that no unnecessary copies of the
+    //:   value type have been created.
+    //
+    // Testing:
+    //
+    //   optional(const optional& )
+    //   optional(bsl::allocator_arg, allocator_type, const optional&)
+    //
+    //   void value();
+    //   void has_value();
+    //   void get_allocator();
+    //
+    // --------------------------------------------------------------------
 
     if (verbose) printf(
-                       "\nTESTING copy construction "
+                       "\nTESTING COPY CONSTRUCTION "
                        "\n=========================\n");
 
     if (verbose) printf( "\nUsing 'MyClass1'.\n");
