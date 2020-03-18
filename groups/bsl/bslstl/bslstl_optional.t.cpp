@@ -5953,39 +5953,34 @@ void bslstl_optional_test6()
 void bslstl_optional_test7()
 {
     // --------------------------------------------------------------------
-    // TESTING operator* FUNCTIONALITY
-    //   This test will verify that the operator* works as expected.
+    // TESTING 'operator*' FUNCTIONALITY
+    //   This test will verify that the 'operator*' works as expected.
     //
     // Concerns:
-    //   * Calling operator* on an engaged optional returns a reference to the
-    //      contained value.
-    //   * It is possible to modify the value through to the
-    //     acquired pointer for non-const optional objects containing non-const
-    //     type object. Similarly, it is not possible to modify the contained
-    //     value through the returned reference in any other case
-    //
-    //   * in C++11, Calling operator* on an engaged const optional returns an
-    //     if the optional object was an lvalue, and an rvalue reference if the
-    //     optional object was an rvalue.
+    //: 1 Calling 'operator* 'on an engaged 'optional' returns a reference to
+    //:   the contained value.
+    //: 2 It is possible to modify the value object in 'optional' through to
+    //:   the acquired reference for non-const 'optional' objects of non-const
+    //:   value type.
+    //: 3 It is not possible to modify the contained value through the returned
+    //:   reference in any other case.
     //
     // Plan:
-    //   Conduct the test using 'Myclass1', 'const Myclass1' (does not use
-    //   allocator) and 'Myclass1' and 'const Myclass1' (uses allocator) for
-    //   'TYPE'.
-    //
-    //   Create engaged optional of each type. Call operator* and check that
-    //   the value and allocator, if any, of the object are correct.
-    //
-    //   Modify the non const optional of a non const type through the return
-    //   reference.
-    //   Check the value of the optional is correct.
-    //
-    //   Bind const optional reference to optional object. Call operator-> and
-    //   check that the value of the object and the allocator is correct.
-    //
-    //   Check the value of the optional object can not be modified through
-    //   operator-> const and through operator-> for const types. This requires
-    //   compilation failures.
+    //: 1 Create an engaged 'optional' of a non allocator aware type. Using
+    //:   'operator*', for concern 1, check the returned reference matches the
+    //:   contained value.
+    //: 2 Modify the value of the object obtained using 'operator*'. For
+    //:   concern 2, check the value of the 'optional' has been modified.
+    //: 3 Bind a 'const optional' reference to 'optional' object. Call
+    //:   'operator*' through the const reference and, for concern 1, check
+    //:   the returned reference matches the contained value.
+    //: 4 For concern 3, attempt to modify a 'const optional' object and an
+    //:   'optional' object of const qualified value type through the reference
+    //:   returned from 'operator*'. Note that this test should fail to compile
+    //:   and needs to be enabled and checked manually.
+    //: 5 Repeat steps 1-4 with an 'optional' object of an allocator aware
+    //:   type. For concern 1, verify that the allocator of the returned
+    //:   reference object matches the allocator of the 'optional' object.
     //
     //
     // Testing:
@@ -5997,8 +5992,8 @@ void bslstl_optional_test7()
     // --------------------------------------------------------------------
 
     if (verbose) printf(
-                       "\nTESTING operator* MEMBER FUNCTION "
-                       "\n==================================\n");
+                       "\nTESTING operator* FUNCTIONALITY "
+                       "\n===============================\n");
 
     if (verbose) printf( "\nUsing 'MyClass1'.\n");
     {
@@ -6074,42 +6069,68 @@ void bslstl_optional_test7()
 
 void bslstl_optional_test8()
 {
-  // --------------------------------------------------------------------
-  // TESTING emplace FUNCTIONALITY
-  //   This test will verify that the emplace function works
-  //   as expected.
-  //
-  // Concerns:
-  //   * Calling emplace on a non-engaged optional creates a value type object
-  //     using the optional's allocator and emplace arguments
-  //   * Calling emplace on an engaged optional replaces the value type object
-  //     with a new one created using the optional's allocator and emplace
-  //     arguments
-  //   * Calling emplace with no arguments creates a default constructed value
-  //     type object
-  //   * Calling emplace does not modify the allocator, even when called with
-  //     an rvalue value type argument
-  //   * emplace can not be used on a const qualified optional.
-  //   * there are no unnecessary value type copies created
-  //
-  //
-  // Plan:
-  //
-  //
-  // Testing:
-  //
-  //   void emplace();
-  //   void emplace(Args&&...);
-  //
-  //   void value();
-  //
-  // --------------------------------------------------------------------
+    // --------------------------------------------------------------------
+    // TESTING 'emplace' METHOD
+    //   This test will verify that the 'emplace' method works as expected.
+    //
+    // Concerns:
+    //: 1 Calling 'emplace' on a non-engaged 'optional' creates a value type
+    //:   object by invoking the constructor with the 'emplace' arguments.
+    //: 2 Calling 'emplace' on an engaged 'optional' replaces the value type
+    //:   object with a new one created by invoking the constructor with the
+    //:   'emplace' arguments.
+    //: 3 Calling 'emplace' with no arguments creates a default constructed
+    //:   value type object.
+    //: 4 If value type is allocator aware, 'emplace' invokes the allocator
+    //:   extended constructor using the optional's allocator.
+    //: 5 If value type is allocator aware, calling 'emplace' does not modify
+    //:    the allocator, even when called with an rvalue value type argument
+    //: 6 'Emplace' can be used with a const qualified value type.
+    //: 7 'Emplace' can not be called on a const qualified optional.
+    //: 8 There are no unnecessary value type copies created
+    //: 9 Variadic arguments to 'emplace' method are correctly fowarded to the
+    //:   constructor arguments.
+    //
+    // Plan:
+    //: 1 Create a non engaged 'optional' object of non allocator aware value
+    //:   type. Call 'emplace' and, for concern 1, verify that the 'optional'
+    //:   object contains the expected value.
+    //: 2 For concern 2, call 'emplace' method on the engaged 'optional' object
+    //:   and verify the value of the 'optional' object has changed.
+    //: 3 In step 1, for concern 3, use 'emplace' method that takes no
+    //:   arguments and verify the object is default constructed.
+    //: 4 For concern 6, repeat steps 1-3 using a const qualified value type.
+    //: 5 For concern 2, repeat steps 1-4 using an allocator aware value type
+    //:   and verify the allocator used for the constructed value is as
+    //:   expected.
+    //: 6 For concern 3, in step 5, call 'emplace' with and rvalue of value
+    //:   type using a different alloctor to the 'optional' object. Verify the
+    //:   allocator has not propagated.
+    //: 7 For concern 8, in steps 1-6, verify there are no additional copies of
+    //:   the value type created.
+    //: 8 Invoke 'emplace' method with varying number of arguments, some of
+    //:   which are to be moved from. For concern 9, verify the arguments are
+    //:   perfect forwarded to the constructor in the correct order.
+    //: 9 In step 8, for concern 8, verify that the additional copies of the
+    //:   arguments or value type have been created.
+    //:10 For concern 7, verify that 'emplace' method can not be invoked on a
+    //:   const qualified 'optional'. Note that this test requires compilation
+    //:   errors and needs to be enabled and checked manually.
+    //
+    // Testing:
+    //
+    //   void emplace();
+    //   void emplace(Args&&...);
+    //
+    //   void value();
+    //
+    // --------------------------------------------------------------------
 
     if (verbose) printf(
-                       "\nTESTING emplace MEMBER FUNCTION "
-                       "\n==================================\n");
+                       "\nTESTING 'emplace' METHOD"
+                       "\n========================\n");
 
-    if (verbose) printf( "\nUsing 'MyClass1'.\n");
+    if (verbose) printf( "\nUsing non allocator aware value type.\n");
     {
         typedef MyClass1                  ValueType;
         typedef bsl::optional<ValueType> Obj;
@@ -6152,7 +6173,52 @@ void bslstl_optional_test8()
             ASSERT(MCI == MyClass1::moveConstructorInvocations);
         }
     }
-    if (verbose) printf( "\nUsing 'MyClass2'.\n");
+    if (verbose) printf( "\nUsing non allocator aware const qualified "
+                          "value type.\n");
+    {
+        typedef const MyClass1 ValueType;
+        typedef bsl::optional<ValueType> Obj;
+
+        {
+            Obj mX;
+            int CCI = ValueType::copyConstructorInvocations;
+            int MCI = ValueType::moveConstructorInvocations;
+
+            mX.emplace();
+            ASSERT(CCI == ValueType::copyConstructorInvocations);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
+            ASSERT(mX.has_value());
+            ASSERT(mX->d_def.d_value == 0 );
+
+            ValueType other(3);
+            CCI = ValueType::copyConstructorInvocations;
+            MCI = ValueType::moveConstructorInvocations;
+            mX.emplace(other);
+            ASSERT(mX.has_value());
+            ASSERT(mX->d_def.d_value == 3 );
+            ASSERT(CCI == ValueType::copyConstructorInvocations -1 );
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
+
+            // const qualified objects can't be moved from
+            ValueType third(4);
+            CCI = ValueType::copyConstructorInvocations;
+            MCI = ValueType::moveConstructorInvocations;
+            mX.emplace(MovUtl::move(third));
+            ASSERT(mX.has_value());
+            ASSERT(mX->d_def.d_value == 4 );
+            ASSERT(CCI == ValueType::copyConstructorInvocations -1);
+            ASSERT(MCI == ValueType::moveConstructorInvocations);
+
+            CCI = ValueType::copyConstructorInvocations;
+            MCI = ValueType::moveConstructorInvocations;
+            mX.emplace(6);
+            ASSERT(mX.has_value());
+            ASSERT(mX->d_def.d_value == 6 );
+            ASSERT(CCI == MyClass1::copyConstructorInvocations);
+            ASSERT(MCI == MyClass1::moveConstructorInvocations);
+        }
+    }
+    if (verbose) printf( "\nUsing allocator aware value type.\n");
     {
         bslma::TestAllocator da("default", veryVeryVeryVerbose);
         bslma::TestAllocator oa("other", veryVeryVeryVerbose);
@@ -6210,7 +6276,7 @@ void bslstl_optional_test8()
            ASSERT(MCI == ValueType::moveConstructorInvocations);
        }
     }
-    if (verbose) printf( "\nUsing 'MyClass2a'.\n");
+    if (verbose) printf( "\nUsing allocator aware value type.\n");
     {
         bslma::TestAllocator da("default", veryVeryVeryVerbose);
         bslma::TestAllocator oa("other", veryVeryVeryVerbose);
@@ -6218,7 +6284,66 @@ void bslstl_optional_test8()
 
         bslma::DefaultAllocatorGuard dag(&da);
 
-       typedef MyClass2a                 ValueType;
+       typedef MyClass2                 ValueType;
+       typedef bsl::optional<ValueType> Obj;
+
+       {
+           Obj mX(bsl::allocator_arg, &oa);
+           int CCI = ValueType::copyConstructorInvocations;
+           int MCI = ValueType::moveConstructorInvocations;
+
+           mX.emplace();
+           ASSERT(CCI == ValueType::copyConstructorInvocations);
+           ASSERT(MCI == ValueType::moveConstructorInvocations);
+           ASSERT(mX.has_value());
+           ASSERT(mX->d_def.d_value == 0 );
+           ASSERT(mX.get_allocator().mechanism() == &oa );
+
+           ValueType other(3, &da);
+           ASSERT(other.d_def.d_allocator_p == &da );
+           CCI = ValueType::copyConstructorInvocations;
+           MCI = ValueType::moveConstructorInvocations;
+           mX.emplace(other);
+           ASSERT(mX.has_value());
+           ASSERT(mX->d_def.d_value == 3 );
+           ASSERT(mX.get_allocator().mechanism() == &oa );
+           ASSERT(mX->d_def.d_allocator_p == &oa );
+           ASSERT(CCI == ValueType::copyConstructorInvocations -1 );
+           ASSERT(MCI == ValueType::moveConstructorInvocations);
+
+           ValueType third(4, &da);
+           CCI = ValueType::copyConstructorInvocations;
+           MCI = ValueType::moveConstructorInvocations;
+           mX.emplace(MovUtl::move(third));
+           ASSERT(third.d_def.d_allocator_p == &da );
+           ASSERT(mX.has_value());
+           ASSERT(mX->d_def.d_value == 4 );
+           ASSERT(CCI == ValueType::copyConstructorInvocations );
+           ASSERT(MCI == ValueType::moveConstructorInvocations -1);
+           ASSERT(mX.get_allocator().mechanism() == &oa );
+           ASSERT(mX->d_def.d_allocator_p == &oa );
+
+           CCI = ValueType::copyConstructorInvocations;
+           MCI = ValueType::moveConstructorInvocations;
+           mX.emplace(6);
+           ASSERT(mX.has_value());
+           ASSERT(mX->d_def.d_value == 6 );
+           ASSERT(mX.get_allocator().mechanism() == &oa );
+           ASSERT(mX->d_def.d_allocator_p == &oa );
+           ASSERT(CCI == ValueType::copyConstructorInvocations);
+           ASSERT(MCI == ValueType::moveConstructorInvocations);
+       }
+    }
+    if (verbose) printf("\nUsing allocator aware const qualified value "
+                        "type.\n");
+    {
+        bslma::TestAllocator da("default", veryVeryVeryVerbose);
+        bslma::TestAllocator oa("other", veryVeryVeryVerbose);
+        bslma::TestAllocator ta("third", veryVeryVeryVerbose);
+
+        bslma::DefaultAllocatorGuard dag(&da);
+
+       typedef const MyClass2a          ValueType;
        typedef bsl::optional<ValueType> Obj;
 
        {
@@ -6234,14 +6359,14 @@ void bslstl_optional_test8()
            ASSERT(MCI == ValueType::moveConstructorInvocations);
 
            ValueType other(bsl::allocator_arg, &da, 3);
-           ASSERT(other.d_data.d_def.d_allocator_p == &da );
+           ASSERT(other.d_data.d_def.d_allocator_p == &da);
            CCI = ValueType::copyConstructorInvocations;
            MCI = ValueType::moveConstructorInvocations;
            mX.emplace(other);
            ASSERT(mX.has_value());
            ASSERT(mX->d_data.d_def.d_value == 3 );
-           ASSERT(mX.get_allocator().mechanism() == &oa );
-           ASSERT(mX->d_data.d_def.d_allocator_p == &oa );
+           ASSERT(mX.get_allocator().mechanism() == &oa);
+           ASSERT(mX->d_data.d_def.d_allocator_p == &oa);
            ASSERT(CCI == ValueType::copyConstructorInvocations -1);
            ASSERT(MCI == ValueType::moveConstructorInvocations);
 
@@ -6249,21 +6374,22 @@ void bslstl_optional_test8()
            CCI = ValueType::copyConstructorInvocations;
            MCI = ValueType::moveConstructorInvocations;
            mX.emplace(MovUtl::move(third));
-           ASSERT(third.d_data.d_def.d_allocator_p == &da );
+           ASSERT(third.d_data.d_def.d_allocator_p == &da);
            ASSERT(mX.has_value());
-           ASSERT(mX->d_data.d_def.d_value == 4 );
-           ASSERT(CCI == ValueType::copyConstructorInvocations);
-           ASSERT(MCI == ValueType::moveConstructorInvocations -1);
-           ASSERT(mX.get_allocator().mechanism() == &oa );
-           ASSERT(mX->d_data.d_def.d_allocator_p == &oa );
+           ASSERT(mX->d_data.d_def.d_value == 4);
+           // const objects can't be moved from
+           ASSERT(CCI == ValueType::copyConstructorInvocations -1);
+           ASSERT(MCI == ValueType::moveConstructorInvocations);
+           ASSERT(mX.get_allocator().mechanism() == &oa);
+           ASSERT(mX->d_data.d_def.d_allocator_p == &oa);
 
            CCI = ValueType::copyConstructorInvocations;
            MCI = ValueType::moveConstructorInvocations;
            mX.emplace(6);
            ASSERT(mX.has_value());
-           ASSERT(mX->d_data.d_def.d_value == 6 );
-           ASSERT(mX.get_allocator().mechanism() == &oa );
-           ASSERT(mX->d_data.d_def.d_allocator_p == &oa );
+           ASSERT(mX->d_data.d_def.d_value == 6);
+           ASSERT(mX.get_allocator().mechanism() == &oa);
+           ASSERT(mX->d_data.d_def.d_allocator_p == &oa);
            ASSERT(CCI == ValueType::copyConstructorInvocations);
            ASSERT(MCI == ValueType::moveConstructorInvocations);
       }
@@ -6575,6 +6701,56 @@ void bslstl_optional_test8()
                            VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
                            VA13));
     }
+#if defined(BSLSTL_OPTIONAL_TEST_BAD__EMPLACE)
+    if (verbose) printf( "\nUsing 'ConstructTestTypeNoAlloc'.\n");
+    {
+        typedef ConstructTestTypeNoAlloc                  ValueType;
+        typedef const ConstructTestTypeNoAlloc            ConstValueType;
+        typedef const bsl::optional<ValueType> CObj;
+        typedef const bsl::optional<ConstValueType> CObjC;
+       {
+            CObj bad1;
+            bad1.emplace();  // this should not compile 1
+            bad1.emplace( VA1); // this should not compile 2
+            bad1.emplace( VA1, VA2); // this should not compile 3
+            bad1.emplace( VA1, VA2, VA3); // this should not compile 4
+            bad1.emplace( VA1, VA2, VA3, VA4);
+                  // this should not compile 5
+
+            CObjC bad2;
+            bad2.emplace();  // this should not compile 6
+            bad2.emplace( VA1); // this should not compile 7
+            bad2.emplace( VA1, VA2); // this should not compile 8
+            bad2.emplace( VA1, VA2, VA3); // this should not compile 9
+            bad2.emplace( VA1, VA2, VA3, VA4);
+                  // this should not compile 10
+
+        }
+    }
+    if (verbose) printf( "\nUsing 'ConstructTestTypeAlloc'.\n");
+    {
+        typedef ConstructTestTypeAlloc                  ValueType;
+        typedef const ConstructTestTypeAlloc            ConstValueType;
+        typedef const bsl::optional<ValueType>          CObj;
+        typedef const bsl::optional<ConstValueType>     CObjC;
+        {
+            CObj bad1;
+            bad1.emplace();  // this should not compile 11
+            bad1.emplace(VA1); // this should not compile 12
+            bad1.emplace(VA1, VA2); // this should not compile 13
+            bad1.emplace(VA1, VA2, VA3); // this should not compile 14
+            bad1.emplace(VA1, VA2, VA3, VA4); // this should not compile 15
+
+            CObjC bad2;
+            bad2.emplace();  // this should not compile 16
+            bad2.emplace(VA1); // this should not compile 17
+            bad2.emplace(VA1, VA2); // this should not compile 18
+            bad2.emplace(VA1, VA2, VA3); // this should not compile 19
+            bad2.emplace(VA1, VA2, VA3, VA4); // this should not compile 20
+
+        }
+    }
+#endif
 
 }
 
@@ -6582,23 +6758,29 @@ void bslstl_optional_test8()
 void bslstl_optional_test9()
 {
     // --------------------------------------------------------------------
-    // TESTING emplace FUNCTIONALITY
-    //   This test will verify that the intializer list emplace function works
+    // TESTING TESTING INITIALIZER LIST 'emplace' METHOD
+    //   This test will verify that the initializer list 'emplace' method works
     //   as expected.
     //
     // Concerns:
-    //   * Calling emplace on a non-engaged optional creates a value type object
-    //     using the optional's allocator and emplace arguments
-    //   * Calling emplace on an engaged optional replaces the value type object
-    //     with a new one created using the optional's allocator and emplace
-    //     arguments
-    //   * Whe using initializer_list, the correct value type constructors is
-    //     selected
-    //   * Multiple arguments are correctly forwarded.
-    //   * emplace can not be used on a const qualified optional.
-    //
+    //: 1 Calling 'emplace' with only an initializer list detects the
+    //:   initializer list.
+    //: 2 Variadic arguments to 'emplace' method are correctly fowarded to the
+    //:   constructor arguments.
+    //: 3 If value type is allocator aware, 'emplace' invokes the allocator
+    //:   extended constructor using the optional's allocator.
+    //: 4 There are no unnecessary argument type and value type copies created
     //
     // Plan:
+    //: 1 Create an 'optional' object of non allocator aware value type.
+    //:   For concern 1, call 'emplace' method that takes just an initializer
+    //:   list, and verify the object was constructed using an initializer list
+    //:   constructor.
+    //: 2 For concern 2, repeat steps 1 using varying number of arguments.
+    //: 3 For concern 3, repeat steps 1-2 with an allocator aware value type
+    //:   and verify the correct allocator is used
+    //: 4 For concern 4, in stesp 1-3, verify no unnecessary copies of the
+    //:   arguments and the value type have been created.
     //
     // Testing:
     //
@@ -6609,9 +6791,9 @@ void bslstl_optional_test9()
     // --------------------------------------------------------------------
 
     if (verbose) printf(
-                       "\nTESTING emplace MEMBER FUNCTION "
-                       "\n==================================\n");
-    if (verbose) printf( "\nTesting initializer list emplace .\n");
+                       "\nTESTING INITIALIZER LIST 'emplace' METHOD"
+                       "\n=========================================\n");
+    if (verbose) printf( "\nUsing non allocator aware value type.\n");
     {
         TEST_EMPLACE(({1,2,3}));
 
@@ -6724,7 +6906,9 @@ void bslstl_optional_test9()
                     VA9, MovUtl::move(VA10),
                     VA11, MovUtl::move(VA12),
                     VA13));
-
+    }
+    if (verbose) printf( "\nUsing allocator aware value type.\n");
+    {
         TEST_EMPLACE_ARGTIL((bsl::allocator_arg, &oa, {1,2,3},
                              MovUtl::move(VA1), VA2, MovUtl::move(VA3)),
                             ({1,2,3},
@@ -6906,91 +7090,40 @@ void bslstl_optional_test9()
                             VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
                             VA13));
     }
-#if defined(BSLSTL_OPTIONAL_TEST_BAD_IL_EMPLACE)
-    if (verbose) printf( "\nUsing 'ConstructTestTypeNoAlloc'.\n");
-    {
-        typedef ConstructTestTypeNoAlloc                  ValueType;
-        typedef const ConstructTestTypeNoAlloc            ConstValueType;
-        typedef const bsl::optional<ValueType> CObj;
-        typedef const bsl::optional<ConstValueType> CObjC;
-       {
-            CObj bad1;
-            bad1.emplace({1,2,3});  // this should not compile 1
-            bad1.emplace({1,2,3}, VA1); // this should not compile 2
-            bad1.emplace({1,2,3}, VA1, VA2); // this should not compile 3
-            bad1.emplace({1,2,3}, VA1, VA2, VA3); // this should not compile 4
-            bad1.emplace({1,2,3}, VA1, VA2, VA3, VA4);
-                  // this should not compile 5
-
-            CObjC bad2;
-            bad2.emplace({1,2,3});  // this should not compile 6
-            bad2.emplace({1,2,3}, VA1); // this should not compile 7
-            bad2.emplace({1,2,3}, VA1, VA2); // this should not compile 8
-            bad2.emplace({1,2,3}, VA1, VA2, VA3); // this should not compile 9
-            bad2.emplace({1,2,3}, VA1, VA2, VA3, VA4);
-                  // this should not compile 10
-
-        }
-    }
-    if (verbose) printf( "\nUsing 'ConstructTestTypeAlloc'.\n");
-    {
-        typedef ConstructTestTypeAlloc                  ValueType;
-        typedef const ConstructTestTypeAlloc            ConstValueType;
-        typedef const bsl::optional<ValueType>          CObj;
-        typedef const bsl::optional<ConstValueType>     CObjC;
-        {
-            CObj bad1;
-            bad1.emplace();  // this should not compile 11
-            bad1.emplace(VA1); // this should not compile 12
-            bad1.emplace(VA1, VA2); // this should not compile 13
-            bad1.emplace(VA1, VA2, VA3); // this should not compile 14
-            bad1.emplace(VA1, VA2, VA3, VA4); // this should not compile 15
-
-            CObjC bad2;
-            bad2.emplace();  // this should not compile 16
-            bad2.emplace(VA1); // this should not compile 17
-            bad2.emplace(VA1, VA2); // this should not compile 18
-            bad2.emplace(VA1, VA2, VA3); // this should not compile 19
-            bad2.emplace(VA1, VA2, VA3, VA4); // this should not compile 20
-
-        }
-    }
-#endif
 }
 void bslstl_optional_test10()
 {
   // --------------------------------------------------------------------
-  // TESTING operator=(nullopt_t) FUNCTIONALITY
-  //   This test will verify that the operator=(nullopt_t) function works
-  //   as expected.
+  // TESTING operator(nullopt_t) MEMBER FUNCTION
+  //   This test will verify that the operator=(nullopt_t) member function
+  //   works as expected.
   //
   // Concerns:
-  //   * Calling operator=(nullopt_t) on an engaged optional makes the optional
-  //     disengaged. The allocator, if any, doesn't change.
-  //   * Calling operator=(nullopt_t) on a disengaged optional leaves the
-  //     optional disengaged. The allocator, if any, doesn't change.
-  //   * operator=(nullopt_t) can not be called on a const qualified optional.
-  //   * operator=(nullopt_t) can be called on a non const qualified optional
-  //     of a const qualified value type.
+  //: 1 Calling 'operator=(nullopt_t)' on a disengaged 'optional' leaves the
+  //:   'optional' disengaged.
+  //: 2 Calling 'operator=(nullopt_t)' on an engaged 'optional' makes the
+  //:   'optional' disengaged.
+  //: 3 For an allocator aware value type, calling 'operator=(nullopt_t)' does
+  //:   not modify the allocator.
+  //: 4 'operator=(nullopt_t)' can be called on a non const qualified
+  //:     'optional' of a const qualified value type.
+  //: 5 'operator=(nullopt_t)' can not be called on a const qualified
+  //:    'optional'.
   //
   //
   // Plan:
-  //
-  //   Conduct the test using 'int' (does not use allocator) and
-  //   'bsl::string' (uses allocator) for 'TYPE'.
-  //
-  //   Create disengaged optional of each type. Call operator=(nullopt_t) on a
-  //   disengaged optional. Check that optional is still disengaged and that
-  //   the allocator, if any, hasn't changed.
-  //
-  //   Emplace a value in each optional. Call operator=(nullopt_t) on the
-  //   engaged optional. Check that optional is disengaged and that
-  //   the allocator, if any, hasn't changed.
-  //
-  //   Repeat the tests for an optional of const qualified value types.
-  //
-  //   Call operator=(nullopt_t) on a const qualified optional. This requires
-  //   compilation failure tests which are not enabled by default.
+  //: 1 Create a disengaged 'optional' of a non allocator aware value type.
+  //:   Call operator=(nullopt_t) and, for concern 1, verify that the 'ptional'
+  //:   object is still disengaged
+  //: 2 Emplace a value in the 'optional'. Call operator=(nullopt_t) and, for
+  //:   concern 2, check that optional is disengaged'
+  //: 3 Repeat steps 1 and 2 with an allocator aware value type, and for
+  //:   concern 3, verify the allocator has not changed.
+  //: 4 For concern 4, repeat steps 1 - 3, using a const qualified value
+  //:   type.
+  //: 5 For concern 5, verify that 'operator=(nullopt_t)' can not be called
+  //:   on a const qualified optional. Note that this test requires compilation
+  //:   failure and needs to be enabled and checkes manually.
   //
   // Testing:
   //
@@ -7005,7 +7138,7 @@ void bslstl_optional_test10()
 
     if (verbose) printf(
                        "\nTESTING operator(nullopt_t) MEMBER FUNCTION "
-                       "\n==================================\n");
+                       "\n===========================================\n");
 
     if (verbose) printf( "\nUsing 'int'.\n");
     {
@@ -7078,44 +7211,44 @@ void bslstl_optional_test10()
 void bslstl_optional_test11()
 {
   // --------------------------------------------------------------------
-  // TESTING operator=(non_optional_type) FUNCTIONALITY
-  //   This test will verify that the operator=(non_optional_type) function works
-  //   as expected.
+  // TESTING 'operator=(non_optional_type)' FUNCTIONALITY
+  //   This test will verify that the 'operator=(rhs)' member function, where
+  //   'rhs' is not an 'optional' type, works as expected.
   //
   // Concerns:
-  //   * Calling operator=(non_optional_type) assigns the rhs value to the
-  //     value of the optional.
-  //   * for allocator aware types, the assignment to a disengaged optional
-  //     uses the stored allocator.
-  //   * for allocator aware types, the assignment to an engaged optional
-  //     uses the stored allocator.
-  //   * assignment of rvalues uses move assignment where available
+  //: 1 Calling 'operator=(rhs)', where 'rhs' is not of an 'optional' type, on
+  //:   an engaged optional assigns 'rhs' to the value type object.
+  //: 2 Calling 'operator=(rhs)', where 'rhs' is not of an 'optional' type, on
+  //:   a disengaged optional creates a value type object initialized with
+  //:   'rhs'.
+  //: 3 For allocator aware types, the assignment to a disengaged optional
+  //:   uses the stored allocator.
+  //: 4 Assignment of rvalues uses move assignment/construction where
+  //:   available.
+  //: 5 Const qualified 'optional' object can not be assigned to.
+  //: 6 'optional' object of const qualified value type can not be assigned to.
   //
   // Plan:
-  //
-  //   Conduct the test using 'Myclass1' (does not use allocator) and
-  //   'Myclass2'/'Myclass2a (uses allocator) for 'TYPE'.
-  //
-  //   Create an engaged optional of each type. Assign a value type value to
-  //   the optional. Check the value of the optional and allocator, if any,
-  //   are correct.
-  //
-  //   Assign an lvalue of type convertible to value type to the optional.
-  //   Check the value of the optional and allocator, if any, are correct.
-  //   Check the value of the assigned object hasn't changed.
-  //
-  //   Repeat the tests for assignment from rvalues. Check the assigned value
-  //   was moved from.
-  //
-  //   Repeat all of the above tests for a const qualified objects as the
-  //   source of assignment.
-  //
-  //   Repeat all of the above tests for a disengaged optional. That is, call
-  //   reset before each assignment.
-  //
-  //   Call assignment on a const qualified optional and optional of const
-  //   qualified type. This requires  compilation failure tests which are
-  //   not enabled by default.
+  //: 1 Create an engaged 'optional' object of non allocator aware type.
+  //:   For concern 1, check that assignment from value type, from const
+  //:   qualified value type, and from type assignable to value type results
+  //:   in an 'optional' object having the value (possible converted from) rhs.
+  //: 2 Repeat step 1 using rvalue 'rhs' and, for concern 4, check 'rhs' was
+  //:   moved from.
+  //: 3 Create a disengaged 'optional' object of non allocator aware type.
+  //:   For concern 2, check that assignment from value type, from const
+  //:   qualified value type, and from type assignable to value type results
+  //:   in an 'optional' object having the value (possible converted from) rhs.
+  //: 4 Repeat step 4 using rvalue 'rhs' and, for concern 4, check 'rhs' was
+  //:   moved from.
+  //: 5 Repeat steps 1-4 using an 'optional' object of allocator aware type.
+  //:   For concern 3, check the allocator of the resulting 'optional' object.
+  //: 6 For concern 5, verify that a const qualified 'optional' object can not
+  //:   be assigned to. Note that this test requires compilation errors and
+  //:   needs to be enabled and checked manually.
+  //: 7 For concern 7, verify that an 'optional' object of const qualified
+  //:   value type can not be assigned to. Note that this test requires
+  //:   compilation errors and needs to be enabled and checked manually.
   //
   // Testing:
   //
@@ -7129,146 +7262,151 @@ void bslstl_optional_test11()
   // --------------------------------------------------------------------
 
     if (verbose) printf(
-                    "\nTESTING operator=(non_optional_type) MEMBER FUNCTION "
-                    "\n===================================================\n");
+                    "\nTESTING 'operator=(non_optional_type)' FUNCTIONALITY"
+                    "\n===================================================="
+                    "\n");
 
-    if (verbose) printf( "\nUsing 'MyClass1'.\n");
+    if (verbose) printf("\nUsing non allocator aware value type.\n");
     {
         typedef MyClass1a                  ValueType;
         typedef const ValueType            ConstValueType;
         typedef bsl::optional<ValueType> Obj;
         typedef bsl::optional<ConstValueType> ObjC;
+        if (verbose) printf("\nChecking assignment to an engaged 'optional'."
+                            "\n");
         {
-          Obj mX = ValueType(0);
-          ASSERT(mX.has_value());
-          ValueType vi = ValueType(1);
-          mX = vi;
-          ASSERT(mX.value().value() == 1);
-          ASSERT(vi.value() == 1);
+            Obj mX = ValueType(0);
+            ASSERT(mX.has_value());
+            ValueType vi = ValueType(1);
+            mX = vi;
+            ASSERT(mX.value().value() == 1);
+            ASSERT(vi.value() == 1);
 
-          MyClass1 i = MyClass1(3);
-          ASSERT(mX.has_value());
-          mX = i;
-          ASSERT(mX.value().value() == 3);
-          ASSERT( i.value() == 3);
+            MyClass1 i = MyClass1(3);
+            ASSERT(mX.has_value());
+            mX = i;
+            ASSERT(mX.value().value() == 3);
+            ASSERT( i.value() == 3);
 
-          ConstValueType cvi = ValueType(1);
-          ASSERT(mX.has_value());
-          mX = cvi;
-          ASSERT(mX.value().value() == 1);
+            ConstValueType cvi = ValueType(1);
+            ASSERT(mX.has_value());
+            mX = cvi;
+            ASSERT(mX.value().value() == 1);
 
-          const MyClass1 ci = MyClass1(3);
-          ASSERT(mX.has_value());
-          mX = ci;
-          ASSERT(mX.value().value() == 3);
+            const MyClass1 ci = MyClass1(3);
+            ASSERT(mX.has_value());
+            mX = ci;
+            ASSERT(mX.value().value() == 3);
 
-          ASSERT(mX.has_value());
-          mX = MovUtl::move(vi);
-          ASSERT(mX.value().value() == 1);
-          ASSERT(vi.value() == MOVED_FROM_VAL);
+            ASSERT(mX.has_value());
+            mX = MovUtl::move(vi);
+            ASSERT(mX.value().value() == 1);
+            ASSERT(vi.value() == MOVED_FROM_VAL);
 
-          ASSERT(mX.has_value());
-          mX = MovUtl::move(i);
-          ASSERT(mX.value().value() == 3);
-          ASSERT(i.value() == MOVED_FROM_VAL);
+            ASSERT(mX.has_value());
+            mX = MovUtl::move(i);
+            ASSERT(mX.value().value() == 3);
+            ASSERT(i.value() == MOVED_FROM_VAL);
 
-          ASSERT(mX.has_value());
-          mX = MovUtl::move(cvi);
-          ASSERT(mX.value().value() == 1);
-          ASSERT(cvi.value() == 1);
+            ASSERT(mX.has_value());
+            mX = MovUtl::move(cvi);
+            ASSERT(mX.value().value() == 1);
+            ASSERT(cvi.value() == 1);
 
-          ASSERT(mX.has_value());
-          mX = MovUtl::move(ci);
-          ASSERT(mX.value().value() == 3);
-          ASSERT(ci.value() == 3);
-       }
-      {
-          Obj mX;
-          ValueType vi = ValueType(1);
-          ASSERT(!mX.has_value());
-          mX = vi;
-          ASSERT(mX.value().value() == 1);
-          ASSERT(vi.value() == 1);
+            ASSERT(mX.has_value());
+            mX = MovUtl::move(ci);
+            ASSERT(mX.value().value() == 3);
+            ASSERT(ci.value() == 3);
+        }
+        if (verbose) printf("\nChecking assignment to a disengaged 'optional'."
+                            "\n");
+        {
+            Obj mX;
+            ValueType vi = ValueType(1);
+            ASSERT(!mX.has_value());
+            mX = vi;
+            ASSERT(mX.value().value() == 1);
+            ASSERT(vi.value() == 1);
 
-          mX.reset();
-          ASSERT(!mX.has_value());
-          MyClass1 i = MyClass1(3);
-          mX = i;
-          ASSERT(mX.value().value() == 3);
-          ASSERT( i.value() == 3);
+            mX.reset();
+            ASSERT(!mX.has_value());
+            MyClass1 i = MyClass1(3);
+            mX = i;
+            ASSERT(mX.value().value() == 3);
+            ASSERT( i.value() == 3);
 
-          ConstValueType cvi = ValueType(1);
-          mX.reset();
-          ASSERT(!mX.has_value());
-          mX = cvi;
-          ASSERT(mX.value().value() == 1);
+            ConstValueType cvi = ValueType(1);
+            mX.reset();
+            ASSERT(!mX.has_value());
+            mX = cvi;
+            ASSERT(mX.value().value() == 1);
 
-          const MyClass1 ci = MyClass1(3);
-          mX.reset();
-          ASSERT(!mX.has_value());
-          mX = ci;
-          ASSERT(mX.value().value() == 3);
+            const MyClass1 ci = MyClass1(3);
+            mX.reset();
+            ASSERT(!mX.has_value());
+            mX = ci;
+            ASSERT(mX.value().value() == 3);
 
-          mX.reset();
-          ASSERT(!mX.has_value());
-          mX = MovUtl::move(vi);
-          ASSERT(mX.value().value() == 1);
-          ASSERT(vi.value() == MOVED_FROM_VAL);
+            mX.reset();
+            ASSERT(!mX.has_value());
+            mX = MovUtl::move(vi);
+            ASSERT(mX.value().value() == 1);
+            ASSERT(vi.value() == MOVED_FROM_VAL);
 
-          mX.reset();
-          ASSERT(!mX.has_value());
-          mX = MovUtl::move(i);
-          ASSERT(mX.value().value() == 3);
-          ASSERT(i.value() == MOVED_FROM_VAL);
+            mX.reset();
+            ASSERT(!mX.has_value());
+            mX = MovUtl::move(i);
+            ASSERT(mX.value().value() == 3);
+            ASSERT(i.value() == MOVED_FROM_VAL);
 
-          mX.reset();
-          ASSERT(!mX.has_value());
-          mX = MovUtl::move(cvi);
-          ASSERT(mX.value().value() == 1);
-          ASSERT(cvi.value() == 1);
+            mX.reset();
+            ASSERT(!mX.has_value());
+            mX = MovUtl::move(cvi);
+            ASSERT(mX.value().value() == 1);
+            ASSERT(cvi.value() == 1);
 
-          mX.reset();
-          ASSERT(!mX.has_value());
-          mX = MovUtl::move(ci);
-          ASSERT(mX.value().value() == 3);
-          ASSERT(ci.value() == 3);
-      }
-      {
-          const Obj mX = ValueType(0);
-          ValueType vi = ValueType(1);
-          MyClass1 i = MyClass1(3);
-          ConstValueType cvi = ValueType(1);
-          const MyClass1 ci = MyClass1(3);
-#if defined(BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST)
-          mX = vi; // this should not compile 3/8
-          mX = i; // this should not compile 4/8
-          mX = cvi; // this should not compile 5/8
-          mX = ci;  // this should not compile 6/8
-          mX = MovUtl::move(vi);  // this should not compile 7/8
-          mX = MovUtl::move(i);  // this should not compile 8/8
-          mX = MovUtl::move(cvi);  // this should not compile 9/8
-          mX = MovUtl::move(ci);  // this should not compile 10/8
-#endif //BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST
-      }
-      {
-          ObjC mX = ValueType(0);
-          ValueType vi = ValueType(1);
-          MyClass1 i = MyClass1(3);
-          ConstValueType cvi = ValueType(1);
-          const MyClass1 ci = MyClass1(3);
-#if defined(BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST)
-          mX = vi; // this should not compile 11/18
-          mX = i; // this should not compile 12/18
-          mX = cvi; // this should not compile 13/18
-          mX = ci;  // this should not compile 14/18
-          mX = MovUtl::move(vi);  // this should not compile 15/18
-          mX = MovUtl::move(i);  // this should not compile 16/8
-          mX = MovUtl::move(cvi);  // this should not compile 17/18
-          mX = MovUtl::move(ci);  // this should not compile 18/18
-#endif //BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST
-      }
+            mX.reset();
+            ASSERT(!mX.has_value());
+            mX = MovUtl::move(ci);
+            ASSERT(mX.value().value() == 3);
+            ASSERT(ci.value() == 3);
+        }
+        {
+            const Obj mX = ValueType(0);
+            ValueType vi = ValueType(1);
+            MyClass1 i = MyClass1(3);
+            ConstValueType cvi = ValueType(1);
+            const MyClass1 ci = MyClass1(3);
+  #if defined(BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST)
+            mX = vi; // this should not compile 3/8
+            mX = i; // this should not compile 4/8
+            mX = cvi; // this should not compile 5/8
+            mX = ci;  // this should not compile 6/8
+            mX = MovUtl::move(vi);  // this should not compile 7/8
+            mX = MovUtl::move(i);  // this should not compile 8/8
+            mX = MovUtl::move(cvi);  // this should not compile 9/8
+            mX = MovUtl::move(ci);  // this should not compile 10/8
+  #endif //BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST
+        }
+        {
+            ObjC mX = ValueType(0);
+            ValueType vi = ValueType(1);
+            MyClass1 i = MyClass1(3);
+            ConstValueType cvi = ValueType(1);
+            const MyClass1 ci = MyClass1(3);
+  #if defined(BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST)
+            mX = vi; // this should not compile 11/18
+            mX = i; // this should not compile 12/18
+            mX = cvi; // this should not compile 13/18
+            mX = ci;  // this should not compile 14/18
+            mX = MovUtl::move(vi);  // this should not compile 15/18
+            mX = MovUtl::move(i);  // this should not compile 16/8
+            mX = MovUtl::move(cvi);  // this should not compile 17/18
+            mX = MovUtl::move(ci);  // this should not compile 18/18
+  #endif //BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST
+        }
     }
-    if (verbose) printf( "\nUsing 'MyClass2a'.\n");
+    if (verbose) printf( "\nUsing allocator aware value type.\n");
     {
         bslma::TestAllocator da("default", veryVeryVeryVerbose);
         bslma::TestAllocator oa("other", veryVeryVeryVerbose);
@@ -7280,7 +7418,9 @@ void bslstl_optional_test11()
         typedef const ValueType            ConstValueType;
         typedef bsl::optional<ValueType> Obj;
         typedef bsl::optional<ConstValueType> ObjC;
-        {
+        if (verbose) printf("\nChecking assignment to an engaged 'optional'."
+                            "\n");
+       {
             Obj mX(bsl::allocator_arg, &oa, ValueType(0));
             ASSERT(mX.has_value());
             ASSERT(mX.value().d_data.d_def.d_allocator_p == &oa);
@@ -7342,6 +7482,8 @@ void bslstl_optional_test11()
             ASSERT(mX.get_allocator().mechanism() == &oa);
             ASSERT(ci.value() == 3);
         }
+        if (verbose) printf("\nChecking assignment to a disengaged 'optional'."
+                         "\n");
         {
             Obj mX(bsl::allocator_arg, &oa);
             ASSERT(mX.get_allocator().mechanism() == &oa);
@@ -7435,7 +7577,7 @@ void bslstl_optional_test11()
             ConstValueType cvi = ValueType(1);
             const MyClass1 ci = MyClass1(3);
 #if defined(BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST)
-             mX = vi; // this should not compile 27
+            mX = vi; // this should not compile 27
             mX = i; // this should not compile 28
             mX = cvi; // this should not compile 29
             mX = ci;  // this should not compile 30
@@ -7449,38 +7591,37 @@ void bslstl_optional_test11()
 }
 void bslstl_optional_test12()
 {
-  // --------------------------------------------------------------------
-  // TESTING operator=(non_optional_type) FUNCTIONALITY
-  //   This test will verify that the operator=(non_optional_type) function works
-  //   as expected. These test require compilation failures and will not run by
-  //   default.
-  //
-  // Concerns:
-  //   * operator=(non_optional_type) can not be called for a type which is
-  //     not assignable to value type.
-  //   * operator=(non_optional_type) can not be called for if value type is
-  //     not constructable from non_optional_type
-  //
-  // Plan:
-  //
-  //   Create an optional of type MyClass1b. Verify that lvalue and rvalue
-  //   of type myClass1 can not be assigned to the optional.
-  //
-  //   Create an optional of type MyClass1c. Verify that lvalue and rvalue
-  //   of type myClass1 can not be assigned to the optional.
-  //
-  //   Create an optional of type MyClass2b. Verify that lvalue and rvalue
-  //   of type myClass2 can not be assigned to the optional.
-  //
-  //   Create an optional of type MyClass2c. Verify that lvalue and rvalue
-  //   of type myClass2 can not be assigned to the optional.
-  //
-  //
-  // Testing:
-  //
-  //   operator=(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) other)
-  //
-  // --------------------------------------------------------------------
+    // --------------------------------------------------------------------
+    // TESTING 'operator=(non_optional_type)' MEMBER FUNCTION
+    //   This test will verify that the operator=(non_optional_type) function
+    //   works as expected.
+    //
+    // Concerns:
+    //: 1 'operator=(rhs)', where rhs is not an 'optional' object, can not be
+    //:    called if 'rhs' is of a type which is not assignable to value type.
+    //: 2  'operator=(rhs)', where rhs is not an 'optional' object, can not be
+    //:    called if value type is not constructable from rhs
+    //
+    // Plan:
+    //
+    //: 1 Create an 'optional' object of non allocator aware value type.
+    //:   For concern 1, verify that lvalue and rvalue of type convertible,
+    //:   but not assignable to value type can not be assigned to the
+    //:   'optional' object. Note that this test requires compilation errors
+    //:   and needs to be enabled and checked manually.
+    //: 2 Create an 'optional' object of non allocator aware value type.
+    //:   For concern 2, verify that lvalue and rvalue of type assignable,
+    //:   but not convertible to value type can not be assigned to the
+    //:   'optional' object. Note that this test requires compilation errors
+    //:   and needs to be enabled and checked manually.
+    //: 3 Repeat steps 1 and 2 with an optional of allocator aware value type.
+    //
+    //
+    // Testing:
+    //
+    //   operator=(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) other)
+    //
+    // --------------------------------------------------------------------
 
     if (verbose) printf(
                     "\nTESTING operator=(non_optional_type) MEMBER FUNCTION "
@@ -7541,14 +7682,19 @@ void bslstl_optional_test13()
 {
   // --------------------------------------------------------------------
   // TESTING operator=(optional_type) FUNCTIONALITY
-  //   This test will verify that the operator=(optional) function works
-  //   as expected.
+  //   This test will verify that the 'operator=(rhs)', where 'rhs' is an
+  //   'optional' type, works as expected.
   //
   // Concerns:
-  //   * assigning an engaged optional to an optional object assigns the
-  //     value of the rhs optional to the value of the destination optional.
-  //   * assigning a disengaged optional to an optional object assigns the
-  //     value of the rhs optional to the value of the destination optional.
+  //: 1 That 'operator=(rhs)', invoked on an engaged optional object and where
+  //:   'rhs' is an engaged optional object, assigns the value of the 'rhs'
+  //:   'optional' to the value of the target 'optional' object.
+  //: 2 That 'operator=(rhs)', invoked on a disengaged optional object and
+  //:   where 'rhs' is an engaged optional object, constructs a value type
+  //:   object from the value of 'rhs''optional' object.
+  //: 3 That 'operator=(rhs)', where 'rhs' is a disengaged optional object,
+  //:   makes the target 'optional' object disengaged.
+
   //   * for allocator aware types, the assignment to a disengaged optional
   //     uses the stored allocator.
   //   * for allocator aware types, the assignment to an engaged optional
