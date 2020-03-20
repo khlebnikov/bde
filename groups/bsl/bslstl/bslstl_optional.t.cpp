@@ -9690,115 +9690,116 @@ void bslstl_optional_test20()
 }
 void bslstl_optional_test21()
 {
-  // --------------------------------------------------------------------
-  // TESTING COPY CONVERSION FROM NON OPTIONAL TYPE
-  //   This test will verify that the copy construction from OTHER type works
-  //   as expected.
-  //
-  // Concerns:
-  //   * Constructing an optional from a OTHER type object creates an engaged
-  //     optional with the value of the source object converted to value type.
-  //     The source object is not modified.
-  //   * If no allocator is provided and the value type uses allocator, the
-  //     default allocator is used for the newly created optional.
-  //   * If allocator extended version of copy constructor is used, the allocator
-  //     passed to the constructors is the allocator of the newly created
-  //     optional object.
-  //
-  //
-  // Plan:
-  //   Conduct the test using 'Myclass1a' (does not use allocator) and
-  //   'Myclass2'/'MyClass2a' (uses allocator) for 'TYPE'.
-  //
-  //   Create an object of Myclass1 type.
-  //   Create an optional of Myclass1a type using the first object as the
-  //   initialization object.
-  //   Check the value of the newly created object is as expected.
-  //   Check the source object has not changed.
-  //
-  //   Bind a const reference to the original object. Create another optional
-  //   of Myclass1a type using the const reference as the initialization
-  //   object.
-  //   Check the value of the newly created object is as expected.
-  //
-  //   Create an object of Myclass1 type.
-  //   Create an optional of Myclass2 type using the first object as
-  //   the initialization object.
-  //   Check the value of the newly created object is as expected.
-  //   Check the allocator of the newly created object is the default
-  //   allocator.
-  //   Check the source object has not changed.
-  //
-  //   Create a const object of Myclass1 type using a non default allocator.
-  //   Create an optional of Myclass2 type using the first object as
-  //   the initialization object.
-  //   Check the value of the newly created object is as expected.
-  //   Check the allocator of the newly created object is the default
-  //   allocator.
-  //   Check the source object has not changed.
-  //
-  //   Create an object of Myclass1 type.
-  //   Create an optional of Myclass2 type using the Myclass1 object as the
-  //   initialization object and a non default allocator as the allocator
-  //   argument.
-  //   Check the value of the newly created object is as expected.
-  //   Check the allocator of the newly created object is the one used
-  //   as the allocator argument.
-  //   Check the source object has not changed.
-  //
-  //   Create a const object of Myclass1 type using a non default allocator.
-  //   Create an optional of Myclass2 type using the Myclass1 object as the
-  //   initialization object and a non default allocator as the allocator
-  //   argument.
-  //   Check the value of the newly created object is as expected.
-  //   Check the allocator of the newly created object is the one used
-  //   as the allocator argument.
-  //
-  //   Create an object Myclass2 type using a non default allocator.
-  //   Create an optional of Myclass2a type using the first object as
-  //   the initialization object.
-  //   Check the value of the newly created object is as expected.
-  //   Check the allocator of the newly created object is the default
-  //   allocator.
-  //   Check the source object has not changed.
-  //
-  //   Create a const object Myclass2 type using a non default allocator.
-  //   Bind a const reference to the Myclass2 object.
-  //   Create an optional of Myclass2a type using the const object as
-  //   the initialization object.
-  //   Check the value of the newly created object is as expected.
-  //   Check the allocator of the newly created object is the default
-  //   allocator.
-  //
-  //   Create an object Myclass2 type using a non default allocator.
-  //   Create an optional of Myclass2a type using the Myclass2 object as
-  //   the initialization object and a non default allocator as the allocator
-  //   argument.
-  //   Check the value of the newly created object is as expected.
-  //   Check the allocator of the newly created object is the one used
-  //   as the allocator argument.
-  //   Check the source object has not changed.
-  //
-  //   Create a const object Myclass2 type using a non default allocator.
-  //   Create an optional of Myclass2a type using the const object as
-  //   the initialization object and a non default allocator as the allocator
-  //   argument.
-  //   Check the value of the newly created object is as expected.
-  //   Check the allocator of the newly created object is the one used
-  //   as the allocator argument.
-  //
-  //
-  //
-  // Testing:
-  //
-  //   optional(const ANY_TYPE&);
-  //   optional(allocator_arg_t, allocator_type, const ANY_TYPE&);
-  //
-  //   void value();
-  //   void has_value();
-  //   void get_allocator();
-  //
-  // --------------------------------------------------------------------
+    // --------------------------------------------------------------------
+    // TESTING COPY CONVERSION FROM NON OPTIONAL TYPE
+    //   This test will verify that the copy conversion from non optional type
+    //   works as expected.
+    //
+    // Concerns:
+    //: 1 Constructing an 'optional' of type TYPE from an object of type
+    //:   convertible to TYPE creates and engaged 'optional with the value type
+    //:   object created by copy conversion from the source object.
+    //: 2 When constructing an 'optional' of type TYPE from an object of type
+    //:   convertible to TYPE, source object is not modified.
+    //: 3 If no allocator is provided and the value type uses allocator, the
+    //:   default allocator is used for the newly created 'optional'.
+    //: 4 If allocator extended version of copy conversion constructor is used,
+    //:   the specified allocator is used for the new object.
+    //
+    //
+    // Plan:
+    //   Conduct the test using 'Myclass1a' (does not use allocator) and
+    //   'Myclass2'/'MyClass2a' (uses allocator) for 'TYPE'.
+    //
+    //   Create an object of Myclass1 type.
+    //   Create an optional of Myclass1a type using the first object as the
+    //   initialization object.
+    //   Check the value of the newly created object is as expected.
+    //   Check the source object has not changed.
+    //
+    //   Bind a const reference to the original object. Create another optional
+    //   of Myclass1a type using the const reference as the initialization
+    //   object.
+    //   Check the value of the newly created object is as expected.
+    //
+    //   Create an object of Myclass1 type.
+    //   Create an optional of Myclass2 type using the first object as
+    //   the initialization object.
+    //   Check the value of the newly created object is as expected.
+    //   Check the allocator of the newly created object is the default
+    //   allocator.
+    //   Check the source object has not changed.
+    //
+    //   Create a const object of Myclass1 type using a non default allocator.
+    //   Create an optional of Myclass2 type using the first object as
+    //   the initialization object.
+    //   Check the value of the newly created object is as expected.
+    //   Check the allocator of the newly created object is the default
+    //   allocator.
+    //   Check the source object has not changed.
+    //
+    //   Create an object of Myclass1 type.
+    //   Create an optional of Myclass2 type using the Myclass1 object as the
+    //   initialization object and a non default allocator as the allocator
+    //   argument.
+    //   Check the value of the newly created object is as expected.
+    //   Check the allocator of the newly created object is the one used
+    //   as the allocator argument.
+    //   Check the source object has not changed.
+    //
+    //   Create a const object of Myclass1 type using a non default allocator.
+    //   Create an optional of Myclass2 type using the Myclass1 object as the
+    //   initialization object and a non default allocator as the allocator
+    //   argument.
+    //   Check the value of the newly created object is as expected.
+    //   Check the allocator of the newly created object is the one used
+    //   as the allocator argument.
+    //
+    //   Create an object Myclass2 type using a non default allocator.
+    //   Create an optional of Myclass2a type using the first object as
+    //   the initialization object.
+    //   Check the value of the newly created object is as expected.
+    //   Check the allocator of the newly created object is the default
+    //   allocator.
+    //   Check the source object has not changed.
+    //
+    //   Create a const object Myclass2 type using a non default allocator.
+    //   Bind a const reference to the Myclass2 object.
+    //   Create an optional of Myclass2a type using the const object as
+    //   the initialization object.
+    //   Check the value of the newly created object is as expected.
+    //   Check the allocator of the newly created object is the default
+    //   allocator.
+    //
+    //   Create an object Myclass2 type using a non default allocator.
+    //   Create an optional of Myclass2a type using the Myclass2 object as
+    //   the initialization object and a non default allocator as the allocator
+    //   argument.
+    //   Check the value of the newly created object is as expected.
+    //   Check the allocator of the newly created object is the one used
+    //   as the allocator argument.
+    //   Check the source object has not changed.
+    //
+    //   Create a const object Myclass2 type using a non default allocator.
+    //   Create an optional of Myclass2a type using the const object as
+    //   the initialization object and a non default allocator as the allocator
+    //   argument.
+    //   Check the value of the newly created object is as expected.
+    //   Check the allocator of the newly created object is the one used
+    //   as the allocator argument.
+    //
+    //
+    //
+    // Testing:
+    //
+    //   optional(const ANY_TYPE&);
+    //   optional(allocator_arg_t, allocator_type, const ANY_TYPE&);
+    //
+    //   void value();
+    //   void has_value();
+    //   void get_allocator();
+    //
+    // --------------------------------------------------------------------
 
     if (verbose) printf(
                        "\nTESTING COPY CONVERSION FROM NON OPTIONAL TYPE"
