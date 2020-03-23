@@ -1092,6 +1092,7 @@ class optional {
     BSLS_KEYWORD_EXPLICIT operator bool()  const  BSLS_KEYWORD_NOEXCEPT;
         // Return 'true' if this object is disengaged, and 'false' Otherwise.
 
+#ifdef  BSL_COMPILERFEATURES_GUARANTEED_COPY_ELISION
     template<class ANY_TYPE>
     TYPE value_or(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) rhs) const
     BSLS_KEYWORD_LVREF_QUAL;
@@ -1116,9 +1117,8 @@ class optional {
         // value type object created using the provided allocator. Otherwise,
         // return the value of rhs converted to value type and using the
         // allocator prrovided.
-
 #endif
-
+#endif //BSL_COMPILERFEATURES_GUARANTEED_COPY_ELISION
     void swap(optional& other);
         // Efficiently exchange the value of this object with the value of the
         // specified 'other' object.  In effect, performs
@@ -1487,25 +1487,23 @@ class optional<TYPE, false> {
 
   BSLS_KEYWORD_EXPLICIT operator bool()  const  BSLS_KEYWORD_NOEXCEPT;
         // Return 'true' if this object is disengaged, and 'false' otherwise.
-
+#ifdef BSL_COMPILERFEATURES_GUARANTEED_COPY_ELISION
   template<class ANY_TYPE>
     TYPE value_or(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE)) const
     BSLS_KEYWORD_LVREF_QUAL;
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
   template<class ANY_TYPE>
     TYPE value_or(ANY_TYPE&&) BSLS_KEYWORD_RVREF_QUAL;
+        // If this->has_value() == true, return a copy of the contained
+        // value type object. Otherwise, return the value of rhs converted to
+        // value type.
 #endif
-      // If this->has_value() == true, return a copy of the contained
-      // value type object. Otherwise, return the value of rhs converted to
-      // value type.
+#endif //BSL_COMPILERFEATURES_GUARANTEED_COPY_ELISION
 
     void swap(optional& other);
         // Efficiently exchange the value of this object with the value of the
         // specified 'other' object.  In effect, performs
         // 'using bsl::swap; swap(c, other.c);'.
-  private:
-
-
 };
 
 // FREE FUNCTIONS
@@ -2028,7 +2026,7 @@ BSLS_KEYWORD_LVREF_QUAL
 
     return d_value.value();
 }
-
+#ifdef BSL_COMPILERFEATURES_GUARANTEED_COPY_ELISION
 template <class TYPE, bool UsesBslmaAllocator>
 template <class ANY_TYPE>
 inline
@@ -2102,6 +2100,7 @@ BSLS_KEYWORD_RVREF_QUAL
                                                   std::forward<ANY_TYPE>(rhs));
 }
 #endif
+#endif //BSL_COMPILERFEATURES_GUARANTEED_COPY_ELISION
 template <class TYPE, bool UsesBslmaAllocator>
 inline
 optional<TYPE, UsesBslmaAllocator>&
@@ -2355,6 +2354,7 @@ const TYPE&& optional<TYPE, false>::value() const BSLS_KEYWORD_RVREF_QUAL
     return std::move(d_value.value());
 }
 #endif
+#ifdef BSL_COMPILERFEATURES_GUARANTEED_COPY_ELISION
 template <class TYPE>
 template <class ANY_TYPE>
 inline
@@ -2390,6 +2390,7 @@ optional<TYPE, false>::value_or(ANY_TYPE&& rhs) BSLS_KEYWORD_RVREF_QUAL
                                std::forward<ANY_TYPE>(rhs));
 }
 #endif
+#endif //BSL_COMPILERFEATURES_GUARANTEED_COPY_ELISION
 template <class TYPE>
 inline
 optional<TYPE, false>&
