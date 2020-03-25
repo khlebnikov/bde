@@ -12235,6 +12235,7 @@ void bslstl_optional_test26()
     //
     // Testing:
     //
+    //   void optional(allocator_arg, allocator, Args&&...);
     //   void optional(in_place_t, Args&&...);
     //   void optional(allocator_arg, allocator, in_place_t, Args&&...);
     //
