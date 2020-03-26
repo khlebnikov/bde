@@ -9958,7 +9958,8 @@ void test_copy_helper()
 }
 // helper function that invokes 'TEST_COPYA' macro for various number of
 // constructor variadic arguments, and for a combination of lvalues and rvalue
-// such that each argument position is tested for perfect forwarding.
+// such that each argument position is tested for perfect forwarding. The
+// 'optional' constructor invoked is a non allocator extended constructor.
 template <typename VALTYPE, typename OPTYPE>
 void test_copyad_helper()
 {
@@ -10199,7 +10200,8 @@ void test_copyad_helper()
 // helper function that invokes 'TEST_COPYA' macro for various number of
 // constructor variadic arguments, adjusted for 'UsesAllocatorArgT' type
 // construction, and for a combination of lvalues and rvalue such that each
-// argument position is tested for perfect forwarding.
+// argument position is tested for perfect forwarding. The 'optional'
+// constructor invoked is a non allocator extended constructor.
 template <typename VALTYPE, typename OPTYPE>
 void test_copyad_argt_helper()
 {
@@ -10462,7 +10464,8 @@ void test_copyad_argt_helper()
 }
 // helper function that invokes 'TEST_COPYA' macro for various number of
 // constructor variadic arguments, and for a combination of lvalues and rvalue
-// such that each argument position is tested for perfect forwarding.
+// such that each argument position is tested for perfect forwarding. The
+// 'optional' constructor invoked is an allocator extended constructor.
 template <typename VALTYPE, typename OPTYPE>
 void test_copya_helper()
 {
@@ -10705,7 +10708,8 @@ void test_copya_helper()
 // helper function that invokes 'TEST_COPYA' macro for various number of
 // constructor variadic arguments, adjusted for 'UsesAllocatorArgT' type
 // construction, and for a combination of lvalues and rvalue such that each
-// argument position is tested for perfect forwarding.
+// argument position is tested for perfect forwarding. The 'optional'
+// constructor invoked is an allocator extended constructor.
 template <typename VALTYPE, typename OPTYPE>
 void test_copya_argt_helper()
 {
@@ -11172,7 +11176,8 @@ void test_copyil_helper()
   TEST_COPY(VALTYPE, OPTYPE,
             (bsl::in_place, {1,2,3},
              VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
-             VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
+             VA5, MovUtl::move(VA6), VA7, MovUtl::move
+             (VA8),
              VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
              VA13),
             ({1,2,3}, VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
@@ -11184,7 +11189,8 @@ void test_copyil_helper()
 // helper function that invokes 'TEST_COPYA' macro for 'initializer_list' and
 // various number of constructor variadic arguments, and for a combination
 // of lvalues and rvalue such that each argument position is tested
-// for perfect forarding.
+// for perfect forarding. The 'optional' constructor invoked is an allocator
+// extended constructor.
 template <typename VALTYPE, typename OPTYPE>
 void test_copyila_helper()
 {
@@ -11405,7 +11411,8 @@ void test_copyila_helper()
 // various number of constructor variadic arguments, modified to support
 // initialization of a 'UsesAllocatorArgT' type, and for a combination
 // of lvalues and rvalue such that each argument position is tested
-// for perfect forwarding.
+// for perfect forwarding. The 'optional' constructor invoked is an allocator
+// extended constructor.
 template <typename VALTYPE, typename OPTYPE>
 void test_copyila_argt_helper()
 {
@@ -11647,7 +11654,8 @@ void test_copyila_argt_helper()
 // helper function that invokes 'TEST_COPYA' macro for 'initializer_list' and
 // various number of constructor variadic arguments, and for a combination
 // of lvalues and rvalue such that each argument position is tested
-// for perfect forarding.
+// for perfect forarding. The 'optional' constructor invoked is a non allocator
+// extended constructor.
 template <typename VALTYPE, typename OPTYPE>
 void test_copyilad_helper()
 {
@@ -11867,7 +11875,8 @@ void test_copyilad_helper()
 // various number of constructor variadic arguments, modified to support
 // initialization of a 'UsesAllocatorArgT' type, and for a combination
 // of lvalues and rvalue such that each argument position is tested
-// for perfect forwarding.
+// for perfect forwarding.  The 'optional' constructor invoked is a non
+// allocator extended constructor.
 template <typename VALTYPE, typename OPTYPE>
 void test_copyilad_argt_helper()
 {
@@ -12192,21 +12201,19 @@ void bslstl_optional_test26()
     //
     // Concerns:
     //: 1 Calling 'in_place_t' constructor creates an engaged 'optional' whose
-    //:   value type object is created using the constructors arguments.
+    //:   'value_type' object is created using the constructors arguments.
     //: 2 Arguments to the 'in_place_t' constructor are forwarded in correct
-    //:   order to the value type object's constructor.
+    //:   order to the 'value_type' object's constructor.
     //: 3 Arguments to the 'in_place_t' constructor are perfect forwarded to
-    //:   the value type object's constructor, that is, rvalue argument is
+    //:   the 'value_type' object's constructor, that is, rvalue argument is
     //:   forwarded as an rvalue, and lvalue argument is forwarded as an lvalue
-    //:   to the value type object's constructor
+    //:   to the 'value_type' object's constructor
     //: 4 If the type uses an allocator and no allocator is provided, the
-    //:   'optional' object will use the default alllocator.
+    //:   'optional' object will use the default allocator.
     //: 5 If the type uses an allocator and the allocator extended 'in_place_t'
-    //:   constructor is used, the 'optional' object will use the alllocator
+    //:   constructor is used, the 'optional' object will use the allocator
     //:   provided in the constructor.
-    //: 6 No unnecessary copies of the value type are created
-    //: 7 It is possible to constructor const 'optional' objects and 'optional'
-    //:   objects of const value type.
+    //: 6 No unnecessary copies of the 'value_type' are created
     //
     //
     // Plan:
@@ -12218,20 +12225,18 @@ void bslstl_optional_test26()
     //:   'TYPE' object.
     //: 2 For concern 2, in step 1 use different number of constructor
     //:   arguments.
-    //: 3 For concern 2, in step 1 and 2, use a mixture of rvalue and lvalue
+    //: 3 For concern 3, in step 1 and 2, use a mixture of rvalue and lvalue
     //:   arguments such that each argument position is tested with an
     //:   rvalue and an lvalue. Check that the rvalue arguments have been
     //:   moved frome.
-    //: 4 Repeat steps 1-3 with an allocator aware type. For concern 4, check
+    //: 4 Repeat steps 1-3 with an allocator aware TYPE. For concern 4, check
     //:   that the default allocator was used to construct the value type
     //:   object.
     //: 5 in step 4, use the allocator extended constructor. For concern 5,
     //:   check that the allocator used in the constructor call is the
-    //:   alloctor of the 'optional' object.
-    //: 6 In steps 1-5, check no unnecessary copies of the value type object
-    //:   have been created.
-    //: 7 For concern 7, repeat steps 1-6 using a const qualified 'optional'
-    //:   type and an 'optional' of const qualified value type.
+    //:   allocator of the 'optional' object.
+    //: 6 In steps 1-5, check no unnecessary copies of the TYPE object have
+    //:   been created.
     //
     // Testing:
     //
@@ -12249,31 +12254,20 @@ void bslstl_optional_test26()
     {
         typedef ConstructTestTypeNoAlloc                  ValueType;
         test_copy_helper<ValueType, bsl::optional<ValueType> >();
-        test_copy_helper<ValueType, const bsl::optional<ValueType> >();
-        test_copy_helper<ValueType, bsl::optional< const ValueType> >();
     }
 
     if (veryVerbose) printf("\t\tUsing 'ConstructTestTypeAlloc'.\n");
     {
         typedef ConstructTestTypeAlloc                  ValueType;
         test_copyad_helper<ValueType, bsl::optional<ValueType> >();
-        test_copyad_helper<ValueType, const bsl::optional<ValueType> >();
-        test_copyad_helper<ValueType, bsl::optional< const ValueType> >();
-
         test_copya_helper<ValueType, bsl::optional<ValueType> >();
-        test_copya_helper<ValueType, const bsl::optional<ValueType> >();
-        test_copya_helper<ValueType, bsl::optional< const ValueType> >();
+
     }
     if (veryVerbose) printf("\t\tUsing 'ConstructTestTypeAllocArgT'.\n");
     {
         typedef ConstructTestTypeAllocArgT                ValueType;
         test_copyad_argt_helper<ValueType, bsl::optional<ValueType> >();
-        test_copyad_argt_helper<ValueType, const bsl::optional<ValueType> >();
-        test_copyad_argt_helper<ValueType, bsl::optional< const ValueType> >();
-
         test_copya_argt_helper<ValueType, bsl::optional<ValueType> >();
-        test_copya_argt_helper<ValueType, const bsl::optional<ValueType> >();
-        test_copya_argt_helper<ValueType, bsl::optional< const ValueType> >();
     }
 }
 
@@ -13282,13 +13276,14 @@ void bslstl_optional_test32()
     //
     //
     // Concerns:
-    //: 1 Invoking 'alloc_optional' creates an optional with the value of the
-    //:   arguments.
-    //: 2 Allocator passed in to the 'alloc_optional' call is the allocator
-    //:   for the newly created optional.
+    //: 1 Invoking 'alloc_optional' creates an 'optional' object whose
+    //:   'value_type' object has been created using the arguments of
+    //:   'alloc_optional'.
+    //: 2 The allocator of the created 'optional' object is the allocator
+    //:   passed in to the 'alloc_optional'.
     //: 3 Multiple arguments are correctly forwarded.
     //: 4 Arguments are perfectly forwarded.
-    //: 5 No unecessary objects of value type are created.
+    //: 5 No unecessary objects of'value_type' are created.
     //
     //
     // Plan:
@@ -13773,19 +13768,21 @@ void bslstl_optional_test33()
     //
     // Concerns:
     //: 1 That 'optional<TYPE>::value_type' is 'TYPE'
-    //: 2 That 'BloombergLP::bslma::UsesBslmaAllocator<optional<TYPE>>' and
+    //: 2 That 'optional<const TYPE>::value_type' is 'const TYPE'
+    //: 3 That 'BloombergLP::bslma::UsesBslmaAllocator<optional<TYPE>>' and
     //:   'BloombergLP::bslmf::UsesAllocatorArgT<optional<TYPE>>' are 'false'
     //:   if 'TYPE' is a non allocator aware type.
-    //: 3 That 'BloombergLP::bslma::UsesBslmaAllocator<optional<TYPE>>' and
+    //: 4 That 'BloombergLP::bslma::UsesBslmaAllocator<optional<TYPE>>' and
     //:   'BloombergLP::bslmf::UsesAllocatorArgT<optional<TYPE>>' are 'true'
     //:   if 'TYPE' is an allocator aware type.
     //
     // Plan:
     //: 1 Using an 'optional' of non allocator aware type, verify that
     //:   'value_type' matches the chosen value type.
-    //: 2 In step 1, for concern 2, verify that both 'UsesBslmaAllocator' and
+    //: 2 For concern 2, repeat step 1 using a 'const' value type.
+    //: 3 In step 1, for concern 2, verify that both 'UsesBslmaAllocator' and
     //:   'UsesAllocatorArgT' traits are false for the 'optional' type.
-    //: 3 Repeat step 1 for a value type that is 'UsesBslmaAllocator', but
+    //: 4 Repeat step 1 for a value type that is 'UsesBslmaAllocator', but
     //:   isn't 'UsesAllocatorArgT'. For concern 3, verify that both
     //:   'UsesBslmaAllocator' and 'UsesAllocatorArgT' traits are true for an
     //:   'optional' of that type.
@@ -13803,8 +13800,11 @@ void bslstl_optional_test33()
 
     {
       typedef MyClass1                      ValueType;
+      typedef const MyClass1                ConstValueType;
       typedef bsl::optional<ValueType>      Obj;
+      typedef bsl::optional<ConstValueType> ObjC;
       ASSERT((bsl::is_same<Obj::value_type, ValueType>::value));
+      ASSERT((bsl::is_same<ObjC::value_type, ConstValueType>::value));
       ASSERT(!(BloombergLP::bslma::UsesBslmaAllocator<Obj>::value));
       ASSERT(!(BloombergLP::bslmf::UsesAllocatorArgT<Obj>::value));
     }
