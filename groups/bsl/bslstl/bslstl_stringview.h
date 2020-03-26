@@ -14,8 +14,6 @@ BSLS_IDENT("$Id: $")
 //
 //@SEE_ALSO: ISO C++ Standard, Section
 //
-//@AUTHOR:
-//
 //@DESCRIPTION: This component defines a single class template
 // 'bsl::basic_string_view' and aliases for ordinary and wide character
 // specializations 'bsl::string_view' and 'bsl::wstring_view' implementing
@@ -205,6 +203,8 @@ BSLS_IDENT("$Id: $")
 
 #include <string>      // for 'native_std::char_traits'
 #include <functional>  // for 'native_std::less', 'native_std::greater_equal'
+
+#define BDE_DISABLE_CPP17_ABI  // Temporary workaround before switching to cpp17
 
 #ifndef BDE_DISABLE_CPP17_ABI
 #ifdef BSLS_LIBRARYFEATURES_HAS_CPP17_BASELINE_LIBRARY

@@ -1032,6 +1032,14 @@ void post(const my_ClassDef* p)
     (void) p;  // remove unused variable warning
 }
 
+
+template <class TYPE>
+struct NotAllocator
+    : ::bsl::integral_constant<bool,
+                        !bsl::is_convertible<TYPE, bslma::Allocator*>::value
+                        >
+{
+};
                        // ======================
                        // class ConstructTestArg
                        // ======================
@@ -1573,70 +1581,33 @@ class ConstructTestTypeAlloc {
         : d_allocator(allocator)
         , d_a1(a1) {}
     explicit
-    ConstructTestTypeAlloc(bslmf::MovableRef<Arg1>  a1, bslma::Allocator *allocator = 0)
+    ConstructTestTypeAlloc(bslmf::MovableRef<Arg1>  a1,
+                           bslma::Allocator *allocator = 0)
             : d_allocator(allocator)
             , d_a1(MovUtl::move(a1)) {}
 
-    template <class ARG1>
-    explicit
-    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
-                           const Arg2 &                             a2,
-                           bslma::Allocator             *allocator = 0)
-        : d_allocator(allocator),
-          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
-          d_a2(a2) {}
-
-    template <class ARG1>
-    explicit
-    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
-                           bslmf::MovableRef<Arg2>                  a2,
-                           bslma::Allocator *allocator              = 0)
-            : d_allocator(allocator),
-              d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
-              d_a2(MovUtl::move(a2)) {}
-
     template <class ARG1,  class ARG2>
     ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
-                           const Arg3                              &a3,
-                           bslma::Allocator *allocator              = 0)
+                           bslma::Allocator *allocator              = 0,
+                           typename bsl::enable_if<NotAllocator<ARG2>::value,
+                                               void>::type * = 0)
         : d_allocator(allocator),
           d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
-          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
-          d_a3(a3){}
-
-    template <class ARG1,  class ARG2>
-    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
-                           bslmf::MovableRef<Arg3>                  a3,
-                           bslma::Allocator *allocator = 0)
-        : d_allocator(allocator),
-          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
-          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
-          d_a3(MovUtl::move(a3)){}
-
-    template <class ARG1,  class ARG2,  class ARG3>
+          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2))
+          {}
+    template <class ARG1,  class ARG2, class ARG3>
     ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
-                           const Arg4                              &a4,
-                           bslma::Allocator *allocator = 0)
+                           bslma::Allocator *allocator              = 0,
+                           typename bsl::enable_if<
+                                        NotAllocator<ARG3>::value,
+                                        void>::type * = 0)
         : d_allocator(allocator),
           d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
           d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
-          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
-          d_a4(a4){}
-    template <class ARG1,  class ARG2,  class ARG3>
-    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
-                           bslmf::MovableRef<Arg4>                  a4,
-                           bslma::Allocator *allocator = 0)
-        : d_allocator(allocator),
-          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
-          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
-          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
-          d_a4(MovUtl::move(a4)){}
+          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)){}
 
     template <class ARG1,  class ARG2,  class ARG3,
               class ARG4>
@@ -1644,28 +1615,15 @@ class ConstructTestTypeAlloc {
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
-                           const Arg5                              &a5,
-                           bslma::Allocator *allocator = 0)
-        : d_allocator(allocator),
+                           bslma::Allocator *allocator              = 0,
+                           typename bsl::enable_if<
+                                        NotAllocator<ARG4>::value,
+                                        void>::type * = 0)
+       : d_allocator(allocator),
           d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
           d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
           d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
-          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
-          d_a5(a5){}
-    template <class ARG1,  class ARG2,  class ARG3,
-              class ARG4>
-    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
-                           bslmf::MovableRef<Arg5>                  a5,
-                           bslma::Allocator *allocator = 0)
-        : d_allocator(allocator),
-          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
-          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
-          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
-          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
-          d_a5(MovUtl::move(a5)){}
+          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)){}
 
     template <class ARG1,  class ARG2,  class ARG3,
               class ARG4,  class ARG5>
@@ -1674,31 +1632,17 @@ class ConstructTestTypeAlloc {
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
-                           const Arg6                              &a6,
-                           bslma::Allocator *allocator = 0)
+                           bslma::Allocator *allocator              = 0,
+                           typename bsl::enable_if<
+                                        NotAllocator<ARG5>::value,
+                                        void>::type * = 0)
         : d_allocator(allocator),
           d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
           d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
           d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
           d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
-          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
-          d_a6(a6){}
-    template <class ARG1,  class ARG2,  class ARG3,
-              class ARG4,  class ARG5>
-    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
-                           bslmf::MovableRef<Arg6>                  a6,
-                           bslma::Allocator *allocator = 0)
-        : d_allocator(allocator),
-          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
-          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
-          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
-          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
-          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
-          d_a6(MovUtl::move(a6)){}
+          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5))
+          {}
 
     template <class ARG1,  class ARG2,  class ARG3,
               class ARG4,  class ARG5,  class ARG6>
@@ -1708,34 +1652,18 @@ class ConstructTestTypeAlloc {
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
-                           const Arg7                              &a7,
-                           bslma::Allocator *allocator = 0)
+                           bslma::Allocator *allocator              = 0,
+                           typename bsl::enable_if<
+                                        NotAllocator<ARG6>::value,
+                                        void>::type * = 0)
         : d_allocator(allocator),
           d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
           d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
           d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
           d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
           d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
-          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
-          d_a7(a7){}
-    template <class ARG1,  class ARG2,  class ARG3,
-              class ARG4,  class ARG5,  class ARG6>
-    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
-                           bslmf::MovableRef<Arg7>                  a7,
-                           bslma::Allocator *allocator = 0)
-        : d_allocator(allocator),
-          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
-          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
-          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
-          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
-          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
-          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
-          d_a7(MovUtl::move(a7)){}
+          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)){}
+
 
     template <class ARG1,  class ARG2,  class ARG3,
               class ARG4,  class ARG5,  class ARG6,
@@ -1747,8 +1675,10 @@ class ConstructTestTypeAlloc {
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
-                           const Arg8                              &a8,
-                           bslma::Allocator *allocator = 0)
+                           bslma::Allocator *allocator              = 0,
+                           typename bsl::enable_if<
+                                        NotAllocator<ARG7>::value,
+                                        void>::type * = 0)
         : d_allocator(allocator),
           d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
           d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
@@ -1756,29 +1686,8 @@ class ConstructTestTypeAlloc {
           d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
           d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
           d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
-          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
-          d_a8(a8){}
-    template <class ARG1,  class ARG2,  class ARG3,
-              class ARG4,  class ARG5,  class ARG6,
-              class ARG7>
-    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
-                           bslmf::MovableRef<Arg8>                  a8,
-                           bslma::Allocator *allocator = 0)
-        : d_allocator(allocator),
-          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
-          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
-          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
-          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
-          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
-          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
-          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
-          d_a8(MovUtl::move(a8)){}
+          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)){}
+
 
     template <class ARG1,  class ARG2,  class ARG3,
               class ARG4,  class ARG5,  class ARG6,
@@ -1791,8 +1700,10 @@ class ConstructTestTypeAlloc {
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
-                           const Arg9                              &a9,
-                           bslma::Allocator *allocator = 0)
+                           bslma::Allocator *allocator              = 0,
+                           typename bsl::enable_if<
+                                        NotAllocator<ARG8>::value,
+                                        void>::type * = 0)
         : d_allocator(allocator),
           d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
           d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
@@ -1801,31 +1712,7 @@ class ConstructTestTypeAlloc {
           d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
           d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
           d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
-          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
-          d_a9(a9){}
-    template <class ARG1,  class ARG2,  class ARG3,
-              class ARG4,  class ARG5,  class ARG6,
-              class ARG7,  class ARG8>
-    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
-                           bslmf::MovableRef<Arg9>                  a9,
-                           bslma::Allocator *allocator = 0)
-        : d_allocator(allocator),
-          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
-          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
-          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
-          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
-          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
-          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
-          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
-          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
-          d_a9(MovUtl::move(a9)){}
+          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)){}
 
     template <class ARG1,  class ARG2,  class ARG3,
               class ARG4,  class ARG5,  class ARG6,
@@ -1839,8 +1726,10 @@ class ConstructTestTypeAlloc {
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
-                           const Arg10                             &a10,
-                           bslma::Allocator *allocator = 0)
+                           bslma::Allocator *allocator              = 0,
+                           typename bsl::enable_if<
+                                        NotAllocator<ARG9>::value,
+                                        void>::type * = 0)
         : d_allocator(allocator),
           d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
           d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
@@ -1850,33 +1739,9 @@ class ConstructTestTypeAlloc {
           d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
           d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
           d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
-          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
-          d_a10(a10){}
-    template <class ARG1,  class ARG2,  class ARG3,
-              class ARG4,  class ARG5,  class ARG6,
-              class ARG7,  class ARG8,  class ARG9>
-    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
-                           bslmf::MovableRef<Arg10>                 a10,
-                           bslma::Allocator *allocator = 0)
-        : d_allocator(allocator),
-          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
-          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
-          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
-          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
-          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
-          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
-          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
-          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
-          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
-          d_a10(MovUtl::move(a10)){}
+          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)){}
+
+
 
     template <class ARG1,  class ARG2,  class ARG3,
               class ARG4,  class ARG5,  class ARG6,
@@ -1892,8 +1757,10 @@ class ConstructTestTypeAlloc {
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
-                           const Arg11                             &a11,
-                           bslma::Allocator *allocator = 0)
+                           bslma::Allocator *allocator              = 0,
+                           typename bsl::enable_if<
+                                        NotAllocator<ARG10>::value,
+                                        void>::type * = 0)
         : d_allocator(allocator),
           d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
           d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
@@ -1904,36 +1771,7 @@ class ConstructTestTypeAlloc {
           d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
           d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
           d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
-          d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
-          d_a11(a11){}
-    template <class ARG1,  class ARG2,  class ARG3,
-              class ARG4,  class ARG5,  class ARG6,
-              class ARG7,  class ARG8,  class ARG9,
-              class ARG10>
-    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
-                           bslmf::MovableRef<Arg11>                 a11,
-                           bslma::Allocator *allocator = 0)
-        : d_allocator(allocator),
-          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
-          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
-          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
-          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
-          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
-          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
-          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
-          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
-          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
-          d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
-          d_a11(MovUtl::move(a11)){}
+          d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)){}
 
     template <class ARG1,  class ARG2,  class ARG3,
               class ARG4,  class ARG5,  class ARG6,
@@ -1950,8 +1788,10 @@ class ConstructTestTypeAlloc {
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11,
-                           const Arg12                             &a12,
-                           bslma::Allocator *allocator = 0)
+                           bslma::Allocator *allocator              = 0,
+                           typename bsl::enable_if<
+                                        NotAllocator<ARG11>::value,
+                                        void>::type * = 0)
         : d_allocator(allocator),
           d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
           d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
@@ -1963,38 +1803,7 @@ class ConstructTestTypeAlloc {
           d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
           d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
           d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
-          d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11)),
-          d_a12(a12){}
-    template <class ARG1,  class ARG2,  class ARG3,
-              class ARG4,  class ARG5,  class ARG6,
-              class ARG7,  class ARG8,  class ARG9,
-              class ARG10, class ARG11>
-    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11,
-                           bslmf::MovableRef<Arg12>                 a12,
-                           bslma::Allocator *allocator = 0)
-        : d_allocator(allocator),
-          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
-          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
-          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
-          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
-          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
-          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
-          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
-          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
-          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
-          d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
-          d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11)),
-          d_a12(MovUtl::move(a12)){}
+          d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11)){}
 
     template <class ARG1,  class ARG2,  class ARG3,
               class ARG4,  class ARG5,  class ARG6,
@@ -2012,9 +1821,11 @@ class ConstructTestTypeAlloc {
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11,
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG12) a12,
-                           const Arg13                             &a13,
-                           bslma::Allocator *allocator = 0)
-        : d_allocator(allocator),
+                           bslma::Allocator *allocator              = 0,
+                           typename bsl::enable_if<
+                                        NotAllocator<ARG12>::value,
+                                        void>::type * = 0)
+      : d_allocator(allocator),
           d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
           d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
           d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
@@ -2026,40 +1837,7 @@ class ConstructTestTypeAlloc {
           d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
           d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
           d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11)),
-          d_a12(BSLS_COMPILERFEATURES_FORWARD(ARG12, a12)),
-          d_a13(a13){}
-    template <class ARG1,  class ARG2,  class ARG3,
-              class ARG4,  class ARG5,  class ARG6,
-              class ARG7,  class ARG8,  class ARG9,
-              class ARG10, class ARG11, class ARG12>
-    ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG4)  a4,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG5)  a5,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG6)  a6,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG7)  a7,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG8)  a8,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG9)  a9,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG10) a10,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG12) a12,
-                           bslmf::MovableRef<Arg13>                 a13,
-                           bslma::Allocator *allocator = 0)
-        : d_allocator(allocator),
-          d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
-          d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
-          d_a3(BSLS_COMPILERFEATURES_FORWARD(ARG3, a3)),
-          d_a4(BSLS_COMPILERFEATURES_FORWARD(ARG4, a4)),
-          d_a5(BSLS_COMPILERFEATURES_FORWARD(ARG5, a5)),
-          d_a6(BSLS_COMPILERFEATURES_FORWARD(ARG6, a6)),
-          d_a7(BSLS_COMPILERFEATURES_FORWARD(ARG7, a7)),
-          d_a8(BSLS_COMPILERFEATURES_FORWARD(ARG8, a8)),
-          d_a9(BSLS_COMPILERFEATURES_FORWARD(ARG9, a9)),
-          d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
-          d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11)),
-          d_a12(BSLS_COMPILERFEATURES_FORWARD(ARG12, a12)),
-          d_a13(MovUtl::move(a13)){}
+          d_a12(BSLS_COMPILERFEATURES_FORWARD(ARG12, a12)){}
 
     template <class ARG1,  class ARG2,  class ARG3,
                       class ARG4,  class ARG5,  class ARG6,
@@ -2079,8 +1857,10 @@ class ConstructTestTypeAlloc {
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11,
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG12) a12,
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG13) a13,
-                           const Arg14                             &a14,
-                           bslma::Allocator *allocator = 0)
+                           bslma::Allocator *allocator              = 0,
+                           typename bsl::enable_if<
+                                        NotAllocator<ARG13>::value,
+                                        void>::type * = 0)
         : d_allocator(allocator),
           d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
           d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
@@ -2094,13 +1874,13 @@ class ConstructTestTypeAlloc {
           d_a10(BSLS_COMPILERFEATURES_FORWARD(ARG10, a10)),
           d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11)),
           d_a12(BSLS_COMPILERFEATURES_FORWARD(ARG12, a12)),
-          d_a13(BSLS_COMPILERFEATURES_FORWARD(ARG13, a13)),
-          d_a14(a14) {}
+          d_a13(BSLS_COMPILERFEATURES_FORWARD(ARG13, a13)){}
+
     template <class ARG1,  class ARG2,  class ARG3,
                       class ARG4,  class ARG5,  class ARG6,
                       class ARG7,  class ARG8,  class ARG9,
                       class ARG10, class ARG11, class ARG12,
-                      class ARG13>
+                      class ARG13, class ARG14>
     ConstructTestTypeAlloc(BSLS_COMPILERFEATURES_FORWARD_REF(ARG1)  a1,
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG2)  a2,
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG3)  a3,
@@ -2114,8 +1894,11 @@ class ConstructTestTypeAlloc {
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG11) a11,
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG12) a12,
                            BSLS_COMPILERFEATURES_FORWARD_REF(ARG13) a13,
-                           bslmf::MovableRef<Arg14>                 a14,
-                           bslma::Allocator *allocator = 0)
+                           BSLS_COMPILERFEATURES_FORWARD_REF(ARG14) a14,
+                           bslma::Allocator *allocator              = 0,
+                           typename bsl::enable_if<
+                                        NotAllocator<ARG14>::value,
+                                        void>::type * = 0)
         : d_allocator(allocator),
           d_a1(BSLS_COMPILERFEATURES_FORWARD(ARG1, a1)),
           d_a2(BSLS_COMPILERFEATURES_FORWARD(ARG2, a2)),
@@ -2130,7 +1913,7 @@ class ConstructTestTypeAlloc {
           d_a11(BSLS_COMPILERFEATURES_FORWARD(ARG11, a11)),
           d_a12(BSLS_COMPILERFEATURES_FORWARD(ARG12, a12)),
           d_a13(BSLS_COMPILERFEATURES_FORWARD(ARG13, a13)),
-          d_a14(MovUtl::move(a14)){}
+          d_a14(BSLS_COMPILERFEATURES_FORWARD(ARG14, a14)){}
 };
 
 // TRAITS

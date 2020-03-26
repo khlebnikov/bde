@@ -34,9 +34,6 @@ BSLS_IDENT("$Id: $")
 //   optional.
 //
 //known limitations :
-//  - move semantics depend on changes to
-//    BloombergLP::bslma::ConstructionUtil::construct to allow for
-//    perfect fowarding of construct arguments
 //  - MoveableRef can not be used where the argument is a deduced type.
 //    This means that rvalue overloads taking optional<OTHER_TYPE>
 //    must use optional<OTHER_TYPE> &&
@@ -108,7 +105,6 @@ BSLS_IDENT("$Id: $")
 //  assert( !optionalInt.has_value());
 //..
 
-#include <bslalg_constructusingallocator.h>
 #include <bslalg_swaputil.h>
 
 #include <bslma_stdallocator.h>
@@ -1096,6 +1092,7 @@ class optional {
     BSLS_KEYWORD_EXPLICIT operator bool()  const  BSLS_KEYWORD_NOEXCEPT;
         // Return 'true' if this object is disengaged, and 'false' Otherwise.
 
+
     template<class ANY_TYPE>
     TYPE value_or(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) rhs) const
     BSLS_KEYWORD_LVREF_QUAL;
@@ -1106,6 +1103,7 @@ class optional {
         // If this->has_value() == true, return a copy of the contained
         // value type object. Otherwise, return the value of rhs converted to
         // value type.
+#ifdef  BSL_COMPILERFEATURES_GUARANTEED_COPY_ELISION
     template<class ANY_TYPE>
     TYPE value_or(bsl::allocator_arg_t,
                   allocator_type,
@@ -1120,9 +1118,8 @@ class optional {
         // value type object created using the provided allocator. Otherwise,
         // return the value of rhs converted to value type and using the
         // allocator prrovided.
-
 #endif
-
+#endif //BSL_COMPILERFEATURES_GUARANTEED_COPY_ELISION
     void swap(optional& other);
         // Efficiently exchange the value of this object with the value of the
         // specified 'other' object.  In effect, performs
@@ -1503,25 +1500,21 @@ class optional<TYPE, false> {
 
   BSLS_KEYWORD_EXPLICIT operator bool()  const  BSLS_KEYWORD_NOEXCEPT;
         // Return 'true' if this object is disengaged, and 'false' otherwise.
-
   template<class ANY_TYPE>
     TYPE value_or(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE)) const
     BSLS_KEYWORD_LVREF_QUAL;
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
   template<class ANY_TYPE>
     TYPE value_or(ANY_TYPE&&) BSLS_KEYWORD_RVREF_QUAL;
+        // If this->has_value() == true, return a copy of the contained
+        // value type object. Otherwise, return the value of rhs converted to
+        // value type.
 #endif
-      // If this->has_value() == true, return a copy of the contained
-      // value type object. Otherwise, return the value of rhs converted to
-      // value type.
 
     void swap(optional& other);
         // Efficiently exchange the value of this object with the value of the
         // specified 'other' object.  In effect, performs
         // 'using bsl::swap; swap(c, other.c);'.
-  private:
-
-
 };
 #endif // __cpp_lib_optional
 // FREE FUNCTIONS
@@ -2125,15 +2118,11 @@ optional<TYPE, UsesBslmaAllocator>::value_or(
 BSLS_KEYWORD_LVREF_QUAL
 {
     if (this->has_value())
-        return BloombergLP::bslalg::AllocatorUtil<TYPE>::construct(
-                               BloombergLP::bslma::Default::defaultAllocator(),
-                               this->value());
+        return TYPE(this->value());
     else
-        return BloombergLP::bslalg::AllocatorUtil<TYPE>::construct(
-                               BloombergLP::bslma::Default::defaultAllocator(),
-                               BSLS_COMPILERFEATURES_FORWARD(ANY_TYPE, rhs));
-
+        return TYPE(BSLS_COMPILERFEATURES_FORWARD(ANY_TYPE, rhs));
 }
+#ifdef BSL_COMPILERFEATURES_GUARANTEED_COPY_ELISION
 template <class TYPE, bool UsesBslmaAllocator>
 template <class ANY_TYPE>
 inline
@@ -2144,16 +2133,16 @@ optional<TYPE, UsesBslmaAllocator>::value_or(bsl::allocator_arg_t,
 BSLS_KEYWORD_LVREF_QUAL
 {
     if (has_value())
-        return BloombergLP::bslalg::AllocatorUtil<TYPE>::construct(
+        return BloombergLP::bslma::ConstructionUtil::make<TYPE>(
                                                          allocator.mechanism(),
                                                          this->value());
     else
-        return BloombergLP::bslalg::AllocatorUtil<TYPE>::construct(
+        return BloombergLP::bslma::ConstructionUtil::make<TYPE>(
                                  allocator.mechanism(),
                                  BSLS_COMPILERFEATURES_FORWARD(ANY_TYPE, rhs));
 
 }
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
+#endif //BSL_COMPILERFEATURES_GUARANTEED_COPY_ELISION
 template <class TYPE, bool UsesBslmaAllocator>
 template <class ANY_TYPE>
 inline
@@ -2162,14 +2151,12 @@ optional<TYPE, UsesBslmaAllocator>::value_or(ANY_TYPE&& rhs)
 BSLS_KEYWORD_RVREF_QUAL
 {
     if (has_value())
-        return BloombergLP::bslalg::AllocatorUtil<TYPE>::construct(
-                               BloombergLP::bslma::Default::defaultAllocator(),
-                               std::move(this->value()));
+        return TYPE(std::move(this->value()));
     else
-        return BloombergLP::bslalg::AllocatorUtil<TYPE>::construct(
-                               BloombergLP::bslma::Default::defaultAllocator(),
-                               std::forward<ANY_TYPE>(rhs));
+        return TYPE(std::forward<ANY_TYPE>(rhs));
 }
+#ifdef BSL_COMPILERFEATURES_GUARANTEED_COPY_ELISION
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
 template <class TYPE, bool UsesBslmaAllocator>
 template <class ANY_TYPE>
 inline
@@ -2180,15 +2167,16 @@ optional<TYPE, UsesBslmaAllocator>::value_or(bsl::allocator_arg_t,
 BSLS_KEYWORD_RVREF_QUAL
 {
     if (has_value())
-        return BloombergLP::bslalg::AllocatorUtil<TYPE>::construct(
+        return BloombergLP::bslma::ConstructionUtil::make<TYPE>(
                                                      allocator.mechanism(),
                                                      std::move(this->value()));
     else
-        return BloombergLP::bslalg::AllocatorUtil<TYPE>::construct(
+        return BloombergLP::bslma::ConstructionUtil::make<TYPE>(
                                                   allocator.mechanism(),
                                                   std::forward<ANY_TYPE>(rhs));
 }
 #endif
+#endif //BSL_COMPILERFEATURES_GUARANTEED_COPY_ELISION
 template <class TYPE, bool UsesBslmaAllocator>
 inline
 optional<TYPE, UsesBslmaAllocator>&
@@ -2460,15 +2448,10 @@ optional<TYPE, false>::value_or(
                                BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) rhs)
 const BSLS_KEYWORD_LVREF_QUAL
 {
-    if (has_value())
-        return BloombergLP::bslalg::AllocatorUtil<TYPE>::construct(
-                               BloombergLP::bslma::Default::defaultAllocator(),
-                               this->value());
+    if (this->has_value())
+        return TYPE(this->value());
     else
-        return BloombergLP::bslalg::AllocatorUtil<TYPE>::construct(
-                               BloombergLP::bslma::Default::defaultAllocator(),
-                               BSLS_COMPILERFEATURES_FORWARD(ANY_TYPE, rhs));
-
+        return TYPE(BSLS_COMPILERFEATURES_FORWARD(ANY_TYPE, rhs));
 }
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
 template <class TYPE>
@@ -2478,13 +2461,9 @@ TYPE
 optional<TYPE, false>::value_or(ANY_TYPE&& rhs) BSLS_KEYWORD_RVREF_QUAL
 {
     if (has_value())
-        return BloombergLP::bslalg::AllocatorUtil<TYPE>::construct(
-                               BloombergLP::bslma::Default::defaultAllocator(),
-                               std::move(this->value()));
+        return TYPE(std::move(this->value()));
     else
-        return BloombergLP::bslalg::AllocatorUtil<TYPE>::construct(
-                               BloombergLP::bslma::Default::defaultAllocator(),
-                               std::forward<ANY_TYPE>(rhs));
+        return TYPE(std::forward<ANY_TYPE>(rhs));
 }
 #endif
 template <class TYPE>
