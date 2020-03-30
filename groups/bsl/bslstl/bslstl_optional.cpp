@@ -16,6 +16,7 @@ namespace bsl {
 nullopt_t nullopt = nullopt_t(2);
 in_place_t in_place;
 #endif // __cpp_lib_optional
+OptNoSuchType optNoSuchType;
 }  // close package namespace
 // todo : update copyright
 // ----------------------------------------------------------------------------
