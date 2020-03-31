@@ -1063,7 +1063,6 @@ class optional {
         // 'TYPE' object. The behaviour is undefined if the 'optional' object
         // is disengaged.
 
-
     TYPE& operator*() BSLS_KEYWORD_LVREF_QUAL;
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
     TYPE&& operator*() BSLS_KEYWORD_RVREF_QUAL;
@@ -1144,7 +1143,6 @@ class optional<TYPE, false> {
 
     // DATA
     optional_data_imp<TYPE>  d_value;       // in-place 'TYPE' object
-
 
   public:
     // TRAITS
