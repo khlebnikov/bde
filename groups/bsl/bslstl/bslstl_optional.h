@@ -1291,7 +1291,8 @@ class optional<TYPE, false> {
     template<class U, class... ARGS>
     explicit optional(bsl::in_place_t, std::initializer_list<U>,
                       BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)...);
-#endif // BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES
+#endif // BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
+#endif //!BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES
 
   ~optional();
       // Destroy this object.
