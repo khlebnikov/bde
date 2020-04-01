@@ -41,14 +41,6 @@ using namespace bsl;
 //                     STANDARD BDE ASSERT TEST FUNCTION
 // ----------------------------------------------------------------------------
 
-#if BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES // $var-args=5
-#error "BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES not supported"
-#endif
-
-#if !defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
-#error "Generalized initializers needed for the current version of bsl::optional"
-#endif
-
 namespace {
 
 int testStatus = 0;
@@ -88,6 +80,11 @@ void aSsErT(bool condition, const char *message, int line)
 #define T_           BSLS_BSLTESTUTIL_T_  // Print a tab (w/o newline).
 #define L_           BSLS_BSLTESTUTIL_L_  // current Line number
 
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_OPERATOR_EXPLICIT
+#define ASSERT_IF_BOOL_CONVERSION(X) ASSERT(X)
+#else
+#define ASSERT_IF_BOOL_CONVERSION(X) ASSERT(X)
+#endif //BSLS_COMPILERFEATURES_SUPPORT_OPERATOR_EXPLICIT
 // ============================================================================
 //                  NEGATIVE-TEST MACRO ABBREVIATIONS
 // ----------------------------------------------------------------------------
@@ -265,7 +262,11 @@ class MyClass1a {
     : d_data(v) {}
 
     MyClass1a(bslmf::MovableRef<MyClass1> v)
-    : d_data(MovUtl::move(v)) {}
+    : d_data(MovUtl::move(MovUtl::access(v))) {}
+#ifndef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+    MyClass1a(bslmf::MovableRef<const MyClass1> v)
+    : d_data(MovUtl::access(v)) {}
+#endif //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
 
     MyClass1a(const MyClass1a& rhs) : d_data(rhs.d_data)
     {
@@ -277,6 +278,13 @@ class MyClass1a {
     {
         ++moveConstructorInvocations;
     }
+#ifndef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+    MyClass1a(bslmf::MovableRef<const MyClass1a> rhs)
+    : d_data(MovUtl::access(rhs).d_data)
+    {
+        ++moveConstructorInvocations;
+    }
+#endif //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
 
   // MANIPULATORS
     MyClass1a& operator=(const MyClass1a& rhs) {
@@ -288,6 +296,12 @@ class MyClass1a {
         d_data.operator=(MovUtl::move(MovUtl::access(rhs).d_data));
         return *this;
     }
+#ifndef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+    MyClass1a& operator=(bslmf::MovableRef<const MyClass1a> rhs) {
+        d_data.operator=(MovUtl::access(rhs).d_data);
+        return *this;
+    }
+#endif //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
 
     // ACCESSORS
     int value() const { return d_data.value(); }
@@ -460,6 +474,21 @@ class MyClass2 {
         }
         moveConstructorInvocations++;
     }
+#ifndef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+    MyClass2(bslmf::MovableRef<const MyClass2> other,
+             bslma::Allocator *a = 0) {
+
+        const MyClass2& otherRef = MovUtl::access(other);
+        d_def.d_value = otherRef.d_def.d_value;
+        if (a) {
+            d_def.d_allocator_p = a;
+        }
+        else {
+            d_def.d_allocator_p = otherRef.d_def.d_allocator_p;
+        }
+        moveConstructorInvocations++;
+    }
+#endif //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
 
     MyClass2(const MyClass1& rhs, bslma::Allocator *a = 0) {
         d_def.d_value = rhs.d_def.d_value;
@@ -473,6 +502,15 @@ class MyClass2 {
         otherRef.d_def.d_value = MOVED_FROM_VAL;
         d_def.d_allocator_p = a;
     }
+#ifndef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+    MyClass2(bslmf::MovableRef<const MyClass1> other,
+             bslma::Allocator *a = 0) {
+
+        const MyClass1& otherRef = MovUtl::access(other);
+        d_def.d_value = otherRef.d_def.d_value;
+        d_def.d_allocator_p = a;
+    }
+#endif //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
 
     ~MyClass2() {
         ASSERT(d_def.d_value != 92);
@@ -496,6 +534,15 @@ class MyClass2 {
         // do not touch allocator!
         return *this;
     }
+
+#ifndef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+    MyClass2& operator=(bslmf::MovableRef<const MyClass2> rhs) {
+        const MyClass2& otherRef = MovUtl::access(rhs);
+        d_def.d_value = otherRef.d_def.d_value;
+        // do not touch allocator!
+        return *this;
+    }
+#endif //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
 
     MyClass2& operator=(int rhs) {
         d_def.d_value = rhs;
@@ -644,7 +691,12 @@ class MyClass2a {
     MyClass2a(const MyClass2& rhs) : d_data(rhs) {}
 
     MyClass2a(bslmf::MovableRef<MyClass2> rhs)
-      : d_data(MovUtl::move(rhs)) {}
+      : d_data(MovUtl::move(MovUtl::access(rhs))) {}
+
+#ifndef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+    MyClass2a(bslmf::MovableRef<const MyClass2> rhs)
+      : d_data(MovUtl::access(rhs)) {}
+#endif //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
 
     MyClass2a(bsl::allocator_arg_t, bslma::Allocator *a, int v)
         : d_data(v, a) {}
@@ -654,8 +706,13 @@ class MyClass2a {
 
     MyClass2a(bsl::allocator_arg_t, bslma::Allocator *a,
               bslmf::MovableRef<MyClass2> v)
-            : d_data(MovUtl::move(v), a) {}
+            : d_data(MovUtl::move(MovUtl::access(v)), a) {}
 
+#ifndef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+    MyClass2a(bsl::allocator_arg_t, bslma::Allocator *a,
+              bslmf::MovableRef<const MyClass2> v)
+            : d_data(MovUtl::access(v), a) {}
+#endif //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
 
     MyClass2a(const MyClass2a& rhs) : d_data(rhs.d_data)
     {
@@ -676,6 +733,14 @@ class MyClass2a {
         ++moveConstructorInvocations;
     }
 
+#ifndef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+    MyClass2a(bslmf::MovableRef<const MyClass2a> rhs)
+        : d_data(MovUtl::access(rhs).d_data)
+    {
+        ++copyConstructorInvocations;
+    }
+#endif //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+
     MyClass2a(bsl::allocator_arg_t,
               bslma::Allocator              *a,
               bslmf::MovableRef<MyClass2a>  rhs)
@@ -684,6 +749,16 @@ class MyClass2a {
         ++moveConstructorInvocations;
     }
 
+#ifndef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+    MyClass2a(bsl::allocator_arg_t,
+              bslma::Allocator              *a,
+              bslmf::MovableRef<const MyClass2a>  rhs)
+        : d_data(MovUtl::access(rhs).d_data, a)
+    {
+        ++copyConstructorInvocations;
+    }
+
+#endif //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
     // MANIPULATORS
     MyClass2a& operator=(const MyClass2a& rhs) {
         d_data.operator=(rhs.d_data);
@@ -695,6 +770,13 @@ class MyClass2a {
         return *this;
     }
 
+#ifndef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+    MyClass2a& operator=(bslmf::MovableRef<const MyClass2a> rhs) {
+        d_data.operator=(MovUtl::access(rhs).d_data);
+        return *this;
+    }
+
+#endif //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
     MyClass2a& operator=(int rhs) {
         d_data.operator=(rhs);
         return *this;
@@ -928,7 +1010,7 @@ class MyClass3 {
               d_def.d_allocator_p = otherRef.d_def.d_allocator_p;
           }
       }
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS
       MyClass3(const MyClass3&& other, bslma::Allocator *a = 0) {
           d_def.d_value = other.d_def.d_value + 20;
           if (a) {
@@ -1006,7 +1088,7 @@ public:
         d_def.d_value = otherRef.d_def.d_value + 10;
         otherRef.d_def.d_value = MOVED_FROM_VAL;
     }
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS
     MyClass4(const MyClass4&& other) {
         d_def.d_value = other.d_def.d_value + 20;
     }
@@ -1470,6 +1552,7 @@ class ConstructTestTypeNoAlloc {
         ++moveConstructorInvocations;
     }
 
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
     ConstructTestTypeNoAlloc(std::initializer_list<int> il)
         : d_ilsum(0)
     {
@@ -1825,7 +1908,7 @@ class ConstructTestTypeNoAlloc {
     {
       for (int i : il) d_ilsum+=i;
     }
-
+#endif //BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
 
 };
 int ConstructTestTypeNoAlloc::copyConstructorInvocations       = 0;
@@ -2526,6 +2609,7 @@ class ConstructTestTypeAlloc {
           d_a13(BSLS_COMPILERFEATURES_FORWARD(ARG13, a13)),
           d_a14(MovUtl::move(a14)){}
 
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
     explicit
     ConstructTestTypeAlloc(std::initializer_list<int> il,
                            bslma::Allocator *allocator = 0)
@@ -3211,7 +3295,7 @@ class ConstructTestTypeAlloc {
     {
       for (int i : il) d_ilsum+=i;
     }
-
+#endif //BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
 };
 
 // TRAITS
@@ -3334,7 +3418,7 @@ class ConstructTestTypeAllocArgT {
 
     ConstructTestTypeAllocArgT(
               bslmf::MovableRef<ConstructTestTypeAllocArgT>  other)
-       : d_allocator_p(other.d_allocator_p),
+       : d_allocator_p(MovUtl::access(other).d_allocator_p),
          d_a1 (MovUtl::move(MovUtl::access(other).d_a1)),
          d_a2 (MovUtl::move(MovUtl::access(other).d_a2)),
          d_a3 (MovUtl::move(MovUtl::access(other).d_a3)),
@@ -3833,7 +3917,8 @@ class ConstructTestTypeAllocArgTIL {
 
     ConstructTestTypeAllocArgTIL(
     bslmf::MovableRef<ConstructTestTypeAllocArgTIL>  other)
-    : d_ilsum(0), d_allocator_p(other.d_allocator_p),
+    : d_ilsum(0),
+    d_allocator_p(MovUtl::access(other).d_allocator_p),
     d_a1 (MovUtl::move(MovUtl::access(other).d_a1)),
     d_a2 (MovUtl::move(MovUtl::access(other).d_a2)),
     d_a3 (MovUtl::move(MovUtl::access(other).d_a3)),
@@ -3890,6 +3975,7 @@ class ConstructTestTypeAllocArgTIL {
             bslma::Allocator     *alloc)
     : d_ilsum(0), d_allocator_p(alloc){}
 
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
     ConstructTestTypeAllocArgTIL(bsl::allocator_arg_t       ,
                                 bslma::Allocator     *alloc,
                                 std::initializer_list<int> il)
@@ -4259,7 +4345,7 @@ class ConstructTestTypeAllocArgTIL {
      {
        for (int i : il) d_ilsum+=i;
      }
-
+#endif // BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
 };
 
 // TRAITS
@@ -4457,20 +4543,26 @@ struct UsesBslmaAllocator<SwappableAA> : bsl::true_type { };
 // helper functions to determine the type of a reference
 bool isConstRef(const MyClass1&)  { return true; }
 bool isConstRef(MyClass1&)        { return false;}
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
 bool isConstRef(MyClass1&&)       { return false;}
 bool isConstRef(const MyClass1&&) { return true; }
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
+#endif //BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS
 bool isRvalueRef(const MyClass1&) { return false;}
 bool isRvalueRef(MyClass1&)       { return false;}
 bool isRvalueRef(MyClass1&&)        { return true; }
 bool isRvalueRef(const MyClass1&&){ return true; }
-#endif // defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
+#endif //BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS
 
 bool isConstRef(const MyClass2&)  { return true; }
 bool isConstRef(MyClass2&)        { return false;}
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
 bool isConstRef(MyClass2&&)       { return false;}
 bool isConstRef(const MyClass2&&) { return true; }
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
+#endif //BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS
 bool isRvalueRef(const MyClass2&) { return false;}
 bool isRvalueRef(MyClass2&)       { return false;}
 bool isRvalueRef(MyClass2&&)        { return true; }
@@ -4771,7 +4863,7 @@ void bslstl_optional_test1()
     bsl::optional<MyClass2> X(bsl::allocator_arg, &ta);
     ASSERT(X.get_allocator() == &ta);
     ASSERT(!X.has_value());
-    ASSERT(!X);
+    ASSERT_IF_BOOL_CONVERSION(!X);
 
     X.emplace(V2);
     ASSERT(X.value().d_def.d_allocator_p == &ta);
@@ -4784,7 +4876,7 @@ void bslstl_optional_test1()
     bsl::optional<int> Y = 5;
     ASSERT(Y.has_value());
     ASSERT(Y.value() == 5);
-    ASSERT(Y);
+    ASSERT_IF_BOOL_CONVERSION(Y);
 
 }
 void bslstl_optional_test2()
@@ -4880,28 +4972,28 @@ void bslstl_optional_test2()
             Obj mX;
             const Obj& X = mX;
             ASSERT(!X.has_value());
-            ASSERT(!X);
+            ASSERT_IF_BOOL_CONVERSION(!X);
         }
         {
             Obj mX = Obj(nullopt);
             const Obj& X = mX;
             ASSERT(!X.has_value());
-            ASSERT(!X);
+            ASSERT_IF_BOOL_CONVERSION(!X);
 
             mX.emplace(MyClass1(5));
             ASSERT(mX.has_value());
-            ASSERT(mX);
+            ASSERT_IF_BOOL_CONVERSION(mX);
             ASSERT(mX.value() == MyClass1(5));
 
             mX.reset();
             ASSERT(!X.has_value());
-            ASSERT(!X);
+            ASSERT_IF_BOOL_CONVERSION(!X);
         }
         int dI;
         {
             Obj mX = MyClass1(5);
             ASSERT(mX.has_value());
-            ASSERT(mX);
+            ASSERT_IF_BOOL_CONVERSION(mX);
             dI = ValueType::destructorInvocations;
         }
         ASSERT(dI == ValueType::destructorInvocations -1);
@@ -4921,7 +5013,7 @@ void bslstl_optional_test2()
             Obj mX;
             const Obj& X = mX;
             ASSERT(!X.has_value());
-            ASSERT(!X);
+            ASSERT_IF_BOOL_CONVERSION(!X);
             ASSERT(X.get_allocator() == &da);
             ASSERT(dam.isTotalSame());
 
@@ -4932,25 +5024,25 @@ void bslstl_optional_test2()
             Obj mX = Obj(nullopt);
             const Obj& X = mX;
             ASSERT(!X.has_value());
-            ASSERT(!X);
+            ASSERT_IF_BOOL_CONVERSION(!X);
             ASSERT(X.get_allocator() == &da);
             ASSERT(dam.isTotalSame());
 
             mX.emplace(MyClass1(5));
             ASSERT(mX.has_value());
-            ASSERT(mX);
+            ASSERT_IF_BOOL_CONVERSION(mX);
             ASSERT(mX.value() == MyClass1(5));
             ASSERT(X.value().d_def.d_allocator_p == &da);
 
             mX.reset();
             ASSERT(!X.has_value());
-            ASSERT(!X);
+            ASSERT_IF_BOOL_CONVERSION(!X);
         }
         int dI;
         {
             Obj mX = MyClass1(5);
             ASSERT(mX.has_value());
-            ASSERT(mX);
+            ASSERT_IF_BOOL_CONVERSION(mX);
             dI = ValueType::destructorInvocations;
         }
         ASSERT(dI == ValueType::destructorInvocations -1);
@@ -5043,28 +5135,23 @@ void bslstl_optional_test3()
             Obj mX;
             const Obj& X = mX;
             ASSERT(!X.has_value());
-            ASSERT(!X);
         }
         {
             Obj mX = Obj(nullopt);
             const Obj& X = mX;
             ASSERT(!X.has_value());
-            ASSERT(!X);
 
             mX.emplace(MyClass1(5));
             ASSERT(mX.has_value());
-            ASSERT(mX);
             ASSERT(mX.value() == MyClass1(5));
 
             mX.reset();
             ASSERT(!X.has_value());
-            ASSERT(!X);
         }
         int dI;
         {
             Obj mX = MyClass1(5);
             ASSERT(mX.has_value());
-            ASSERT(mX);
             dI = ValueType::destructorInvocations;
         }
         ASSERT(dI == ValueType::destructorInvocations -1);
@@ -5084,7 +5171,6 @@ void bslstl_optional_test3()
             Obj mX;
             const Obj& X = mX;
             ASSERT(!X.has_value());
-            ASSERT(!X);
             ASSERT(X.get_allocator() == &da);
             ASSERT(dam.isTotalSame());
 
@@ -5095,25 +5181,21 @@ void bslstl_optional_test3()
             Obj mX = Obj(nullopt);
             const Obj& X = mX;
             ASSERT(!X.has_value());
-            ASSERT(!X);
             ASSERT(X.get_allocator() == &da);
             ASSERT(dam.isTotalSame());
 
             mX.emplace(MyClass1(5));
             ASSERT(mX.has_value());
-            ASSERT(mX);
             ASSERT(mX.value() == MyClass1(5));
             ASSERT(X.value().d_def.d_allocator_p == &da);
 
             mX.reset();
             ASSERT(!X.has_value());
-            ASSERT(!X);
         }
         int dI;
         {
             Obj mX = MyClass1(5);
             ASSERT(mX.has_value());
-            ASSERT(mX);
             dI = ValueType::destructorInvocations;
         }
         ASSERT(dI == ValueType::destructorInvocations -1);
@@ -5175,20 +5257,20 @@ void bslstl_optional_test4()
         {
             Obj mX;
             const Obj& X = mX;
-            ASSERT(!X);
+            ASSERT_IF_BOOL_CONVERSION(!X);
             ASSERT(false == X.has_value());
 
             mX.emplace(1);
-            ASSERT(mX);
+            ASSERT_IF_BOOL_CONVERSION(mX);
             ASSERT(true == mX.has_value());
 
             mX.reset();
-            ASSERT(!mX);
+            ASSERT_IF_BOOL_CONVERSION(!mX);
             ASSERT(false == mX.has_value());
         }
         {
             Obj mX(2);
-            ASSERT(mX);
+            ASSERT_IF_BOOL_CONVERSION(mX);
             ASSERT(true == mX.has_value());
         }
     }
@@ -5204,20 +5286,20 @@ void bslstl_optional_test4()
         {
             Obj mX;
             const Obj& X = mX;
-            ASSERT(!X);
+            ASSERT_IF_BOOL_CONVERSION(!X);
             ASSERT(false == X.has_value());
 
             mX.emplace(V2);
-            ASSERT(mX);
+            ASSERT_IF_BOOL_CONVERSION(mX);
             ASSERT(true == mX.has_value());
 
-             mX.reset();
-            ASSERT(!mX);
+            mX.reset();
+            ASSERT_IF_BOOL_CONVERSION(!mX);
             ASSERT(false == mX.has_value());
         }
         {
             Obj mX(V2);
-            ASSERT(mX);
+            ASSERT_IF_BOOL_CONVERSION(mX);
             ASSERT(true == mX.has_value());
         }
     }
@@ -5395,7 +5477,7 @@ void bslstl_optional_test6()
     //   example, the constness is preserved:
     //
     //       Cobj temp = Cobj("s");
-    //       bsl::string = std::move(temp).value();
+    //       bsl::string = MovUtl::move(temp).value();
     //
     //    The tests have been written to take this issue into account.
     //
@@ -5480,7 +5562,7 @@ void bslstl_optional_test6()
             ASSERT(!isConstRef(mX.value()));
             ASSERT(isConstRef(X.value()));
             ASSERT(isConstRef(cmX.value()));
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS
             ASSERT(!isRvalueRef(mX.value()));
             ASSERT(isRvalueRef(Obj(3).value()));
             ASSERT(isRvalueRef(ObjC(4).value()));
@@ -5530,7 +5612,7 @@ void bslstl_optional_test6()
         ASSERT(!isConstRef(mX.value()));
         ASSERT(isConstRef(X.value()));
         ASSERT(isConstRef(cmX.value()));
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS
         ASSERT(!isRvalueRef(mX.value()));
         ASSERT(isRvalueRef(Obj(3).value()));
         ASSERT(isRvalueRef(ObjC(4).value()));
@@ -5622,9 +5704,9 @@ void bslstl_optional_test7()
             ASSERT(mX.value().value() == 3);
             ASSERT(i2.value() == 3);
 
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS
             Obj source(4);
-            const ValueType &i3 = std::move(source).value_or(77);
+            const ValueType &i3 = MovUtl::move(source).value_or(77);
             ASSERT(i3.value() == 4);
             ASSERT(source.value().value() == MOVED_FROM_VAL);
 #endif  //defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
@@ -5657,9 +5739,9 @@ void bslstl_optional_test7()
             ASSERT(i2.value() == 88);
             ASSERT(i2.d_def.d_allocator_p == 0);
 
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS
             Obj source(4);
-            const ValueType &i3 = std::move(source).value_or(77);
+            const ValueType &i3 = MovUtl::move(source).value_or(77);
             ASSERT(i3 == 4);
             ASSERT(source.value().value() == MOVED_FROM_VAL);
 #endif  //defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
@@ -5680,9 +5762,9 @@ void bslstl_optional_test7()
            ASSERT(i2.value().value() == 8);
            ASSERT(i2.d_def.d_allocator_p == &ta);
 
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS
             Obj source(4);
-            const ValueType &i3 = std::move(source).value_or(
+            const ValueType &i3 = MovUtl::move(source).value_or(
                                                 bsl::allocator_arg, &ta, val);
             ASSERT(i3 == 4);
             ASSERT(source.value().value() == MOVED_FROM_VAL);
@@ -6303,7 +6385,7 @@ void bslstl_optional_test10()
         TEST_EMPLACE((VA1, MovUtl::move(VA2),
                     VA3, MovUtl::move(VA4),
                     VA5));
-
+/*
         TEST_EMPLACE((MovUtl::move(VA1), VA2,
                     MovUtl::move(VA3), VA4,
                     MovUtl::move(VA5), VA6));
@@ -6326,7 +6408,7 @@ void bslstl_optional_test10()
                     MovUtl::move(VA7), VA8));
         TEST_EMPLACE((VA1, MovUtl::move(VA2),
                     VA3, MovUtl::move(VA4),
-                    VA5, MovUtl::move(VA6),
+                    VA5, MovUtl::move(VA6),VA6
                     VA7, MovUtl::move(VA8)));
 
         TEST_EMPLACE((MovUtl::move(VA1), VA2,
@@ -6545,8 +6627,9 @@ void bslstl_optional_test10()
                            VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
                            VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
                            VA13));
+*/
     }
-#if defined(BSLSTL_OPTIONAL_TEST_BAD__EMPLACE)
+#ifdef BSLSTL_OPTIONAL_TEST_BAD__EMPLACE
     if (veryVerbose) printf("\tUsing 'ConstructTestTypeNoAlloc'.\n");
     {
         typedef ConstructTestTypeNoAlloc                  ValueType;
@@ -6600,6 +6683,7 @@ void bslstl_optional_test10()
 }
 void bslstl_optional_test11()
 {
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
     // --------------------------------------------------------------------
     // TESTING TESTING INITIALIZER LIST 'emplace' METHOD
     //   This test will verify that the initializer list 'emplace' method works
@@ -6662,7 +6746,7 @@ void bslstl_optional_test11()
         TEST_EMPLACE(({1,2,3}, VA1, MovUtl::move(VA2),
                     VA3, MovUtl::move(VA4),
                     VA5));
-
+/*
         TEST_EMPLACE(({1,2,3}, MovUtl::move(VA1), VA2,
                     MovUtl::move(VA3), VA4,
                     MovUtl::move(VA5), VA6));
@@ -6750,6 +6834,7 @@ void bslstl_optional_test11()
                     VA9, MovUtl::move(VA10),
                     VA11, MovUtl::move(VA12),
                     VA13));
+*/
     }
     if (veryVerbose) printf("\tUsing allocator aware 'value_type'.\n");
     {
@@ -6804,7 +6889,7 @@ void bslstl_optional_test11()
                            ({1,2,3},
                             VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
                             VA5));
-
+/*
         TEST_EMPLACE_ARGTIL((bsl::allocator_arg, &oa, {1,2,3},
                              MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
                              MovUtl::move(VA5), VA6),
@@ -6933,7 +7018,9 @@ void bslstl_optional_test11()
                             VA5, MovUtl::move(VA6), VA7, MovUtl::move(VA8),
                             VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
                             VA13));
+*/
     }
+#endif // BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
 }
 void bslstl_optional_test12()
 {
@@ -7185,7 +7272,7 @@ void bslstl_optional_test13()
         {
             ObjC mX = ValueType(0);
             ValueType vi = ValueType(1);
-  #if defined(BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST)
+  #ifdef BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST
             mX = vi; // this should not compile
   #endif //BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST
         }
@@ -7340,7 +7427,7 @@ void bslstl_optional_test13()
         {
             ObjC mX = ValueType(0);
             ValueType vi = ValueType(1);
-#if defined(BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST)
+#ifdef BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST
             mX = vi; // this should not compile
 #endif //BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST
         }
@@ -7386,7 +7473,7 @@ void bslstl_optional_test14()
                     "\nTESTING 'operator=(non_optional_type)' MEMBER FUNCTION"
                     "\n======================================================"
                     "\n");
-#if defined(BSLSTL_OPTIONAL_TEST_BAD_EQUAL_NONOPT)
+#ifdef BSLSTL_OPTIONAL_TEST_BAD_EQUAL_NONOPT
 
     if (veryVerbose) printf("\tUsing 'MyClass1b'.\n");
     {
@@ -7508,19 +7595,21 @@ void bslstl_optional_test15()
     if (veryVerbose) printf("\tUsing non allocator aware 'value_type'.\n");
     {
         typedef MyClass1a                  ValueType;
-        typedef const ValueType             ConstValueType;
         typedef bsl::optional<ValueType>    Obj;
-        typedef bsl::optional<ConstValueType> ObjC;
-
         typedef MyClass1                   OtherType;
-        typedef const OtherType             ConstOtherType;
         typedef bsl::optional<OtherType>    OtherObj;
+
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+        typedef const ValueType             ConstValueType;
+        typedef bsl::optional<ConstValueType> ObjC;
+        typedef const OtherType             ConstOtherType;
         typedef bsl::optional<ConstOtherType> OtherObjC;
 
         typedef const Obj CObj;
         typedef const ObjC CObjC;
         typedef const OtherObj COtherObj;
         typedef const OtherObjC COtherObjC;
+#endif //BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
         if (veryVeryVerbose) printf("\t\t Using an engaged 'optional' as the"
                                     " test object.\n");
         {
@@ -7531,6 +7620,10 @@ void bslstl_optional_test15()
 
             mX.emplace(2);
             TEST_EQUAL_EMPTY(mX, OtherObj);
+
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+            // C++03 MovableRef isn't const friendly which will make these
+            // tests fail
 
             mX.emplace(2);
             TEST_EQUAL_EMPTY(mX, CObj);
@@ -7549,6 +7642,7 @@ void bslstl_optional_test15()
 
             mX.emplace(2);
             TEST_EQUAL_EMPTY(mX, COtherObjC);
+#endif //BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
 
             mX.emplace(2);
             TEST_EQUAL_EMPTY_MOVE(mX, Obj);
@@ -7556,6 +7650,9 @@ void bslstl_optional_test15()
             mX.emplace(2);
             TEST_EQUAL_EMPTY_MOVE(mX, OtherObj);
 
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+            // C++03 MovableRef isn't const friendly which will make these
+            // tests fail
             mX.emplace(2);
             TEST_EQUAL_EMPTY_MOVE(mX, CObj);
 
@@ -7574,8 +7671,17 @@ void bslstl_optional_test15()
             mX.emplace(2);
             TEST_EQUAL_EMPTY_MOVE(mX, COtherObjC);
 
+#endif //BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+
             mX.emplace(2);
             TEST_EQUAL_ENGAGED(mX, Obj, ValueType, 7);
+
+            mX.emplace(2);
+            TEST_EQUAL_ENGAGED(mX, OtherObj, OtherType, 7);
+
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+            // C++03 MovableRef isn't const friendly which will make these
+            // tests fail
 
             mX.emplace(2);
             TEST_EQUAL_ENGAGED(mX, CObj, ValueType, 7);
@@ -7587,9 +7693,6 @@ void bslstl_optional_test15()
             TEST_EQUAL_ENGAGED(mX, CObjC, ValueType, 7);
 
             mX.emplace(2);
-            TEST_EQUAL_ENGAGED(mX, OtherObj, OtherType, 7);
-
-            mX.emplace(2);
             TEST_EQUAL_ENGAGED(mX, COtherObj, OtherType, 7);
 
             mX.emplace(2);
@@ -7597,10 +7700,18 @@ void bslstl_optional_test15()
 
             mX.emplace(2);
             TEST_EQUAL_ENGAGED(mX, COtherObjC, OtherType,  7);
+#endif //BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
 
             mX.emplace(2);
             TEST_EQUAL_ENGAGED_MOVE(mX, Obj, ValueType, 7, MOVED_FROM_VAL);
 
+            mX.emplace(2);
+            TEST_EQUAL_ENGAGED_MOVE(mX, OtherObj, OtherType, 7,
+                                    MOVED_FROM_VAL);
+
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+            // C++03 MovableRef isn't const friendly which will make these
+            // tests fail
             mX.emplace(2);
             TEST_EQUAL_ENGAGED_MOVE(mX, CObj, ValueType, 7, 7);
 
@@ -7610,9 +7721,6 @@ void bslstl_optional_test15()
             mX.emplace(2);
             TEST_EQUAL_ENGAGED_MOVE(mX, CObjC, ValueType, 7, 7);
 
-            mX.emplace(2);
-            TEST_EQUAL_ENGAGED_MOVE(mX, OtherObj, OtherType, 7,
-                                    MOVED_FROM_VAL);
 
             mX.emplace(2);
             TEST_EQUAL_ENGAGED_MOVE(mX, COtherObj, OtherType, 7, 7);
@@ -7622,6 +7730,8 @@ void bslstl_optional_test15()
 
             mX.emplace(2);
             TEST_EQUAL_ENGAGED_MOVE(mX, COtherObjC, OtherType,  7, 7);
+#endif //BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+
         }
         if (veryVeryVerbose) printf("\t\tUsing a disengaged 'optional' as "
                                     "the test object.\n");
@@ -7634,6 +7744,9 @@ void bslstl_optional_test15()
             mX.reset();
             TEST_EQUAL_EMPTY(mX, OtherObj);
 
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+            // C++03 MovableRef isn't const friendly which will make these
+            // tests fail
             mX.reset();
             TEST_EQUAL_EMPTY(mX, CObj);
 
@@ -7651,6 +7764,7 @@ void bslstl_optional_test15()
 
             mX.reset();
             TEST_EQUAL_EMPTY(mX, COtherObjC);
+#endif //BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
 
             mX.reset();
             TEST_EQUAL_EMPTY_MOVE(mX, Obj);
@@ -7658,6 +7772,9 @@ void bslstl_optional_test15()
             mX.reset();
             TEST_EQUAL_EMPTY_MOVE(mX, OtherObj);
 
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+            // C++03 MovableRef isn't const friendly which will make these
+            // tests fail
             mX.reset();
             TEST_EQUAL_EMPTY_MOVE(mX, CObj);
 
@@ -7675,10 +7792,17 @@ void bslstl_optional_test15()
 
             mX.reset();
             TEST_EQUAL_EMPTY_MOVE(mX, COtherObjC);
+#endif //BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
 
             mX.reset();
             TEST_EQUAL_ENGAGED(mX, Obj, ValueType, 7);
 
+            mX.reset();
+            TEST_EQUAL_ENGAGED(mX, OtherObj, OtherType, 7);
+
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+            // C++03 MovableRef isn't const friendly which will make these
+            // tests fail
             mX.reset();
             TEST_EQUAL_ENGAGED(mX, CObj, ValueType, 7);
 
@@ -7689,9 +7813,6 @@ void bslstl_optional_test15()
             TEST_EQUAL_ENGAGED(mX, CObjC, ValueType, 7);
 
             mX.reset();
-            TEST_EQUAL_ENGAGED(mX, OtherObj, OtherType, 7);
-
-            mX.reset();
             TEST_EQUAL_ENGAGED(mX, COtherObj, OtherType, 7);
 
             mX.reset();
@@ -7699,9 +7820,17 @@ void bslstl_optional_test15()
 
             mX.reset();
             TEST_EQUAL_ENGAGED(mX, COtherObjC, OtherType,  7);
+#endif //BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
 
             mX.reset();
             TEST_EQUAL_ENGAGED_MOVE(mX, Obj, ValueType, 7, MOVED_FROM_VAL);
+
+            mX.reset();
+            TEST_EQUAL_ENGAGED_MOVE(mX, OtherObj, OtherType, 7,
+                                    MOVED_FROM_VAL);
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+            // C++03 MovableRef isn't const friendly which will make these
+            // tests fail
             mX.reset();
             TEST_EQUAL_ENGAGED_MOVE(mX, CObj, ValueType, 7, 7);
 
@@ -7711,9 +7840,6 @@ void bslstl_optional_test15()
             mX.reset();
             TEST_EQUAL_ENGAGED_MOVE(mX, CObjC, ValueType, 7, 7);
 
-            mX.reset();
-            TEST_EQUAL_ENGAGED_MOVE(mX, OtherObj, OtherType, 7,
-                                    MOVED_FROM_VAL);
 
             mX.reset();
             TEST_EQUAL_ENGAGED_MOVE(mX, COtherObj, OtherType, 7, 7);
@@ -7723,6 +7849,7 @@ void bslstl_optional_test15()
 
             mX.reset();
             TEST_EQUAL_ENGAGED_MOVE(mX, COtherObjC, OtherType,  7, 7);
+#endif //BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
         }
     }
     if (veryVerbose) printf("\tUsing allocator aware 'value_type'\n");
@@ -7732,19 +7859,23 @@ void bslstl_optional_test15()
         bslma::TestAllocator ta("third", veryVeryVeryVerbose);
 
         typedef MyClass2a                  ValueType;
-        typedef const ValueType             ConstValueType;
         typedef bsl::optional<ValueType>    Obj;
-        typedef bsl::optional<ConstValueType> ObjC;
 
         typedef MyClass2                   OtherType;
-        typedef const OtherType             ConstOtherType;
         typedef bsl::optional<OtherType>    OtherObj;
+
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+        typedef const ValueType             ConstValueType;
+        typedef bsl::optional<ConstValueType> ObjC;
+        typedef const OtherType             ConstOtherType;
         typedef bsl::optional<ConstOtherType> OtherObjC;
 
         typedef const Obj CObj;
         typedef const ObjC CObjC;
         typedef const OtherObj COtherObj;
         typedef const OtherObjC COtherObjC;
+#endif //BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+
         if (veryVeryVerbose) printf("\t\tUsing an engaged 'optional' as the"
                                     " test object.\n");
 
@@ -7757,6 +7888,9 @@ void bslstl_optional_test15()
             mX.emplace(2);
             TEST_EQUAL_EMPTY_A(mX, OtherObj);
 
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+            // C++03 MovableRef isn't const friendly which will make these
+            // tests fail
             mX.emplace(2);
             TEST_EQUAL_EMPTY_A(mX, CObj);
 
@@ -7774,6 +7908,7 @@ void bslstl_optional_test15()
 
             mX.emplace(2);
             TEST_EQUAL_EMPTY_A(mX, COtherObjC);
+#endif //BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
 
             mX.emplace(2);
             TEST_EQUAL_EMPTY_MOVE_A(mX, Obj);
@@ -7781,6 +7916,9 @@ void bslstl_optional_test15()
             mX.emplace(2);
             TEST_EQUAL_EMPTY_MOVE_A(mX, OtherObj);
 
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+            // C++03 MovableRef isn't const friendly which will make these
+            // tests fail
             mX.emplace(2);
             TEST_EQUAL_EMPTY_MOVE_A(mX, CObj);
 
@@ -7798,10 +7936,16 @@ void bslstl_optional_test15()
 
             mX.emplace(2);
             TEST_EQUAL_EMPTY_MOVE_A(mX, COtherObjC);
+#endif //BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
 
             mX.emplace(2);
             TEST_EQUAL_ENGAGED_A(mX, Obj, ValueType, 7);
 
+            mX.emplace(2);
+            TEST_EQUAL_ENGAGED_A(mX, OtherObj, OtherType, 7);
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+            // C++03 MovableRef isn't const friendly which will make these
+            // tests fail
             mX.emplace(2);
             TEST_EQUAL_ENGAGED_A(mX, CObj, ValueType, 7);
 
@@ -7812,9 +7956,6 @@ void bslstl_optional_test15()
             TEST_EQUAL_ENGAGED_A(mX, CObjC, ValueType, 7);
 
             mX.emplace(2);
-            TEST_EQUAL_ENGAGED_A(mX, OtherObj, OtherType, 7);
-
-            mX.emplace(2);
             TEST_EQUAL_ENGAGED_A(mX, COtherObj, OtherType, 7);
 
             mX.emplace(2);
@@ -7822,10 +7963,17 @@ void bslstl_optional_test15()
 
             mX.emplace(2);
             TEST_EQUAL_ENGAGED_A(mX, COtherObjC, OtherType,  7);
+#endif //BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
 
             mX.emplace(2);
             TEST_EQUAL_ENGAGED_MOVE_A(mX, Obj, ValueType, 7, MOVED_FROM_VAL);
 
+            mX.emplace(2);
+            TEST_EQUAL_ENGAGED_MOVE_A(mX, OtherObj, OtherType, 7,
+                                      MOVED_FROM_VAL);
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+            // C++03 MovableRef isn't const friendly which will make these
+            // tests fail
             mX.emplace(2);
             TEST_EQUAL_ENGAGED_MOVE_A(mX, CObj, ValueType, 7, 7);
 
@@ -7836,10 +7984,6 @@ void bslstl_optional_test15()
             TEST_EQUAL_ENGAGED_MOVE_A(mX, CObjC, ValueType, 7, 7);
 
             mX.emplace(2);
-            TEST_EQUAL_ENGAGED_MOVE_A(mX, OtherObj, OtherType, 7,
-                                      MOVED_FROM_VAL);
-
-            mX.emplace(2);
             TEST_EQUAL_ENGAGED_MOVE_A(mX, COtherObj, OtherType, 7, 7);
 
             mX.emplace(2);
@@ -7847,6 +7991,7 @@ void bslstl_optional_test15()
 
             mX.emplace(2);
             TEST_EQUAL_ENGAGED_MOVE_A(mX, COtherObjC, OtherType,  7, 7);
+#endif //BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
         }
         if (veryVeryVerbose) printf("\t\tUsing a disengaged 'optional' as "
                                     "the test object.\n");
@@ -7859,6 +8004,9 @@ void bslstl_optional_test15()
             mX.reset();
             TEST_EQUAL_EMPTY_A(mX, OtherObj);
 
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+            // C++03 MovableRef isn't const friendly which will make these
+            // tests fail
             mX.reset();
             TEST_EQUAL_EMPTY_A(mX, CObj);
 
@@ -7869,13 +8017,11 @@ void bslstl_optional_test15()
             TEST_EQUAL_EMPTY_A(mX, ObjC);
 
             mX.reset();
-            TEST_EQUAL_EMPTY_A(mX, OtherObjC);
-
-            mX.reset();
             TEST_EQUAL_EMPTY_A(mX, CObjC);
 
             mX.reset();
             TEST_EQUAL_EMPTY_A(mX, COtherObjC);
+#endif //BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
 
             mX.reset();
             TEST_EQUAL_EMPTY_MOVE_A(mX, Obj);
@@ -7883,6 +8029,9 @@ void bslstl_optional_test15()
             mX.reset();
             TEST_EQUAL_EMPTY_MOVE_A(mX, OtherObj);
 
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+            // C++03 MovableRef isn't const friendly which will make these
+            // tests fail
             mX.reset();
             TEST_EQUAL_EMPTY_MOVE_A(mX, CObj);
 
@@ -7893,17 +8042,21 @@ void bslstl_optional_test15()
             TEST_EQUAL_EMPTY_MOVE_A(mX, ObjC);
 
             mX.reset();
-            TEST_EQUAL_EMPTY_MOVE_A(mX, OtherObjC);
-
-            mX.reset();
             TEST_EQUAL_EMPTY_MOVE_A(mX, CObjC);
 
             mX.reset();
             TEST_EQUAL_EMPTY_MOVE_A(mX, COtherObjC);
+#endif //BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
 
             mX.reset();
             TEST_EQUAL_ENGAGED_A(mX, Obj, ValueType, 7);
 
+            mX.reset();
+            TEST_EQUAL_ENGAGED_A(mX, OtherObj, OtherType, 7);
+
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+            // C++03 MovableRef isn't const friendly which will make these
+            // tests fail
             mX.reset();
             TEST_EQUAL_ENGAGED_A(mX, CObj, ValueType, 7);
 
@@ -7914,9 +8067,6 @@ void bslstl_optional_test15()
             TEST_EQUAL_ENGAGED_A(mX, CObjC, ValueType, 7);
 
             mX.reset();
-            TEST_EQUAL_ENGAGED_A(mX, OtherObj, OtherType, 7);
-
-            mX.reset();
             TEST_EQUAL_ENGAGED_A(mX, COtherObj, OtherType, 7);
 
             mX.reset();
@@ -7925,9 +8075,18 @@ void bslstl_optional_test15()
             mX.reset();
             TEST_EQUAL_ENGAGED_A(mX, COtherObjC, OtherType,  7);
 
+#endif //BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+
             mX.reset();
             TEST_EQUAL_ENGAGED_MOVE_A(mX, Obj, ValueType, 7, MOVED_FROM_VAL);
 
+            mX.reset();
+            TEST_EQUAL_ENGAGED_MOVE_A(mX, OtherObj, OtherType, 7,
+                                      MOVED_FROM_VAL);
+
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+            // C++03 MovableRef isn't const friendly which will make these
+            // tests fail
             mX.reset();
             TEST_EQUAL_ENGAGED_MOVE_A(mX, CObj, ValueType, 7, 7);
 
@@ -7938,10 +8097,6 @@ void bslstl_optional_test15()
             TEST_EQUAL_ENGAGED_MOVE_A(mX, CObjC, ValueType, 7, 7);
 
             mX.reset();
-            TEST_EQUAL_ENGAGED_MOVE_A(mX, OtherObj, OtherType, 7,
-                                      MOVED_FROM_VAL);
-
-            mX.reset();
             TEST_EQUAL_ENGAGED_MOVE_A(mX, COtherObj, OtherType, 7, 7);
 
             mX.reset();
@@ -7949,6 +8104,7 @@ void bslstl_optional_test15()
 
             mX.reset();
             TEST_EQUAL_ENGAGED_MOVE_A(mX, COtherObjC, OtherType,  7, 7);
+#endif //BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
         }
     }
     {
@@ -7960,7 +8116,7 @@ void bslstl_optional_test15()
 
         ObjC mX = ValueType(0);
         OtherType i = OtherType(3);
-#if defined(BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST)
+#ifdef BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST
         mX = i;
 #endif //BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST
     }
@@ -7973,7 +8129,7 @@ void bslstl_optional_test15()
 
         ObjC mX = ValueType(0);
         OtherType i = OtherType(3);
-#if defined(BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST)
+#ifdef BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST
         mX = i;
 #endif //BSLSTL_OPTIONAL_TEST_BAD_EQUAL_CONST
      }
@@ -8020,7 +8176,7 @@ void bslstl_optional_test16()
     if (verbose) printf(
                     "\nTESTING 'operator=(optional_type)' MEMBER FUNCTION"
                     "\n==================================================\n");
-#if defined(BSLSTL_OPTIONAL_TEST_BAD_EQUAL_OPT)
+#ifdef BSLSTL_OPTIONAL_TEST_BAD_EQUAL_OPT
 
     if (veryVerbose) printf("\tUsing 'MyClass1b'.\n");
     {
@@ -9800,7 +9956,7 @@ void test_copy_helper()
               (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
                VA5)
              );
-
+/*
     TEST_COPY(VALTYPE, OPTYPE,
               (bsl::in_place,
                MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
@@ -9967,6 +10123,7 @@ void test_copy_helper()
                VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
                VA13, MovUtl::move(VA14))
               );
+*/
 }
 // helper function that invokes 'TEST_COPYA' macro for various number of
 // constructor variadic arguments, and for a combination of lvalues and rvalue
@@ -10040,7 +10197,7 @@ void test_copyad_helper()
                (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
                 VA5),
                &da);
-
+/*
     TEST_COPYA(VALTYPE, OPTYPE,
                (bsl::in_place,
                 MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
@@ -10207,7 +10364,7 @@ void test_copyad_helper()
                 VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
                 VA13, MovUtl::move(VA14)),
                &da);
-
+*/
 }
 // helper function that invokes 'TEST_COPYA' macro for various number of
 // constructor variadic arguments, adjusted for 'UsesAllocatorArgT' type
@@ -10287,7 +10444,7 @@ void test_copyad_argt_helper()
                 VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
                 VA5),
                &da);
-
+/*
     TEST_COPYA(VALTYPE, OPTYPE,
                (bsl::in_place,
                 MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
@@ -10472,7 +10629,7 @@ void test_copyad_argt_helper()
                 VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
                 VA13, MovUtl::move(VA14)),
                &da);
-
+*/
 }
 // helper function that invokes 'TEST_COPYA' macro for various number of
 // constructor variadic arguments, and for a combination of lvalues and rvalue
@@ -10549,7 +10706,7 @@ void test_copya_helper()
                (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
                 VA5),
                &oa);
-
+/*
     TEST_COPYA(VALTYPE, OPTYPE,
                (bsl::allocator_arg, &oa, bsl::in_place,
                 MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
@@ -10716,6 +10873,7 @@ void test_copya_helper()
                 VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
                 VA13, MovUtl::move(VA14)),
                &oa);
+*/
 }
 // helper function that invokes 'TEST_COPYA' macro for various number of
 // constructor variadic arguments, adjusted for 'UsesAllocatorArgT' type
@@ -10799,7 +10957,7 @@ void test_copya_argt_helper()
                 VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
                 VA5),
                &oa);
-
+/*
     TEST_COPYA(VALTYPE, OPTYPE,
                (bsl::allocator_arg, &oa, bsl::in_place,
                 MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
@@ -10984,7 +11142,9 @@ void test_copya_argt_helper()
                 VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
                 VA13, MovUtl::move(VA14)),
                &oa);
+*/
 }
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
 // helper function that invokes 'TEST_COPY' macro for 'initializer_list' and
 // various number of constructor variadic arguments, and for a combination
 // of lvalues and rvalue such that each argument position is tested
@@ -11052,7 +11212,7 @@ void test_copyil_helper()
             ({1,2,3}, VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
              VA5)
            );
-
+/*
   TEST_COPY(VALTYPE, OPTYPE,
             (bsl::in_place, {1,2,3},
              MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
@@ -11197,6 +11357,7 @@ void test_copyil_helper()
              VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
              VA13)
             );
+*/
 }
 // helper function that invokes 'TEST_COPYA' macro for 'initializer_list' and
 // various number of constructor variadic arguments, and for a combination
@@ -11274,7 +11435,7 @@ void test_copyila_helper()
                ({1,2,3}, VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
                 VA5),
                &oa);
-
+/*
     TEST_COPYA(VALTYPE, OPTYPE,
                (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
                 MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
@@ -11418,6 +11579,7 @@ void test_copyila_helper()
                 VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
                 VA13),
                &oa);
+*/
 }
 // helper function that invokes 'TEST_COPYA' macro for 'initializer_list' and
 // various number of constructor variadic arguments, modified to support
@@ -11502,7 +11664,7 @@ void test_copyila_argt_helper()
                 VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
                 VA5),
                &oa);
-
+/*
     TEST_COPYA(VALTYPE, OPTYPE,
                (bsl::allocator_arg, &oa, bsl::in_place, {1,2,3},
                 MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
@@ -11662,6 +11824,7 @@ void test_copyila_argt_helper()
                 VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
                 VA13),
                &oa);
+*/
 }
 // helper function that invokes 'TEST_COPYA' macro for 'initializer_list' and
 // various number of constructor variadic arguments, and for a combination
@@ -11737,7 +11900,7 @@ void test_copyilad_helper()
                ({1,2,3}, VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
                 VA5),
                &da);
-
+/*
     TEST_COPYA(VALTYPE, OPTYPE,
                (bsl::in_place, {1,2,3},
                 MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
@@ -11881,7 +12044,7 @@ void test_copyilad_helper()
                 VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
                 VA13),
                &da);
-
+*/
 }
 // helper function that invokes 'TEST_COPYA' macro for 'initializer_list' and
 // various number of constructor variadic arguments, modified to support
@@ -11963,7 +12126,7 @@ void test_copyilad_argt_helper()
                 VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
                 VA5),
                &da);
-
+/*
     TEST_COPYA(VALTYPE, OPTYPE,
                (bsl::in_place, {1,2,3},
                 MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
@@ -12123,7 +12286,9 @@ void test_copyilad_argt_helper()
                 VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
                 VA13),
                &da);
+*/
 }
+#endif //BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
 void bslstl_optional_test25()
 {
     // ------------------------------------------------------------------------
@@ -12285,6 +12450,7 @@ void bslstl_optional_test26()
 
 void bslstl_optional_test27()
 {
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
     // --------------------------------------------------------------------
     // TESTING 'initializer_list' 'in_place_t' CONSTRUCTOR
     //   This test will verify that the 'initializer_list' 'in_place_t'
@@ -12379,6 +12545,7 @@ void bslstl_optional_test27()
         test_copyila_argt_helper<ValueType, const bsl::optional<ValueType> >();
         test_copyila_argt_helper<ValueType, bsl::optional< const ValueType> >();
     }
+#endif // BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
 }
 void bslstl_optional_test28()
 {
@@ -12462,10 +12629,12 @@ void bslstl_optional_test28()
         ASSERT(destination.value().has_value());
         ASSERT(destination.value().value() == 4);
 
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
         source = {};
         ASSERT(!source.has_value());
         destination = {};
         ASSERT(!destination.has_value());
+#endif //BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
 
         source = 5;
         destination = MovUtl::move(source);
@@ -12484,10 +12653,13 @@ void bslstl_optional_test28()
         ASSERT(destination.has_value());
         ASSERT(!destination.value().has_value());
 
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+        // C++03 MovableRef isn't const friendly which will make this test fail
         destination = 4;
         destination = MovUtl::move(source2);
         ASSERT(destination.has_value());
         ASSERT(!destination.value().has_value());
+#endif //BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
 
         source = bsl::nullopt;
         ASSERT(!source.has_value());
@@ -12508,6 +12680,8 @@ void bslstl_optional_test28()
         typedef bsl::string                     ValueType;
         typedef bsl::optional<ValueType>        OptV;
         typedef const OptV                      COptV;
+
+        typedef bsl::optional<COptV>            ObjC;
         typedef bsl::optional<OptV>             Obj;
 
         OptV source("test26");
@@ -12517,17 +12691,18 @@ void bslstl_optional_test28()
         ASSERT(destination.value().has_value());
         ASSERT(destination.value().value() == "test26");
 
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
         source = {};
         ASSERT(!source.has_value());
         destination = {};
         ASSERT(!destination.has_value());
+#endif //BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
 
 
         source = "another test string";
-        destination = std::move(source);
+        destination = MovUtl::move(source);
         ASSERT(destination.has_value());
         ASSERT(destination.value().value() == "another test string");
-
 
         COptV source2("test26");
         destination = source2;
@@ -12542,12 +12717,27 @@ void bslstl_optional_test28()
         ASSERT(destination.has_value());
         ASSERT(destination.value().value() == "haha");
 
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+        // C++03 MovableRef isn't const friendly which will make this test fail
         destination = MovUtl::move(source2);
         ASSERT(destination.has_value());
         ASSERT(destination.value().has_value());
         ASSERT(destination.value().value() == "test26");
-    }
+#endif //BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
 
+        source = bsl::nullopt;
+        ASSERT(!source.has_value());
+        destination = bsl::nullopt;
+        ASSERT(!destination.has_value());
+
+        Obj source3;
+        destination = source3;
+        ASSERT(!destination.has_value());
+
+        ObjC source4;
+        destination = source4;
+        ASSERT(!destination.has_value());
+    }
 }
 
 void bslstl_optional_test29()
@@ -12978,7 +13168,7 @@ void bslstl_optional_test31()
         CCI = MyClass1::copyConstructorInvocations;
         MCI = MyClass1::moveConstructorInvocations;
 
-        optional<MyClass1> obj2 = bsl::make_optional(std::move(source));
+        optional<MyClass1> obj2 = bsl::make_optional(MovUtl::move(source));
         ASSERT( 2 == obj2.value().value());
         ASSERT( CCI == (MyClass1::copyConstructorInvocations));
         ASSERT( MCI == (MyClass1::moveConstructorInvocations  - 1));
@@ -13000,7 +13190,7 @@ void bslstl_optional_test31()
         CCI = MyClass2::copyConstructorInvocations;
         MCI = MyClass2::moveConstructorInvocations;
 
-        optional<MyClass2> obj2 = bsl::make_optional(std::move(source));
+        optional<MyClass2> obj2 = bsl::make_optional(MovUtl::move(source));
         ASSERT( 2 == obj2.value().value());
         ASSERT( &da == obj2.value().d_def.d_allocator_p);
         ASSERT( CCI == (MyClass2::copyConstructorInvocations));
@@ -13023,7 +13213,7 @@ void bslstl_optional_test31()
         CCI = MyClass2a::copyConstructorInvocations;
         MCI = MyClass2a::moveConstructorInvocations;
 
-        optional<MyClass2a> obj2 = bsl::make_optional(std::move(source));
+        optional<MyClass2a> obj2 = bsl::make_optional(MovUtl::move(source));
         ASSERT( 2 == obj2.value().value());
         ASSERT( &da == obj2.value().d_data.d_def.d_allocator_p);
         ASSERT( CCI == (MyClass2a::copyConstructorInvocations));
@@ -13054,7 +13244,7 @@ void bslstl_optional_test31()
         TEST_MAKEOP((VA1, MovUtl::move(VA2),
                      VA3, MovUtl::move(VA4),
                      VA5),&da);
-
+/*
         TEST_MAKEOP((MovUtl::move(VA1), VA2,
                      MovUtl::move(VA3), VA4,
                      MovUtl::move(VA5), VA6),&da);
@@ -13157,7 +13347,10 @@ void bslstl_optional_test31()
                      VA9, MovUtl::move(VA10),
                      VA11, MovUtl::move(VA12),
                      VA13, MovUtl::move(VA14)),&da);
+*/
     }
+
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
     if (veryVerbose) printf("\tinitializer_list make optional.\n");
     {
        bslma::TestAllocator da("default", veryVeryVeryVerbose);
@@ -13185,7 +13378,7 @@ void bslstl_optional_test31()
        TEST_MAKEOP(({1,2,3}, VA1, MovUtl::move(VA2),
                     VA3, MovUtl::move(VA4),
                     VA5),&da);
-
+/*
        TEST_MAKEOP(({1,2,3}, MovUtl::move(VA1), VA2,
                     MovUtl::move(VA3), VA4,
                     MovUtl::move(VA5), VA6),&da);
@@ -13273,8 +13466,9 @@ void bslstl_optional_test31()
                     VA9, MovUtl::move(VA10),
                     VA11, MovUtl::move(VA12),
                     VA13),&da);
-
+*/
     }
+#endif // BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
 }
 void bslstl_optional_test32()
 {
@@ -13350,7 +13544,14 @@ void bslstl_optional_test32()
         CCI = MyClass2::copyConstructorInvocations;
         MCI = MyClass2::moveConstructorInvocations;
 
-        optional<MyClass2> obj2 = bsl::alloc_optional(&oa, std::move(source));
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+        optional<MyClass2> obj2 = bsl::alloc_optional(&oa,
+                                  MovUtl::move(source));
+#else
+        //type deduction does not work when using MovableRef
+        optional<MyClass2> obj2 = bsl::alloc_optional<MyClass2>(&oa,
+                                  MovUtl::move(source));
+#endif //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
         ASSERT( 2 == obj2.value().value());
         ASSERT( &oa == obj2.value().d_def.d_allocator_p);
         ASSERT( CCI == (MyClass2::copyConstructorInvocations));
@@ -13400,7 +13601,7 @@ void bslstl_optional_test32()
                      (VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
                       VA5, &da),
                      &da);
-
+/*
         TEST_ALLOCOP((&da,MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
                       MovUtl::move(VA5), VA6),
                      (MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
@@ -13547,8 +13748,10 @@ void bslstl_optional_test32()
                       VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
                       VA13, MovUtl::move(VA14)),
                      &da);
-
+*/
     }
+
+#ifdef BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
     if (veryVerbose) printf("\tinitializer_list alloc_optional.\n");
     {
         bslma::TestAllocator da("default", veryVeryVeryVerbose);
@@ -13608,7 +13811,7 @@ void bslstl_optional_test32()
                       VA1, MovUtl::move(VA2), VA3, MovUtl::move(VA4),
                       VA5, &da),
                      &da);
-
+/*
         TEST_ALLOCOP((&da, {1,2,3},
                       MovUtl::move(VA1), VA2, MovUtl::move(VA3), VA4,
                       MovUtl::move(VA5), VA6),
@@ -13771,7 +13974,9 @@ void bslstl_optional_test32()
                       VA9, MovUtl::move(VA10), VA11, MovUtl::move(VA12),
                       VA13, &da),
                      &da);
+*/
     }
+#endif // BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS
 }
 
 #ifdef __cpp_lib_optional
