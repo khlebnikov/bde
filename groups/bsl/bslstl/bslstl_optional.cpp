@@ -16,8 +16,13 @@ namespace bsl {
 nullopt_t nullopt = nullopt_t(2);
 in_place_t in_place;
 #endif // __cpp_lib_optional
-OptNoSuchType optNoSuchType;
 }  // close package namespace
+namespace BloombergLP {
+namespace bslstl {
+Optional_OptNoSuchType optNoSuchType;
+} // close package namespace
+} // close enterprise namespace
+
 // todo : update copyright
 // ----------------------------------------------------------------------------
 // Copyright 2015 Bloomberg Finance L.P.
