@@ -14,43 +14,7 @@
 #include <bsls_ident.h>
 #endif
 BSLS_IDENT("$Id: $")
-// todo (decisions)
-//  * what allocator to use in value_or(T&&) &
-//  * what allocator to use in value_or(const T&) &&
-// C++03 notes :
-//   is_constructible is needed for correct overload resolution
-//   in operator= . Using is_convertible in C++03 may lead to
-//   different overload resolution when the type is_constructible
-//   but !is_convertible. Not having any constraints on
-//   operator=(moveable_ref<other_type>), and separating T from U
-///  overloads may be an option as
-//   perfect forwarding best match issue is not problematic
-//   in C++03. Will need investigating which assignment overloads
-//   should be removed in c++03.
-//
-//   !(bsl::is_same<ANY_TYPE, bsl::decay<TYPE>::type>
-//   && bsl::is_scalar<TYPE>) constraints on operator=(U&&) are
-//   needed so cases like bsl::optonal<int>={} create a disengaged
-//   optional.
-//
-//known limitations :
-//  - MoveableRef can not be used where the argument is a deduced type.
-//    This means that rvalue overloads taking optional<OTHER_TYPE>
-//    must use optional<OTHER_TYPE> &&
-//  - For assignment/construction constraints, we use is_constructible
-//    but the exact creation will be done using allocation construction
-//    which will invoke an allocator extended constructor for allocator
-//    aware types. If the 'value_type' is constructible from the
-//    assignment/constructor parameter, but doesn't have a corresponding
-//    allocator extended constructor, the overload selection may not be
-//    be correct.
-//  - 'optional<const TYPE>' is fully supported in C++11 and onwards. However,
-//    due to limitations of 'MovableRef<const TYPE>', C++03 support for const
-//    value_types is limited and move semantics of such an 'optional' in C++03
-//    will not work.
-//
-//
-//
+
 //@PURPOSE: Provide a template for nullable (in-place) objects which emulates
 //  'std::optional' and (theoretical) 'pmr::optional'
 //
@@ -108,6 +72,26 @@ BSLS_IDENT("$Id: $")
 //  optionalInt.reset();
 //  assert( !optionalInt.has_value());
 //..
+
+// todo (decisions)
+//  * what allocator to use in value_or(T&&) &
+//  * what allocator to use in value_or(const T&) &&
+//
+//known limitations :
+//  - For assignment/construction constraints, we use is_constructible
+//    but the exact creation will be done using allocation construction
+//    which will invoke an allocator extended constructor for allocator
+//    aware types. If the 'value_type' is constructible from the
+//    assignment/constructor parameter, but doesn't have a corresponding
+//    allocator extended constructor, the overload selection may not be
+//    be correct.
+//  - 'optional<const TYPE>' is fully supported in C++11 and onwards. However,
+//    due to limitations of 'MovableRef<const TYPE>', C++03 support for const
+//    value_types is limited and move semantics of such an 'optional' in C++03
+//    will not work.
+//
+//
+//
 
 #include <bslalg_swaputil.h>
 
