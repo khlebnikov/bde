@@ -4733,33 +4733,6 @@ bool isConstPtr(const T*) { return true;}
   ASSERT(MCI == ConstructTestTypeAllocArgTIL::moveConstructorInvocations);    \
   ASSERT(alloc == obj.value().d_allocator_p);                                 \
 }
-#define TEST_CONSTRUCT(op, expArgs)                                           \
-  {                                                                           \
-    ConstructTestTypeNoAlloc EXP expArgs ;                                    \
-    bsls::ObjectBuffer<ConstructTestTypeNoAlloc> rawBuf;                      \
-    ConstructTestTypeNoAlloc  *objPtr =  rawBuf.address();                    \
-    ConstructTestTypeNoAlloc&  mX     = *objPtr;                              \
-    const ConstructTestTypeNoAlloc& X =  mX;                                  \
-    memset(static_cast<void *>(&mX), 92, sizeof mX);                          \
-    Obj:: op ;                                                                \
-    ASSERT(EXP == X);                                                         \
-    ASSERT(createdAlike(EXP,X) == true);                                      \
-  }
-
-#define TEST_CONSTRUCTA(op, expArgs1, expArgs2, alloc)                        \
-  {                                                                           \
-    /* Expects allocator at end of argument list */                           \
-    ConstructTestTypeAlloc EXP expArgs1;                                      \
-    bsls::ObjectBuffer<ConstructTestTypeAlloc> rawBuf;                        \
-    ConstructTestTypeAlloc  *objPtr =  rawBuf.address();                      \
-    ConstructTestTypeAlloc&  mX     = *objPtr;                                \
-    const ConstructTestTypeAlloc& X = *objPtr;                                \
-    memset(static_cast<void *>(&mX), 92, sizeof mX);                          \
-    Obj:: op ;                                                                \
-    ASSERT(EXP == X);                                                         \
-    ASSERT(alloc == X.d_allocator_p);                                         \
-    ASSERT(createdAlike(EXP,X) == true);                                      \
-  }
 
 #define TEST_MAKEOP(expArgs, alloc)                                           \
   {                                                                           \
