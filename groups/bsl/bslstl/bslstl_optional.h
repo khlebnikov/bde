@@ -211,6 +211,17 @@ struct Optional_OptNoSuchType {
 extern Optional_OptNoSuchType optNoSuchType;
 
 #ifdef BSLS_LIBRARYFEATURES_HAS_CPP11_BASELINE_LIBRARY
+#define BSLSTL_OPTIONAL_DECLARE_IF_EXPLICIT_CONSTRUCT(U,V)  ,                 \
+    typename bsl::enable_if<std::is_constructible<U, V>::value &&             \
+                            !bsl::is_convertible<V, U>::value,                \
+                            bool>::type  = true
+
+#define BSLSTL_OPTIONAL_DECLARE_IF_NOT_EXPLICIT_CONSTRUCT(U,V)  ,             \
+    typename bsl::enable_if< std::is_constructible<U, V>::value &&            \
+                             bsl::is_convertible<V, U>::value,                \
+                             bool>::type  = false
+
+
 #define BSLSTL_OPTIONAL_OR_IS_CONSTRUCTIBLE_V(U,V)                            \
                                         || std::is_constructible<U, V>::value
 #define BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V(U,V)                           \
@@ -219,7 +230,11 @@ extern Optional_OptNoSuchType optNoSuchType;
                                         && std::is_assignable<U, V>::value
 #define BSLSTL_OPTIONAL_IS_TRIVIALLY_DESTRUCTIBLE                             \
                                         std::is_trivially_destructible
+
+
 #else
+#define BSLSTL_OPTIONAL_DECLARE_IF_EXPLICIT_CONSTRUCT(U,V)
+#define BSLSTL_OPTIONAL_DECLARE_IF_NOT_EXPLICIT_CONSTRUCT(U,V)
 #define BSLSTL_OPTIONAL_OR_IS_CONSTRUCTIBLE_V(U,V)
 #define BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V(U,V)
 #define BSLSTL_OPTIONAL_AND_IS_ASSIGNABLE_V(U,V)
@@ -616,11 +631,10 @@ class optional {
 
     // Because there are no default arguments in C++03, the case of
     // ANYTYPE==TYPE is written out separately.
-    template<class ANY_TYPE>
+    template<class ANY_TYPE
+             BSLSTL_OPTIONAL_DECLARE_IF_NOT_EXPLICIT_CONSTRUCT(TYPE, ANY_TYPE)>
     optional(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) rhs,
-             typename bsl::enable_if<bsl::is_same<ANY_TYPE, TYPE>::value
-                       BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V(TYPE, ANY_TYPE)
-                       && bsl::is_convertible<ANY_TYPE, TYPE>::value,
+             typename bsl::enable_if<bsl::is_same<ANY_TYPE, TYPE>::value,
                        BloombergLP::bslstl::Optional_OptNoSuchType>::type
                                           = BloombergLP::bslstl::optNoSuchType)
         // Create an 'optional' object having the value of the specified
@@ -632,13 +646,12 @@ class optional {
         this->emplace(BSLS_COMPILERFEATURES_FORWARD(ANY_TYPE, rhs));
     }
 
-    template<class ANY_TYPE>
+    template<class ANY_TYPE
+             BSLSTL_OPTIONAL_DECLARE_IF_EXPLICIT_CONSTRUCT(TYPE, ANY_TYPE)>
     explicit
     optional(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) rhs,
             typename bsl::enable_if<
-                         bsl::is_same<ANY_TYPE,TYPE>::value
-                         BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V(TYPE, ANY_TYPE)
-                         && !bsl::is_convertible<ANY_TYPE, TYPE>::value,
+                         bsl::is_same<ANY_TYPE,TYPE>::value,
                          BloombergLP::bslstl::Optional_OptNoSuchType>::type
                                           = BloombergLP::bslstl::optNoSuchType)
         // Create an 'optional' object having the value of the specified
@@ -650,13 +663,12 @@ class optional {
         this->emplace(BSLS_COMPILERFEATURES_FORWARD(ANY_TYPE, rhs));
     }
 
-    template<class ANY_TYPE>
+    template<class ANY_TYPE
+             BSLSTL_OPTIONAL_DECLARE_IF_NOT_EXPLICIT_CONSTRUCT(TYPE, ANY_TYPE)>
     optional(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) rhs,
              typename bsl::enable_if<!bsl::is_same<ANY_TYPE, TYPE >::value
                          && !bsl::is_same<ANY_TYPE, optional<TYPE> >::value
-                         && !bsl::is_same<ANY_TYPE, bsl::nullopt_t>::value
-                         BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V(TYPE, ANY_TYPE)
-                         && bsl::is_convertible<ANY_TYPE, TYPE>::value,
+                         && !bsl::is_same<ANY_TYPE, bsl::nullopt_t>::value,
                          BloombergLP::bslstl::Optional_OptNoSuchType>::type
                                           = BloombergLP::bslstl::optNoSuchType)
         // Create an 'optional' object having the value of the specified
@@ -668,14 +680,13 @@ class optional {
         this->emplace(BSLS_COMPILERFEATURES_FORWARD(ANY_TYPE, rhs));
     }
 
-    template<class ANY_TYPE>
+    template<class ANY_TYPE
+             BSLSTL_OPTIONAL_DECLARE_IF_EXPLICIT_CONSTRUCT(TYPE, ANY_TYPE)>
     explicit
     optional(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) rhs,
              typename bsl::enable_if<!bsl::is_same<ANY_TYPE, TYPE >::value
                          && bsl::is_same<ANY_TYPE,  optional<TYPE> >::value
-                         && !bsl::is_same<ANY_TYPE, bsl::nullopt_t>::value
-                         BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V(TYPE, ANY_TYPE)
-                         && !bsl::is_convertible<ANY_TYPE, TYPE>::value,
+                         && !bsl::is_same<ANY_TYPE, bsl::nullopt_t>::value,
                          BloombergLP::bslstl::Optional_OptNoSuchType>::type
                                           = BloombergLP::bslstl::optNoSuchType)
         // Create an 'optional' object having the value of the specified
@@ -687,12 +698,12 @@ class optional {
         this->emplace(BSLS_COMPILERFEATURES_FORWARD(ANY_TYPE, rhs));
     }
 
-    template<class ANY_TYPE>
+    template<class ANY_TYPE
+             BSLSTL_OPTIONAL_DECLARE_IF_NOT_EXPLICIT_CONSTRUCT(TYPE,
+                                                              const ANY_TYPE&)>
     optional(const optional<ANY_TYPE>& rhs,
              typename bsl::enable_if<
                   !bsl::is_same<ANY_TYPE, TYPE>::value
-                  BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V(TYPE, const ANY_TYPE&)
-                  && bsl::is_convertible<const ANY_TYPE &, TYPE>::value
                   && !BloombergLP::bslstl::Optional_ConvertsFromOptional<TYPE,
                                                               ANY_TYPE>::value,
                   BloombergLP::bslstl::Optional_OptNoSuchType>::type
@@ -709,13 +720,13 @@ class optional {
         }
     }
 
-    template<class ANY_TYPE>
+    template<class ANY_TYPE
+             BSLSTL_OPTIONAL_DECLARE_IF_EXPLICIT_CONSTRUCT(TYPE,
+                                                           const ANY_TYPE&)>
     explicit
     optional(const optional<ANY_TYPE>& rhs,
              typename bsl::enable_if<
                   !bsl::is_same<ANY_TYPE, TYPE>::value
-                  BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V(TYPE, const ANY_TYPE&)
-                  && !bsl::is_convertible<const ANY_TYPE &, TYPE>::value
                   && !BloombergLP::bslstl::Optional_ConvertsFromOptional<TYPE,
                                                               ANY_TYPE>::value,
                   BloombergLP::bslstl::Optional_OptNoSuchType>::type
@@ -739,12 +750,11 @@ class optional {
     // not exist due to the nature of C++03 MovableRef implementation and
     // usage. Conseqently, a 'MovableRef' equivalent constructors needs to be
     // provided in C++03 (see below).
-    template<class ANY_TYPE>
+    template<class ANY_TYPE
+             BSLSTL_OPTIONAL_DECLARE_IF_NOT_EXPLICIT_CONSTRUCT(TYPE, ANY_TYPE)>
     optional(optional<ANY_TYPE>&& rhs,
              typename bsl::enable_if<
                    !bsl::is_same<ANY_TYPE, TYPE>::value
-                   BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V(TYPE, ANY_TYPE)
-                   && bsl::is_convertible<ANY_TYPE , TYPE>::value
                    && !BloombergLP::bslstl::Optional_ConvertsFromOptional<TYPE,
                                                               ANY_TYPE>::value,
                    BloombergLP::bslstl::Optional_OptNoSuchType>::type
@@ -761,13 +771,12 @@ class optional {
         }
     }
 
-    template<class ANY_TYPE>
+    template<class ANY_TYPE
+             BSLSTL_OPTIONAL_DECLARE_IF_EXPLICIT_CONSTRUCT(TYPE, ANY_TYPE)>
     explicit
     optional(optional<ANY_TYPE>&& rhs,
              typename bsl::enable_if<
                    !bsl::is_same<ANY_TYPE, TYPE>::value
-                   BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V(TYPE, ANY_TYPE)
-                   && !bsl::is_convertible<ANY_TYPE , TYPE>::value
                    && !BloombergLP::bslstl::Optional_ConvertsFromOptional<TYPE,
                                                               ANY_TYPE>::value,
                    BloombergLP::bslstl::Optional_OptNoSuchType>::type
@@ -785,12 +794,11 @@ class optional {
     }
 
 #else
-    template<class ANY_TYPE>
+    template<class ANY_TYPE
+             BSLSTL_OPTIONAL_DECLARE_IF_NOT_EXPLICIT_CONSTRUCT(TYPE, ANY_TYPE)>
     optional(BloombergLP::bslmf::MovableRef<optional<ANY_TYPE> > rhs,
              typename bsl::enable_if<
                    !bsl::is_same<ANY_TYPE, TYPE>::value
-                   BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V(TYPE, ANY_TYPE)
-                   && bsl::is_convertible<ANY_TYPE , TYPE>::value
                    && !BloombergLP::bslstl::Optional_ConvertsFromOptional<TYPE,
                                                               ANY_TYPE>::value,
                    BloombergLP::bslstl::Optional_OptNoSuchType>::type
@@ -808,13 +816,12 @@ class optional {
         }
     }
 
-    template<class ANY_TYPE>
+    template<class ANY_TYPE
+             BSLSTL_OPTIONAL_DECLARE_IF_EXPLICIT_CONSTRUCT(TYPE, ANY_TYPE)>
     explicit
     optional(BloombergLP::bslmf::MovableRef<optional<ANY_TYPE> > rhs,
              typename bsl::enable_if<
                    !bsl::is_same<ANY_TYPE, TYPE>::value
-                   BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V(TYPE, ANY_TYPE)
-                   && !bsl::is_convertible<ANY_TYPE , TYPE>::value
                    && !BloombergLP::bslstl::Optional_ConvertsFromOptional<TYPE,
                                                               ANY_TYPE>::value,
                    BloombergLP::bslstl::Optional_OptNoSuchType>::type
@@ -1398,12 +1405,11 @@ class optional<TYPE, false> {
         // construction from '*rhs'. Otherwise, create a disengaged 'optional'.
         // 'rhs' is left in a valid, but unspecified state.
 
-    template<class ANY_TYPE>
+    template<class ANY_TYPE
+             BSLSTL_OPTIONAL_DECLARE_IF_NOT_EXPLICIT_CONSTRUCT(TYPE, ANY_TYPE)>
     optional(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) rhs,
              typename bsl::enable_if<
-                        bsl::is_same<ANY_TYPE, TYPE >::value
-                        BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V(TYPE, ANY_TYPE)
-                        && bsl::is_convertible<ANY_TYPE, TYPE>::value,
+                        bsl::is_same<ANY_TYPE, TYPE >::value,
                         BloombergLP::bslstl::Optional_OptNoSuchType>::type
                                          = BloombergLP::bslstl::optNoSuchType)
         // Create an 'optional' object having the same value as the specified
@@ -1415,13 +1421,12 @@ class optional<TYPE, false> {
         this->emplace(BSLS_COMPILERFEATURES_FORWARD(ANY_TYPE, rhs));
     }
 
-    template<class ANY_TYPE>
+    template<class ANY_TYPE
+             BSLSTL_OPTIONAL_DECLARE_IF_EXPLICIT_CONSTRUCT(TYPE, ANY_TYPE)>
     explicit
     optional(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) rhs,
              typename bsl::enable_if<
-                         bsl::is_same<ANY_TYPE, TYPE >::value
-                         BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V(TYPE, ANY_TYPE)
-                         && !bsl::is_convertible<ANY_TYPE, TYPE>::value,
+                         bsl::is_same<ANY_TYPE, TYPE >::value,
                          BloombergLP::bslstl::Optional_OptNoSuchType>::type
                                           = BloombergLP::bslstl::optNoSuchType)
         // Create an 'optional' object having the same value as the specified
@@ -1433,14 +1438,13 @@ class optional<TYPE, false> {
         this->emplace(BSLS_COMPILERFEATURES_FORWARD(ANY_TYPE, rhs));
     }
 
-    template<class ANY_TYPE>
+    template<class ANY_TYPE
+             BSLSTL_OPTIONAL_DECLARE_IF_NOT_EXPLICIT_CONSTRUCT(TYPE, ANY_TYPE)>
     optional(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) rhs,
              typename bsl::enable_if<
                         !bsl::is_same<ANY_TYPE, TYPE >::value
                         && !bsl::is_same<ANY_TYPE, optional<TYPE> >::value
-                        && !bsl::is_same<ANY_TYPE, bsl::nullopt_t>::value
-                        BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V(TYPE, ANY_TYPE)
-                        && bsl::is_convertible<ANY_TYPE, TYPE>::value,
+                        && !bsl::is_same<ANY_TYPE, bsl::nullopt_t>::value,
                         BloombergLP::bslstl::Optional_OptNoSuchType>::type
                                          = BloombergLP::bslstl::optNoSuchType)
         // Create an 'optional' object having the same value as the specified
@@ -1452,15 +1456,14 @@ class optional<TYPE, false> {
         this->emplace(BSLS_COMPILERFEATURES_FORWARD(ANY_TYPE, rhs));
     }
 
-    template<class ANY_TYPE>
+    template<class ANY_TYPE
+             BSLSTL_OPTIONAL_DECLARE_IF_EXPLICIT_CONSTRUCT(TYPE, ANY_TYPE)>
     explicit
     optional(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) rhs,
              typename bsl::enable_if<
                         !bsl::is_same<ANY_TYPE, TYPE >::value
                         && !bsl::is_same<ANY_TYPE, optional<TYPE> >::value
-                        && !bsl::is_same<ANY_TYPE, bsl::nullopt_t>::value
-                        BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V(TYPE, ANY_TYPE)
-                        && !bsl::is_convertible<ANY_TYPE, TYPE>::value,
+                        && !bsl::is_same<ANY_TYPE, bsl::nullopt_t>::value,
                         BloombergLP::bslstl::Optional_OptNoSuchType>::type
                                           = BloombergLP::bslstl::optNoSuchType)
         // Create an 'optional' object having the same value as the specified
@@ -1474,12 +1477,12 @@ class optional<TYPE, false> {
       // Create an 'optional' object having the value of the specified
       // 'rhs' object.
 
-    template<class ANY_TYPE>
+    template<class ANY_TYPE
+             BSLSTL_OPTIONAL_DECLARE_IF_NOT_EXPLICIT_CONSTRUCT(TYPE,
+                                                              const ANY_TYPE&)>
     optional(const optional<ANY_TYPE>& rhs,
              typename bsl::enable_if<
                   !bsl::is_same<ANY_TYPE, TYPE>::value
-                  BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V(TYPE, const ANY_TYPE&)
-                  && bsl::is_convertible<const ANY_TYPE &, TYPE>::value
                   && !BloombergLP::bslstl::Optional_ConvertsFromOptional<TYPE,
                                                              ANY_TYPE>::value,
                   BloombergLP::bslstl::Optional_OptNoSuchType>::type
@@ -1494,13 +1497,13 @@ class optional<TYPE, false> {
         }
     }
 
-    template<class ANY_TYPE>
+    template<class ANY_TYPE
+             BSLSTL_OPTIONAL_DECLARE_IF_EXPLICIT_CONSTRUCT(TYPE,
+                                                           const ANY_TYPE&)>
     explicit
     optional(const optional<ANY_TYPE>& rhs,
              typename bsl::enable_if<
                    !bsl::is_same<ANY_TYPE, TYPE>::value
-                  BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V(TYPE, const ANY_TYPE&)
-                  && !bsl::is_convertible<const ANY_TYPE &, TYPE>::value
                   && !BloombergLP::bslstl::Optional_ConvertsFromOptional<TYPE,
                                                               ANY_TYPE>::value,
                   BloombergLP::bslstl::Optional_OptNoSuchType>::type
@@ -1522,12 +1525,11 @@ class optional<TYPE, false> {
     // not exist due to the nature of C++03 MovableRef implementation and
     // usage. Conseqently, a 'MovableRef' equivalent constructors needs to be
     // provided in C++03 (see below).
-    template<class ANY_TYPE>
+    template<class ANY_TYPE
+             BSLSTL_OPTIONAL_DECLARE_IF_NOT_EXPLICIT_CONSTRUCT(TYPE, ANY_TYPE)>
     optional(optional<ANY_TYPE>&& rhs,
              typename bsl::enable_if<
                    !bsl::is_same<ANY_TYPE, TYPE>::value
-                   BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V(TYPE, ANY_TYPE)
-                   && bsl::is_convertible<ANY_TYPE , TYPE>::value
                    && !BloombergLP::bslstl::Optional_ConvertsFromOptional<TYPE,
                                                               ANY_TYPE>::value,
                    BloombergLP::bslstl::Optional_OptNoSuchType>::type
@@ -1545,13 +1547,12 @@ class optional<TYPE, false> {
         }
     }
 
-    template<class ANY_TYPE>
+    template<class ANY_TYPE
+             BSLSTL_OPTIONAL_DECLARE_IF_EXPLICIT_CONSTRUCT(TYPE, ANY_TYPE)>
     explicit
     optional(optional<ANY_TYPE>&& rhs,
              typename bsl::enable_if<
                    !bsl::is_same<ANY_TYPE, TYPE>::value
-                   BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V(TYPE, ANY_TYPE)
-                   && !bsl::is_convertible<ANY_TYPE , TYPE>::value
                    && !BloombergLP::bslstl::Optional_ConvertsFromOptional<TYPE,
                                                               ANY_TYPE>::value,
                    BloombergLP::bslstl::Optional_OptNoSuchType>::type
@@ -1569,12 +1570,11 @@ class optional<TYPE, false> {
         }
     }
 #else
-    template<class ANY_TYPE>
+    template<class ANY_TYPE
+             BSLSTL_OPTIONAL_DECLARE_IF_EXPLICIT_CONSTRUCT(TYPE, ANY_TYPE)>
     optional(BloombergLP::bslmf::MovableRef<optional<ANY_TYPE> > rhs,
              typename bsl::enable_if<
                    !bsl::is_same<ANY_TYPE, TYPE>::value
-                   BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V(TYPE, ANY_TYPE)
-                   && bsl::is_convertible<ANY_TYPE , TYPE>::value
                    && !BloombergLP::bslstl::Optional_ConvertsFromOptional<TYPE,
                                                               ANY_TYPE>::value,
                    BloombergLP::bslstl::Optional_OptNoSuchType>::type
@@ -1590,13 +1590,12 @@ class optional<TYPE, false> {
         }
     }
 
-    template<class ANY_TYPE>
+    template<class ANY_TYPE
+             BSLSTL_OPTIONAL_DECLARE_IF_EXPLICIT_CONSTRUCT(TYPE, ANY_TYPE)>
     explicit
     optional(BloombergLP::bslmf::MovableRef<optional<ANY_TYPE> > rhs,
              typename bsl::enable_if<
                    !bsl::is_same<ANY_TYPE, TYPE>::value
-                   BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V(TYPE, ANY_TYPE)
-                   && !bsl::is_convertible<ANY_TYPE , TYPE>::value
                    && !BloombergLP::bslstl::Optional_ConvertsFromOptional<TYPE,
                                                               ANY_TYPE>::value,
                    BloombergLP::bslstl::Optional_OptNoSuchType>::type
