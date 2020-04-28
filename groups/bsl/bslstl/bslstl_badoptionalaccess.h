@@ -8,64 +8,43 @@ BSLS_IDENT("$Id: $")
 //@PURPOSE: Provide an exception class thrown by 'bsl::optional'.
 //
 //@CLASSES:
-//  bslstl::BadOptionalAccess: exception possibly thrown by 'bsl::optional'
-//  bsl::bad_optional_access: alias to exception type thrown by 'bsl::optional'
+//  bsl::bad_optional_access: exception type thrown by 'bsl::optional'
 //
 //@SEE_ALSO: bslstl_optional, bslstl_stdexceptionutil
 //
-//@DESCRIPTION: This component provides a 'bsl::bad_optional_access' exception.
-// This exception is thrown by  'bsl::optional::value' when accessing a
+//@DESCRIPTION: This component provides a 'bsl::bad_optional_access' exception
+// class.  This exception is thrown by 'bsl::optional::value' when accessing a
 // 'bsl::optional' object that does not contain a value.  If 'std::optional'
 // implementation is available, 'bsl::bad_optional_access' is an alias to
-// 'std::bad_optional_access'.  Otherwise, it is an alias to
-// 'bslstl::BadOptionalAccess' class.
+// 'std::bad_optional_access'.
 //
 
-// Prevent 'bslstl' headers from being included directly in 'BSL_OVERRIDES_STD'
-// mode.  Doing so is unsupported, and is likely to cause compilation errors.
-#if defined(BSL_OVERRIDES_STD) && !defined(BOS_STDHDRS_PROLOGUE_IN_EFFECT)
-#error "include <bsl_memory.h> instead of <bslstl_badoptionalaccess.h> in \
-BSL_OVERRIDES_STD mode"
-#endif
 #include <bslscm_version.h>
 
 #include <bsls_exceptionutil.h>
 #include <bsls_keyword.h>
-#include <bsls_nativestd.h>
 
 #include <exception>
 
-#ifdef BSLS_LIBRARYFEATURES_HAS_CPP17_BASELINE_LIBRARY
-#include <optional> // 'std::bad_optional_access' if defined
-#endif // BSLS_LIBRARYFEATURES_HAS_CPP17_BASELINE_LIBRARY
+#ifdef BDE_BUILD_TARGET_EXC
 
-namespace BloombergLP {
-namespace bslstl { class BadOptionalAccess; }
-}  // close enterprise namespace
+#ifdef BSLS_LIBRARYFEATURES_HAS_CPP17_BASELINE_LIBRARY
+#include <optional> // for 'std::bad_optional_access'
+#endif // BSLS_LIBRARYFEATURES_HAS_CPP17_BASELINE_LIBRARY
 
 namespace bsl {
 #ifdef BSLS_LIBRARYFEATURES_HAS_CPP17_BASELINE_LIBRARY
 typedef std::bad_optional_access bad_optional_access;
 #else
-typedef ::BloombergLP::bslstl::BadOptionalAccess bad_optional_access;
-#endif //BSLS_LIBRARYFEATURES_HAS_CPP17_BASELINE_LIBRARY
+                       // =========================
+                       // class bad_optional_access
+                       // =========================
 
-}  // close namespace bsl
-
-#ifdef BSLS_LIBRARYFEATURES_HAS_CPP17_BASELINE_LIBRARY
-#else
-namespace BloombergLP {
-namespace bslstl {
-
-                       // =======================
-                       // class BadOptionalAccess
-                       // =======================
-
-class BadOptionalAccess : public native_std::exception {
+class bad_optional_access : public std::exception {
   public:
     // CREATORS
-    BadOptionalAccess() BSLS_KEYWORD_NOEXCEPT;
-        // Create a 'BadOptionalAccess' object.  Note that this function is
+    bad_optional_access() BSLS_KEYWORD_NOEXCEPT;
+        // Create a 'bad_optional_access' object.  Note that this function is
         // explicitly user-declared, to make it simple to declare 'const'
         // objects of this type.
 
@@ -84,25 +63,26 @@ class BadOptionalAccess : public native_std::exception {
 //                           INLINE DEFINITIONS
 // ============================================================================
 
-                       // -----------------------
-                       // class BadOptionalAccess
-                       // -----------------------
+                       // -------------------------
+                       // class bad_optional_access
+                       // -------------------------
 
 inline
-BadOptionalAccess::BadOptionalAccess() BSLS_KEYWORD_NOEXCEPT
-: native_std::exception()
+bad_optional_access::bad_optional_access() BSLS_KEYWORD_NOEXCEPT
+: std::exception()
 {
 }
 
 inline
-const char *BadOptionalAccess::what() const BSLS_EXCEPTION_WHAT_NOTHROW
+const char *bad_optional_access::what() const BSLS_EXCEPTION_WHAT_NOTHROW
 {
     return "bad_optional_access";
 }
-
-}  // close package namespace
-}  // close enterprise namespace
 #endif //BSLS_LIBRARYFEATURES_HAS_CPP17_BASELINE_LIBRARY
+
+}  // close namespace bsl
+
+#endif //BDE_BUILD_TARGET_EXC
 #endif
 
 // ----------------------------------------------------------------------------
