@@ -2,6 +2,7 @@ bslstl_algorithmworkaround
 bslstl_allocator
 bslstl_allocatortraits
 bslstl_array
+bslstl_badoptionalaccess
 bslstl_badweakptr
 bslstl_bidirectionaliterator
 bslstl_bidirectionalnodepool
@@ -37,6 +38,7 @@ bslstl_multimap
 bslstl_multimap_test
 bslstl_multiset
 bslstl_multiset_test
+bslstl_optional
 bslstl_ostringstream
 bslstl_ownerless
 bslstl_pair
