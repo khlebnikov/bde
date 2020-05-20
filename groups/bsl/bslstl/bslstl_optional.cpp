@@ -7,10 +7,10 @@
 // should not be used as an example for new development.
 // ----------------------------------------------------------------------------
 
-#include "bslstl_optional.h"
+#include <bslstl_optional.h>
 
 #include <bsls_ident.h>
-BSLS_IDENT_RCSID(bslstl_optional_cpp,"$Id$ $CSID$")
+BSLS_IDENT_RCSID(bslstl_optional_cpp, "$Id$ $CSID$")
 
 // ----------------------------------------------------------------------------
 // Copyright 2020 Bloomberg Finance L.P.

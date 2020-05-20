@@ -16,8 +16,8 @@
 #include <bslma_testallocator.h>
 #include <bslma_testallocatormonitor.h>
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 using namespace BloombergLP;
 using namespace bsl;
@@ -40,14 +40,13 @@ using namespace bsl;
 // is allocator aware or not, and thus the behaviour needs to be tested for
 // both allocator aware and non allocator aware value types.  One of the
 // guarantees this type provides is that no unnecessary copies of the value
-// type object are created when using this type as opposed to using a raw
-// value type object.  In order to test this guarantee, we use test types
-// designed to count the number of instances created.
+// type object are created when using this type as opposed to using a raw value
+// type object.  In order to test this guarantee, we use test types designed to
+// count the number of instances created.
 //
 //  Internal implementation types:
 // [ 1] 'Optional_Data' class
 // [ 2] 'Optional_DataImp' class
-
 
 // ============================================================================
 //                     STANDARD BSL ASSERT TEST FUNCTION
@@ -70,15 +69,14 @@ void aSsErT(bool condition, const char *message, int line)
 
 }  // close unnamed namespace
 
-
 // ============================================================================
 //               STANDARD BSL TEST DRIVER MACRO ABBREVIATIONS
 // ----------------------------------------------------------------------------
 
-#define ASSERT       BSLS_BSLTESTUTIL_ASSERT
-#define ASSERTV      BSLS_BSLTESTUTIL_ASSERTV
+#define ASSERT BSLS_BSLTESTUTIL_ASSERT
+#define ASSERTV BSLS_BSLTESTUTIL_ASSERTV
 
-#define LOOP_ASSERT  BSLS_BSLTESTUTIL_LOOP_ASSERT
+#define LOOP_ASSERT BSLS_BSLTESTUTIL_LOOP_ASSERT
 #define LOOP0_ASSERT BSLS_BSLTESTUTIL_LOOP0_ASSERT
 #define LOOP1_ASSERT BSLS_BSLTESTUTIL_LOOP1_ASSERT
 #define LOOP2_ASSERT BSLS_BSLTESTUTIL_LOOP2_ASSERT
@@ -87,19 +85,19 @@ void aSsErT(bool condition, const char *message, int line)
 #define LOOP5_ASSERT BSLS_BSLTESTUTIL_LOOP5_ASSERT
 #define LOOP6_ASSERT BSLS_BSLTESTUTIL_LOOP6_ASSERT
 
-#define Q            BSLS_BSLTESTUTIL_Q   // Quote identifier literally.
-#define P            BSLS_BSLTESTUTIL_P   // Print identifier and value.
-#define P_           BSLS_BSLTESTUTIL_P_  // P(X) without '\n'.
-#define T_           BSLS_BSLTESTUTIL_T_  // Print a tab (w/o newline).
-#define L_           BSLS_BSLTESTUTIL_L_  // current Line number
+#define Q BSLS_BSLTESTUTIL_Q    // Quote identifier literally.
+#define P BSLS_BSLTESTUTIL_P    // Print identifier and value.
+#define P_ BSLS_BSLTESTUTIL_P_  // P(X) without '\n'.
+#define T_ BSLS_BSLTESTUTIL_T_  // Print a tab (w/o newline).
+#define L_ BSLS_BSLTESTUTIL_L_  // current Line number
 
 // ============================================================================
 //                       GLOBAL TEST VALUES
 // ----------------------------------------------------------------------------
 
-static bool             verbose;
-static bool         veryVerbose;
-static bool     veryVeryVerbose;
+static bool verbose;
+static bool veryVerbose;
+static bool veryVeryVerbose;
 static bool veryVeryVeryVerbose;
 
 using namespace BloombergLP;
@@ -113,10 +111,9 @@ const int MOVED_FROM_VAL = 0x01d;
 //                  CLASSES FOR TESTING USAGE EXAMPLES
 //-----------------------------------------------------------------------------
 
-
-                             // =================
-                             // class MyClassDef
-                             // =================
+                              // ================
+                              // class MyClassDef
+                              // ================
 
 struct MyClassDef {
     // Data members that give MyClassX size and alignment.  This class is a
@@ -126,17 +123,17 @@ struct MyClassDef {
     // to allocate storage owned by this class.
 
     // DATA (exceptionally public, only in test driver)
-    int                         d_value;
-    int                        *d_data_p;
-    bslma::Allocator           *d_allocator_p;
+    int               d_value;
+    int              *d_data_p;
+    bslma::Allocator *d_allocator_p;
 };
 
 // In optimized builds, some compilers will elide some of the operations in the
 // destructors of the test classes defined below.  In order to force the
 // compiler to retain all of the code in the destructors, we provide the
 // following function that can be used to (conditionally) print out the state
-// of a 'MyClassDef' data member.  If the destructor calls this function as
-// its last operation, then all values set in the destructor have visible
+// of a 'MyClassDef' data member.  If the destructor calls this function as its
+// last operation, then all values set in the destructor have visible
 // side-effects, but non-verbose test runs do not have to be burdened with
 // additional output.
 
@@ -146,13 +143,16 @@ void dumpClassDefState(const MyClassDef& def)
 {
     if (forceDestructorCall) {
         printf("%p: %d %p %p\n",
-               &def, def.d_value, def.d_data_p, def.d_allocator_p);
+               &def,
+               def.d_value,
+               def.d_data_p,
+               def.d_allocator_p);
     }
 }
 
-                             // ===============
-                             // class MyClass1
-                             // ===============
+                               // ==============
+                               // class MyClass1
+                               // ==============
 
 struct MyClass1 {
     // This 'class' is a simple type that does not take allocators.  Its
@@ -164,7 +164,6 @@ struct MyClass1 {
     // unnecessary copies.  A signal value, 'MOVED_FROM_VAL', is used to detect
     // an object in a moved-from state.
 
-
     // DATA
     MyClassDef d_def;
 
@@ -173,28 +172,31 @@ struct MyClass1 {
     static int s_destructorInvocations;
 
     // CREATORS
-   //explicit
-    MyClass1(int v = 0) {                                           // IMPLICIT
-        d_def.d_value = v;
+    MyClass1(int v = 0)  // IMPLICIT
+    {
+        d_def.d_value       = v;
         d_def.d_allocator_p = 0;
     }
-    MyClass1(const MyClass1& rhs) {
-        d_def.d_value = rhs.d_def.d_value;
+    MyClass1(const MyClass1& rhs)
+    {
+        d_def.d_value       = rhs.d_def.d_value;
         d_def.d_allocator_p = 0;
         ++s_copyConstructorInvocations;
     }
 
-    MyClass1(bslmf::MovableRef<MyClass1> other) {
-        MyClass1& otherRef = MovUtl::access(other);
-        d_def.d_value = otherRef.d_def.d_value;
+    MyClass1(bslmf::MovableRef<MyClass1> other)
+    {
+        MyClass1& otherRef     = MovUtl::access(other);
+        d_def.d_value          = otherRef.d_def.d_value;
         otherRef.d_def.d_value = MOVED_FROM_VAL;
-        d_def.d_allocator_p = 0;
+        d_def.d_allocator_p    = 0;
         ++s_moveConstructorInvocations;
     }
 
-    ~MyClass1() {
+    ~MyClass1()
+    {
         ASSERT(d_def.d_value != 91);
-        d_def.d_value = 91;
+        d_def.d_value       = 91;
         d_def.d_allocator_p = 0;
         dumpClassDefState(d_def);
         ++s_destructorInvocations;
@@ -210,8 +212,8 @@ struct MyClass1 {
     MyClass1& operator=(bslmf::MovableRef<MyClass1> rhs)
         // assign the value of specified 'rhs' to this object
     {
-        MyClass1& otherRef = MovUtl::access(rhs);
-        d_def.d_value = otherRef.d_def.d_value;
+        MyClass1& otherRef     = MovUtl::access(rhs);
+        d_def.d_value          = otherRef.d_def.d_value;
         otherRef.d_def.d_value = MOVED_FROM_VAL;
         return *this;
     }
@@ -224,48 +226,55 @@ struct MyClass1 {
     }
     // ACCESSORS
     int value() const { return d_def.d_value; }
-
 };
-bool operator==(const MyClass1& lhs,
-                const MyClass1& rhs)
+bool operator==(const MyClass1& lhs, const MyClass1& rhs)
 {
-    return (lhs.value()==rhs.value());
+    return (lhs.value() == rhs.value());
 }
 // CLASS DATA
-int MyClass1::s_copyConstructorInvocations       = 0;
-int MyClass1::s_moveConstructorInvocations       = 0;
-int MyClass1::s_destructorInvocations            = 0;
+int MyClass1::s_copyConstructorInvocations = 0;
+int MyClass1::s_moveConstructorInvocations = 0;
+int MyClass1::s_destructorInvocations      = 0;
 
-                             // ===============
-                             // class MyClass1a
-                             // ===============
+                              // ===============
+                              // class MyClass1a
+                              // ===============
 
 struct MyClass1a {
     // This 'class' is the same as My_Class1, except it also supports
     // conversion from My_Class1. This allows for testing of converting
     // constructors and assignment from a type convertible to value type.
 
-    MyClass1 d_data;
+    MyClass1   d_data;
     static int s_copyConstructorInvocations;
     static int s_moveConstructorInvocations;
 
     // CREATORS
 
-    explicit
-    MyClass1a(int v)  : d_data(v) {}                                // IMPLICIT
+    explicit MyClass1a(int v)  // IMPLICIT
+    : d_data(v)
+    {
+    }
 
-    MyClass1a(const MyClass1& v)                                    // IMPLICIT
-    : d_data(v) {}
+    MyClass1a(const MyClass1& v)  // IMPLICIT
+    : d_data(v)
+    {
+    }
 
-    MyClass1a(bslmf::MovableRef<MyClass1> v)                        // IMPLICIT
-    : d_data(MovUtl::move(MovUtl::access(v))) {}
+    MyClass1a(bslmf::MovableRef<MyClass1> v)  // IMPLICIT
+    : d_data(MovUtl::move(MovUtl::access(v)))
+    {
+    }
 
 #ifndef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
     MyClass1a(bslmf::MovableRef<const MyClass1> v)
-    : d_data(MovUtl::access(v)) {}                                  // IMPLICIT
-#endif //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+    : d_data(MovUtl::access(v))
+    {
+    }   // IMPLICIT
+#endif  //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
 
-    MyClass1a(const MyClass1a& rhs) : d_data(rhs.d_data)
+    MyClass1a(const MyClass1a& rhs)
+    : d_data(rhs.d_data)
     {
         ++s_copyConstructorInvocations;
     }
@@ -281,45 +290,44 @@ struct MyClass1a {
     {
         ++s_moveConstructorInvocations;
     }
-#endif //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+#endif  //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
 
-  // MANIPULATORS
+    // MANIPULATORS
     MyClass1a& operator=(const MyClass1a& rhs)
         // assign the value of specified 'rhs' to this object
     {
-        d_data.operator=(rhs.d_data);
+        d_data. operator=(rhs.d_data);
         return *this;
     }
 
     MyClass1a& operator=(bslmf::MovableRef<MyClass1a> rhs)
         // assign the value of specified 'rhs' to this object
     {
-        d_data.operator=(MovUtl::move(MovUtl::access(rhs).d_data));
+        d_data. operator=(MovUtl::move(MovUtl::access(rhs).d_data));
         return *this;
     }
 #ifndef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
     MyClass1a& operator=(bslmf::MovableRef<const MyClass1a> rhs)
         // assign the value of specified 'rhs' to this object
     {
-        d_data.operator=(MovUtl::access(rhs).d_data);
+        d_data. operator=(MovUtl::access(rhs).d_data);
         return *this;
     }
-#endif //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+#endif  //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
 
     // ACCESSORS
     int value() const { return d_data.value(); }
 };
 // CLASS DATA
-int MyClass1a::s_copyConstructorInvocations       = 0;
-int MyClass1a::s_moveConstructorInvocations       = 0;
-bool operator==(const MyClass1a& lhs,
-                const MyClass1a& rhs)
+int MyClass1a::s_copyConstructorInvocations = 0;
+int MyClass1a::s_moveConstructorInvocations = 0;
+bool operator==(const MyClass1a& lhs, const MyClass1a& rhs)
 {
-    return (lhs.value()==rhs.value());
+    return (lhs.value() == rhs.value());
 }
-                             // ===============
-                             // class MyClass2
-                             // ===============
+                               // ==============
+                               // class MyClass2
+                               // ==============
 
 struct MyClass2 {
     // This 'class' supports the 'bslma::UsesBslmaAllocator' trait, providing
@@ -341,26 +349,29 @@ struct MyClass2 {
     static int s_destructorInvocations;
 
     // CREATORS
-    explicit
-    MyClass2(bslma::Allocator *a = 0) {
-        d_def.d_value = 0;
+    explicit MyClass2(bslma::Allocator *a = 0)
+    {
+        d_def.d_value       = 0;
         d_def.d_allocator_p = a;
     }
 
-    MyClass2(int v, bslma::Allocator *a = 0) {                      // IMPLICIT
-        d_def.d_value = v;
+    MyClass2(int v, bslma::Allocator *a = 0)  // IMPLICIT
+    {
+        d_def.d_value       = v;
         d_def.d_allocator_p = a;
     }
-    MyClass2(const MyClass2& rhs, bslma::Allocator *a = 0) {        // IMPLICIT
-        d_def.d_value = rhs.d_def.d_value;
+    MyClass2(const MyClass2& rhs, bslma::Allocator *a = 0)  // IMPLICIT
+    {
+        d_def.d_value       = rhs.d_def.d_value;
         d_def.d_allocator_p = a;
         s_copyConstructorInvocations++;
     }
 
-    MyClass2(bslmf::MovableRef<MyClass2> other, bslma::Allocator *a = 0) {
-                                                                    // IMPLICIT
-        MyClass2& otherRef = MovUtl::access(other);
-        d_def.d_value = otherRef.d_def.d_value;
+    MyClass2(bslmf::MovableRef<MyClass2> other, bslma::Allocator *a = 0)
+    {
+        // IMPLICIT
+        MyClass2& otherRef     = MovUtl::access(other);
+        d_def.d_value          = otherRef.d_def.d_value;
         otherRef.d_def.d_value = MOVED_FROM_VAL;
         if (a) {
             d_def.d_allocator_p = a;
@@ -371,11 +382,11 @@ struct MyClass2 {
         s_moveConstructorInvocations++;
     }
 #ifndef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
-    MyClass2(bslmf::MovableRef<const MyClass2> other,
-             bslma::Allocator *a = 0) {                             // IMPLICIT
+    MyClass2(bslmf::MovableRef<const MyClass2> other, bslma::Allocator *a = 0)
+    {  // IMPLICIT
 
         const MyClass2& otherRef = MovUtl::access(other);
-        d_def.d_value = otherRef.d_def.d_value;
+        d_def.d_value            = otherRef.d_def.d_value;
         if (a) {
             d_def.d_allocator_p = a;
         }
@@ -384,33 +395,36 @@ struct MyClass2 {
         }
         s_moveConstructorInvocations++;
     }
-#endif //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+#endif  //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
 
-    MyClass2(const MyClass1& rhs, bslma::Allocator *a = 0) {        // IMPLICIT
-        d_def.d_value = rhs.d_def.d_value;
+    MyClass2(const MyClass1& rhs, bslma::Allocator *a = 0)  // IMPLICIT
+    {
+        d_def.d_value       = rhs.d_def.d_value;
         d_def.d_allocator_p = a;
     }
 
-    MyClass2(bslmf::MovableRef<MyClass1> other, bslma::Allocator *a = 0) {
-                                                                    // IMPLICIT
-        MyClass1& otherRef = MovUtl::access(other);
-        d_def.d_value = otherRef.d_def.d_value;
+    MyClass2(bslmf::MovableRef<MyClass1> other, bslma::Allocator *a = 0)
+        // IMPLICIT
+    {
+        MyClass1& otherRef     = MovUtl::access(other);
+        d_def.d_value          = otherRef.d_def.d_value;
         otherRef.d_def.d_value = MOVED_FROM_VAL;
-        d_def.d_allocator_p = a;
+        d_def.d_allocator_p    = a;
     }
 #ifndef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
-    MyClass2(bslmf::MovableRef<const MyClass1> other,
-             bslma::Allocator *a = 0) {                             // IMPLICIT
+    MyClass2(bslmf::MovableRef<const MyClass1> other, bslma::Allocator *a = 0)
+    {  // IMPLICIT
 
         const MyClass1& otherRef = MovUtl::access(other);
-        d_def.d_value = otherRef.d_def.d_value;
-        d_def.d_allocator_p = a;
+        d_def.d_value            = otherRef.d_def.d_value;
+        d_def.d_allocator_p      = a;
     }
-#endif //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+#endif  //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
 
-    ~MyClass2() {
+    ~MyClass2()
+    {
         ASSERT(d_def.d_value != 92);
-        d_def.d_value = 92;
+        d_def.d_value       = 92;
         d_def.d_allocator_p = 0;
         dumpClassDefState(d_def);
         ++s_destructorInvocations;
@@ -428,8 +442,8 @@ struct MyClass2 {
     MyClass2& operator=(bslmf::MovableRef<MyClass2> rhs)
         // assign the value of specified 'rhs' to this object
     {
-        MyClass2& otherRef = MovUtl::access(rhs);
-        d_def.d_value = otherRef.d_def.d_value;
+        MyClass2& otherRef     = MovUtl::access(rhs);
+        d_def.d_value          = otherRef.d_def.d_value;
         otherRef.d_def.d_value = MOVED_FROM_VAL;
         // do not touch allocator!
         return *this;
@@ -440,11 +454,11 @@ struct MyClass2 {
         // assign the value of specified 'rhs' to this object
     {
         const MyClass2& otherRef = MovUtl::access(rhs);
-        d_def.d_value = otherRef.d_def.d_value;
+        d_def.d_value            = otherRef.d_def.d_value;
         // do not touch allocator!
         return *this;
     }
-#endif //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+#endif  //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
 
     MyClass2& operator=(int rhs)
         // assign the value of specified 'rhs' to this object
@@ -460,110 +474,90 @@ struct MyClass2 {
     int value() const { return d_def.d_value; }
 
     // returns the allocator used by this object
-    bsl::allocator<char> get_allocator() const {
-        return d_def.d_allocator_p;
-    }
+    bsl::allocator<char> get_allocator() const { return d_def.d_allocator_p; }
 };
 // CLASS DATA
-int MyClass2::s_copyConstructorInvocations       = 0;
-int MyClass2::s_moveConstructorInvocations       = 0;
-int MyClass2::s_destructorInvocations            = 0;
+int MyClass2::s_copyConstructorInvocations = 0;
+int MyClass2::s_moveConstructorInvocations = 0;
+int MyClass2::s_destructorInvocations      = 0;
 
-bool operator==(const MyClass2& lhs,
-                const MyClass2& rhs)
+bool operator==(const MyClass2& lhs, const MyClass2& rhs)
 {
-    return (lhs.value()==rhs.value());
-}
-
-bool operator==(const int&      lhs,
-                const MyClass2& rhs)
-{
-    return (lhs==rhs.value());
-}
-bool operator==(const MyClass2& lhs,
-                const int&      rhs)
-{
-    return (lhs.value()==rhs);
-}
-bool operator!=(const MyClass2& lhs,
-                const MyClass2& rhs)
-{
-    return !(lhs ==rhs);
+    return (lhs.value() == rhs.value());
 }
 
-bool operator!=(const int&      lhs,
-                const MyClass2& rhs)
+bool operator==(const int& lhs, const MyClass2& rhs)
 {
-    return !(lhs ==rhs);
+    return (lhs == rhs.value());
 }
-bool operator!=(const MyClass2& lhs,
-                const int&      rhs)
+bool operator==(const MyClass2& lhs, const int& rhs)
 {
-    return !(lhs ==rhs);
+    return (lhs.value() == rhs);
 }
-bool operator<(const MyClass2& lhs,
-               const MyClass2& rhs)
+bool operator!=(const MyClass2& lhs, const MyClass2& rhs)
 {
-    return (lhs.value()<rhs.value());
+    return !(lhs == rhs);
 }
 
-bool operator<(const int&      lhs,
-               const MyClass2& rhs)
+bool operator!=(const int& lhs, const MyClass2& rhs)
 {
-    return (lhs<rhs.value());
+    return !(lhs == rhs);
 }
-bool operator<(const MyClass2& lhs,
-               const int&      rhs)
+bool operator!=(const MyClass2& lhs, const int& rhs)
 {
-    return (lhs.value()<rhs);
+    return !(lhs == rhs);
 }
-bool operator>(const MyClass2& lhs,
-               const MyClass2& rhs)
+bool operator<(const MyClass2& lhs, const MyClass2& rhs)
 {
-    return (lhs.value()>rhs.value());
+    return (lhs.value() < rhs.value());
 }
 
-bool operator>(const int&      lhs,
-               const MyClass2& rhs)
+bool operator<(const int& lhs, const MyClass2& rhs)
 {
-    return (lhs>rhs.value());
+    return (lhs < rhs.value());
 }
-bool operator>(const MyClass2& lhs,
-               const int&      rhs)
+bool operator<(const MyClass2& lhs, const int& rhs)
 {
-    return (lhs.value()>rhs);
+    return (lhs.value() < rhs);
 }
-bool operator<=(const MyClass2& lhs,
-                const MyClass2& rhs)
+bool operator>(const MyClass2& lhs, const MyClass2& rhs)
 {
-    return (lhs.value()<=rhs.value());
+    return (lhs.value() > rhs.value());
 }
 
-bool operator<=(const int&      lhs,
-                const MyClass2& rhs)
+bool operator>(const int& lhs, const MyClass2& rhs)
 {
-    return (lhs<=rhs.value());
+    return (lhs > rhs.value());
 }
-bool operator<=(const MyClass2& lhs,
-                const int&      rhs)
+bool operator>(const MyClass2& lhs, const int& rhs)
 {
-    return (lhs.value()<=rhs);
+    return (lhs.value() > rhs);
 }
-bool operator>=(const MyClass2& lhs,
-                const MyClass2& rhs)
+bool operator<=(const MyClass2& lhs, const MyClass2& rhs)
 {
-    return (lhs.value()>=rhs.value());
+    return (lhs.value() <= rhs.value());
 }
 
-bool operator>=(const int&      lhs,
-                const MyClass2& rhs)
+bool operator<=(const int& lhs, const MyClass2& rhs)
 {
-    return (lhs>=rhs.value());
+    return (lhs <= rhs.value());
 }
-bool operator>=(const MyClass2& lhs,
-                const int&      rhs)
+bool operator<=(const MyClass2& lhs, const int& rhs)
 {
-    return (lhs.value()>=rhs);
+    return (lhs.value() <= rhs);
+}
+bool operator>=(const MyClass2& lhs, const MyClass2& rhs)
+{
+    return (lhs.value() >= rhs.value());
+}
+
+bool operator>=(const int& lhs, const MyClass2& rhs)
+{
+    return (lhs >= rhs.value());
+}
+bool operator>=(const MyClass2& lhs, const int& rhs)
+{
+    return (lhs.value() >= rhs);
 }
 
 // TRAITS
@@ -571,14 +565,15 @@ namespace BloombergLP {
 namespace bslma {
 
 template <>
-struct UsesBslmaAllocator<MyClass2> : bsl::true_type { };
+struct UsesBslmaAllocator<MyClass2> : bsl::true_type {
+};
 
 }  // close namespace bslma
 }  // close enterprise namespace
 
-                                 // ==========
+                                 // =========
                                  // MyClass2a
-                                 // ==========
+                                 // =========
 
 struct MyClass2a {
     // This 'class' behaves the same as 'MyClass2' (allocator-aware type that
@@ -586,78 +581,100 @@ struct MyClass2a {
     // 'allocator_arg_t' idiom for passing an allocator to constructors.  This
     // class is constructible and assignable from MyClass2
 
-    MyClass2 d_data;
+    MyClass2   d_data;
 
     static int s_copyConstructorInvocations;
     static int s_moveConstructorInvocations;
 
     // CREATORS
-    MyClass2a() : d_data() { }
+    MyClass2a()
+    : d_data()
+    {
+    }
 
-    MyClass2a(bsl::allocator_arg_t, bslma::Allocator *a) : d_data(a) {}
+    MyClass2a(bsl::allocator_arg_t, bslma::Allocator *a)
+    : d_data(a)
+    {
+    }
 
-    explicit
-    MyClass2a(int v)  : d_data(v) {}                                // IMPLICIT
+    explicit MyClass2a(int v)  // IMPLICIT
+    : d_data(v)
+    {
+    }
 
-    MyClass2a(const MyClass2& rhs) : d_data(rhs) {}                 // IMPLICIT
+    MyClass2a(const MyClass2& rhs)  // IMPLICIT
+    : d_data(rhs)
+    {
+    }
 
-    MyClass2a(bslmf::MovableRef<MyClass2> rhs)                      // IMPLICIT
-      : d_data(MovUtl::move(MovUtl::access(rhs))) {}
+    MyClass2a(bslmf::MovableRef<MyClass2> rhs)  // IMPLICIT
+    : d_data(MovUtl::move(MovUtl::access(rhs)))
+    {
+    }
 
 #ifndef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
-    MyClass2a(bslmf::MovableRef<const MyClass2> rhs)                // IMPLICIT
-      : d_data(MovUtl::access(rhs)) {}
-#endif //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+    MyClass2a(bslmf::MovableRef<const MyClass2> rhs)  // IMPLICIT
+    : d_data(MovUtl::access(rhs))
+    {
+    }
+#endif  //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
 
     MyClass2a(bsl::allocator_arg_t, bslma::Allocator *a, int v)
-        : d_data(v, a) {}
+    : d_data(v, a)
+    {
+    }
 
     MyClass2a(bsl::allocator_arg_t, bslma::Allocator *a, const MyClass2& v)
-            : d_data(v, a) {}
+    : d_data(v, a)
+    {
+    }
 
     MyClass2a(bsl::allocator_arg_t,
-              bslma::Allocator           *a,
-              bslmf::MovableRef<MyClass2> v)
-            : d_data(MovUtl::move(MovUtl::access(v)), a) {}
+              bslma::Allocator            *a,
+              bslmf::MovableRef<MyClass2>  v)
+    : d_data(MovUtl::move(MovUtl::access(v)), a)
+    {
+    }
 
 #ifndef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
     MyClass2a(bsl::allocator_arg_t,
-              bslma::Allocator                 *a,
-              bslmf::MovableRef<const MyClass2> v)
-            : d_data(MovUtl::access(v), a) {}
-#endif //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+              bslma::Allocator                  *a,
+              bslmf::MovableRef<const MyClass2>  v)
+    : d_data(MovUtl::access(v), a)
+    {
+    }
+#endif  //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
 
-    MyClass2a(const MyClass2a& rhs) : d_data(rhs.d_data)
+    MyClass2a(const MyClass2a& rhs)
+    : d_data(rhs.d_data)
     {
         ++s_copyConstructorInvocations;
     }
 
-    MyClass2a(bsl::allocator_arg_t  ,
-              bslma::Allocator    *a,
-              const MyClass2a&     rhs)
-        : d_data(rhs.d_data, a)
+    MyClass2a(bsl::allocator_arg_t, bslma::Allocator *a, const MyClass2a& rhs)
+    : d_data(rhs.d_data, a)
     {
         ++s_copyConstructorInvocations;
     }
 
     MyClass2a(bslmf::MovableRef<MyClass2a> rhs)
-        : d_data(MovUtl::move(MovUtl::access(rhs).d_data))
+    : d_data(MovUtl::move(MovUtl::access(rhs).d_data))
     {
         ++s_moveConstructorInvocations;
     }
 
 #ifndef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
     MyClass2a(bslmf::MovableRef<const MyClass2a> rhs)
-        : d_data(MovUtl::access(rhs).d_data)
+    : d_data(MovUtl::access(rhs).d_data)
     {
         ++s_copyConstructorInvocations;
     }
-#endif //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+#endif  //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
 
     MyClass2a(bsl::allocator_arg_t,
               bslma::Allocator             *a,
               bslmf::MovableRef<MyClass2a>  rhs)
-        : d_data(MovUtl::move(MovUtl::access(rhs).d_data), a)
+    : d_data(MovUtl::move(MovUtl::access(rhs).d_data), a)
     {
         ++s_moveConstructorInvocations;
     }
@@ -666,25 +683,25 @@ struct MyClass2a {
     MyClass2a(bsl::allocator_arg_t,
               bslma::Allocator                   *a,
               bslmf::MovableRef<const MyClass2a>  rhs)
-        : d_data(MovUtl::access(rhs).d_data, a)
+    : d_data(MovUtl::access(rhs).d_data, a)
     {
         ++s_copyConstructorInvocations;
     }
 
-#endif //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+#endif  //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
 
     // MANIPULATORS
     MyClass2a& operator=(const MyClass2a& rhs)
         // assign the value of specified 'rhs' to this object
     {
-        d_data.operator=(rhs.d_data);
+        d_data. operator=(rhs.d_data);
         return *this;
     }
 
     MyClass2a& operator=(bslmf::MovableRef<MyClass2a> rhs)
         // assign the value of specified 'rhs' to this object
     {
-        d_data.operator=(MovUtl::move(MovUtl::access(rhs).d_data));
+        d_data. operator=(MovUtl::move(MovUtl::access(rhs).d_data));
         return *this;
     }
 
@@ -692,15 +709,15 @@ struct MyClass2a {
     MyClass2a& operator=(bslmf::MovableRef<const MyClass2a> rhs)
         // assign the value of specified 'rhs' to this object
     {
-        d_data.operator=(MovUtl::access(rhs).d_data);
+        d_data. operator=(MovUtl::access(rhs).d_data);
         return *this;
     }
 
-#endif //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
+#endif  //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
     MyClass2a& operator=(int rhs)
         // assign the value of specified 'rhs' to this object
     {
-        d_data.operator=(rhs);
+        d_data. operator=(rhs);
         return *this;
     }
     // ACCESSORS
@@ -709,53 +726,63 @@ struct MyClass2a {
     int value() const { return d_data.value(); }
 
     // returns the allocator used for this object
-    bsl::allocator<char> get_allocator() const {
+    bsl::allocator<char> get_allocator() const
+    {
         return d_data.get_allocator();
     }
 };
 
-bool operator==(const MyClass2a& lhs,
-                const MyClass2a& rhs)
+bool operator==(const MyClass2a& lhs, const MyClass2a& rhs)
     // Check if specified 'lhs' matches the specified 'rhs'
 {
-    return (lhs.value()==rhs.value());
+    return (lhs.value() == rhs.value());
 }
-int MyClass2a::s_copyConstructorInvocations       = 0;
-int MyClass2a::s_moveConstructorInvocations       = 0;
+int MyClass2a::s_copyConstructorInvocations = 0;
+int MyClass2a::s_moveConstructorInvocations = 0;
 // TRAITS
 namespace BloombergLP {
 
 namespace bslma {
-template <> struct UsesBslmaAllocator<MyClass2a> : bsl::true_type { };
+template <>
+struct UsesBslmaAllocator<MyClass2a> : bsl::true_type {
+};
 }  // close namespace bslma
 
 namespace bslmf {
-template <> struct UsesAllocatorArgT<MyClass2a> : bsl::true_type { };
+template <>
+struct UsesAllocatorArgT<MyClass2a> : bsl::true_type {
+};
 }  // close namespace bslmf
 
 }  // close enterprise namespace
 
 // helper functions to determine the constness of a pointer
-template<class TYPE>
-bool isConstPtr( TYPE*) { return false;}
-template<class TYPE>
-bool isConstPtr(const TYPE*) { return true;}
+template <class TYPE>
+bool isConstPtr(TYPE *)
+{
+    return false;
+}
+template <class TYPE>
+bool isConstPtr(const TYPE *)
+{
+    return true;
+}
 
-
-template <class TYPE, bool USES_BSLMA_ALLOC =
-                           BloombergLP::bslma::UsesBslmaAllocator<TYPE>::value>
+template <class TYPE,
+          bool USES_BSLMA_ALLOC =
+              BloombergLP::bslma::UsesBslmaAllocator<TYPE>::value>
 class Test_Util {
     // This class provided test utilities that have different behaviour
     // depending on whether 'TYPE is allocator aware or not.  The main template
     // is for allocator aware types.
 
   public:
-    static bool checkAllocator(const TYPE                 &obj,
-                               const bsl::allocator<char> &expected);
-        // Check if, for the specified 'obj', 'obj.get_allocator()' returns
-        // the specified 'expected' allocator.
+    static bool checkAllocator(const TYPE&                 obj,
+                               const bsl::allocator<char>& expected);
+        // Check if, for the specified 'obj', 'obj.get_allocator()' returns the
+        // specified 'expected' allocator.
 
-    static bool hasSameAllocator(const TYPE &obj, const TYPE &other);
+    static bool hasSameAllocator(const TYPE& obj, const TYPE& other);
         // Check if, for the specified 'obj' and specified 'other',
         // 'obj.get_allocator() == other.get_allocator()';
 };
@@ -767,31 +794,29 @@ class Test_Util<TYPE, false> {
     // specialization is for non allocator aware types.
 
   public:
-    static bool checkAllocator(const TYPE &,const bsl::allocator<char>&);
+    static bool checkAllocator(const TYPE&, const bsl::allocator<char>&);
         // return 'true'.
 
-    static bool hasSameAllocator(const TYPE &,const TYPE &);
+    static bool hasSameAllocator(const TYPE&, const TYPE&);
         // return 'true'.
-
 };
 
 template <class TYPE, bool USES_BSLMA_ALLOC>
-inline bool
-Test_Util<TYPE, USES_BSLMA_ALLOC>::checkAllocator(
-                                          const TYPE                 &obj,
-                                          const bsl::allocator<char> &expected)
+inline
+bool Test_Util<TYPE, USES_BSLMA_ALLOC>::checkAllocator(
+                                          const TYPE&                 obj,
+                                          const bsl::allocator<char>& expected)
 {
     return (expected == obj.get_allocator());
 }
 
 template <class TYPE, bool USES_BSLMA_ALLOC>
-inline bool
-Test_Util<TYPE, USES_BSLMA_ALLOC>::hasSameAllocator(const TYPE &obj,
-                                                    const TYPE &other)
+inline
+bool Test_Util<TYPE, USES_BSLMA_ALLOC>::hasSameAllocator(const TYPE& obj,
+                                                         const TYPE& other)
 {
     return (obj.get_allocator() == other.get_allocator());
 }
-
 
 template <class TYPE>
 inline bool
@@ -808,25 +833,24 @@ Test_Util<TYPE, false>::hasSameAllocator(const TYPE&, const TYPE&)
     return true;
 }
 
-template<class TYPE>
-bool checkAllocator(const TYPE &obj,const bsl::allocator<char> &allocator)
+template <class TYPE>
+bool checkAllocator(const TYPE& obj, const bsl::allocator<char>& allocator)
     // check that the specified 'obj' uses the specified 'allocator'.
 {
-    return Test_Util<TYPE>::checkAllocator(obj,allocator);
+    return Test_Util<TYPE>::checkAllocator(obj, allocator);
 }
 
-template<class TYPE>
-bool hasSameAllocator(const TYPE &obj1, const TYPE &obj2)
+template <class TYPE>
+bool hasSameAllocator(const TYPE& obj1, const TYPE& obj2)
     // check that the specified 'obj1' and specified 'obj2' use the same
     // allocator.
 {
-    return Test_Util<TYPE>::hasSameAllocator(obj1,obj2);
+    return Test_Util<TYPE>::hasSameAllocator(obj1, obj2);
 }
 
 // ============================================================================
 //                          TEST DRIVER TEMPLATE
 // ----------------------------------------------------------------------------
-
 
 template <class TYPE>
 class TestDriver {
@@ -838,13 +862,11 @@ class TestDriver {
 
     static void bslstl_optional_test2();
         // Optional_DataImp TEST
-
 };
 
 template <class TYPE>
 void TestDriver<TYPE>::bslstl_optional_test1()
 {
-
     // --------------------------------------------------------------------
     // 'Optional_Data' TEST
     //  This case exercises the functionality of 'Optional_Data' internal
@@ -859,27 +881,28 @@ void TestDriver<TYPE>::bslstl_optional_test1()
     //: 1 Compare 'std::is_trivially_destructible' trait for 'TYPE' and for
     //:   'Optional_Data<TYPE>'.  In C++03 mode, use
     //:   'bsl::is_trivially_copyable' trait instead.
+    //
     // Testing:
     //   'Optional_Data' class
     // --------------------------------------------------------------------
-    if (verbose) printf("\n'Optional_Data' TEST"
-                        "\n=================== \n");
+    if (verbose)
+        printf("\n'Optional_Data' TEST"
+               "\n=================== \n");
 
 #ifdef BSLS_LIBRARYFEATURES_HAS_CPP11_BASELINE_LIBRARY
     ASSERT(std::is_trivially_destructible<TYPE>::value ==
            std::is_trivially_destructible<
-                            BloombergLP::bslstl::Optional_Data<TYPE> >::value);
+               BloombergLP::bslstl::Optional_Data<TYPE> >::value);
 #else
     ASSERT(bsl::is_trivially_copyable<TYPE>::value ==
            bsl::is_trivially_copyable<
-                            BloombergLP::bslstl::Optional_Data<TYPE> >::value);
-#endif // BSLS_LIBRARYFEATURES_HAS_CPP11_BASELINE_LIBRARY
+               BloombergLP::bslstl::Optional_Data<TYPE> >::value);
+#endif  // BSLS_LIBRARYFEATURES_HAS_CPP11_BASELINE_LIBRARY
 }
 
 template <class TYPE>
 void TestDriver<TYPE>::bslstl_optional_test2()
 {
-
     // --------------------------------------------------------------------
     // 'Optional_DataImp' TEST
     //   This case exercises (but does not fully test) the functionality of
@@ -907,8 +930,9 @@ void TestDriver<TYPE>::bslstl_optional_test2()
     //   'Optional_DataImp' class
     // --------------------------------------------------------------------
 
-    if (verbose) printf("\n'Optional_DataImp' TEST"
-                        "\n=======================\n");
+    if (verbose)
+        printf("\n'Optional_DataImp' TEST"
+               "\n=======================\n");
 
     bslma::TestAllocator da("default", veryVeryVeryVerbose);
 
@@ -925,7 +949,6 @@ void TestDriver<TYPE>::bslstl_optional_test2()
 
     X.reset();
     ASSERT(!X.hasValue());
-
 }
 //=============================================================================
 //                              MAIN PROGRAM
@@ -933,23 +956,27 @@ void TestDriver<TYPE>::bslstl_optional_test2()
 
 int main(int argc, char **argv)
 {
-    const int                 test = argc > 1 ? atoi(argv[1]) : 0;
-    verbose = argc > 2;
-    veryVerbose = argc > 3;
-    veryVeryVerbose = argc > 4;
+    const int test      = argc > 1 ? atoi(argv[1]) : 0;
+    verbose             = argc > 2;
+    veryVerbose         = argc > 3;
+    veryVeryVerbose     = argc > 4;
     veryVeryVeryVerbose = argc > 5;
 
+    printf("TEST  %s CASE %d \n", __FILE__, test);
 
-    printf( "TEST  %s CASE %d \n", __FILE__, test );
-
-    switch (test) { case 0:
+    switch (test) {
+      case 0:
       case 2: {
         // --------------------------------------------------------------------
         // 'Optional_DataImp' TEST
         // --------------------------------------------------------------------
 
-        if (verbose) printf("\n" "'Optional_DataImp' TEST" "\n"
-                                 "=======================" "\n");
+        if (verbose)
+            printf("\n"
+                   "'Optional_DataImp' TEST"
+                   "\n"
+                   "======================="
+                   "\n");
 
         TestDriver<int>::bslstl_optional_test2();
         TestDriver<MyClass1>::bslstl_optional_test2();
@@ -959,14 +986,18 @@ int main(int argc, char **argv)
         TestDriver<const MyClass1>::bslstl_optional_test2();
         TestDriver<const MyClass2>::bslstl_optional_test2();
         TestDriver<const MyClass2a>::bslstl_optional_test2();
-      }  break;
+      } break;
       case 1: {
         // --------------------------------------------------------------------
         // 'Optional_Data' TEST
         // --------------------------------------------------------------------
 
-        if (verbose) printf("\n" "'Optional_Data' TEST" "\n"
-                                 "====================" "\n");
+        if (verbose)
+            printf("\n"
+                   "'Optional_Data' TEST"
+                   "\n"
+                   "===================="
+                   "\n");
 
         TestDriver<int>::bslstl_optional_test1();
         TestDriver<const int>::bslstl_optional_test1();
@@ -975,13 +1006,13 @@ int main(int argc, char **argv)
         TestDriver<MyClass2a>::bslstl_optional_test1();
       } break;
       default: {
-        printf( "WARNING: CASE `%d' NOT FOUND.\n", test);
+        printf("WARNING: CASE `%d' NOT FOUND.\n", test);
         testStatus = -1;
       }
     }
 
     if (testStatus > 0) {
-        printf( "Error, non-zero test status = %d .\n", testStatus);
+        printf("Error, non-zero test status = %d .\n", testStatus);
     }
     return testStatus;
 }
