@@ -126,7 +126,7 @@ class NullableValue_WithoutAllocator;
                       // =========================
 
 template <class TYPE>
-class NullableValue {
+class NullableValue : public bsl::optional<TYPE> {
     // This template class extends the set of values of its value-semantic
     // 'TYPE' parameter to include the notion of a "null" value.  If 'TYPE' is
     // fully value-semantic, then the augmented type 'Nullable<TYPE>' will be
@@ -148,10 +148,7 @@ class NullableValue {
 
     struct EnableType { };
 
-    // DATA
-    bsl::optional<TYPE> d_imp;  // managed nullable 'TYPE' object
-    
-    
+   
     struct NoAlloc
     {
         // This empty 'struct' is used as an optional argument type in the
@@ -457,24 +454,8 @@ class NullableValue {
 // }}} END GENERATED CODE
 #endif
 
-    void reset();
-        // Reset this object to the default constructed state (i.e., to have
-        // the null value).
 
-    void swap(NullableValue& other);
-        // Efficiently exchange the value of this object with the value of the
-        // specified 'other' object.  This method provides the no-throw
-        // exception-safety guarantee if the template parameter 'TYPE' provides
-        // that guarantee and the result of the 'isNull' method for the two
-        // objects being swapped is the same.  The behavior is undefined unless
-        // this object was created with the same allocator, if any, as 'other'.
-
-    TYPE& value();
-        // Return a reference providing modifiable access to the underlying
-        // 'TYPE' object.  The behavior is undefined unless this object is
-        // non-null.
-
-    // ACCESSORS
+     // ACCESSORS
     const TYPE *addressOr(const TYPE *address) const;
         // Return an address providing non-modifiable access to the underlying
         // object of a (template parameter) 'TYPE' if this object is non-null,
@@ -526,11 +507,6 @@ class NullableValue {
         // the initial indentation (as governed by 'level').  If 'stream' is
         // not valid on entry, this operation has no effect.
 
-    const TYPE& value() const;
-        // Return a reference providing non-modifiable access to the underlying
-        // object of a (template parameter) 'TYPE'.  The behavior is undefined
-        // unless this object is non-null.
-
     TYPE valueOr(const TYPE& value) const;
         // Return the value of the underlying object of a (template parameter)
         // 'TYPE' if this object is non-null, and the specified 'value'
@@ -552,9 +528,6 @@ class NullableValue {
         // object of a (template parameter) 'TYPE' if this object is non-null,
         // and 0 otherwise.
 
-    AllocType get_allocator() const;
-        // Return the allocator used to construct this object.  Will not
-        // compile if called for a 'TYPE' that does not use allocators.
 };
 
 // FREE OPERATORS
@@ -827,14 +800,14 @@ template <class TYPE>
 inline
 NullableValue<TYPE>::NullableValue(const AllocType& allocator)
                                                           BSLS_KEYWORD_NOEXCEPT
-: d_imp(bsl::allocator_arg, allocator)
+: bsl::optional<TYPE>(bsl::allocator_arg, allocator)
 {
 }
 
 template <class TYPE>
 inline
 NullableValue<TYPE>::NullableValue(const NullableValue& original)
-: d_imp(original.d_imp)
+: bsl::optional<TYPE>(original.value())
 {
 }
 
@@ -842,14 +815,14 @@ template <class TYPE>
 inline
 NullableValue<TYPE>::NullableValue(const NullableValue&  original,
                                    const AllocType&      allocator)
-: d_imp(bsl::allocator_arg, allocator, original.d_imp)
+: bsl::optional<TYPE>(bsl::allocator_arg, allocator, original.value())
 {
 }
 
 template <class TYPE>
 inline
 NullableValue<TYPE>::NullableValue(bslmf::MovableRef<NullableValue> original)
-: d_imp(MoveUtil::move(MoveUtil::access(original).d_imp))
+: bsl::optional<TYPE>(MoveUtil::move(MoveUtil::access(original).value()))
 {
 }
 
@@ -858,9 +831,9 @@ inline
 NullableValue<TYPE>::NullableValue(
                               bslmf::MovableRef<NullableValue>  original,
                               const AllocType&                  allocator)
-: d_imp(bsl::allocator_arg,
+: bsl::optional<TYPE>(bsl::allocator_arg,
         allocator,
-        MoveUtil::move(MoveUtil::access(original).d_imp))
+        MoveUtil::move(MoveUtil::access(original).value()))
 {
 }
 
@@ -874,7 +847,7 @@ NullableValue<TYPE>::NullableValue(
                                !bsl::is_convertible<BDE_OTHER_TYPE,
                                                     AllocType>::value,
                                EnableType>::type)
-: d_imp (BSLS_COMPILERFEATURES_FORWARD(BDE_OTHER_TYPE, value))
+: bsl::optional<TYPE>(BSLS_COMPILERFEATURES_FORWARD(BDE_OTHER_TYPE, value))
 {
 }
 
@@ -887,7 +860,7 @@ NullableValue<TYPE>::NullableValue(
       typename bsl::enable_if<bsl::is_convertible<BDE_OTHER_TYPE, TYPE>::value,
 
                               EnableType>::type)
-: d_imp(bsl::allocator_arg,
+: bsl::optional<TYPE>(bsl::allocator_arg,
         allocator,
         BSLS_COMPILERFEATURES_FORWARD(BDE_OTHER_TYPE, value))
 {
@@ -898,7 +871,7 @@ template <class BDE_OTHER_TYPE>
 inline
 NullableValue<TYPE>::NullableValue(
                                  const NullableValue<BDE_OTHER_TYPE>& original)
-: d_imp(original.d_imp)
+: bsl::optional<TYPE>(original.value())
 {
 }
 
@@ -908,7 +881,7 @@ inline
 NullableValue<TYPE>::NullableValue(
                                 const NullableValue<BDE_OTHER_TYPE>& original,
                                 const AllocType&                     allocator)
-: d_imp(bsl::allocator_arg, allocator, original.d_imp)
+: bsl::optional<TYPE>(bsl::allocator_arg, allocator, original.value())
 {
 }
 
@@ -917,7 +890,7 @@ NullableValue<TYPE>::NullableValue(
 template <class TYPE>
 inline
 NullableValue<TYPE>::NullableValue(const NullOptType&) BSLS_KEYWORD_NOEXCEPT
-: d_imp()
+: bsl::optional<TYPE>()
 {
 }
 
@@ -926,7 +899,7 @@ inline
 NullableValue<TYPE>::NullableValue(const NullOptType&             ,
                                    const AllocType& allocator)
                                                           BSLS_KEYWORD_NOEXCEPT
-: d_imp(bsl::allocator_arg, allocator)
+: bsl::optional<TYPE>(bsl::allocator_arg, allocator)
 {
 }
 
@@ -936,7 +909,7 @@ template <class TYPE>
 inline
 NullableValue<TYPE>& NullableValue<TYPE>::operator=(const NullableValue& rhs)
 {
-    d_imp = rhs.d_imp;
+    bsl::optional<TYPE>::operator=(rhs);
 
     return *this;
 }
@@ -946,9 +919,7 @@ inline
 NullableValue<TYPE>&
 NullableValue<TYPE>::operator=(bslmf::MovableRef<NullableValue> rhs)
 {
-    NullableValue& lvalue = rhs;
-    d_imp = MoveUtil::move(lvalue.d_imp);
-
+    bsl::optional<TYPE>::operator=(MoveUtil::move(rhs));
     return *this;
 }
 
@@ -957,7 +928,7 @@ template <class BDE_OTHER_TYPE>
 NullableValue<TYPE>& NullableValue<TYPE>::operator=(
                                       const NullableValue<BDE_OTHER_TYPE>& rhs)
 {
-    d_imp = rhs.d_imp;
+    bsl::optional<TYPE>::operator=(rhs);
     return *this;
 }
 
@@ -965,8 +936,7 @@ template <class TYPE>
 inline
 NullableValue<TYPE>& NullableValue<TYPE>::operator=(const TYPE& rhs)
 {
-    d_imp.emplace(rhs);
-
+    bsl::optional<TYPE>::operator=(rhs);
     return *this;
 }
 
@@ -982,12 +952,12 @@ STREAM& NullableValue<TYPE>::bdexStreamIn(STREAM& stream, int version)
 
     if (stream) {
         if (!isNull) {
-            d_imp.emplace();
+            this->emplace();
 
-            bdexStreamIn(stream, d_imp.value(), version);
+            bdexStreamIn(stream, this->value(), version);
         }
         else {
-            d_imp.reset();
+            this->reset();
         }
     }
 
@@ -999,7 +969,7 @@ inline
 NullableValue<TYPE>&
 NullableValue<TYPE>::operator=(bslmf::MovableRef<TYPE> rhs)
 {
-    d_imp.emplace(MoveUtil::move(rhs));
+    bsl::optional<TYPE>::operator=(MoveUtil::move(rhs));
 
     return *this;
 }
@@ -1009,7 +979,7 @@ template <class BDE_OTHER_TYPE>
 inline
 NullableValue<TYPE>& NullableValue<TYPE>::operator=(const BDE_OTHER_TYPE& rhs)
 {
-    d_imp.emplace(rhs);
+    bsl::optional<TYPE>::operator=(rhs);
 
     return *this;
 }
@@ -1019,7 +989,7 @@ inline
 NullableValue<TYPE>& NullableValue<TYPE>::operator=(const NullOptType&)
                                                           BSLS_KEYWORD_NOEXCEPT
 {
-    d_imp.reset();
+    this->reset();
 
     return *this;
 }
@@ -1031,17 +1001,17 @@ inline
 TYPE& NullableValue<TYPE>::makeValue(
                        BSLS_COMPILERFEATURES_FORWARD_REF(BDE_OTHER_TYPE) value)
 {
-    d_imp.emplace(BSLS_COMPILERFEATURES_FORWARD(BDE_OTHER_TYPE, value));
-    return d_imp.value();
+    this->emplace(BSLS_COMPILERFEATURES_FORWARD(BDE_OTHER_TYPE, value));
+    return this->value();
 }
 
 template <class TYPE>
 inline
 TYPE& NullableValue<TYPE>::makeValue()
 {
-    d_imp.emplace();
+    this->emplace();
 
-    return d_imp.value();
+    return this->value();
 }
 
 #if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES
@@ -1050,8 +1020,8 @@ template <class... ARGS>
 inline
 TYPE& NullableValue<TYPE>::makeValueInplace(ARGS&&... args)
 {
-    d_imp.emplace(BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...);
-    return d_imp.value();
+    this->emplace(BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...);
+    return this->value();
 }
 #elif BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
 // {{{ BEGIN GENERATED CODE
@@ -1069,8 +1039,8 @@ inline
 TYPE& NullableValue<TYPE>::makeValueInplace(
                                )
 {
-    d_imp.emplace();
-    return d_imp.value();
+    this->emplace();
+    return this->value();
 }
 #endif  // BDLB_NULLABLEVALUE_VARIADIC_LIMIT_D >= 0
 
@@ -1081,8 +1051,8 @@ inline
 TYPE& NullableValue<TYPE>::makeValueInplace(
                               BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_1) args_1)
 {
-    d_imp.emplace(BSLS_COMPILERFEATURES_FORWARD(ARGS_1, args_1));
-    return d_imp.value();
+    this->emplace(BSLS_COMPILERFEATURES_FORWARD(ARGS_1, args_1));
+    return this->value();
 }
 #endif  // BDLB_NULLABLEVALUE_VARIADIC_LIMIT_D >= 1
 
@@ -1095,9 +1065,9 @@ TYPE& NullableValue<TYPE>::makeValueInplace(
                               BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_1) args_1,
                               BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_2) args_2)
 {
-    d_imp.emplace(BSLS_COMPILERFEATURES_FORWARD(ARGS_1, args_1),
+    this->emplace(BSLS_COMPILERFEATURES_FORWARD(ARGS_1, args_1),
                            BSLS_COMPILERFEATURES_FORWARD(ARGS_2, args_2));
-    return d_imp.value();
+    return this->value();
 }
 #endif  // BDLB_NULLABLEVALUE_VARIADIC_LIMIT_D >= 2
 
@@ -1112,10 +1082,10 @@ TYPE& NullableValue<TYPE>::makeValueInplace(
                               BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_2) args_2,
                               BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_3) args_3)
 {
-    d_imp.emplace(BSLS_COMPILERFEATURES_FORWARD(ARGS_1, args_1),
+    this->emplace(BSLS_COMPILERFEATURES_FORWARD(ARGS_1, args_1),
                            BSLS_COMPILERFEATURES_FORWARD(ARGS_2, args_2),
                            BSLS_COMPILERFEATURES_FORWARD(ARGS_3, args_3));
-    return d_imp.value();
+    return this->value();
 }
 #endif  // BDLB_NULLABLEVALUE_VARIADIC_LIMIT_D >= 3
 
@@ -1132,11 +1102,11 @@ TYPE& NullableValue<TYPE>::makeValueInplace(
                               BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_3) args_3,
                               BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_4) args_4)
 {
-    d_imp.emplace(BSLS_COMPILERFEATURES_FORWARD(ARGS_1, args_1),
+    this->emplace(BSLS_COMPILERFEATURES_FORWARD(ARGS_1, args_1),
                            BSLS_COMPILERFEATURES_FORWARD(ARGS_2, args_2),
                            BSLS_COMPILERFEATURES_FORWARD(ARGS_3, args_3),
                            BSLS_COMPILERFEATURES_FORWARD(ARGS_4, args_4));
-    return d_imp.value();
+    return this->value();
 }
 #endif  // BDLB_NULLABLEVALUE_VARIADIC_LIMIT_D >= 4
 
@@ -1155,12 +1125,12 @@ TYPE& NullableValue<TYPE>::makeValueInplace(
                               BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_4) args_4,
                               BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_5) args_5)
 {
-    d_imp.emplace(BSLS_COMPILERFEATURES_FORWARD(ARGS_1, args_1),
+    this->emplace(BSLS_COMPILERFEATURES_FORWARD(ARGS_1, args_1),
                            BSLS_COMPILERFEATURES_FORWARD(ARGS_2, args_2),
                            BSLS_COMPILERFEATURES_FORWARD(ARGS_3, args_3),
                            BSLS_COMPILERFEATURES_FORWARD(ARGS_4, args_4),
                            BSLS_COMPILERFEATURES_FORWARD(ARGS_5, args_5));
-    return d_imp.value();
+    return this->value();
 }
 #endif  // BDLB_NULLABLEVALUE_VARIADIC_LIMIT_D >= 5
 
@@ -1173,39 +1143,18 @@ inline
 TYPE& NullableValue<TYPE>::makeValueInplace(
                                BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args)
 {
-    d_imp.emplace(BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...);
-    return d_imp.value();
+    this->emplace(BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...);
+    return this->value();
 }
 // }}} END GENERATED CODE
 #endif
-
-template <class TYPE>
-inline
-void NullableValue<TYPE>::reset()
-{
-    d_imp.reset();
-}
-
-template <class TYPE>
-inline
-void NullableValue<TYPE>::swap(NullableValue<TYPE>& other)
-{
-    d_imp.swap(other.d_imp);
-}
-
-template <class TYPE>
-inline
-TYPE& NullableValue<TYPE>::value()
-{
-    return d_imp.value();
-}
 
 // ACCESSORS
 template <class TYPE>
 inline
 const TYPE *NullableValue<TYPE>::addressOr(const TYPE *address) const
 {
-    return d_imp.has_value() ? this->d_imp.operator->() : address;
+    return this->has_value() ? this->operator->() : address;
 }
 
 template <class TYPE>
@@ -1214,12 +1163,12 @@ STREAM& NullableValue<TYPE>::bdexStreamOut(STREAM& stream, int version) const
 {
     using bslx::OutStreamFunctions::bdexStreamOut;
 
-    const bool isNull = !d_imp.has_value();
+    const bool isNull = !this->has_value();
 
     stream.putInt8(isNull ? 1 : 0);
 
     if (!isNull) {
-        bdexStreamOut(stream, d_imp.value(), version);
+        bdexStreamOut(stream, this->value(), version);
     }
 
     return stream;
@@ -1229,7 +1178,7 @@ template <class TYPE>
 inline
 bool NullableValue<TYPE>::isNull() const BSLS_KEYWORD_NOEXCEPT
 {
-    return !d_imp.has_value();
+    return !this->has_value();
 }
 
 template <class TYPE>
@@ -1266,7 +1215,7 @@ bsl::ostream& NullableValue<TYPE>::print(bsl::ostream& stream,
                                          int           level,
                                          int           spacesPerLevel) const
 {
-    if (!d_imp) {
+    if (!this->has_value()) {
         return bdlb::PrintMethods::print(stream,
                                          "NULL",
                                          level,
@@ -1274,46 +1223,30 @@ bsl::ostream& NullableValue<TYPE>::print(bsl::ostream& stream,
     }
 
     return bdlb::PrintMethods::print(stream,
-                                     d_imp.value(),
+                                     this->value(),
                                      level,
                                      spacesPerLevel);
 }
 
 template <class TYPE>
 inline
-const TYPE& NullableValue<TYPE>::value() const
-{
-    return d_imp.value();
-}
-
-template <class TYPE>
-inline
 TYPE NullableValue<TYPE>::valueOr(const TYPE& value) const
 {
-    return d_imp.value_or(value);
+    return this->value_or(value);
 }
 
 template <class TYPE>
 inline
 const TYPE *NullableValue<TYPE>::valueOr(const TYPE *value) const
 {
-    return d_imp.has_value() ? this->d_imp.operator->() : value;
+    return this->has_value() ? this->operator->() : value;
 }
 
 template <class TYPE>
 inline
 const TYPE *NullableValue<TYPE>::valueOrNull() const
 {
-    return d_imp.has_value() ? this->d_imp.operator->(): 0;
-}
-
-template <class TYPE>
-inline
-typename NullableValue<TYPE>::AllocType
-NullableValue<TYPE>::get_allocator() const
-{
-    // Will not compile if 'd_imp' does not have a 'get_allocator' method.
-    return d_imp.get_allocator();
+    return this->has_value() ? this->operator->(): 0;
 }
 
 }  // close package namespace
