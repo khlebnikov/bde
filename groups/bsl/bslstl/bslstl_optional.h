@@ -232,7 +232,7 @@ struct Optional_OptNoSuchType {
     // CREATORS
     explicit BSLS_KEYWORD_CONSTEXPR Optional_OptNoSuchType(
                                                     int) BSLS_KEYWORD_NOEXCEPT;
-        // Create a 'Optional_OptNoSuchType' object.  Note that the argument is
+        // Create an 'Optional_OptNoSuchType' object.  Note that the argument is
         // not used.
 };
 
@@ -269,7 +269,7 @@ static const BSLS_KEYWORD_CONSTEXPR Optional_OptNoSuchType optNoSuchType =
 
 template <class TYPE>
 struct Optional_DataImp {
-    // This component-private 'class' manages a 'value_type' object in
+    // This component-private 'struct' manages a 'value_type' object in
     // 'optional'.  It allows 'optional<TYPE>' to be trivially destructible if
     // 'TYPE' is trivially destructible.  This class also provides an
     // abstraction for 'const' value type.  An 'optional' may contain a 'const'
@@ -295,7 +295,9 @@ struct Optional_DataImp {
     // DATA
     bsls::ObjectBuffer<StoredType> d_buffer;
         // in-place 'TYPE' object
-    bool d_hasValue;  // 'true' if object has a value, and 'false' otherwise
+        
+    bool                           d_hasValue;  
+        // 'true' if object has a value, and 'false' otherwise
   public:
     // CREATORS
     Optional_DataImp() BSLS_KEYWORD_NOEXCEPT;
