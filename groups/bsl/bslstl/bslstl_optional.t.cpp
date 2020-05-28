@@ -69,14 +69,15 @@ void aSsErT(bool condition, const char *message, int line)
 
 }  // close unnamed namespace
 
+
 // ============================================================================
 //               STANDARD BSL TEST DRIVER MACRO ABBREVIATIONS
 // ----------------------------------------------------------------------------
 
-#define ASSERT BSLS_BSLTESTUTIL_ASSERT
-#define ASSERTV BSLS_BSLTESTUTIL_ASSERTV
+#define ASSERT       BSLS_BSLTESTUTIL_ASSERT
+#define ASSERTV      BSLS_BSLTESTUTIL_ASSERTV
 
-#define LOOP_ASSERT BSLS_BSLTESTUTIL_LOOP_ASSERT
+#define LOOP_ASSERT  BSLS_BSLTESTUTIL_LOOP_ASSERT
 #define LOOP0_ASSERT BSLS_BSLTESTUTIL_LOOP0_ASSERT
 #define LOOP1_ASSERT BSLS_BSLTESTUTIL_LOOP1_ASSERT
 #define LOOP2_ASSERT BSLS_BSLTESTUTIL_LOOP2_ASSERT
@@ -85,27 +86,31 @@ void aSsErT(bool condition, const char *message, int line)
 #define LOOP5_ASSERT BSLS_BSLTESTUTIL_LOOP5_ASSERT
 #define LOOP6_ASSERT BSLS_BSLTESTUTIL_LOOP6_ASSERT
 
-#define Q BSLS_BSLTESTUTIL_Q    // Quote identifier literally.
-#define P BSLS_BSLTESTUTIL_P    // Print identifier and value.
-#define P_ BSLS_BSLTESTUTIL_P_  // P(X) without '\n'.
-#define T_ BSLS_BSLTESTUTIL_T_  // Print a tab (w/o newline).
-#define L_ BSLS_BSLTESTUTIL_L_  // current Line number
+#define Q            BSLS_BSLTESTUTIL_Q   // Quote identifier literally.
+#define P            BSLS_BSLTESTUTIL_P   // Print identifier and value.
+#define P_           BSLS_BSLTESTUTIL_P_  // P(X) without '\n'.
+#define T_           BSLS_BSLTESTUTIL_T_  // Print a tab (w/o newline).
+#define L_           BSLS_BSLTESTUTIL_L_  // current Line number
 
 // ============================================================================
 //                       GLOBAL TEST VALUES
 // ----------------------------------------------------------------------------
 
-static bool verbose;
-static bool veryVerbose;
-static bool veryVeryVerbose;
+static bool             verbose;
+static bool         veryVerbose;
+static bool     veryVeryVerbose;
 static bool veryVeryVeryVerbose;
 
 using namespace BloombergLP;
 using namespace bsl;
 
-typedef bslmf::MovableRefUtil MovUtl;
+typedef bslmf::MovableRefUtil MoveUtil;
+
+namespace {
 
 const int MOVED_FROM_VAL = 0x01d;
+
+}  // close unnamed namespace
 
 //=============================================================================
 //                  CLASSES FOR TESTING USAGE EXAMPLES
@@ -186,7 +191,7 @@ struct MyClass1 {
 
     MyClass1(bslmf::MovableRef<MyClass1> other)
     {
-        MyClass1& otherRef     = MovUtl::access(other);
+        MyClass1& otherRef     = MoveUtil::access(other);
         d_def.d_value          = otherRef.d_def.d_value;
         otherRef.d_def.d_value = MOVED_FROM_VAL;
         d_def.d_allocator_p    = 0;
@@ -212,7 +217,7 @@ struct MyClass1 {
     MyClass1& operator=(bslmf::MovableRef<MyClass1> rhs)
         // assign the value of specified 'rhs' to this object
     {
-        MyClass1& otherRef     = MovUtl::access(rhs);
+        MyClass1& otherRef     = MoveUtil::access(rhs);
         d_def.d_value          = otherRef.d_def.d_value;
         otherRef.d_def.d_value = MOVED_FROM_VAL;
         return *this;
@@ -262,13 +267,13 @@ struct MyClass1a {
     }
 
     MyClass1a(bslmf::MovableRef<MyClass1> v)  // IMPLICIT
-    : d_data(MovUtl::move(MovUtl::access(v)))
+    : d_data(MoveUtil::move(MoveUtil::access(v)))
     {
     }
 
 #ifndef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
     MyClass1a(bslmf::MovableRef<const MyClass1> v)
-    : d_data(MovUtl::access(v))
+    : d_data(MoveUtil::access(v))
     {
     }   // IMPLICIT
 #endif  //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
@@ -280,13 +285,13 @@ struct MyClass1a {
     }
 
     MyClass1a(bslmf::MovableRef<MyClass1a> rhs)
-    : d_data(MovUtl::move(MovUtl::access(rhs).d_data))
+    : d_data(MoveUtil::move(MoveUtil::access(rhs).d_data))
     {
         ++s_moveConstructorInvocations;
     }
 #ifndef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
     MyClass1a(bslmf::MovableRef<const MyClass1a> rhs)
-    : d_data(MovUtl::access(rhs).d_data)
+    : d_data(MoveUtil::access(rhs).d_data)
     {
         ++s_moveConstructorInvocations;
     }
@@ -303,14 +308,14 @@ struct MyClass1a {
     MyClass1a& operator=(bslmf::MovableRef<MyClass1a> rhs)
         // assign the value of specified 'rhs' to this object
     {
-        d_data. operator=(MovUtl::move(MovUtl::access(rhs).d_data));
+        d_data. operator=(MoveUtil::move(MoveUtil::access(rhs).d_data));
         return *this;
     }
 #ifndef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
     MyClass1a& operator=(bslmf::MovableRef<const MyClass1a> rhs)
         // assign the value of specified 'rhs' to this object
     {
-        d_data. operator=(MovUtl::access(rhs).d_data);
+        d_data. operator=(MoveUtil::access(rhs).d_data);
         return *this;
     }
 #endif  //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
@@ -370,7 +375,7 @@ struct MyClass2 {
     MyClass2(bslmf::MovableRef<MyClass2> other, bslma::Allocator *a = 0)
     {
         // IMPLICIT
-        MyClass2& otherRef     = MovUtl::access(other);
+        MyClass2& otherRef     = MoveUtil::access(other);
         d_def.d_value          = otherRef.d_def.d_value;
         otherRef.d_def.d_value = MOVED_FROM_VAL;
         if (a) {
@@ -385,7 +390,7 @@ struct MyClass2 {
     MyClass2(bslmf::MovableRef<const MyClass2> other, bslma::Allocator *a = 0)
     {  // IMPLICIT
 
-        const MyClass2& otherRef = MovUtl::access(other);
+        const MyClass2& otherRef = MoveUtil::access(other);
         d_def.d_value            = otherRef.d_def.d_value;
         if (a) {
             d_def.d_allocator_p = a;
@@ -406,7 +411,7 @@ struct MyClass2 {
     MyClass2(bslmf::MovableRef<MyClass1> other, bslma::Allocator *a = 0)
         // IMPLICIT
     {
-        MyClass1& otherRef     = MovUtl::access(other);
+        MyClass1& otherRef     = MoveUtil::access(other);
         d_def.d_value          = otherRef.d_def.d_value;
         otherRef.d_def.d_value = MOVED_FROM_VAL;
         d_def.d_allocator_p    = a;
@@ -415,7 +420,7 @@ struct MyClass2 {
     MyClass2(bslmf::MovableRef<const MyClass1> other, bslma::Allocator *a = 0)
     {  // IMPLICIT
 
-        const MyClass1& otherRef = MovUtl::access(other);
+        const MyClass1& otherRef = MoveUtil::access(other);
         d_def.d_value            = otherRef.d_def.d_value;
         d_def.d_allocator_p      = a;
     }
@@ -442,7 +447,7 @@ struct MyClass2 {
     MyClass2& operator=(bslmf::MovableRef<MyClass2> rhs)
         // assign the value of specified 'rhs' to this object
     {
-        MyClass2& otherRef     = MovUtl::access(rhs);
+        MyClass2& otherRef     = MoveUtil::access(rhs);
         d_def.d_value          = otherRef.d_def.d_value;
         otherRef.d_def.d_value = MOVED_FROM_VAL;
         // do not touch allocator!
@@ -453,7 +458,7 @@ struct MyClass2 {
     MyClass2& operator=(bslmf::MovableRef<const MyClass2> rhs)
         // assign the value of specified 'rhs' to this object
     {
-        const MyClass2& otherRef = MovUtl::access(rhs);
+        const MyClass2& otherRef = MoveUtil::access(rhs);
         d_def.d_value            = otherRef.d_def.d_value;
         // do not touch allocator!
         return *this;
@@ -608,13 +613,13 @@ struct MyClass2a {
     }
 
     MyClass2a(bslmf::MovableRef<MyClass2> rhs)  // IMPLICIT
-    : d_data(MovUtl::move(MovUtl::access(rhs)))
+    : d_data(MoveUtil::move(MoveUtil::access(rhs)))
     {
     }
 
 #ifndef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
     MyClass2a(bslmf::MovableRef<const MyClass2> rhs)  // IMPLICIT
-    : d_data(MovUtl::access(rhs))
+    : d_data(MoveUtil::access(rhs))
     {
     }
 #endif  //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
@@ -632,7 +637,7 @@ struct MyClass2a {
     MyClass2a(bsl::allocator_arg_t,
               bslma::Allocator            *a,
               bslmf::MovableRef<MyClass2>  v)
-    : d_data(MovUtl::move(MovUtl::access(v)), a)
+    : d_data(MoveUtil::move(MoveUtil::access(v)), a)
     {
     }
 
@@ -640,7 +645,7 @@ struct MyClass2a {
     MyClass2a(bsl::allocator_arg_t,
               bslma::Allocator                  *a,
               bslmf::MovableRef<const MyClass2>  v)
-    : d_data(MovUtl::access(v), a)
+    : d_data(MoveUtil::access(v), a)
     {
     }
 #endif  //#ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
@@ -658,14 +663,14 @@ struct MyClass2a {
     }
 
     MyClass2a(bslmf::MovableRef<MyClass2a> rhs)
-    : d_data(MovUtl::move(MovUtl::access(rhs).d_data))
+    : d_data(MoveUtil::move(MoveUtil::access(rhs).d_data))
     {
         ++s_moveConstructorInvocations;
     }
 
 #ifndef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
     MyClass2a(bslmf::MovableRef<const MyClass2a> rhs)
-    : d_data(MovUtl::access(rhs).d_data)
+    : d_data(MoveUtil::access(rhs).d_data)
     {
         ++s_copyConstructorInvocations;
     }
@@ -674,7 +679,7 @@ struct MyClass2a {
     MyClass2a(bsl::allocator_arg_t,
               bslma::Allocator             *a,
               bslmf::MovableRef<MyClass2a>  rhs)
-    : d_data(MovUtl::move(MovUtl::access(rhs).d_data), a)
+    : d_data(MoveUtil::move(MoveUtil::access(rhs).d_data), a)
     {
         ++s_moveConstructorInvocations;
     }
@@ -683,7 +688,7 @@ struct MyClass2a {
     MyClass2a(bsl::allocator_arg_t,
               bslma::Allocator                   *a,
               bslmf::MovableRef<const MyClass2a>  rhs)
-    : d_data(MovUtl::access(rhs).d_data, a)
+    : d_data(MoveUtil::access(rhs).d_data, a)
     {
         ++s_copyConstructorInvocations;
     }
@@ -701,7 +706,7 @@ struct MyClass2a {
     MyClass2a& operator=(bslmf::MovableRef<MyClass2a> rhs)
         // assign the value of specified 'rhs' to this object
     {
-        d_data. operator=(MovUtl::move(MovUtl::access(rhs).d_data));
+        d_data. operator=(MoveUtil::move(MoveUtil::access(rhs).d_data));
         return *this;
     }
 
@@ -709,7 +714,7 @@ struct MyClass2a {
     MyClass2a& operator=(bslmf::MovableRef<const MyClass2a> rhs)
         // assign the value of specified 'rhs' to this object
     {
-        d_data. operator=(MovUtl::access(rhs).d_data);
+        d_data. operator=(MoveUtil::access(rhs).d_data);
         return *this;
     }
 

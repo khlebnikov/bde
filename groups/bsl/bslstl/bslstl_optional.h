@@ -712,25 +712,24 @@ template <class TYPE,
           bool IS_TRIVIALLY_DESTRUCTIBLE =
               BSLSTL_OPTIONAL_IS_TRIVIALLY_DESTRUCTIBLE<TYPE>::value>
 struct Optional_Data : public Optional_DataImp<TYPE> {
-    // Component-level class; DO NOT USE
-
-    // Optional_Data is a type used to manage 'value_type' object in
+    // This component-private 'struct' manages a 'value_type' object in
     // 'optional'.  It allows 'optional<TYPE>' to be trivially destructible if
     // 'TYPE' is trivially destructible.  This class also provides an
-    // abstraction for const value type.  An 'optional' may contain a 'const'
+    // abstraction for 'const' value type.  An 'optional' may contain a 'const'
     // type object.  An assignment to such an 'optional' should not succeed.
     // However, unless the 'optional' itself is 'const', it should be possible
     // to change the value of the 'optional' using 'emplace'.  In order to
     // allow for that, this class manages a non-const object of 'value_type',
     // but all the observers return a 'const' adjusted reference to the managed
     // object.  This functionality is common for all value types and is
-    // implemented in the Optional_DataImp base class.  The derived class,
+    // implemented in the 'Optional_DataImp' base class.  The derived class,
     // 'Optional_Data', is specialised on 'value_type'
-    // 'is_trivially_destructible' trait.  The main template is for non
-    // trivially destructible types, and it provides a destructor that ensures
-    // the value_type destructor is called if 'd_buffer' holds an object.  The
-    // specialisation for 'is_trivially_destructible' types does not have a
-    // user provided destructor and 'is_trivially_destructible' itself.
+    // 'is_trivially_destructible' trait.  The main template is for types that
+    // are not trivially destructible, and it provides a destructor that
+    // ensures the 'value_type' destructor is called if 'd_buffer' holds an
+    // object.  The specialisation for 'is_trivially_destructible' types does
+    // not have a user-provided destructor and 'is_trivially_destructible'
+    // itself.
 
   public:
     // CREATORS
@@ -744,25 +743,23 @@ struct Optional_Data : public Optional_DataImp<TYPE> {
 
 template <class TYPE>
 struct Optional_Data<TYPE, true> : public Optional_DataImp<TYPE> {
-    // Component-level class; DO NOT USE
-
-    // Optional_Data is a type used to manage 'value_type' object in
+    // This component-private 'struct' manages a 'value_type' object in
     // 'optional'.  It allows 'optional<TYPE>' to be trivially destructible if
     // 'TYPE' is trivially destructible.  This class also provides an
-    // abstraction for const value type.  An 'optional' may contain a 'const'
+    // abstraction for 'const' value type.  An 'optional' may contain a 'const'
     // type object.  An assignment to such an 'optional' should not succeed.
     // However, unless the 'optional' itself is 'const', it should be possible
     // to change the value of the 'optional' using 'emplace'.  In order to
     // allow for that, this class manages a non-const object of 'value_type',
     // but all the observers return a 'const' adjusted reference to the managed
     // object.  This functionality is common for all value types and is
-    // implemented in the Optional_DataImp base class.  The derived class,
+    // implemented in the 'Optional_DataImp' base class.  The derived class,
     // 'Optional_Data', is specialised on 'value_type'
-    // 'is_trivially_destructible' trait.  The main template is for non
-    // trivially destructible types, and it provides a destructor that ensures
-    // the value_type destructor is called if 'd_buffer' holds an object.  This
-    // specialisation is for 'is_trivially_destructible' types, and does not
-    // have a user provided destructor, which makes it
+    // 'is_trivially_destructible' trait.  The main template is for types that
+    // are not trivially destructible, and it provides a destructor that
+    // ensures the 'value_type' destructor is called if 'd_buffer' holds an
+    // object.  This specialisation is for 'is_trivially_destructible' types,
+    // and does not have a user provided destructor, which makes it
     // 'is_trivially_destructible' itself.
 
   public:
