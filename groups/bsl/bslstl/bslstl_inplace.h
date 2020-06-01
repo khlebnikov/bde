@@ -18,8 +18,8 @@ BSLS_IDENT("$Id: $")
 // two other in-place construction tag types, 'std::in_place_type_t' and
 // 'std::in_place_index_t'. There is currently no need to provide the
 // equivalent tag types in bsl, but if such need arises, the name of this
-// header has been chosen for the purpose of being the designated place for
-// all in-place construction tags.
+// header has been chosen for the purpose of being the designated place for all
+// in-place construction tags.
 
 #include <bslscm_version.h>
 

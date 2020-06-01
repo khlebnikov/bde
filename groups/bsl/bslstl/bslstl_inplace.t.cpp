@@ -3,9 +3,9 @@
 #include <bsls_bsltestutil.h>
 #include <bsls_platform.h>
 
+#include "bslstl_inplace.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include "bslstl_inplace.h"
 
 using namespace BloombergLP;
 using namespace bsl;
@@ -95,8 +95,8 @@ bool isInplaceTagType(const bsl::in_place_t&)
 {
     return true;
 }
-template<class TYPE>
-bool isInplaceTagType(const TYPE &)
+template <class TYPE>
+bool isInplaceTagType(const TYPE&)
 {
     return false;
 }
@@ -111,12 +111,11 @@ bool isInplaceTagType(const TYPE &)
 
 int main(int argc, char *argv[])
 {
-
-    int  test                = argc > 1 ? atoi(argv[1]) : 0;
-    bool verbose             = argc > 2;
-//  bool veryVerbose         = argc > 3;
-//  bool veryVeryVerbose     = argc > 4;
-//  bool veryVeryVeryVerbose = argc > 5;
+    int  test    = argc > 1 ? atoi(argv[1]) : 0;
+    bool verbose = argc > 2;
+    //  bool veryVerbose         = argc > 3;
+    //  bool veryVeryVerbose     = argc > 4;
+    //  bool veryVeryVeryVerbose = argc > 5;
 
     printf("TEST " __FILE__ " CASE %d\n", test);
 
@@ -140,10 +139,10 @@ int main(int argc, char *argv[])
         if (verbose) printf("\n'bsl::in_place_t' TYPEDEF"
                             "\n=========================\n");
 
-  #ifdef BSLS_LIBRARYFEATURES_HAS_CPP17_BASELINE_LIBRARY
+#ifdef BSLS_LIBRARYFEATURES_HAS_CPP17_BASELINE_LIBRARY
         ASSERT((bsl::is_same<bsl::in_place_t, std::in_place_t>::value));
 
-  #endif //BSLS_LIBRARYFEATURES_HAS_CPP17_BASELINE_LIBRARY
+#endif  //BSLS_LIBRARYFEATURES_HAS_CPP17_BASELINE_LIBRARY
       } break;
       case 1: {
         // --------------------------------------------------------------------
@@ -171,8 +170,8 @@ int main(int argc, char *argv[])
 
       } break;
       default: {
-            fprintf(stderr, "WARNING: CASE `%d' NOT FOUND.\n", test);
-            testStatus = -1;
+        fprintf(stderr, "WARNING: CASE `%d' NOT FOUND.\n", test);
+        testStatus = -1;
       }
     }
 
@@ -197,5 +196,3 @@ int main(int argc, char *argv[])
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // ----------------------------- END-OF-FILE ----------------------------------
-
-
