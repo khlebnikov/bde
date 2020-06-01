@@ -23,6 +23,7 @@ bslstl_hashtable
 bslstl_hashtable_test
 bslstl_hashtablebucketiterator
 bslstl_hashtableiterator
+bslstl_inplace
 bslstl_iosfwd
 bslstl_iserrorcodeenum
 bslstl_iserrorconditionenum

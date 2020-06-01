@@ -89,7 +89,6 @@ BSLS_IDENT("$Id: $")
 #include <bslscm_version.h>
 
 #include <bslstl_badoptionalaccess.h>
-
 #include <bslalg_swaputil.h>
 
 #include <bslma_constructionutil.h>
@@ -117,6 +116,7 @@ BSLS_IDENT("$Id: $")
 #include <bsls_util.h>
 
 #include <stddef.h>
+#include "bslstl_inplace.h"
 
 #ifdef BSLS_LIBRARYFEATURES_HAS_CPP11_BASELINE_LIBRARY
 //#include <bsl_type_traits.h>
@@ -131,21 +131,6 @@ BSLS_IDENT("$Id: $")
 #include <initializer_list>
 #endif
 
-//TBD move these macros somewhere more appropriate
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
-#define BSLS_KEYWORD_LVREF_QUAL &
-#define BSLS_KEYWORD_RVREF_QUAL &&
-// These macros represent ref-qualifiers on member functions in C++11
-#else
-#define BSLS_KEYWORD_LVREF_QUAL
-//#define BSLS_KEYWORD_RVREF_QUAL
-    // In C++03, there is no notion of rvalues, and all member functions are
-    // effectively lvalue qualified.  'BSLS_KEYWORD_RVREF_QUAL' is deliberately
-    // not defined in C++03, as any reasonable implementation of a member
-    // function with this qualifier, i.e. one that takes advantage of the fact
-    // it has been invoked on an rvalue, has no meaning in C++03.
-#endif
-
 namespace bsl {
 
 #ifdef __cpp_lib_optional
@@ -153,10 +138,6 @@ namespace bsl {
 using nullopt_t = std::nullopt_t;
 using std::nullopt;
 
-// 'in_place_t' doesn't have it's own feature test macro, but it will be
-// available with '__cpp_lib_optional' because 'std::optional' uses it.
-using in_place_t = std::in_place_t;
-using std::in_place;
 #else
 
                               // ===============
@@ -190,19 +171,6 @@ BSLS_KEYWORD_CONSTEXPR nullopt_t::nullopt_t(int) BSLS_KEYWORD_NOEXCEPT
 static const BSLS_KEYWORD_CONSTEXPR nullopt_t nullopt = nullopt_t(0);
 // Value of type 'nullopt_t' used as an argument to functions that take a
 // 'nullopt_t' argument.
-
-                              // ================
-                              // class in_place_t
-                              // ================
-struct in_place_t {
-    // This trivial tag type is passed to the constructors of 'optional' to
-    // indicate that the contained object should be constructed
-    //  in-place.
-};
-
-static const BSLS_KEYWORD_CONSTEXPR in_place_t in_place = in_place_t();
-// Value of type 'in_place_t' used as an argument to functions that take an
-// 'in_place_t' argument.
 
 #endif  // __cpp_lib_optional
 
@@ -674,13 +642,14 @@ struct Optional_DataImp {
     void reset() BSLS_KEYWORD_NOEXCEPT;
         // Destroy the 'value_type' object in 'd_buffer', if any.
 
-    TYPE& value() BSLS_KEYWORD_LVREF_QUAL;
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
+    TYPE& value() &;
+    TYPE&& value() &&;
         // Return the 'value_type' object in 'd_buffer' with const
         // qualification adjusted to match that of 'TYPE'.  The behavior is
-        // undefined unless 'true == hasValue()'
-
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
-    TYPE&& value() BSLS_KEYWORD_RVREF_QUAL;
+        // undefined unless 'this->hasValue() == true'
+#else
+    TYPE& value();
         // Return the 'value_type' object in 'd_buffer' with const
         // qualification adjusted to match that of 'TYPE'.  The behavior is
         // undefined unless 'this->hasValue() == true'
@@ -691,13 +660,15 @@ struct Optional_DataImp {
         // return 'true' if there is a value in 'd_buffer', and 'false'
         //otherwise.
 
-    const TYPE& value() const BSLS_KEYWORD_LVREF_QUAL;
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
+    const TYPE& value() const &;
+    const TYPE&& value() const &&;
         // Return the 'value_type' object in 'd_buffer' with const
         // qualification adjusted to match that of 'TYPE'.  The behavior is
         // undefined unless 'this->hasValue() == true'
 
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
-    const TYPE&& value() const BSLS_KEYWORD_RVREF_QUAL;
+#else
+    const TYPE& value() const;
         // Return the 'value_type' object in 'd_buffer' with const
         // qualification adjusted to match that of 'TYPE'.  The behavior is
         // undefined unless 'this->hasValue() == true'
@@ -1535,23 +1506,32 @@ void Optional_DataImp<TYPE>::reset() BSLS_KEYWORD_NOEXCEPT
     d_hasValue = false;
 }
 
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
 template <class TYPE>
 inline
-TYPE& Optional_DataImp<TYPE>::value() BSLS_KEYWORD_LVREF_QUAL
+TYPE& Optional_DataImp<TYPE>::value() &
 {
     BSLS_ASSERT(d_hasValue);
 
     return d_buffer.object();
 }
 
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
 template <class TYPE>
 inline
-TYPE&& Optional_DataImp<TYPE>::value() BSLS_KEYWORD_RVREF_QUAL
+TYPE&& Optional_DataImp<TYPE>::value() &&
 {
     BSLS_ASSERT(d_hasValue);
 
     return std::move(d_buffer.object());
+}
+#else
+template <class TYPE>
+inline
+TYPE& Optional_DataImp<TYPE>::value()
+{
+    BSLS_ASSERT(d_hasValue);
+
+    return d_buffer.object();
 }
 #endif  //defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
 
@@ -1563,22 +1543,32 @@ bool Optional_DataImp<TYPE>::hasValue() const BSLS_KEYWORD_NOEXCEPT
     return d_hasValue;
 }
 
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
 template <class TYPE>
 inline
-const TYPE& Optional_DataImp<TYPE>::value() const BSLS_KEYWORD_LVREF_QUAL
+const TYPE& Optional_DataImp<TYPE>::value() const &
 {
     BSLS_ASSERT(d_hasValue);
 
     return d_buffer.object();
 }
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
+
 template <class TYPE>
 inline
-const TYPE&& Optional_DataImp<TYPE>::value() const BSLS_KEYWORD_RVREF_QUAL
+const TYPE&& Optional_DataImp<TYPE>::value() const &&
 {
     BSLS_ASSERT(d_hasValue);
 
     return std::move(d_buffer.object());
+}
+#else
+template <class TYPE>
+inline
+const TYPE& Optional_DataImp<TYPE>::value() const
+{
+    BSLS_ASSERT(d_hasValue);
+
+    return d_buffer.object();
 }
 #endif  //defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
 
