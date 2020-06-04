@@ -1,5 +1,4 @@
 // bslstl_inplace.h                                                   -*-C++-*-
-
 #ifndef INCLUDED_BSLSTL_INPLACE
 #define INCLUDED_BSLSTL_INPLACE
 
@@ -13,7 +12,7 @@ BSLS_IDENT("$Id: $")
 //
 //@DESCRIPTION: This component provides an implementation of a standard
 // compliant tag type for in-place construction, 'bsl::in_place_t'.  This tag
-// type is used in constructors of bsl::optional to indicate that the contained
+// type is used in constructors of 'bsl::optional' to indicate that the contained
 // object should be constructed in-place.  Note that the standard currently has
 // two other in-place construction tag types, 'std::in_place_type_t' and
 // 'std::in_place_index_t'. There is currently no need to provide the
@@ -57,6 +56,7 @@ static const BSLS_KEYWORD_CONSTEXPR in_place_t in_place = in_place_t();
 }  // close namespace bsl
 
 #endif  // INCLUDED_BSLSTL_INPLACE
+
 // ----------------------------------------------------------------------------
 // Copyright 2020 Bloomberg Finance L.P.
 //

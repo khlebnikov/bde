@@ -1,9 +1,8 @@
 // bslstl_inplace.cpp                                                 -*-C++-*-
-
 #include <bslstl_inplace.h>
 
 #include <bsls_ident.h>
-BSLS_IDENT_RCSID(bslstl_inplacet_cpp, "$Id$ $CSID$")
+BSLS_IDENT_RCSID(bslstl_inplace_cpp, "$Id$ $CSID$")
 
 // ----------------------------------------------------------------------------
 // Copyright 2020 Bloomberg Finance L.P.
