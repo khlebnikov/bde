@@ -59,32 +59,33 @@ BSLS_IDENT("$Id: $")
 // First, create a nullable 'int' object:
 //..
 //  bsl::optional<int> optionalInt;
-//  assert( !optionalInt.has_value());
+//  assert(!optionalInt.has_value());
 //..
 // Next, give the 'int' object the value 123 (making it non-null):
 //..
 //  optionalInt.emplace(123);
-//  assert(optionalInt.has_value());
+//  assert( optionalInt.has_value());
 //  assert(123 == optionalInt.value());
 //..
 // Finally, reset the object to its default constructed state (i.e., null):
 //..
 //  optionalInt.reset();
-//  assert( !optionalInt.has_value());
+//  assert(!optionalInt.has_value());
 //..
-
-//known limitations :
-//  - For assignment/construction constraints, we use is_constructible
-//    but the exact creation will be done using allocation construction
-//    that will invoke an allocator extended constructor for allocator
-//    aware types. If the 'value_type' is constructible from the
-//    assignment/constructor parameter, but doesn't have a corresponding
-//    allocator extended constructor, the overload selection may not be
-//    be correct.
-//  - 'optional<const TYPE>' is fully supported in C++11 and onwards. However,
-//    due to limitations of 'MovableRef<const TYPE>', C++03 support for const
-//    value_types is limited and move semantics of such an 'optional' in C++03
-//    will not work.
+//
+///Known limitations
+///-----------------
+//: o For assignment/construction constraints, we use 'is_constructible' but
+//:   the exact creation will be done using allocation construction that will
+//:   invoke an allocator-extended constructor for allocator-aware types.
+//:   If the 'value_type' is constructible from the assignment/constructor
+//:   argument, but doesn't have a corresponding allocator-extended
+//:   constructor, the overload selection may not be be correct.
+//:
+//: o 'optional<const TYPE>' is fully supported in C++11 and onwards. However,
+//:   due to limitations of 'MovableRef<const TYPE>', C++03 support for const
+//:   'value_type's is limited and move semantics of such an 'optional' in
+//:   C++03 will not work.
 
 #include <bslscm_version.h>
 
@@ -238,14 +239,13 @@ static const BSLS_KEYWORD_CONSTEXPR Optional_OptNoSuchType optNoSuchType =
 template <class TYPE>
 struct Optional_DataImp {
     // This component-private 'struct' manages a 'value_type' object in
-    // 'optional'.  It allows 'optional<TYPE>' to be trivially destructible if
-    // 'TYPE' is trivially destructible.  This class also provides an
+    // 'optional'.  This class provides an
     // abstraction for 'const' value type.  An 'optional' may contain a 'const'
     // type object.  An assignment to such an 'optional' should not succeed.
     // However, unless the 'optional' itself is 'const', it should be possible
     // to change the value of the 'optional' using 'emplace'.  In order to
     // allow for that, this class manages a non-const object of 'value_type',
-    // but all the observers return a 'const' adjusted reference to the managed
+    // but all the accessors return a 'const' adjusted reference to the managed
     // object.  This functionality is common for all value types and is
     // implemented in the 'Optional_DataImp' base class.  The derived class,
     // 'Optional_Data', is specialised on 'value_type'
@@ -684,23 +684,8 @@ template <class TYPE,
               BSLSTL_OPTIONAL_IS_TRIVIALLY_DESTRUCTIBLE<TYPE>::value>
 struct Optional_Data : public Optional_DataImp<TYPE> {
     // This component-private 'struct' manages a 'value_type' object in
-    // 'optional'.  It allows 'optional<TYPE>' to be trivially destructible if
-    // 'TYPE' is trivially destructible.  This class also provides an
-    // abstraction for 'const' value type.  An 'optional' may contain a 'const'
-    // type object.  An assignment to such an 'optional' should not succeed.
-    // However, unless the 'optional' itself is 'const', it should be possible
-    // to change the value of the 'optional' using 'emplace'.  In order to
-    // allow for that, this class manages a non-const object of 'value_type',
-    // but all the observers return a 'const' adjusted reference to the managed
-    // object.  This functionality is common for all value types and is
-    // implemented in the 'Optional_DataImp' base class.  The derived class,
-    // 'Optional_Data', is specialised on 'value_type'
-    // 'is_trivially_destructible' trait.  The main template is for types that
-    // are not trivially destructible, and it provides a destructor that
-    // ensures the 'value_type' destructor is called if 'd_buffer' holds an
-    // object.  The specialisation for 'is_trivially_destructible' types does
-    // not have a user-provided destructor and 'is_trivially_destructible'
-    // itself.
+    // 'optional' by inheriting from `Optional_DataImp`.  In addition, this primary template properly
+    // destroys the owned instance of 'TYPE' in its destructor.
 
   public:
     // CREATORS
@@ -714,23 +699,8 @@ struct Optional_Data : public Optional_DataImp<TYPE> {
 
 template <class TYPE>
 struct Optional_Data<TYPE, true> : public Optional_DataImp<TYPE> {
-    // This component-private 'struct' manages a 'value_type' object in
-    // 'optional'.  It allows 'optional<TYPE>' to be trivially destructible if
-    // 'TYPE' is trivially destructible.  This class also provides an
-    // abstraction for 'const' value type.  An 'optional' may contain a 'const'
-    // type object.  An assignment to such an 'optional' should not succeed.
-    // However, unless the 'optional' itself is 'const', it should be possible
-    // to change the value of the 'optional' using 'emplace'.  In order to
-    // allow for that, this class manages a non-const object of 'value_type',
-    // but all the observers return a 'const' adjusted reference to the managed
-    // object.  This functionality is common for all value types and is
-    // implemented in the 'Optional_DataImp' base class.  The derived class,
-    // 'Optional_Data', is specialised on 'value_type'
-    // 'is_trivially_destructible' trait.  The main template is for types that
-    // are not trivially destructible, and it provides a destructor that
-    // ensures the 'value_type' destructor is called if 'd_buffer' holds an
-    // object.  This specialisation is for 'is_trivially_destructible' types,
-    // and does not have a user provided destructor, which makes it
+    // This partial specialization manages a trivially destructible 'value_type' in optional. 
+    // It does not have a user-provided destructor, which makes it
     // 'is_trivially_destructible' itself.
 
   public:
