@@ -3,7 +3,13 @@
 
 #include <bsls_ident.h>
 BSLS_IDENT_RCSID(bslstl_inplace_cpp, "$Id$ $CSID$")
+namespace bsl {
 
+#if !defined(BSLS_COMPILERFEATURES_SUPPORT_CONSTEXPR)
+const in_place_t in_place = in_place_t();
+#endif
+
+}  // close namespace bsl
 // ----------------------------------------------------------------------------
 // Copyright 2020 Bloomberg Finance L.P.
 //

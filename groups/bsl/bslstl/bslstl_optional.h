@@ -161,9 +161,13 @@ BSLS_KEYWORD_CONSTEXPR nullopt_t::nullopt_t(int) BSLS_KEYWORD_NOEXCEPT
 {
 }
 
-static const BSLS_KEYWORD_CONSTEXPR nullopt_t nullopt = nullopt_t(0);
-// Value of type 'nullopt_t' used as an argument to functions that take a
-// 'nullopt_t' argument.
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_CONSTEXPR)
+BSLS_KEYWORD_INLINE_CONSTEXPR nullopt_t nullopt = nullopt_t(0);
+#else
+extern const nullopt_t nullopt;
+#endif
+    // Value of type 'nullopt_t' used as an argument to functions that take a
+    // 'nullopt_t' argument.
 
 #endif  // __cpp_lib_optional
 
@@ -208,10 +212,15 @@ BSLS_KEYWORD_CONSTEXPR Optional_OptNoSuchType::Optional_OptNoSuchType(
 {
 }
 
-static const BSLS_KEYWORD_CONSTEXPR Optional_OptNoSuchType optNoSuchType =
+
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_CONSTEXPR)
+BSLS_KEYWORD_INLINE_CONSTEXPR Optional_OptNoSuchType optNoSuchType =
     Optional_OptNoSuchType(0);
-// Value of type 'Optional_OptNoSuchType' used as the default argument in
-// functions that are constrained using a function argument.
+#else
+extern const Optional_OptNoSuchType optNoSuchType;
+#endif
+    // Value of type 'Optional_OptNoSuchType' used as the default argument in
+    // functions that are constrained using a function argument.
 
 #ifdef BSLS_LIBRARYFEATURES_HAS_CPP11_BASELINE_LIBRARY
 #define BSLSTL_OPTIONAL_IS_TRIVIALLY_DESTRUCTIBLE                             \

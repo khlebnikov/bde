@@ -47,9 +47,13 @@ struct in_place_t {
     // constructed in-place.
 };
 
-static const BSLS_KEYWORD_CONSTEXPR in_place_t in_place = in_place_t();
-// Value of type 'in_place_t' used as an argument to functions that take an
-// 'in_place_t' argument.
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_CONSTEXPR)
+BSLS_KEYWORD_INLINE_CONSTEXPR in_place_t in_place = in_place_t();
+#else
+extern const in_place_t in_place;
+#endif
+    // Value of type 'in_place_t' used as an argument to functions that take an
+    // 'in_place_t' argument.
 
 #endif  // BSLS_LIBRARYFEATURES_HAS_CPP17_BASELINE_LIBRARY
 
