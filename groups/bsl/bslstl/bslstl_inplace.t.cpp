@@ -1,9 +1,9 @@
 // bslstl_inplace.t.cpp                                               -*-C++-*-
 
+#include <bslstl_inplace.h>
 #include <bsls_bsltestutil.h>
 #include <bsls_platform.h>
 
-#include "bslstl_inplace.h"
 #include <stdio.h>
 #include <stdlib.h>
 

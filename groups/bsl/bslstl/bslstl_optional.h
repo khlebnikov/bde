@@ -1,12 +1,5 @@
 // bslstl_optional.h                                                  -*-C++-*-
 
-// ----------------------------------------------------------------------------
-//                                   NOTICE
-//
-// This component is not up to date with current BDE coding standards, and
-// should not be used as an example for new development.
-// ----------------------------------------------------------------------------
-
 #ifndef INCLUDED_BSLSTL_OPTIONAL
 #define INCLUDED_BSLSTL_OPTIONAL
 
@@ -119,7 +112,6 @@ BSLS_IDENT("$Id: $")
 #include "bslstl_inplace.h"
 
 #ifdef BSLS_LIBRARYFEATURES_HAS_CPP11_BASELINE_LIBRARY
-//#include <bsl_type_traits.h>
 #include <type_traits>
 #endif
 #ifdef BSLS_LIBRARYFEATURES_HAS_CPP17_BASELINE_LIBRARY
