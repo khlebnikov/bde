@@ -129,9 +129,7 @@ int main(int argc, char *argv[])
         //:   'std::in_place_t' is available.
         //
         // Plan:
-        //: 1 For concern 1, if we're using CPP17 library, check that
-        //:   'bsl::in_place_t' is the same type as 'std::in_place_t' using
-        //:   'bsl::is_same'.
+        //: 1 Check that 'bsl::in_place_t' is the same type as 'std::in_place_t' using 'bsl::is_same' if CPP17 library is available (C-1).
         //
         // Testing:
         //   typedef bsl::in_place_t
@@ -151,7 +149,7 @@ int main(int argc, char *argv[])
         //
         // Concerns:
         //: 1 The class is sufficiently functional and 'bsl::in_place' variable
-        //:   exists
+        //:   exists.
         //
         // Plan:
         //: 1 Perform and ad-hoc test of the primary modifiers and accessors.
