@@ -26,7 +26,7 @@ BSLS_IDENT("$Id: $")
 #include <bsls_keyword.h>
 
 #ifdef BSLS_LIBRARYFEATURES_HAS_CPP17_BASELINE_LIBRARY
-#include <utility> // for std::in_place_t
+#include <utility>  // for std::in_place_t
 #endif  // BSLS_LIBRARYFEATURES_HAS_CPP17_BASELINE_LIBRARY
 
 namespace bsl {
