@@ -12,13 +12,13 @@ BSLS_IDENT("$Id: $")
 //
 //@DESCRIPTION: This component provides an implementation of a standard
 // compliant tag type for in-place construction, 'bsl::in_place_t'.  This tag
-// type is used in constructors of 'bsl::optional' to indicate that the contained
-// object should be constructed in-place.  Note that the standard currently has
-// two other in-place construction tag types, 'std::in_place_type_t' and
-// 'std::in_place_index_t'. There is currently no need to provide the
-// equivalent tag types in bsl, but if such need arises, the name of this
-// header has been chosen for the purpose of being the designated place for all
-// in-place construction tags.
+// type is used in constructors of 'bsl::optional' to indicate that the
+// contained object should be constructed in-place.  Note that the standard
+// currently has two other in-place construction tag types,
+// 'std::in_place_type_t' and 'std::in_place_index_t'. There is currently no
+// need to provide the equivalent tag types in bsl, but if such need arises,
+// the name of this header has been chosen for the purpose of being the
+// designated place for all in-place construction tags.
 
 #include <bslscm_version.h>
 
@@ -45,7 +45,17 @@ struct in_place_t {
     // This trivial tag type is passed to the constructors of types that
     // contain a single object to indicate that the contained object should be
     // constructed in-place.
+
+    explicit BSLS_KEYWORD_CONSTEXPR in_place_t() BSLS_KEYWORD_NOEXCEPT;
+        // Create an 'in_place_t' value.
 };
+
+// bde_verify requires an out-of-class definition.  The 'constexpr' 'in_place'
+// variable requires a constructor definition before its own definition below.
+inline
+BSLS_KEYWORD_CONSTEXPR in_place_t::in_place_t() BSLS_KEYWORD_NOEXCEPT
+{
+}
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_CONSTEXPR)
 BSLS_KEYWORD_INLINE_CONSTEXPR in_place_t in_place = in_place_t();

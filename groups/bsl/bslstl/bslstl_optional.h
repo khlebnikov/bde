@@ -153,9 +153,8 @@ struct nullopt_t {
 
 // CREATORS
 
-// bde_verify requires an out-of-class definition.  It also requires the tag
-// variable below not to be extern.  The variable itself requires a constructor
-// definition before its own definition.
+// bde_verify requires an out-of-class definition.  The 'constexpr' variable
+// requires a constructor definition before its own definition.
 inline
 BSLS_KEYWORD_CONSTEXPR nullopt_t::nullopt_t(int) BSLS_KEYWORD_NOEXCEPT
 {
@@ -203,9 +202,8 @@ struct Optional_OptNoSuchType {
 
 // CREATORS
 
-// bde_verify requires an out-of-class definition.  It also requires the tag
-// variable below not to be extern.  The variable itself requires a constructor
-// definition before its own definition.
+// bde_verify requires an out-of-class definition.  The 'constexpr' variable
+// requires a constructor definition before its own definition.
 inline
 BSLS_KEYWORD_CONSTEXPR Optional_OptNoSuchType::Optional_OptNoSuchType(
                                                      int) BSLS_KEYWORD_NOEXCEPT
