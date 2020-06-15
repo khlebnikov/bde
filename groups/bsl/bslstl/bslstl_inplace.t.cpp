@@ -1,6 +1,7 @@
 // bslstl_inplace.t.cpp                                               -*-C++-*-
 
 #include <bslstl_inplace.h>
+
 #include <bsls_bsltestutil.h>
 #include <bsls_platform.h>
 
@@ -139,7 +140,6 @@ int main(int argc, char *argv[])
 
 #ifdef BSLS_LIBRARYFEATURES_HAS_CPP17_BASELINE_LIBRARY
         ASSERT((bsl::is_same<bsl::in_place_t, std::in_place_t>::value));
-
 #endif  //BSLS_LIBRARYFEATURES_HAS_CPP17_BASELINE_LIBRARY
       } break;
       case 1: {

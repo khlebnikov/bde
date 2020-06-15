@@ -46,15 +46,17 @@ struct in_place_t {
     // contain a single object to indicate that the contained object should be
     // constructed in-place.
 
+    // CREATORS
     explicit BSLS_KEYWORD_CONSTEXPR in_place_t() BSLS_KEYWORD_NOEXCEPT;
         // Create an 'in_place_t' value.
 };
 
-// bde_verify requires an out-of-class definition.  The 'constexpr' 'in_place'
-// variable requires a constructor definition before its own definition below.
+// CREATORS
 inline
 BSLS_KEYWORD_CONSTEXPR in_place_t::in_place_t() BSLS_KEYWORD_NOEXCEPT
 {
+    // This 'constexpr' function has to be defined before initialializing the
+    // 'constexpr' value, 'in_place', below.
 }
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_CONSTEXPR)

@@ -185,7 +185,7 @@ namespace bslstl {
                         // ============================
 
 struct Optional_OptNoSuchType {
-    // This trivial tag type is used to distinguish between arguments passed by
+    // This component-private trivial tag type is used to distinguish between arguments passed by
     // a user, and an 'enable_if' argument.  It is not default constructible so
     // the following construction never invokes a constrained single parameter
     // constructor:
@@ -225,7 +225,7 @@ extern const Optional_OptNoSuchType optNoSuchType;
 
 #else
 #define BSLSTL_OPTIONAL_IS_TRIVIALLY_DESTRUCTIBLE bsl::is_trivially_copyable
-// C++03 does not provide a trivially destructible state.  Instead we use
+// C++03 does not provide a trivially destructible trait.  Instead we use
 // 'bsl::is_trivially_copyable' which implies the type is also trivially
 // destructible.
 #endif  // BSLS_LIBRARYFEATURES_HAS_CPP11_BASELINE_LIBRARY
@@ -646,7 +646,7 @@ struct Optional_DataImp {
 
     //ACCESSORS
     bool hasValue() const BSLS_KEYWORD_NOEXCEPT;
-        // return 'true' if there is a value in 'd_buffer', and 'false'
+        // Return 'true' if this objects has a value, and 'false'
         //otherwise.
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
@@ -1461,9 +1461,9 @@ template <class TYPE>
 void Optional_DataImp<TYPE>::reset() BSLS_KEYWORD_NOEXCEPT
 {
     if (d_hasValue) {
-        bslma::DestructionUtil::destroy(&(d_buffer.object()));
+        bslma::DestructionUtil::destroy(&d_buffer.object());
+        d_hasValue = false;
     }
-    d_hasValue = false;
 }
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
@@ -1540,16 +1540,12 @@ const TYPE& Optional_DataImp<TYPE>::value() const
 template <class TYPE, bool IS_TRIVIALLY_DESTRUCTIBLE>
 Optional_Data<TYPE, IS_TRIVIALLY_DESTRUCTIBLE>::~Optional_Data()
 {
-    this->reset();
+    reset();
 }
 
 }  // close package namespace
 }  // close enterprise namespace
 
-#undef BSLS_KEYWORD_LVREF_QUAL
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS)
-#undef BSLS_KEYWORD_RVREF_QUAL
-#endif
 
 #undef BSLSTL_OPTIONAL_IS_TRIVIALLY_DESTRUCTIBLE
 

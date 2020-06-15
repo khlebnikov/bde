@@ -22,6 +22,7 @@ const Optional_OptNoSuchType optNoSuchType = Optional_OptNoSuchType(0);
 
 }  // close package namespace
 }  // close enterprise namespace
+
 // ----------------------------------------------------------------------------
 // Copyright 2020 Bloomberg Finance L.P.
 //
