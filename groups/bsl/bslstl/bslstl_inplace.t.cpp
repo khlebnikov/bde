@@ -130,7 +130,9 @@ int main(int argc, char *argv[])
         //:   'std::in_place_t' is available.
         //
         // Plan:
-        //: 1 Check that 'bsl::in_place_t' is the same type as 'std::in_place_t' using 'bsl::is_same' if CPP17 library is available (C-1).
+        //: 1 Check that 'bsl::in_place_t' is the same type as
+        //:   'std::in_place_t' using 'bsl::is_same' if CPP17 library is
+        //:   available (C-1).
         //
         // Testing:
         //   typedef bsl::in_place_t

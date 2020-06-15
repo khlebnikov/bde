@@ -9,6 +9,8 @@
 #include <bslma_testallocator.h>
 #include <bslma_testallocatormonitor.h>
 
+#include <bsltf_templatetestfacility.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -84,6 +86,8 @@ void aSsErT(bool condition, const char *message, int line)
 #define P_           BSLS_BSLTESTUTIL_P_  // P(X) without '\n'.
 #define T_           BSLS_BSLTESTUTIL_T_  // Print a tab (w/o newline).
 #define L_           BSLS_BSLTESTUTIL_L_  // current Line number
+
+#define RUN_EACH_TYPE BSLTF_TEMPLATETESTFACILITY_RUN_EACH_TYPE
 
 // ============================================================================
 //                       GLOBAL TEST VALUES
@@ -855,51 +859,17 @@ class TestDriver {
     // This class template provides a namespace for testing the 'optional'
     // type.
   public:
-    static void bslstl_optional_test1();
+    static void testCase2();
+        // Optional_DataImp TEST.  The test requires TYPE to be default
+        // constructible.
+
+    static void testCase1();
         // Optional_Data TEST
 
-    static void bslstl_optional_test2();
-        // Optional_DataImp TEST
 };
 
 template <class TYPE>
-void TestDriver<TYPE>::bslstl_optional_test1()
-{
-    // --------------------------------------------------------------------
-    // 'Optional_Data' TEST
-    //  This case exercises the functionality of 'Optional_Data' internal
-    //  class.  'Optional_Data' allows 'bsl::optional' objects to be trivially
-    //  destructible if 'TYPE' is trivially destructible.
-    //
-    // Concerns:
-    //: 1 'Optional_Data<TYPE>' object is trivially destructible if 'TYPE' is
-    //:    trivially destructible.
-    //
-    // Plan:
-    //: 1 Compare 'std::is_trivially_destructible' trait for 'TYPE' and for
-    //:   'Optional_Data<TYPE>'.  In C++03 mode, use
-    //:   'bsl::is_trivially_copyable' trait instead.
-    //
-    // Testing:
-    //   'Optional_Data' class
-    // --------------------------------------------------------------------
-    if (verbose)
-        printf("\n'Optional_Data' TEST"
-               "\n=================== \n");
-
-#ifdef BSLS_LIBRARYFEATURES_HAS_CPP11_BASELINE_LIBRARY
-    ASSERT(std::is_trivially_destructible<TYPE>::value ==
-           std::is_trivially_destructible<
-               BloombergLP::bslstl::Optional_Data<TYPE> >::value);
-#else
-    ASSERT(bsl::is_trivially_copyable<TYPE>::value ==
-           bsl::is_trivially_copyable<
-               BloombergLP::bslstl::Optional_Data<TYPE> >::value);
-#endif  // BSLS_LIBRARYFEATURES_HAS_CPP11_BASELINE_LIBRARY
-}
-
-template <class TYPE>
-void TestDriver<TYPE>::bslstl_optional_test2()
+void TestDriver<TYPE>::testCase2()
 {
     // --------------------------------------------------------------------
     // 'Optional_DataImp' TEST
@@ -934,6 +904,8 @@ void TestDriver<TYPE>::bslstl_optional_test2()
 
     bslma::TestAllocator da("default", veryVeryVeryVerbose);
 
+    typedef const TYPE CONST_TYPE;
+
     BloombergLP::bslstl::Optional_DataImp<TYPE> X;
     ASSERT(!X.hasValue());
 
@@ -945,9 +917,53 @@ void TestDriver<TYPE>::bslstl_optional_test2()
 
     ASSERT(isConstPtr(&val) == isConstPtr(&X.value()));
 
+    BloombergLP::bslstl::Optional_DataImp<CONST_TYPE> CX;
+    CX.emplace(&da, val);
+    ASSERT(isConstPtr(&CX.value()));
+
     X.reset();
     ASSERT(!X.hasValue());
+    CX.reset();
+    ASSERT(!X.hasValue());
+
 }
+
+template <class TYPE>
+void TestDriver<TYPE>::testCase1()
+{
+    // --------------------------------------------------------------------
+    // 'Optional_Data' TEST
+    //  This case exercises the functionality of 'Optional_Data' internal
+    //  class.  'Optional_Data' allows 'bsl::optional' objects to be trivially
+    //  destructible if 'TYPE' is trivially destructible.
+    //
+    // Concerns:
+    //: 1 'Optional_Data<TYPE>' object is trivially destructible if 'TYPE' is
+    //:    trivially destructible.
+    //
+    // Plan:
+    //: 1 Compare 'std::is_trivially_destructible' trait for 'TYPE' and for
+    //:   'Optional_Data<TYPE>'.  In C++03 mode, use
+    //:   'bsl::is_trivially_copyable' trait instead.
+    //
+    // Testing:
+    //   'Optional_Data' class
+    // --------------------------------------------------------------------
+    if (verbose)
+        printf("\n'Optional_Data' TEST"
+               "\n=================== \n");
+
+#ifdef BSLS_LIBRARYFEATURES_HAS_CPP11_BASELINE_LIBRARY
+    ASSERT(std::is_trivially_destructible<TYPE>::value ==
+           std::is_trivially_destructible<
+               BloombergLP::bslstl::Optional_Data<TYPE> >::value);
+#else
+    ASSERT(bsl::is_trivially_copyable<TYPE>::value ==
+           bsl::is_trivially_copyable<
+               BloombergLP::bslstl::Optional_Data<TYPE> >::value);
+#endif  // BSLS_LIBRARYFEATURES_HAS_CPP11_BASELINE_LIBRARY
+}
+
 //=============================================================================
 //                              MAIN PROGRAM
 //-----------------------------------------------------------------------------
@@ -976,14 +992,9 @@ int main(int argc, char **argv)
                    "======================="
                    "\n");
 
-        TestDriver<int>::bslstl_optional_test2();
-        TestDriver<MyClass1>::bslstl_optional_test2();
-        TestDriver<MyClass2>::bslstl_optional_test2();
-        TestDriver<MyClass2a>::bslstl_optional_test2();
-        TestDriver<const int>::bslstl_optional_test2();
-        TestDriver<const MyClass1>::bslstl_optional_test2();
-        TestDriver<const MyClass2>::bslstl_optional_test2();
-        TestDriver<const MyClass2a>::bslstl_optional_test2();
+        RUN_EACH_TYPE(TestDriver,
+                      testCase2,
+                      BSLTF_TEMPLATETESTFACILITY_TEST_TYPES_REGULAR);
       } break;
       case 1: {
         // --------------------------------------------------------------------
@@ -997,11 +1008,10 @@ int main(int argc, char **argv)
                    "===================="
                    "\n");
 
-        TestDriver<int>::bslstl_optional_test1();
-        TestDriver<const int>::bslstl_optional_test1();
-        TestDriver<MyClass1>::bslstl_optional_test1();
-        TestDriver<MyClass2>::bslstl_optional_test1();
-        TestDriver<MyClass2a>::bslstl_optional_test1();
+        RUN_EACH_TYPE(TestDriver,
+                      testCase1,
+                      BSLTF_TEMPLATETESTFACILITY_TEST_TYPES_ALL);
+
       } break;
       default: {
         printf("WARNING: CASE `%d' NOT FOUND.\n", test);

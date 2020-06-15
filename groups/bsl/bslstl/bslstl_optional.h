@@ -152,12 +152,11 @@ struct nullopt_t {
 };
 
 // CREATORS
-
-// bde_verify requires an out-of-class definition.  The 'constexpr' variable
-// requires a constructor definition before its own definition.
 inline
 BSLS_KEYWORD_CONSTEXPR nullopt_t::nullopt_t(int) BSLS_KEYWORD_NOEXCEPT
 {
+    // This 'constexpr' function has to be defined before initialializing the
+    // 'constexpr' value, 'nullopt', below.
 }
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_CONSTEXPR)
@@ -185,10 +184,10 @@ namespace bslstl {
                         // ============================
 
 struct Optional_OptNoSuchType {
-    // This component-private trivial tag type is used to distinguish between arguments passed by
-    // a user, and an 'enable_if' argument.  It is not default constructible so
-    // the following construction never invokes a constrained single parameter
-    // constructor:
+    // This component-private trivial tag type is used to distinguish between
+    // arguments passed by a user, and an 'enable_if' argument.  It is not
+    // default constructible so the following construction never invokes a
+    // constrained single parameter constructor:
     //..
     //   optional<SomeType> o(int, {});
     //..
@@ -201,13 +200,12 @@ struct Optional_OptNoSuchType {
 };
 
 // CREATORS
-
-// bde_verify requires an out-of-class definition.  The 'constexpr' variable
-// requires a constructor definition before its own definition.
 inline
 BSLS_KEYWORD_CONSTEXPR Optional_OptNoSuchType::Optional_OptNoSuchType(
                                                      int) BSLS_KEYWORD_NOEXCEPT
 {
+    // This 'constexpr' function has to be defined before initialializing the
+    // 'constexpr' value, 'optNoSuchType', below.
 }
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_CONSTEXPR)
@@ -695,15 +693,15 @@ struct Optional_Data<TYPE, true> : public Optional_DataImp<TYPE> {
 
   public:
 #ifndef BSLS_LIBRARYFEATURES_HAS_CPP11_BASELINE_LIBRARY
-    // Workaround for C++03 'bsl::is_trivially_copyable' trait.  Note that,
-    // whether 'Optional_Data<TYPE>' satisfies 'bsl::is_trivally_copyable'
-    // doesn't affect 'Optional<TYPE>' 'bsl::is_trivally_copyable' trait.  We
-    // only add this nested trait for the tests to be able to check the C++03
-    // implementation of 'Optional_Data'.  For correct C++03 functionality,
-    // 'bsl::optional' has to add a nested trait as well.
     BSLMF_NESTED_TRAIT_DECLARATION_IF(Optional_Data,
                                       bsl::is_trivially_copyable,
                                       bsl::is_trivially_copyable<TYPE>::value);
+        // Workaround for C++03 'bsl::is_trivially_copyable' trait.  Note that,
+        // whether 'Optional_Data<TYPE>' satisfies 'bsl::is_trivally_copyable'
+        // doesn't affect 'Optional<TYPE>' 'bsl::is_trivally_copyable' trait.
+        // We only add this nested trait for the tests to be able to check the
+        // C++03 implementation of 'Optional_Data'.  For correct C++03
+        // functionality, 'bsl::optional' has to add a nested trait as well.
 #endif  //BSLS_LIBRARYFEATURES_HAS_CPP11_BASELINE_LIBRARY
 };
 
@@ -1540,7 +1538,7 @@ const TYPE& Optional_DataImp<TYPE>::value() const
 template <class TYPE, bool IS_TRIVIALLY_DESTRUCTIBLE>
 Optional_Data<TYPE, IS_TRIVIALLY_DESTRUCTIBLE>::~Optional_Data()
 {
-    reset();
+    this->reset();
 }
 
 }  // close package namespace
