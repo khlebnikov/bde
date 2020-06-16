@@ -860,6 +860,7 @@ class TestDriver {
     // type.
   public:
     static void testCase2();
+    static void testCase2_Imp();
         // Optional_DataImp TEST.  The test requires TYPE to be default
         // constructible.
 
@@ -867,9 +868,15 @@ class TestDriver {
         // Optional_Data TEST
 
 };
-
 template <class TYPE>
 void TestDriver<TYPE>::testCase2()
+{
+    testCase2_Imp();
+    TestDriver<const TYPE>::testCase2_Imp();
+
+}
+template <class TYPE>
+void TestDriver<TYPE>::testCase2_Imp()
 {
     // --------------------------------------------------------------------
     // 'Optional_DataImp' TEST
@@ -914,16 +921,9 @@ void TestDriver<TYPE>::testCase2()
     ASSERT(X.hasValue());
     ASSERT(X.value() == val);
     ASSERT(checkAllocator(X, &da));
-
     ASSERT(isConstPtr(&val) == isConstPtr(&X.value()));
 
-    BloombergLP::bslstl::Optional_DataImp<CONST_TYPE> CX;
-    CX.emplace(&da, val);
-    ASSERT(isConstPtr(&CX.value()));
-
     X.reset();
-    ASSERT(!X.hasValue());
-    CX.reset();
     ASSERT(!X.hasValue());
 
 }

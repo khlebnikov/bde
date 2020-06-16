@@ -223,9 +223,9 @@ extern const Optional_OptNoSuchType optNoSuchType;
 
 #else
 #define BSLSTL_OPTIONAL_IS_TRIVIALLY_DESTRUCTIBLE bsl::is_trivially_copyable
-// C++03 does not provide a trivially destructible trait.  Instead we use
-// 'bsl::is_trivially_copyable' which implies the type is also trivially
-// destructible.
+    // C++03 does not provide a trivially destructible trait.  Instead we use
+    // 'bsl::is_trivially_copyable' which implies the type is also trivially
+    // destructible.
 #endif  // BSLS_LIBRARYFEATURES_HAS_CPP11_BASELINE_LIBRARY
 
                            // ======================
