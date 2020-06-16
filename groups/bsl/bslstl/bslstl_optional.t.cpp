@@ -911,8 +911,6 @@ void TestDriver<TYPE>::testCase2_Imp()
 
     bslma::TestAllocator da("default", veryVeryVeryVerbose);
 
-    typedef const TYPE CONST_TYPE;
-
     BloombergLP::bslstl::Optional_DataImp<TYPE> X;
     ASSERT(!X.hasValue());
 
