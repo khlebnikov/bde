@@ -860,7 +860,6 @@ class TestDriver {
     // type.
   public:
     static void testCase2();
-    static void testCase2_Imp();
         // Optional_DataImp TEST.  The test requires TYPE to be default
         // constructible.
 
@@ -869,14 +868,7 @@ class TestDriver {
 
 };
 template <class TYPE>
-void TestDriver<TYPE>::testCase2()
-{
-    testCase2_Imp();
-    TestDriver<const TYPE>::testCase2_Imp();
-
-}
-template <class TYPE>
-void TestDriver<TYPE>::testCase2_Imp()
+void testCase2_Imp()
 {
     // --------------------------------------------------------------------
     // 'Optional_DataImp' TEST
@@ -923,6 +915,13 @@ void TestDriver<TYPE>::testCase2_Imp()
 
     X.reset();
     ASSERT(!X.hasValue());
+
+}
+template <class TYPE>
+void TestDriver<TYPE>::testCase2()
+{
+    testCase2_Imp<TYPE>();
+    testCase2_Imp<const TYPE>();
 
 }
 
