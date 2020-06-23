@@ -23,6 +23,7 @@ bslstl_hashtable
 bslstl_hashtable_test
 bslstl_hashtablebucketiterator
 bslstl_hashtableiterator
+bslstl_inplace
 bslstl_iosfwd
 bslstl_iserrorcodeenum
 bslstl_iserrorconditionenum
@@ -38,6 +39,7 @@ bslstl_multimap
 bslstl_multimap_test
 bslstl_multiset
 bslstl_multiset_test
+bslstl_optional
 bslstl_ostringstream
 bslstl_ownerless
 bslstl_pair
