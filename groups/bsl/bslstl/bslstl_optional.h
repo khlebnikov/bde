@@ -335,8 +335,7 @@ struct Optional_AssignsFromOptional : bsl::integral_constant<bool, false> {
 // operator.
 #define BSLSTL_OPTIONAL_ENABLE_IF_CONSTRUCT_FROM_OPTIONAL_LVAL                \
     , typename bsl::enable_if<                                                \
-          !bsl::is_same<BSLSTL_OPTIONAL_REMOVE_CVREF_T(ANY_TYPE),             \
-                        TYPE>::value &&                                       \
+          !bsl::is_same<ANY_TYPE, TYPE>::value &&                             \
               !BloombergLP::bslstl::                                          \
                   Optional_ConvertsFromOptional<TYPE, ANY_TYPE>::value        \
                       BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V(                 \
@@ -346,8 +345,7 @@ struct Optional_AssignsFromOptional : bsl::integral_constant<bool, false> {
 
 #define BSLSTL_OPTIONAL_ENABLE_IF_CONSTRUCT_FROM_OPTIONAL_RVAL                \
     , typename bsl::enable_if<                                                \
-          !bsl::is_same<BSLSTL_OPTIONAL_REMOVE_CVREF_T(ANY_TYPE),             \
-                        TYPE>::value &&                                       \
+          !bsl::is_same<ANY_TYPE, TYPE>::value &&                             \
               !BloombergLP::bslstl::                                          \
                   Optional_ConvertsFromOptional<TYPE, ANY_TYPE>::value        \
                       BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V(TYPE, ANY_TYPE), \
