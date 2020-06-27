@@ -241,7 +241,7 @@ extern const Optional_OptNoSuchType optNoSuchType;
 #endif  // BSLS_LIBRARYFEATURES_HAS_CPP11_BASELINE_LIBRARY
 
 // Type traits to assist in choosing the correct assignment and construction
-// overload.  If the 'value_type' converts  or assigns from an
+// overload.  If the 'value_type' converts or assigns from an
 // 'optional<other_type>', then the overload passing the function parameter to
 // the 'value_type' is preferred.  As in 'std' implementation, if the
 // 'value_type' converts or assigns from any value category, we consider it
