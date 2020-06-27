@@ -220,21 +220,30 @@ extern const Optional_OptNoSuchType optNoSuchType;
 
 #ifdef BSLS_LIBRARYFEATURES_HAS_CPP11_BASELINE_LIBRARY
 
-#define BSLSTL_OPTIONAL_OR_IS_CONSTRUCTIBLE_V(U, V)                           \
-    || std::is_constructible<U, V>::value
-#define BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V(U, V)                          \
-    &&std::is_constructible<U, V>::value
-#define BSLSTL_OPTIONAL_AND_IS_ASSIGNABLE_V(U, V)                             \
-    &&std::is_assignable<U, V>::value
-#define BSLSTL_OPTIONAL_IS_TRIVIALLY_DESTRUCTIBLE                             \
-    std::is_trivially_destructible
+template<class U, class V, bool D>
+struct Optional_IsConstructible : std::is_constructible<U, V> {};
+
+template<class U, class V, bool D>
+struct Optional_IsAssignable : std::is_assignable<U, V> {};
+
+template<class TYPE>
+struct Optional_IsTriviallyDestructible : std::is_trivially_destructible<TYPE> {};
+
 
 #else
 
-#define BSLSTL_OPTIONAL_OR_IS_CONSTRUCTIBLE_V(U, V)
-#define BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V(U, V)
-#define BSLSTL_OPTIONAL_AND_IS_ASSIGNABLE_V(U, V)
-#define BSLSTL_OPTIONAL_IS_TRIVIALLY_DESTRUCTIBLE bsl::is_trivially_copyable
+template<class U, class V, bool D>
+struct Optional_IsConstructible : bsl::integral_constant<bool, D> {};
+    // The 'bool' template parameter represents the desired value this trait
+    // should have in order not to affect the constraint it appears in.
+
+template<class U, class V, bool D>
+struct Optional_IsAssignable : bsl::integral_constant<bool, D> {};
+    // The 'bool' template parameter represents the desired value this trait
+    // should have in order not to affect the constraint it appears in.
+
+template<class TYPE>
+struct Optional_IsTriviallyDestructible : bsl::is_trivially_copyable<TYPE> {};
     // C++03 does not provide a trivially destructible trait.  Instead we use
     // 'bsl::is_trivially_copyable' which implies the type is also trivially
     // destructible.
@@ -290,18 +299,10 @@ struct Optional_ConvertsFromOptional
           bsl::is_convertible<bsl::optional<ANY_TYPE>&, TYPE>::value ||
           bsl::is_convertible<const bsl::optional<ANY_TYPE>, TYPE>::value ||
           bsl::is_convertible<bsl::optional<ANY_TYPE>, TYPE>::value
-              BSLSTL_OPTIONAL_OR_IS_CONSTRUCTIBLE_V(
-                  TYPE,
-                  const bsl::optional<ANY_TYPE>&)
-                  BSLSTL_OPTIONAL_OR_IS_CONSTRUCTIBLE_V(
-                      TYPE,
-                      bsl::optional<ANY_TYPE>&)
-                      BSLSTL_OPTIONAL_OR_IS_CONSTRUCTIBLE_V(
-                          TYPE,
-                          const bsl::optional<ANY_TYPE>)
-                          BSLSTL_OPTIONAL_OR_IS_CONSTRUCTIBLE_V(
-                              TYPE,
-                              bsl::optional<ANY_TYPE>) ||
+          || BloombergLP::bslstl::Optional_IsConstructible<TYPE, const bsl::optional<ANY_TYPE>&, false>::value
+          || BloombergLP::bslstl::Optional_IsConstructible<TYPE, bsl::optional<ANY_TYPE>&, false>::value
+          || BloombergLP::bslstl::Optional_IsConstructible< TYPE, const bsl::optional<ANY_TYPE>, false>::value
+          || BloombergLP::bslstl::Optional_IsConstructible<TYPE, bsl::optional<ANY_TYPE>, false>::value ||
           Optional_ConvertsFromStdOptional<TYPE, ANY_TYPE>::value> {
 };
 
@@ -338,8 +339,8 @@ struct Optional_AssignsFromOptional : bsl::integral_constant<bool, false> {
           !bsl::is_same<ANY_TYPE, TYPE>::value &&                             \
               !BloombergLP::bslstl::                                          \
                   Optional_ConvertsFromOptional<TYPE, ANY_TYPE>::value        \
-                      BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V(                 \
-                          TYPE, const ANY_TYPE&),                             \
+                      && BloombergLP::bslstl::Optional_IsConstructible<                 \
+                          TYPE, const ANY_TYPE&, true>::value,                             \
           BloombergLP::bslstl::Optional_OptNoSuchType>::type =                \
           BloombergLP::bslstl::optNoSuchType
 
@@ -348,7 +349,7 @@ struct Optional_AssignsFromOptional : bsl::integral_constant<bool, false> {
           !bsl::is_same<ANY_TYPE, TYPE>::value &&                             \
               !BloombergLP::bslstl::                                          \
                   Optional_ConvertsFromOptional<TYPE, ANY_TYPE>::value        \
-                      BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V(TYPE, ANY_TYPE), \
+                      && BloombergLP::bslstl::Optional_IsConstructible<TYPE, ANY_TYPE, true>::value, \
           BloombergLP::bslstl::Optional_OptNoSuchType>::type =                \
           BloombergLP::bslstl::optNoSuchType
 
@@ -363,7 +364,7 @@ struct Optional_AssignsFromOptional : bsl::integral_constant<bool, false> {
                             bsl::in_place_t>::value &&                        \
               !bsl::is_same<BSLSTL_OPTIONAL_REMOVE_CVREF_T(ANY_TYPE),         \
                             bsl::allocator_arg_t>::value                      \
-                  BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V(TYPE, ANY_TYPE),     \
+              && BloombergLP::bslstl::Optional_IsConstructible<TYPE, ANY_TYPE, true>::value,     \
           BloombergLP::bslstl::Optional_OptNoSuchType>::type =                \
           BloombergLP::bslstl::optNoSuchType
 
@@ -389,8 +390,8 @@ struct Optional_AssignsFromOptional : bsl::integral_constant<bool, false> {
     typename bsl::enable_if<                                                  \
         !BloombergLP::bslstl::Optional_ConvertsFromOptional<TYPE,             \
                                                             ANY_TYPE>::value  \
-                BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V(TYPE, const ANY_TYPE&) \
-                    BSLSTL_OPTIONAL_AND_IS_ASSIGNABLE_V(TYPE&, ANY_TYPE) &&   \
+                && BloombergLP::bslstl::Optional_IsConstructible<TYPE, const ANY_TYPE&, true>::value \
+                && BloombergLP::bslstl::Optional_IsAssignable<TYPE&, ANY_TYPE, true>::value &&   \
             !BloombergLP::bslstl::                                            \
                 Optional_AssignsFromOptional<TYPE, ANY_TYPE>::value,          \
         optional>::type
@@ -398,9 +399,9 @@ struct Optional_AssignsFromOptional : bsl::integral_constant<bool, false> {
 #define BSLSTL_OPTIONAL_ENABLE_ASSIGN_FROM_OPTIONAL_RVAL                      \
     typename bsl::enable_if<                                                  \
         !BloombergLP::bslstl::Optional_ConvertsFromOptional<TYPE, ANY_TYPE>:: \
-                value BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V(TYPE, ANY_TYPE)  \
-                    BSLSTL_OPTIONAL_AND_IS_ASSIGNABLE_V(TYPE&, ANY_TYPE) &&   \
-            !BloombergLP::bslstl::                                            \
+                value && BloombergLP::bslstl::Optional_IsConstructible<TYPE, ANY_TYPE, true>::value  \
+                    && BloombergLP::bslstl::Optional_IsAssignable<TYPE&, ANY_TYPE, true>::value    \
+            && !BloombergLP::bslstl::                                            \
                 Optional_AssignsFromOptional<TYPE, ANY_TYPE>::value,          \
         optional>::type
 
@@ -410,8 +411,8 @@ struct Optional_AssignsFromOptional : bsl::integral_constant<bool, false> {
             !(bsl::is_same<ANY_TYPE,                                          \
                            typename bsl::decay<TYPE>::type>::value &&         \
               std::is_scalar<TYPE>::value)                                    \
-                BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V(TYPE, ANY_TYPE)        \
-                    BSLSTL_OPTIONAL_AND_IS_ASSIGNABLE_V(TYPE&, ANY_TYPE),     \
+                && BloombergLP::bslstl::Optional_IsConstructible<TYPE, ANY_TYPE, true>::value        \
+                    && BloombergLP::bslstl::Optional_IsAssignable<TYPE&, ANY_TYPE, true>::value,     \
         optional>::type
 
 #ifdef BSLS_LIBRARYFEATURES_HAS_CPP17_BASELINE_LIBRARY
@@ -420,8 +421,8 @@ struct Optional_AssignsFromOptional : bsl::integral_constant<bool, false> {
     , typename bsl::enable_if<                                                \
           !BloombergLP::bslstl::                                              \
               Optional_ConvertsFromOptional<TYPE, ANY_TYPE>::value            \
-                  BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V(TYPE,                \
-                                                         const ANY_TYPE&),    \
+                  && BloombergLP::bslstl::Optional_IsConstructible<TYPE,                \
+                                                         const ANY_TYPE&, true>::value,    \
           BloombergLP::bslstl::Optional_OptNoSuchType>::type =                \
           BloombergLP::bslstl::optNoSuchType
 
@@ -429,7 +430,7 @@ struct Optional_AssignsFromOptional : bsl::integral_constant<bool, false> {
     , typename bsl::enable_if<                                                \
           !BloombergLP::bslstl::                                              \
               Optional_ConvertsFromOptional<TYPE, ANY_TYPE>::value            \
-                  BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V(TYPE, ANY_TYPE),     \
+                  && BloombergLP::bslstl::Optional_IsConstructible<TYPE, ANY_TYPE, true>::value,     \
           BloombergLP::bslstl::Optional_OptNoSuchType>::type =                \
           BloombergLP::bslstl::optNoSuchType
 
@@ -437,9 +438,9 @@ struct Optional_AssignsFromOptional : bsl::integral_constant<bool, false> {
     typename bsl::enable_if<                                                  \
         !BloombergLP::bslstl::Optional_ConvertsFromStdOptional<TYPE,          \
                                                                ANY_TYPE>::    \
-                value BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V(TYPE,            \
-                                                             const ANY_TYPE&) \
-                    BSLSTL_OPTIONAL_AND_IS_ASSIGNABLE_V(TYPE&, ANY_TYPE) &&   \
+                value && BloombergLP::bslstl::Optional_IsConstructible<TYPE,            \
+                                             const ANY_TYPE&,true>::value \
+                    && BloombergLP::bslstl::Optional_IsAssignable<TYPE&, ANY_TYPE, true>::value &&   \
             !BloombergLP::bslstl::                                            \
                 Optional_AssignsFromStdOptional<TYPE, ANY_TYPE>::value,       \
         optional>::type
@@ -448,8 +449,8 @@ struct Optional_AssignsFromOptional : bsl::integral_constant<bool, false> {
     typename bsl::enable_if<                                                  \
         !BloombergLP::bslstl::Optional_ConvertsFromStdOptional<TYPE,          \
                                                                ANY_TYPE>::    \
-                value BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V(TYPE, ANY_TYPE)  \
-                    BSLSTL_OPTIONAL_AND_IS_ASSIGNABLE_V(TYPE&, ANY_TYPE) &&   \
+                value && BloombergLP::bslstl::Optional_IsConstructible<TYPE, ANY_TYPE, true>::value  \
+                    && BloombergLP::bslstl::Optional_IsAssignable<TYPE&, ANY_TYPE, true>::value &&   \
             !BloombergLP::bslstl::                                            \
                 Optional_AssignsFromStdOptional<TYPE, ANY_TYPE>::value,       \
         optional>::type
@@ -896,7 +897,7 @@ struct Optional_DataImp {
 
 template <class TYPE,
           bool IS_TRIVIALLY_DESTRUCTIBLE =
-              BSLSTL_OPTIONAL_IS_TRIVIALLY_DESTRUCTIBLE<TYPE>::value>
+              BloombergLP::bslstl::Optional_IsTriviallyDestructible<TYPE>::value>
 struct Optional_Data : public Optional_DataImp<TYPE> {
     // This component-private 'struct' manages a 'value_type' object in
     // 'optional' by inheriting from `Optional_DataImp`.  In addition, this
@@ -11586,10 +11587,6 @@ bool operator>=(const std::optional<LHS_TYPE>& lhs,
 #endif
 }  // close namespace bsl
 
-#undef BSLSTL_OPTIONAL_OR_IS_CONSTRUCTIBLE_V
-#undef BSLSTL_OPTIONAL_AND_IS_CONSTRUCTIBLE_V
-#undef BSLSTL_OPTIONAL_AND_IS_ASSIGNABLE_V
-#undef BSLSTL_OPTIONAL_IS_TRIVIALLY_DESTRUCTIBLE
 #undef BSLSTL_OPTIONAL_REMOVE_CVREF_T
 #undef BSLSTL_OPTIONAL_ENABLE_IF_CONSTRUCT_FROM_OPTIONAL_RVAL
 #undef BSLSTL_OPTIONAL_ENABLE_IF_CONSTRUCT_FROM_ANYTYPE
