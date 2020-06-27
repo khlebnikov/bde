@@ -320,12 +320,12 @@ struct Optional_AssignsFromOptional
 
 template <class TYPE, class ANY_TYPE>
 struct Optional_AssignsFromOptional : bsl::integral_constant<bool, false> {
-    //We only use '|| BloombergLP::bslstl::Optional_AssignsFrom' in
+    // We only use '|| BloombergLP::bslstl::Optional_AssignsFrom' in
     // 'bsl::optional' constraints. In order to ignore
     // Optional_AssignsFromOptional trait in C++03, we set it to false so it
     // never affects the trait it appears in.
 };
-#endif  //BSLS_LIBRARYFEATURES_HAS_CPP11_BASELINE_LIBRARY
+#endif  // BSLS_LIBRARYFEATURES_HAS_CPP11_BASELINE_LIBRARY
 
 // Remove CV qualifiers and references from type 'U'
 #define BSLSTL_OPTIONAL_REMOVE_CVREF_T(U)                                     \
@@ -977,6 +977,7 @@ class optional {
     // DATA
     BloombergLP::bslstl::Optional_Data<TYPE> d_value;
         // in-place 'TYPE' object
+
     allocator_type                           d_allocator;
         // allocator to be used for all in-place 'TYPE' objects
 
