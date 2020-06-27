@@ -257,7 +257,7 @@ struct Optional_IsTriviallyDestructible : bsl::is_trivially_copyable<TYPE> {
 #endif  // BSLS_LIBRARYFEATURES_HAS_CPP11_BASELINE_LIBRARY
 
 // Type traits to assist in choosing the correct assignment and construction
-// overload.  If the 'value_type' converts  or assigns from an
+// overload.  If the 'value_type' converts or assigns from an
 // 'optional<other_type>', then the overload passing the function parameter to
 // the 'value_type' is preferred.  As in 'std' implementation, if the
 // 'value_type' converts or assigns from any value category, we consider it
@@ -338,12 +338,12 @@ struct Optional_AssignsFromOptional
 
 template <class TYPE, class ANY_TYPE>
 struct Optional_AssignsFromOptional : bsl::integral_constant<bool, false> {
-    //We only use '|| BloombergLP::bslstl::Optional_AssignsFrom' in
+    // We only use '|| BloombergLP::bslstl::Optional_AssignsFrom' in
     // 'bsl::optional' constraints. In order to ignore
     // Optional_AssignsFromOptional trait in C++03, we set it to false so it
     // never affects the trait it appears in.
 };
-#endif  //BSLS_LIBRARYFEATURES_HAS_CPP11_BASELINE_LIBRARY
+#endif  // BSLS_LIBRARYFEATURES_HAS_CPP11_BASELINE_LIBRARY
 
 // Remove CV qualifiers and references from type 'U'
 #define BSLSTL_OPTIONAL_REMOVE_CVREF_T(U)                                     \
@@ -1013,6 +1013,7 @@ class optional {
     // DATA
     BloombergLP::bslstl::Optional_Data<TYPE> d_value;
         // in-place 'TYPE' object
+
     allocator_type                           d_allocator;
         // allocator to be used for all in-place 'TYPE' objects
 
