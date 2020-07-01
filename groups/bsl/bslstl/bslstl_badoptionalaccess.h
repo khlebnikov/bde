@@ -23,6 +23,7 @@ BSLS_IDENT("$Id: $")
 
 #include <bsls_exceptionutil.h>
 #include <bsls_keyword.h>
+#include <bsls_libraryfeatures.h>
 
 #include <exception>
 
