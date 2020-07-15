@@ -10923,6 +10923,8 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
 // }}} END GENERATED CODE
 #endif
 
+
+#if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
 template <class TYPE, class INIT_LIST_TYPE, class... ARGS>
 BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
@@ -10937,6 +10939,335 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
                                BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...);
 }
 #endif  // defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
+#elif BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
+// {{{ BEGIN GENERATED CODE
+// The following section is automatically generated.  **DO NOT EDIT**
+// Generator command line: sim_cpp11_features.pl bslstl_optional.h
+#ifndef BSLSTL_OPTIONAL_VARIADIC_LIMIT
+#define BSLSTL_OPTIONAL_VARIADIC_LIMIT 10
+#endif
+#ifndef BSLSTL_OPTIONAL_VARIADIC_LIMIT_P
+#define BSLSTL_OPTIONAL_VARIADIC_LIMIT_P BSLSTL_OPTIONAL_VARIADIC_LIMIT
+#endif
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
+#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 0
+template <class TYPE, class INIT_LIST_TYPE>
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+                     typename bsl::optional<TYPE>::allocator_type const& alloc,
+                     std::initializer_list<INIT_LIST_TYPE>               il)
+{
+    return bsl::optional<TYPE>(bsl::allocator_arg,
+                               alloc,
+                               bsl::in_place,
+                               il);
+}
+#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 0
+
+#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 1
+template <class TYPE, class INIT_LIST_TYPE, class ARGS_01>
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+                     typename bsl::optional<TYPE>::allocator_type const& alloc,
+                     std::initializer_list<INIT_LIST_TYPE>               il,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01)
+{
+    return bsl::optional<TYPE>(bsl::allocator_arg,
+                               alloc,
+                               bsl::in_place,
+                               il,
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_01, args_01));
+}
+#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 1
+
+#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 2
+template <class TYPE, class INIT_LIST_TYPE, class ARGS_01,
+                                            class ARGS_02>
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+                     typename bsl::optional<TYPE>::allocator_type const& alloc,
+                     std::initializer_list<INIT_LIST_TYPE>               il,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02)
+{
+    return bsl::optional<TYPE>(bsl::allocator_arg,
+                               alloc,
+                               bsl::in_place,
+                               il,
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_01, args_01),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_02, args_02));
+}
+#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 2
+
+#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 3
+template <class TYPE, class INIT_LIST_TYPE, class ARGS_01,
+                                            class ARGS_02,
+                                            class ARGS_03>
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+                     typename bsl::optional<TYPE>::allocator_type const& alloc,
+                     std::initializer_list<INIT_LIST_TYPE>               il,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03) args_03)
+{
+    return bsl::optional<TYPE>(bsl::allocator_arg,
+                               alloc,
+                               bsl::in_place,
+                               il,
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_01, args_01),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_02, args_02),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_03, args_03));
+}
+#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 3
+
+#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 4
+template <class TYPE, class INIT_LIST_TYPE, class ARGS_01,
+                                            class ARGS_02,
+                                            class ARGS_03,
+                                            class ARGS_04>
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+                     typename bsl::optional<TYPE>::allocator_type const& alloc,
+                     std::initializer_list<INIT_LIST_TYPE>               il,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03) args_03,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_04) args_04)
+{
+    return bsl::optional<TYPE>(bsl::allocator_arg,
+                               alloc,
+                               bsl::in_place,
+                               il,
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_01, args_01),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_02, args_02),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_03, args_03),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_04, args_04));
+}
+#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 4
+
+#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 5
+template <class TYPE, class INIT_LIST_TYPE, class ARGS_01,
+                                            class ARGS_02,
+                                            class ARGS_03,
+                                            class ARGS_04,
+                                            class ARGS_05>
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+                     typename bsl::optional<TYPE>::allocator_type const& alloc,
+                     std::initializer_list<INIT_LIST_TYPE>               il,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03) args_03,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_04) args_04,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_05) args_05)
+{
+    return bsl::optional<TYPE>(bsl::allocator_arg,
+                               alloc,
+                               bsl::in_place,
+                               il,
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_01, args_01),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_02, args_02),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_03, args_03),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_04, args_04),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_05, args_05));
+}
+#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 5
+
+#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 6
+template <class TYPE, class INIT_LIST_TYPE, class ARGS_01,
+                                            class ARGS_02,
+                                            class ARGS_03,
+                                            class ARGS_04,
+                                            class ARGS_05,
+                                            class ARGS_06>
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+                     typename bsl::optional<TYPE>::allocator_type const& alloc,
+                     std::initializer_list<INIT_LIST_TYPE>               il,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03) args_03,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_04) args_04,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_05) args_05,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_06) args_06)
+{
+    return bsl::optional<TYPE>(bsl::allocator_arg,
+                               alloc,
+                               bsl::in_place,
+                               il,
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_01, args_01),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_02, args_02),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_03, args_03),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_04, args_04),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_05, args_05),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_06, args_06));
+}
+#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 6
+
+#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 7
+template <class TYPE, class INIT_LIST_TYPE, class ARGS_01,
+                                            class ARGS_02,
+                                            class ARGS_03,
+                                            class ARGS_04,
+                                            class ARGS_05,
+                                            class ARGS_06,
+                                            class ARGS_07>
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+                     typename bsl::optional<TYPE>::allocator_type const& alloc,
+                     std::initializer_list<INIT_LIST_TYPE>               il,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03) args_03,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_04) args_04,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_05) args_05,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_06) args_06,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_07) args_07)
+{
+    return bsl::optional<TYPE>(bsl::allocator_arg,
+                               alloc,
+                               bsl::in_place,
+                               il,
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_01, args_01),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_02, args_02),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_03, args_03),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_04, args_04),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_05, args_05),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_06, args_06),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_07, args_07));
+}
+#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 7
+
+#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 8
+template <class TYPE, class INIT_LIST_TYPE, class ARGS_01,
+                                            class ARGS_02,
+                                            class ARGS_03,
+                                            class ARGS_04,
+                                            class ARGS_05,
+                                            class ARGS_06,
+                                            class ARGS_07,
+                                            class ARGS_08>
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+                     typename bsl::optional<TYPE>::allocator_type const& alloc,
+                     std::initializer_list<INIT_LIST_TYPE>               il,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03) args_03,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_04) args_04,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_05) args_05,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_06) args_06,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_07) args_07,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_08) args_08)
+{
+    return bsl::optional<TYPE>(bsl::allocator_arg,
+                               alloc,
+                               bsl::in_place,
+                               il,
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_01, args_01),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_02, args_02),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_03, args_03),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_04, args_04),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_05, args_05),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_06, args_06),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_07, args_07),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_08, args_08));
+}
+#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 8
+
+#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 9
+template <class TYPE, class INIT_LIST_TYPE, class ARGS_01,
+                                            class ARGS_02,
+                                            class ARGS_03,
+                                            class ARGS_04,
+                                            class ARGS_05,
+                                            class ARGS_06,
+                                            class ARGS_07,
+                                            class ARGS_08,
+                                            class ARGS_09>
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+                     typename bsl::optional<TYPE>::allocator_type const& alloc,
+                     std::initializer_list<INIT_LIST_TYPE>               il,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03) args_03,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_04) args_04,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_05) args_05,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_06) args_06,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_07) args_07,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_08) args_08,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_09) args_09)
+{
+    return bsl::optional<TYPE>(bsl::allocator_arg,
+                               alloc,
+                               bsl::in_place,
+                               il,
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_01, args_01),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_02, args_02),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_03, args_03),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_04, args_04),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_05, args_05),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_06, args_06),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_07, args_07),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_08, args_08),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_09, args_09));
+}
+#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 9
+
+#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 10
+template <class TYPE, class INIT_LIST_TYPE, class ARGS_01,
+                                            class ARGS_02,
+                                            class ARGS_03,
+                                            class ARGS_04,
+                                            class ARGS_05,
+                                            class ARGS_06,
+                                            class ARGS_07,
+                                            class ARGS_08,
+                                            class ARGS_09,
+                                            class ARGS_10>
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+                     typename bsl::optional<TYPE>::allocator_type const& alloc,
+                     std::initializer_list<INIT_LIST_TYPE>               il,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03) args_03,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_04) args_04,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_05) args_05,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_06) args_06,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_07) args_07,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_08) args_08,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_09) args_09,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_10) args_10)
+{
+    return bsl::optional<TYPE>(bsl::allocator_arg,
+                               alloc,
+                               bsl::in_place,
+                               il,
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_01, args_01),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_02, args_02),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_03, args_03),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_04, args_04),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_05, args_05),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_06, args_06),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_07, args_07),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_08, args_08),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_09, args_09),
+                              BSLS_COMPILERFEATURES_FORWARD(ARGS_10, args_10));
+}
+#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 10
+
+#endif
+#else
+// The generated code below is a workaround for the absence of perfect
+// forwarding in some compilers.
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
+template <class TYPE, class INIT_LIST_TYPE, class... ARGS>
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+                     typename bsl::optional<TYPE>::allocator_type const& alloc,
+                     std::initializer_list<INIT_LIST_TYPE>               il,
+                     BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)...          args)
+{
+    return bsl::optional<TYPE>(bsl::allocator_arg,
+                               alloc,
+                               bsl::in_place,
+                               il,
+                               BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...);
+}
+#endif
+// }}} END GENERATED CODE
+#endif
 
 template <class TYPE>
 BSLS_KEYWORD_CONSTEXPR bsl::optional<typename bsl::decay<TYPE>::type>
@@ -10972,19 +11303,19 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
 #ifndef BSLSTL_OPTIONAL_VARIADIC_LIMIT
 #define BSLSTL_OPTIONAL_VARIADIC_LIMIT 10
 #endif
-#ifndef BSLSTL_OPTIONAL_VARIADIC_LIMIT_P
-#define BSLSTL_OPTIONAL_VARIADIC_LIMIT_P BSLSTL_OPTIONAL_VARIADIC_LIMIT
+#ifndef BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q
+#define BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q BSLSTL_OPTIONAL_VARIADIC_LIMIT
 #endif
-#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 0
+#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 0
 template <class TYPE>
 BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
                                )
 {
     return bsl::optional<TYPE>(bsl::in_place);
 }
-#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 0
+#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 0
 
-#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 1
+#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 1
 template <class TYPE, class ARGS_01>
 BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
                             BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01)
@@ -10992,9 +11323,9 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
     return bsl::optional<TYPE>(bsl::in_place,
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_01, args_01));
 }
-#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 1
+#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 1
 
-#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 2
+#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 2
 template <class TYPE, class ARGS_01,
                       class ARGS_02>
 BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
@@ -11005,9 +11336,9 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_01, args_01),
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_02, args_02));
 }
-#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 2
+#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 2
 
-#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 3
+#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 3
 template <class TYPE, class ARGS_01,
                       class ARGS_02,
                       class ARGS_03>
@@ -11021,9 +11352,9 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_02, args_02),
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_03, args_03));
 }
-#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 3
+#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 3
 
-#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 4
+#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 4
 template <class TYPE, class ARGS_01,
                       class ARGS_02,
                       class ARGS_03,
@@ -11040,9 +11371,9 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_03, args_03),
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_04, args_04));
 }
-#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 4
+#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 4
 
-#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 5
+#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 5
 template <class TYPE, class ARGS_01,
                       class ARGS_02,
                       class ARGS_03,
@@ -11062,9 +11393,9 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_04, args_04),
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_05, args_05));
 }
-#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 5
+#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 5
 
-#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 6
+#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 6
 template <class TYPE, class ARGS_01,
                       class ARGS_02,
                       class ARGS_03,
@@ -11087,9 +11418,9 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_05, args_05),
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_06, args_06));
 }
-#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 6
+#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 6
 
-#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 7
+#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 7
 template <class TYPE, class ARGS_01,
                       class ARGS_02,
                       class ARGS_03,
@@ -11115,9 +11446,9 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_06, args_06),
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_07, args_07));
 }
-#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 7
+#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 7
 
-#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 8
+#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 8
 template <class TYPE, class ARGS_01,
                       class ARGS_02,
                       class ARGS_03,
@@ -11146,9 +11477,9 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_07, args_07),
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_08, args_08));
 }
-#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 8
+#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 8
 
-#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 9
+#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 9
 template <class TYPE, class ARGS_01,
                       class ARGS_02,
                       class ARGS_03,
@@ -11180,9 +11511,9 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_08, args_08),
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_09, args_09));
 }
-#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 9
+#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 9
 
-#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 10
+#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 10
 template <class TYPE, class ARGS_01,
                       class ARGS_02,
                       class ARGS_03,
@@ -11217,11 +11548,11 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_09, args_09),
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_10, args_10));
 }
-#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 10
+#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 10
 
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
-#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 0
+#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 0
 template <class TYPE, class INIT_LIST_TYPE>
 BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
                                std::initializer_list<INIT_LIST_TYPE>      il)
@@ -11229,9 +11560,9 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
     return bsl::optional<TYPE>(
         bsl::in_place, il);
 }
-#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 0
+#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 0
 
-#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 1
+#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 1
 template <class TYPE, class INIT_LIST_TYPE, class ARGS_01>
 BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
                                std::initializer_list<INIT_LIST_TYPE>      il,
@@ -11240,9 +11571,9 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
     return bsl::optional<TYPE>(
         bsl::in_place, il, BSLS_COMPILERFEATURES_FORWARD(ARGS_01, args_01));
 }
-#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 1
+#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 1
 
-#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 2
+#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 2
 template <class TYPE, class INIT_LIST_TYPE, class ARGS_01,
                                             class ARGS_02>
 BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
@@ -11254,9 +11585,9 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
         bsl::in_place, il, BSLS_COMPILERFEATURES_FORWARD(ARGS_01, args_01),
                            BSLS_COMPILERFEATURES_FORWARD(ARGS_02, args_02));
 }
-#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 2
+#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 2
 
-#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 3
+#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 3
 template <class TYPE, class INIT_LIST_TYPE, class ARGS_01,
                                             class ARGS_02,
                                             class ARGS_03>
@@ -11271,9 +11602,9 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
                            BSLS_COMPILERFEATURES_FORWARD(ARGS_02, args_02),
                            BSLS_COMPILERFEATURES_FORWARD(ARGS_03, args_03));
 }
-#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 3
+#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 3
 
-#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 4
+#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 4
 template <class TYPE, class INIT_LIST_TYPE, class ARGS_01,
                                             class ARGS_02,
                                             class ARGS_03,
@@ -11291,9 +11622,9 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
                            BSLS_COMPILERFEATURES_FORWARD(ARGS_03, args_03),
                            BSLS_COMPILERFEATURES_FORWARD(ARGS_04, args_04));
 }
-#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 4
+#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 4
 
-#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 5
+#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 5
 template <class TYPE, class INIT_LIST_TYPE, class ARGS_01,
                                             class ARGS_02,
                                             class ARGS_03,
@@ -11314,9 +11645,9 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
                            BSLS_COMPILERFEATURES_FORWARD(ARGS_04, args_04),
                            BSLS_COMPILERFEATURES_FORWARD(ARGS_05, args_05));
 }
-#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 5
+#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 5
 
-#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 6
+#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 6
 template <class TYPE, class INIT_LIST_TYPE, class ARGS_01,
                                             class ARGS_02,
                                             class ARGS_03,
@@ -11340,9 +11671,9 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
                            BSLS_COMPILERFEATURES_FORWARD(ARGS_05, args_05),
                            BSLS_COMPILERFEATURES_FORWARD(ARGS_06, args_06));
 }
-#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 6
+#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 6
 
-#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 7
+#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 7
 template <class TYPE, class INIT_LIST_TYPE, class ARGS_01,
                                             class ARGS_02,
                                             class ARGS_03,
@@ -11369,9 +11700,9 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
                            BSLS_COMPILERFEATURES_FORWARD(ARGS_06, args_06),
                            BSLS_COMPILERFEATURES_FORWARD(ARGS_07, args_07));
 }
-#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 7
+#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 7
 
-#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 8
+#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 8
 template <class TYPE, class INIT_LIST_TYPE, class ARGS_01,
                                             class ARGS_02,
                                             class ARGS_03,
@@ -11401,9 +11732,9 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
                            BSLS_COMPILERFEATURES_FORWARD(ARGS_07, args_07),
                            BSLS_COMPILERFEATURES_FORWARD(ARGS_08, args_08));
 }
-#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 8
+#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 8
 
-#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 9
+#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 9
 template <class TYPE, class INIT_LIST_TYPE, class ARGS_01,
                                             class ARGS_02,
                                             class ARGS_03,
@@ -11436,9 +11767,9 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
                            BSLS_COMPILERFEATURES_FORWARD(ARGS_08, args_08),
                            BSLS_COMPILERFEATURES_FORWARD(ARGS_09, args_09));
 }
-#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 9
+#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 9
 
-#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 10
+#if BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 10
 template <class TYPE, class INIT_LIST_TYPE, class ARGS_01,
                                             class ARGS_02,
                                             class ARGS_03,
@@ -11474,7 +11805,7 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
                            BSLS_COMPILERFEATURES_FORWARD(ARGS_09, args_09),
                            BSLS_COMPILERFEATURES_FORWARD(ARGS_10, args_10));
 }
-#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 10
+#endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 10
 
 #endif
 #else
