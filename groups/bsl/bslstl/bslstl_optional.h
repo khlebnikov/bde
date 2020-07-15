@@ -97,6 +97,7 @@ BSLS_IDENT("$Id: $")
 #include <bslmf_if.h>
 #include <bslmf_integralconstant.h>
 #include <bslmf_isbitwisemoveable.h>
+#include <bslmf_issame.h>
 #include <bslmf_isconvertible.h>
 #include <bslmf_movableref.h>
 #include <bslmf_nestedtraitdeclaration.h>
