@@ -528,7 +528,7 @@ struct Optional_DataImp {
     typedef typename bsl::remove_const<TYPE>::type StoredType;
 
     // DATA
-    bsls::ObjectBuffer<StoredType> d_buffer;
+    BloombergLP::bsls::ObjectBuffer<StoredType> d_buffer;
         // in-place 'TYPE' object
 
     bool                           d_hasValue;
@@ -558,7 +558,7 @@ struct Optional_DataImp {
 #elif BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
 // {{{ BEGIN GENERATED CODE
 // The following section is automatically generated.  **DO NOT EDIT**
-// Generator command line: sim_cpp11_features.pl bslstl_optional.h
+// Generator command line: sim_cpp11_features.pl BloombergLP::bslstl_optional.h
 #ifndef BSLSTL_OPTIONAL_VARIADIC_LIMIT
 #define BSLSTL_OPTIONAL_VARIADIC_LIMIT 10
 #endif
@@ -6223,7 +6223,7 @@ template <class TYPE>
 void Optional_DataImp<TYPE>::reset() BSLS_KEYWORD_NOEXCEPT
 {
     if (d_hasValue) {
-        bslma::DestructionUtil::destroy(&d_buffer.object());
+        bslma::DestructionUtil::destroy(d_buffer.address());
         d_hasValue = false;
     }
 }
@@ -8297,8 +8297,9 @@ template <class TYPE, bool USES_BSLMA_ALLOC>
 void optional<TYPE, USES_BSLMA_ALLOC>::swap(optional& other)
 {
     if (this->has_value() && other.has_value()) {
-        BloombergLP::bslalg::SwapUtil::swap(&(this->value()),
-                                            &(other.value()));
+        BloombergLP::bslalg::SwapUtil::swap(
+            BloombergLP::bsls::Util::addressOf(this->value()),
+            BloombergLP::bsls::Util::addressOf(other.value()));
     }
     else if (this->has_value()) {
         other.emplace(MoveUtil::move(this->value()));
@@ -9978,8 +9979,9 @@ template <class TYPE>
 void optional<TYPE, false>::swap(optional& other)
 {
     if (this->has_value() && other.has_value()) {
-        BloombergLP::bslalg::SwapUtil::swap(&(this->value()),
-                                            &(other.value()));
+        BloombergLP::bslalg::SwapUtil::swap(
+            BloombergLP::bsls::Util::addressOf(this->value()),
+            BloombergLP::bsls::Util::addressOf(other.value()));
     }
     else if (this->has_value()) {
         other.emplace(MoveUtil::move(this->value()));
