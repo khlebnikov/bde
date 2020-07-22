@@ -362,6 +362,17 @@ struct Optional_RemoveCVRef {
     typedef typename bsl::remove_cv<bsl::remove_reference<TYPE> >::type type;
 };
 
+template <class TYPE, class ANY_TYPE>
+struct Optional_Propagates_Allocator
+: bsl::integral_constant<
+      bool,
+      BloombergLP::bslma::UsesBslmaAllocator<TYPE>::value &&
+      bsl::is_const<TYPE>::value &&
+      bsl::is_same<ANY_TYPE,
+      typename bsl::remove_cv<TYPE>::type>::value>
+{
+};
+
 // Macros to define common constraints that enable a constructor or assignment
 // operator.
 #define BSLSTL_OPTIONAL_ENABLE_IF_CONSTRUCT_FROM_OPTIONAL_LVAL                \
@@ -382,6 +393,20 @@ struct Optional_RemoveCVRef {
                   Optional_ConvertsFromOptional<TYPE, ANY_TYPE>::value &&     \
               BloombergLP::bslstl::                                           \
                   Optional_IsConstructible<TYPE, ANY_TYPE, true>::value,      \
+          BloombergLP::bslstl::Optional_OptNoSuchType>::type =                \
+          BloombergLP::bslstl::optNoSuchType
+
+#define BSLSTL_OPTIONAL_ENABLE_IF_CONSTRUCT_PROPAGATES_ALLOCATOR              \
+    , typename bsl::enable_if<                                                \
+          BloombergLP::bslstl::                                               \
+              Optional_Propagates_Allocator<TYPE, ANY_TYPE>::value,           \
+          BloombergLP::bslstl::Optional_OptNoSuchType>::type =                \
+          BloombergLP::bslstl::optNoSuchType
+
+#define BSLSTL_OPTIONAL_ENABLE_IF_CONSTRUCT_DOES_NOT_PROPAGATE_ALLOCATOR      \
+    , typename bsl::enable_if<                                                \
+          !BloombergLP::bslstl::                                              \
+              Optional_Propagates_Allocator<TYPE, ANY_TYPE>::value,           \
           BloombergLP::bslstl::Optional_OptNoSuchType>::type =                \
           BloombergLP::bslstl::optNoSuchType
 
@@ -1171,6 +1196,7 @@ class optional {
     template <class ANY_TYPE>
     optional(optional<ANY_TYPE>&& rhs
         BSLSTL_OPTIONAL_ENABLE_IF_CONSTRUCT_FROM_OPTIONAL_RVAL
+        BSLSTL_OPTIONAL_ENABLE_IF_CONSTRUCT_DOES_NOT_PROPAGATE_ALLOCATOR
         BSLSTL_OPTIONAL_ENABLE_IF_NOT_EXPLICIT_CONSTRUCT(TYPE, ANY_TYPE))
         // If specified 'rhs' contains a value, initialize the 'value_type'
         // object by moving from '*rhs'.  Otherwise, create a disengaged
@@ -1187,6 +1213,7 @@ class optional {
     template <class ANY_TYPE>
     explicit optional(optional<ANY_TYPE>&& rhs
         BSLSTL_OPTIONAL_ENABLE_IF_CONSTRUCT_FROM_OPTIONAL_RVAL
+        BSLSTL_OPTIONAL_ENABLE_IF_CONSTRUCT_DOES_NOT_PROPAGATE_ALLOCATOR
         BSLSTL_OPTIONAL_ENABLE_IF_EXPLICIT_CONSTRUCT(TYPE, ANY_TYPE))
         // If specified 'rhs' contains a value, initialize the 'value_type'
         // object by moving from '*rhs'.  Otherwise, create a disengaged
@@ -1200,10 +1227,89 @@ class optional {
         }
     }
 
+    template <class ANY_TYPE>
+    optional(optional<ANY_TYPE>&& rhs
+        BSLSTL_OPTIONAL_ENABLE_IF_CONSTRUCT_FROM_OPTIONAL_RVAL
+        BSLSTL_OPTIONAL_ENABLE_IF_CONSTRUCT_PROPAGATES_ALLOCATOR
+        BSLSTL_OPTIONAL_ENABLE_IF_NOT_EXPLICIT_CONSTRUCT(TYPE, ANY_TYPE))
+        // If specified 'rhs' contains a value, initialize the 'value_type'
+        // object by moving from '*rhs'.  Otherwise, create a disengaged
+        // 'optional'.  This is a special case constructor where 'ANY_TYPE' is
+        // a non-const version of 'TYPE' and we need to use the allocator from
+        // 'rhs' to supply memory for this and any future 'value_type' objects.
+        : d_allocator(rhs.get_allocator())
+    {
+        // Must be in-place inline because the use of 'enable_if' will
+        // otherwise break the MSVC 2010 compiler.
+        if (rhs.has_value()) {
+            emplace(MoveUtil::move(rhs.value()));
+        }
+    }
+
+    template <class ANY_TYPE>
+    explicit optional(optional<ANY_TYPE>&& rhs
+        BSLSTL_OPTIONAL_ENABLE_IF_CONSTRUCT_FROM_OPTIONAL_RVAL
+        BSLSTL_OPTIONAL_ENABLE_IF_CONSTRUCT_PROPAGATES_ALLOCATOR
+        BSLSTL_OPTIONAL_ENABLE_IF_EXPLICIT_CONSTRUCT(TYPE, ANY_TYPE))
+        // If specified 'rhs' contains a value, initialize the 'value_type'
+        // object by moving from '*rhs'.  Otherwise, create a disengaged
+        // 'optional'.  This is a special case constructor where 'ANY_TYPE' is
+        // a non-const version of 'TYPE' and we need to use the allocator from
+        // 'rhs' to supply memory for this and any future 'value_type' objects.
+    : d_allocator(rhs.get_allocator())
+    {
+        // Must be in-place inline because the use of 'enable_if' will
+        // otherwise break the MSVC 2010 compiler.
+        if (rhs.has_value()) {
+            emplace(MoveUtil::move(rhs.value()));
+        }
+    }
+
 #else
     template <class ANY_TYPE>
     optional(BloombergLP::bslmf::MovableRef<optional<ANY_TYPE> > rhs
         BSLSTL_OPTIONAL_ENABLE_IF_CONSTRUCT_FROM_OPTIONAL_RVAL
+        BSLSTL_OPTIONAL_ENABLE_IF_CONSTRUCT_PROPAGATES_ALLOCATOR
+        BSLSTL_OPTIONAL_ENABLE_IF_NOT_EXPLICIT_CONSTRUCT(TYPE, ANY_TYPE))
+        // If specified 'rhs' contains a value, initialize the 'value_type'
+        // object by moving from '*rhs'.  Otherwise, create a disengaged
+        // 'optional'.  This is a special case constructor where 'ANY_TYPE' is
+        // a non-const version of 'TYPE' and we need to use the allocator from
+        // 'rhs' to supply memory for this and any future 'value_type' objects.
+    : d_allocator(MoveUtil::access(rhs).get_allocator())
+    {
+        // Must be in-place inline because the use of 'enable_if' will
+        // otherwise break the MSVC 2010 compiler.
+        optional<ANY_TYPE>& lvalue = rhs;
+        if (lvalue.has_value()) {
+            emplace(MoveUtil::move(lvalue.value()));
+        }
+    }
+
+    template <class ANY_TYPE>
+    explicit optional(BloombergLP::bslmf::MovableRef<optional<ANY_TYPE> > rhs
+        BSLSTL_OPTIONAL_ENABLE_IF_CONSTRUCT_FROM_OPTIONAL_RVAL
+        BSLSTL_OPTIONAL_ENABLE_IF_CONSTRUCT_PROPAGATES_ALLOCATOR
+        BSLSTL_OPTIONAL_ENABLE_IF_EXPLICIT_CONSTRUCT(TYPE, ANY_TYPE))
+        // If specified 'rhs' contains a value, initialize the 'value_type'
+        // object by moving from '*rhs'.  Otherwise, create a disengaged
+        // 'optional'.  This is a special case constructor where 'ANY_TYPE' is
+        // a non-const version of 'TYPE' and we need to use the allocator from
+        // 'rhs' to supply memory for this and any future 'value_type' objects.
+    : d_allocator(MoveUtil::access(rhs).get_allocator())
+    {
+        // Must be in-place inline because the use of 'enable_if' will
+        // otherwise break the MSVC 2010 compiler.
+        optional<ANY_TYPE>& lvalue = rhs;
+        if (lvalue.has_value()) {
+            emplace(MoveUtil::move(lvalue.value()));
+        }
+    }
+
+    template <class ANY_TYPE>
+    optional(BloombergLP::bslmf::MovableRef<optional<ANY_TYPE> > rhs
+        BSLSTL_OPTIONAL_ENABLE_IF_CONSTRUCT_FROM_OPTIONAL_RVAL
+        BSLSTL_OPTIONAL_ENABLE_IF_CONSTRUCT_DOES_NOT_PROPAGATE_ALLOCATOR
         BSLSTL_OPTIONAL_ENABLE_IF_NOT_EXPLICIT_CONSTRUCT(TYPE, ANY_TYPE))
         // If specified 'rhs' contains a value, initialize the 'value_type'
         // object by moving from '*rhs'.  Otherwise, create a disengaged
@@ -1221,6 +1327,7 @@ class optional {
     template <class ANY_TYPE>
     explicit optional(BloombergLP::bslmf::MovableRef<optional<ANY_TYPE> > rhs
         BSLSTL_OPTIONAL_ENABLE_IF_CONSTRUCT_FROM_OPTIONAL_RVAL
+        BSLSTL_OPTIONAL_ENABLE_IF_CONSTRUCT_DOES_NOT_PROPAGATE_ALLOCATOR
         BSLSTL_OPTIONAL_ENABLE_IF_EXPLICIT_CONSTRUCT(TYPE, ANY_TYPE))
         // If specified 'rhs' contains a value, initialize the 'value_type'
         // object by moving from '*rhs'.  Otherwise, create a disengaged
@@ -1234,6 +1341,7 @@ class optional {
             emplace(MoveUtil::move(lvalue.value()));
         }
     }
+
 #endif  //defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES )
 
 #ifdef BSLS_LIBRARYFEATURES_HAS_CPP17_BASELINE_LIBRARY
