@@ -558,7 +558,7 @@ struct Optional_DataImp {
 #elif BSLS_COMPILERFEATURES_SIMULATE_VARIADIC_TEMPLATES
 // {{{ BEGIN GENERATED CODE
 // The following section is automatically generated.  **DO NOT EDIT**
-// Generator command line: sim_cpp11_features.pl BloombergLP::bslstl_optional.h
+// Generator command line: sim_cpp11_features.pl bslstl_optional.h
 #ifndef BSLSTL_OPTIONAL_VARIADIC_LIMIT
 #define BSLSTL_OPTIONAL_VARIADIC_LIMIT 10
 #endif
@@ -1044,6 +1044,13 @@ class optional {
         optional,
         BloombergLP::bslmf::IsBitwiseMoveable,
         BloombergLP::bslmf::IsBitwiseMoveable<TYPE>::value);
+
+#ifndef BSLS_LIBRARYFEATURES_HAS_CPP11_BASELINE_LIBRARY
+    BSLMF_NESTED_TRAIT_DECLARATION_IF(Optional,
+                                      bsl::is_trivially_copyable,
+                                      bsl::is_trivially_copyable<TYPE>::value);
+    // Workaround for C++03 'bsl::is_trivially_copyable' trait.
+#endif  //BSLS_LIBRARYFEATURES_HAS_CPP11_BASELINE_LIBRARY
 
     // CREATORS
     optional();
@@ -3261,6 +3268,13 @@ class optional<TYPE, false> {
         BloombergLP::bslmf::IsBitwiseMoveable,
         BloombergLP::bslmf::IsBitwiseMoveable<TYPE>::value);
 
+#ifndef BSLS_LIBRARYFEATURES_HAS_CPP11_BASELINE_LIBRARY
+    BSLMF_NESTED_TRAIT_DECLARATION_IF(Optional,
+                                      bsl::is_trivially_copyable,
+                                      bsl::is_trivially_copyable<TYPE>::value);
+    // Workaround for C++03 'bsl::is_trivially_copyable' trait.
+#endif  //BSLS_LIBRARYFEATURES_HAS_CPP11_BASELINE_LIBRARY
+
     // CREATORS
     optional();
         // Create a disengaged 'optional' object.
@@ -4698,7 +4712,12 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
     // 'args' as constructor arguments.  Note that this function will fail to
     // compile if TYPE doesn't use allocators.
 
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS) &&        \
+    (!defined(BSLS_PLATFORM_CMP_MSVC) || (BSLS_PLATFORM_CMP_VERSION >= 1900))
+// MSVC2013 has a bug which causes deduction issues in free template functions
+// that have an 'std::initializer_list' argument where the
+// 'std::initializer_list' element type is deduced.
+
 template <class TYPE, class INIT_LIST_TYPE, class... ARGS>
 BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
@@ -4887,7 +4906,9 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
 #endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_G >= 10
 
 
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS) &&        \
+    (!defined(BSLS_PLATFORM_CMP_MSVC) || (BSLS_PLATFORM_CMP_VERSION >= 1900))
+
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_G >= 0
 template <class TYPE, class INIT_LIST_TYPE>
 BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
@@ -5074,7 +5095,9 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)...          args);
 
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS) &&        \
+    (!defined(BSLS_PLATFORM_CMP_MSVC) || (BSLS_PLATFORM_CMP_VERSION >= 1900))
+
 template <class TYPE, class INIT_LIST_TYPE, class... ARGS>
 BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
@@ -5101,7 +5124,12 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
     // 'args' as the constructor arguments.  If TYPE uses an allocator, the
     // default allocator will be used for the 'optional' object.
 
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS) &&        \
+    (!defined(BSLS_PLATFORM_CMP_MSVC) || (BSLS_PLATFORM_CMP_VERSION >= 1900))
+// MSVC2013 has a bug which causes deduction issues in free template functions
+// that have an 'std::initializer_list' argument where the
+// 'std::initializer_list' element type is deduced.
+
 template <class TYPE, class INIT_LIST_TYPE, class... ARGS>
 BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
                               std::initializer_list<INIT_LIST_TYPE>      il,
@@ -5279,7 +5307,9 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
 #endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_H >= 10
 
 
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS) &&        \
+    (!defined(BSLS_PLATFORM_CMP_MSVC) || (BSLS_PLATFORM_CMP_VERSION >= 1900))
+
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_H >= 0
 template <class TYPE, class INIT_LIST_TYPE>
 BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
@@ -5455,7 +5485,9 @@ template <class TYPE, class... ARGS>
 BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
                               BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args);
 
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS) &&        \
+    (!defined(BSLS_PLATFORM_CMP_MSVC) || (BSLS_PLATFORM_CMP_VERSION >= 1900))
+
 template <class TYPE, class INIT_LIST_TYPE, class... ARGS>
 BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
                               std::initializer_list<INIT_LIST_TYPE>      il,
@@ -10925,9 +10957,10 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
 // }}} END GENERATED CODE
 #endif
 
-
 #if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS) &&        \
+    (!defined(BSLS_PLATFORM_CMP_MSVC) || (BSLS_PLATFORM_CMP_VERSION >= 1900))
+
 template <class TYPE, class INIT_LIST_TYPE, class... ARGS>
 BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
@@ -10951,7 +10984,9 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
 #ifndef BSLSTL_OPTIONAL_VARIADIC_LIMIT_P
 #define BSLSTL_OPTIONAL_VARIADIC_LIMIT_P BSLSTL_OPTIONAL_VARIADIC_LIMIT
 #endif
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS) &&        \
+    (!defined(BSLS_PLATFORM_CMP_MSVC) || (BSLS_PLATFORM_CMP_VERSION >= 1900))
+
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 0
 template <class TYPE, class INIT_LIST_TYPE>
 BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
@@ -11254,7 +11289,9 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
 #else
 // The generated code below is a workaround for the absence of perfect
 // forwarding in some compilers.
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS) &&        \
+    (!defined(BSLS_PLATFORM_CMP_MSVC) || (BSLS_PLATFORM_CMP_VERSION >= 1900))
+
 template <class TYPE, class INIT_LIST_TYPE, class... ARGS>
 BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
@@ -11288,7 +11325,9 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
                                BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...);
 }
 
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS) &&        \
+    (!defined(BSLS_PLATFORM_CMP_MSVC) || (BSLS_PLATFORM_CMP_VERSION >= 1900))
+
 template <class TYPE, class INIT_LIST_TYPE, class... ARGS>
 BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
                                std::initializer_list<INIT_LIST_TYPE>      il,
@@ -11553,7 +11592,9 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
 #endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 10
 
 
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS) &&        \
+    (!defined(BSLS_PLATFORM_CMP_MSVC) || (BSLS_PLATFORM_CMP_VERSION >= 1900))
+
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 0
 template <class TYPE, class INIT_LIST_TYPE>
 BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
@@ -11821,7 +11862,9 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
                                BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...);
 }
 
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS)
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS) &&        \
+    (!defined(BSLS_PLATFORM_CMP_MSVC) || (BSLS_PLATFORM_CMP_VERSION >= 1900))
+
 template <class TYPE, class INIT_LIST_TYPE, class... ARGS>
 BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
                                std::initializer_list<INIT_LIST_TYPE>      il,
