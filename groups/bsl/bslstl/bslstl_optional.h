@@ -1046,7 +1046,7 @@ class optional {
         BloombergLP::bslmf::IsBitwiseMoveable<TYPE>::value);
 
 #ifndef BSLS_LIBRARYFEATURES_HAS_CPP11_BASELINE_LIBRARY
-    BSLMF_NESTED_TRAIT_DECLARATION_IF(Optional,
+    BSLMF_NESTED_TRAIT_DECLARATION_IF(optional,
                                       bsl::is_trivially_copyable,
                                       bsl::is_trivially_copyable<TYPE>::value);
     // Workaround for C++03 'bsl::is_trivially_copyable' trait.
@@ -3269,7 +3269,7 @@ class optional<TYPE, false> {
         BloombergLP::bslmf::IsBitwiseMoveable<TYPE>::value);
 
 #ifndef BSLS_LIBRARYFEATURES_HAS_CPP11_BASELINE_LIBRARY
-    BSLMF_NESTED_TRAIT_DECLARATION_IF(Optional,
+    BSLMF_NESTED_TRAIT_DECLARATION_IF(optional,
                                       bsl::is_trivially_copyable,
                                       bsl::is_trivially_copyable<TYPE>::value);
     // Workaround for C++03 'bsl::is_trivially_copyable' trait.
