@@ -1044,7 +1044,7 @@ class optional {
     // UNSPECIFIED BOOL
 
     // This type is needed only in C++03 mode, where 'explicit' conversion
-    // operators are not supported.  A 'function' is implicitly converted to
+    // operators are not supported.  An 'optional' is implicitly converted to
     // 'UnspecifiedBool' when used in 'if' statements, but is not implicitly
     // convertible to 'bool'.
     typedef BloombergLP::bsls::UnspecifiedBool<optional> UnspecifiedBoolUtil;
