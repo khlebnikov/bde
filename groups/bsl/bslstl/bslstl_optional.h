@@ -359,7 +359,8 @@ struct Optional_AssignsFromOptional
 // Remove CV qualifiers and references from type 'U'
 template <class TYPE>
 struct Optional_RemoveCVRef {
-    typedef typename bsl::remove_cv<bsl::remove_reference<TYPE> >::type type;
+    typedef typename bsl::remove_cv<
+        typename bsl::remove_reference<TYPE>::type>::type type;
 };
 
 template <class TYPE, class ANY_TYPE>
@@ -532,6 +533,13 @@ struct Optional_Propagates_Allocator
         optional>::type
 
 #endif  // BSLS_LIBRARYFEATURES_HAS_CPP17_BASELINE_LIBRARY
+
+#define BSLSTL_OPTIONAL_ENABLE_IF_ARG_NOT_ALLOCATOR                           \
+    typename bsl::enable_if<                                                  \
+        !bsl::is_same<                                                        \
+            typename BloombergLP::bslstl::Optional_RemoveCVRef<ARG>::type,    \
+            bsl::allocator_arg_t>::value,                                     \
+        optional<TYPE> >::type
 
                            // ======================
                            // class Optional_DataImp
@@ -4810,9 +4818,10 @@ bool operator>=(const std::optional<LHS_TYPE>& lhs,
 
 template <class TYPE>
 BSLS_KEYWORD_CONSTEXPR bsl::optional<typename bsl::decay<TYPE>::type>
-alloc_optional(typename bsl::optional<
-                   typename bsl::decay<TYPE>::type>::allocator_type const&,
-               BSLS_COMPILERFEATURES_FORWARD_REF(TYPE) rhs);
+make_optional(bsl::allocator_arg_t,
+              typename bsl::optional<
+                  typename bsl::decay<TYPE>::type>::allocator_type const&,
+              BSLS_COMPILERFEATURES_FORWARD_REF(TYPE) rhs);
     // Return an 'optional' object containing a 'TYPE' object created  by
     // invoking a 'bsl::optional' allocator extended 'in_place_t' constructor
     // with the specified 'alloc' as the allocator argument, and specified
@@ -4821,7 +4830,8 @@ alloc_optional(typename bsl::optional<
 
 #if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES
 template <class TYPE, class... ARGS>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)...          args);
     // Return an 'optional' object containing a 'TYPE' object created by
@@ -4837,7 +4847,8 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
 // 'std::initializer_list' element type is deduced.
 
 template <class TYPE, class INIT_LIST_TYPE, class... ARGS>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      std::initializer_list<INIT_LIST_TYPE>               il,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)...          args);
@@ -4859,13 +4870,15 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
 #endif
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_G >= 0
 template <class TYPE>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc);
 #endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_G >= 0
 
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_G >= 1
 template <class TYPE, class ARGS_01>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01);
 #endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_G >= 1
@@ -4873,7 +4886,8 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_G >= 2
 template <class TYPE, class ARGS_01,
                       class ARGS_02>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02);
@@ -4883,7 +4897,8 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
 template <class TYPE, class ARGS_01,
                       class ARGS_02,
                       class ARGS_03>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
@@ -4895,7 +4910,8 @@ template <class TYPE, class ARGS_01,
                       class ARGS_02,
                       class ARGS_03,
                       class ARGS_04>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
@@ -4909,7 +4925,8 @@ template <class TYPE, class ARGS_01,
                       class ARGS_03,
                       class ARGS_04,
                       class ARGS_05>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
@@ -4925,7 +4942,8 @@ template <class TYPE, class ARGS_01,
                       class ARGS_04,
                       class ARGS_05,
                       class ARGS_06>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
@@ -4943,7 +4961,8 @@ template <class TYPE, class ARGS_01,
                       class ARGS_05,
                       class ARGS_06,
                       class ARGS_07>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
@@ -4963,7 +4982,8 @@ template <class TYPE, class ARGS_01,
                       class ARGS_06,
                       class ARGS_07,
                       class ARGS_08>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
@@ -4985,7 +5005,8 @@ template <class TYPE, class ARGS_01,
                       class ARGS_07,
                       class ARGS_08,
                       class ARGS_09>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
@@ -5009,7 +5030,8 @@ template <class TYPE, class ARGS_01,
                       class ARGS_08,
                       class ARGS_09,
                       class ARGS_10>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
@@ -5029,14 +5051,16 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
 
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_G >= 0
 template <class TYPE, class INIT_LIST_TYPE>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      std::initializer_list<INIT_LIST_TYPE>               il);
 #endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_G >= 0
 
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_G >= 1
 template <class TYPE, class INIT_LIST_TYPE, class ARGS_01>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      std::initializer_list<INIT_LIST_TYPE>               il,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01);
@@ -5045,7 +5069,8 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_G >= 2
 template <class TYPE, class INIT_LIST_TYPE, class ARGS_01,
                                             class ARGS_02>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      std::initializer_list<INIT_LIST_TYPE>               il,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
@@ -5056,7 +5081,8 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
 template <class TYPE, class INIT_LIST_TYPE, class ARGS_01,
                                             class ARGS_02,
                                             class ARGS_03>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      std::initializer_list<INIT_LIST_TYPE>               il,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
@@ -5069,7 +5095,8 @@ template <class TYPE, class INIT_LIST_TYPE, class ARGS_01,
                                             class ARGS_02,
                                             class ARGS_03,
                                             class ARGS_04>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      std::initializer_list<INIT_LIST_TYPE>               il,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
@@ -5084,7 +5111,8 @@ template <class TYPE, class INIT_LIST_TYPE, class ARGS_01,
                                             class ARGS_03,
                                             class ARGS_04,
                                             class ARGS_05>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      std::initializer_list<INIT_LIST_TYPE>               il,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
@@ -5101,7 +5129,8 @@ template <class TYPE, class INIT_LIST_TYPE, class ARGS_01,
                                             class ARGS_04,
                                             class ARGS_05,
                                             class ARGS_06>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      std::initializer_list<INIT_LIST_TYPE>               il,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
@@ -5120,7 +5149,8 @@ template <class TYPE, class INIT_LIST_TYPE, class ARGS_01,
                                             class ARGS_05,
                                             class ARGS_06,
                                             class ARGS_07>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      std::initializer_list<INIT_LIST_TYPE>               il,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
@@ -5141,7 +5171,8 @@ template <class TYPE, class INIT_LIST_TYPE, class ARGS_01,
                                             class ARGS_06,
                                             class ARGS_07,
                                             class ARGS_08>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      std::initializer_list<INIT_LIST_TYPE>               il,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
@@ -5164,7 +5195,8 @@ template <class TYPE, class INIT_LIST_TYPE, class ARGS_01,
                                             class ARGS_07,
                                             class ARGS_08,
                                             class ARGS_09>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      std::initializer_list<INIT_LIST_TYPE>               il,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
@@ -5189,7 +5221,8 @@ template <class TYPE, class INIT_LIST_TYPE, class ARGS_01,
                                             class ARGS_08,
                                             class ARGS_09,
                                             class ARGS_10>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      std::initializer_list<INIT_LIST_TYPE>               il,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
@@ -5209,7 +5242,8 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
 // The generated code below is a workaround for the absence of perfect
 // forwarding in some compilers.
 template <class TYPE, class... ARGS>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)...          args);
 
@@ -5217,7 +5251,8 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
     (!defined(BSLS_PLATFORM_CMP_MSVC) || (BSLS_PLATFORM_CMP_VERSION >= 1900))
 
 template <class TYPE, class INIT_LIST_TYPE, class... ARGS>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      std::initializer_list<INIT_LIST_TYPE>               il,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)...          args);
@@ -5233,13 +5268,20 @@ make_optional(BSLS_COMPILERFEATURES_FORWARD_REF(TYPE) rhs);
     // constructor argument.  If TYPE uses an allocator, the default allocator
     // will be used for the 'optional' object.
 
+template <class TYPE>
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional();
+    // Return an 'optional' object containing a default constructed 'TYPE'
+    // object. If TYPE uses an allocator, the default allocator will be used
+    // for the 'optional' object.
+
 #if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES
-template <class TYPE, class... ARGS>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
-                              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args);
+template <class TYPE, class ARG, class... ARGS>
+BSLS_KEYWORD_CONSTEXPR BSLSTL_OPTIONAL_ENABLE_IF_ARG_NOT_ALLOCATOR
+make_optional(BSLS_COMPILERFEATURES_FORWARD_REF(ARG),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)...);
     // Return an 'optional' object containing a 'TYPE' object created by
     // invoking a 'bsl::optional' 'in_place_t' constructor with the specified
-    // 'args' as the constructor arguments.  If TYPE uses an allocator, the
+    // arguments as the constructor arguments.  If TYPE uses an allocator, the
     // default allocator will be used for the 'optional' object.
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS) &&        \
@@ -5269,159 +5311,169 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
 #define BSLSTL_OPTIONAL_VARIADIC_LIMIT_H BSLSTL_OPTIONAL_VARIADIC_LIMIT
 #endif
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_H >= 0
-template <class TYPE>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
-                              );
+template <class TYPE, class ARG>
+BSLS_KEYWORD_CONSTEXPR BSLSTL_OPTIONAL_ENABLE_IF_ARG_NOT_ALLOCATOR
+make_optional(BSLS_COMPILERFEATURES_FORWARD_REF(ARG));
 #endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_H >= 0
 
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_H >= 1
-template <class TYPE, class ARGS_01>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01);
+template <class TYPE, class ARG, class ARGS_01>
+BSLS_KEYWORD_CONSTEXPR BSLSTL_OPTIONAL_ENABLE_IF_ARG_NOT_ALLOCATOR
+make_optional(BSLS_COMPILERFEATURES_FORWARD_REF(ARG),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01));
 #endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_H >= 1
 
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_H >= 2
-template <class TYPE, class ARGS_01,
-                      class ARGS_02>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02);
+template <class TYPE, class ARG, class ARGS_01,
+                                 class ARGS_02>
+BSLS_KEYWORD_CONSTEXPR BSLSTL_OPTIONAL_ENABLE_IF_ARG_NOT_ALLOCATOR
+make_optional(BSLS_COMPILERFEATURES_FORWARD_REF(ARG),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02));
 #endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_H >= 2
 
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_H >= 3
-template <class TYPE, class ARGS_01,
-                      class ARGS_02,
-                      class ARGS_03>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03) args_03);
+template <class TYPE, class ARG, class ARGS_01,
+                                 class ARGS_02,
+                                 class ARGS_03>
+BSLS_KEYWORD_CONSTEXPR BSLSTL_OPTIONAL_ENABLE_IF_ARG_NOT_ALLOCATOR
+make_optional(BSLS_COMPILERFEATURES_FORWARD_REF(ARG),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03));
 #endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_H >= 3
 
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_H >= 4
-template <class TYPE, class ARGS_01,
-                      class ARGS_02,
-                      class ARGS_03,
-                      class ARGS_04>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03) args_03,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_04) args_04);
+template <class TYPE, class ARG, class ARGS_01,
+                                 class ARGS_02,
+                                 class ARGS_03,
+                                 class ARGS_04>
+BSLS_KEYWORD_CONSTEXPR BSLSTL_OPTIONAL_ENABLE_IF_ARG_NOT_ALLOCATOR
+make_optional(BSLS_COMPILERFEATURES_FORWARD_REF(ARG),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_04));
 #endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_H >= 4
 
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_H >= 5
-template <class TYPE, class ARGS_01,
-                      class ARGS_02,
-                      class ARGS_03,
-                      class ARGS_04,
-                      class ARGS_05>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03) args_03,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_04) args_04,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_05) args_05);
+template <class TYPE, class ARG, class ARGS_01,
+                                 class ARGS_02,
+                                 class ARGS_03,
+                                 class ARGS_04,
+                                 class ARGS_05>
+BSLS_KEYWORD_CONSTEXPR BSLSTL_OPTIONAL_ENABLE_IF_ARG_NOT_ALLOCATOR
+make_optional(BSLS_COMPILERFEATURES_FORWARD_REF(ARG),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_04),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_05));
 #endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_H >= 5
 
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_H >= 6
-template <class TYPE, class ARGS_01,
-                      class ARGS_02,
-                      class ARGS_03,
-                      class ARGS_04,
-                      class ARGS_05,
-                      class ARGS_06>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03) args_03,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_04) args_04,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_05) args_05,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_06) args_06);
+template <class TYPE, class ARG, class ARGS_01,
+                                 class ARGS_02,
+                                 class ARGS_03,
+                                 class ARGS_04,
+                                 class ARGS_05,
+                                 class ARGS_06>
+BSLS_KEYWORD_CONSTEXPR BSLSTL_OPTIONAL_ENABLE_IF_ARG_NOT_ALLOCATOR
+make_optional(BSLS_COMPILERFEATURES_FORWARD_REF(ARG),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_04),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_05),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_06));
 #endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_H >= 6
 
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_H >= 7
-template <class TYPE, class ARGS_01,
-                      class ARGS_02,
-                      class ARGS_03,
-                      class ARGS_04,
-                      class ARGS_05,
-                      class ARGS_06,
-                      class ARGS_07>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03) args_03,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_04) args_04,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_05) args_05,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_06) args_06,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_07) args_07);
+template <class TYPE, class ARG, class ARGS_01,
+                                 class ARGS_02,
+                                 class ARGS_03,
+                                 class ARGS_04,
+                                 class ARGS_05,
+                                 class ARGS_06,
+                                 class ARGS_07>
+BSLS_KEYWORD_CONSTEXPR BSLSTL_OPTIONAL_ENABLE_IF_ARG_NOT_ALLOCATOR
+make_optional(BSLS_COMPILERFEATURES_FORWARD_REF(ARG),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_04),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_05),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_06),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_07));
 #endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_H >= 7
 
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_H >= 8
-template <class TYPE, class ARGS_01,
-                      class ARGS_02,
-                      class ARGS_03,
-                      class ARGS_04,
-                      class ARGS_05,
-                      class ARGS_06,
-                      class ARGS_07,
-                      class ARGS_08>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03) args_03,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_04) args_04,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_05) args_05,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_06) args_06,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_07) args_07,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_08) args_08);
+template <class TYPE, class ARG, class ARGS_01,
+                                 class ARGS_02,
+                                 class ARGS_03,
+                                 class ARGS_04,
+                                 class ARGS_05,
+                                 class ARGS_06,
+                                 class ARGS_07,
+                                 class ARGS_08>
+BSLS_KEYWORD_CONSTEXPR BSLSTL_OPTIONAL_ENABLE_IF_ARG_NOT_ALLOCATOR
+make_optional(BSLS_COMPILERFEATURES_FORWARD_REF(ARG),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_04),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_05),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_06),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_07),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_08));
 #endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_H >= 8
 
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_H >= 9
-template <class TYPE, class ARGS_01,
-                      class ARGS_02,
-                      class ARGS_03,
-                      class ARGS_04,
-                      class ARGS_05,
-                      class ARGS_06,
-                      class ARGS_07,
-                      class ARGS_08,
-                      class ARGS_09>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03) args_03,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_04) args_04,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_05) args_05,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_06) args_06,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_07) args_07,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_08) args_08,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_09) args_09);
+template <class TYPE, class ARG, class ARGS_01,
+                                 class ARGS_02,
+                                 class ARGS_03,
+                                 class ARGS_04,
+                                 class ARGS_05,
+                                 class ARGS_06,
+                                 class ARGS_07,
+                                 class ARGS_08,
+                                 class ARGS_09>
+BSLS_KEYWORD_CONSTEXPR BSLSTL_OPTIONAL_ENABLE_IF_ARG_NOT_ALLOCATOR
+make_optional(BSLS_COMPILERFEATURES_FORWARD_REF(ARG),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_04),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_05),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_06),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_07),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_08),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_09));
 #endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_H >= 9
 
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_H >= 10
-template <class TYPE, class ARGS_01,
-                      class ARGS_02,
-                      class ARGS_03,
-                      class ARGS_04,
-                      class ARGS_05,
-                      class ARGS_06,
-                      class ARGS_07,
-                      class ARGS_08,
-                      class ARGS_09,
-                      class ARGS_10>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03) args_03,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_04) args_04,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_05) args_05,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_06) args_06,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_07) args_07,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_08) args_08,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_09) args_09,
-                           BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_10) args_10);
+template <class TYPE, class ARG, class ARGS_01,
+                                 class ARGS_02,
+                                 class ARGS_03,
+                                 class ARGS_04,
+                                 class ARGS_05,
+                                 class ARGS_06,
+                                 class ARGS_07,
+                                 class ARGS_08,
+                                 class ARGS_09,
+                                 class ARGS_10>
+BSLS_KEYWORD_CONSTEXPR BSLSTL_OPTIONAL_ENABLE_IF_ARG_NOT_ALLOCATOR
+make_optional(BSLS_COMPILERFEATURES_FORWARD_REF(ARG),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_04),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_05),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_06),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_07),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_08),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_09),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_10));
 #endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_H >= 10
 
 
@@ -5599,9 +5651,10 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
 #else
 // The generated code below is a workaround for the absence of perfect
 // forwarding in some compilers.
-template <class TYPE, class... ARGS>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
-                              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args);
+template <class TYPE, class ARG, class... ARGS>
+BSLS_KEYWORD_CONSTEXPR BSLSTL_OPTIONAL_ENABLE_IF_ARG_NOT_ALLOCATOR
+make_optional(BSLS_COMPILERFEATURES_FORWARD_REF(ARG),
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)...);
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_GENERALIZED_INITIALIZERS) &&        \
     (!defined(BSLS_PLATFORM_CMP_MSVC) || (BSLS_PLATFORM_CMP_VERSION >= 1900))
@@ -10752,9 +10805,10 @@ BSLS_KEYWORD_CONSTEXPR bool operator>=(
 
 template <class TYPE>
 BSLS_KEYWORD_CONSTEXPR bsl::optional<typename bsl::decay<TYPE>::type>
-alloc_optional(typename bsl::optional<typename bsl::decay<TYPE>::type>::
-                   allocator_type const&               alloc,
-               BSLS_COMPILERFEATURES_FORWARD_REF(TYPE) rhs)
+make_optional(bsl::allocator_arg_t,
+              typename bsl::optional<typename bsl::decay<TYPE>::type>::
+                  allocator_type const&               alloc,
+              BSLS_COMPILERFEATURES_FORWARD_REF(TYPE) rhs)
 {
     return bsl::optional<typename bsl::decay<TYPE>::type>(
         bsl::allocator_arg,
@@ -10765,7 +10819,8 @@ alloc_optional(typename bsl::optional<typename bsl::decay<TYPE>::type>::
 
 #if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES
 template <class TYPE, class... ARGS>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)...          args)
 {
@@ -10786,7 +10841,8 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
 #endif
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_O >= 0
 template <class TYPE>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc)
 {
     return bsl::optional<TYPE>(bsl::allocator_arg,
@@ -10797,7 +10853,8 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
 
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_O >= 1
 template <class TYPE, class ARGS_01>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01)
 {
@@ -10811,7 +10868,8 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_O >= 2
 template <class TYPE, class ARGS_01,
                       class ARGS_02>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02)
@@ -10828,7 +10886,8 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
 template <class TYPE, class ARGS_01,
                       class ARGS_02,
                       class ARGS_03>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
@@ -10848,7 +10907,8 @@ template <class TYPE, class ARGS_01,
                       class ARGS_02,
                       class ARGS_03,
                       class ARGS_04>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
@@ -10871,7 +10931,8 @@ template <class TYPE, class ARGS_01,
                       class ARGS_03,
                       class ARGS_04,
                       class ARGS_05>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
@@ -10897,7 +10958,8 @@ template <class TYPE, class ARGS_01,
                       class ARGS_04,
                       class ARGS_05,
                       class ARGS_06>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
@@ -10926,7 +10988,8 @@ template <class TYPE, class ARGS_01,
                       class ARGS_05,
                       class ARGS_06,
                       class ARGS_07>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
@@ -10958,7 +11021,8 @@ template <class TYPE, class ARGS_01,
                       class ARGS_06,
                       class ARGS_07,
                       class ARGS_08>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
@@ -10993,7 +11057,8 @@ template <class TYPE, class ARGS_01,
                       class ARGS_07,
                       class ARGS_08,
                       class ARGS_09>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
@@ -11031,7 +11096,8 @@ template <class TYPE, class ARGS_01,
                       class ARGS_08,
                       class ARGS_09,
                       class ARGS_10>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
@@ -11064,7 +11130,8 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
 // The generated code below is a workaround for the absence of perfect
 // forwarding in some compilers.
 template <class TYPE, class... ARGS>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)...          args)
 {
@@ -11081,7 +11148,8 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
     (!defined(BSLS_PLATFORM_CMP_MSVC) || (BSLS_PLATFORM_CMP_VERSION >= 1900))
 
 template <class TYPE, class INIT_LIST_TYPE, class... ARGS>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      std::initializer_list<INIT_LIST_TYPE>               il,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)...          args)
@@ -11108,7 +11176,8 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
 
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 0
 template <class TYPE, class INIT_LIST_TYPE>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      std::initializer_list<INIT_LIST_TYPE>               il)
 {
@@ -11121,7 +11190,8 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
 
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 1
 template <class TYPE, class INIT_LIST_TYPE, class ARGS_01>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      std::initializer_list<INIT_LIST_TYPE>               il,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01)
@@ -11137,7 +11207,8 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_P >= 2
 template <class TYPE, class INIT_LIST_TYPE, class ARGS_01,
                                             class ARGS_02>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      std::initializer_list<INIT_LIST_TYPE>               il,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
@@ -11156,7 +11227,8 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
 template <class TYPE, class INIT_LIST_TYPE, class ARGS_01,
                                             class ARGS_02,
                                             class ARGS_03>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      std::initializer_list<INIT_LIST_TYPE>               il,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
@@ -11178,7 +11250,8 @@ template <class TYPE, class INIT_LIST_TYPE, class ARGS_01,
                                             class ARGS_02,
                                             class ARGS_03,
                                             class ARGS_04>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      std::initializer_list<INIT_LIST_TYPE>               il,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
@@ -11203,7 +11276,8 @@ template <class TYPE, class INIT_LIST_TYPE, class ARGS_01,
                                             class ARGS_03,
                                             class ARGS_04,
                                             class ARGS_05>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      std::initializer_list<INIT_LIST_TYPE>               il,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
@@ -11231,7 +11305,8 @@ template <class TYPE, class INIT_LIST_TYPE, class ARGS_01,
                                             class ARGS_04,
                                             class ARGS_05,
                                             class ARGS_06>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      std::initializer_list<INIT_LIST_TYPE>               il,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
@@ -11262,7 +11337,8 @@ template <class TYPE, class INIT_LIST_TYPE, class ARGS_01,
                                             class ARGS_05,
                                             class ARGS_06,
                                             class ARGS_07>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      std::initializer_list<INIT_LIST_TYPE>               il,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
@@ -11296,7 +11372,8 @@ template <class TYPE, class INIT_LIST_TYPE, class ARGS_01,
                                             class ARGS_06,
                                             class ARGS_07,
                                             class ARGS_08>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      std::initializer_list<INIT_LIST_TYPE>               il,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
@@ -11333,7 +11410,8 @@ template <class TYPE, class INIT_LIST_TYPE, class ARGS_01,
                                             class ARGS_07,
                                             class ARGS_08,
                                             class ARGS_09>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      std::initializer_list<INIT_LIST_TYPE>               il,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
@@ -11373,7 +11451,8 @@ template <class TYPE, class INIT_LIST_TYPE, class ARGS_01,
                                             class ARGS_08,
                                             class ARGS_09,
                                             class ARGS_10>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      std::initializer_list<INIT_LIST_TYPE>               il,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
@@ -11412,7 +11491,8 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
     (!defined(BSLS_PLATFORM_CMP_MSVC) || (BSLS_PLATFORM_CMP_VERSION >= 1900))
 
 template <class TYPE, class INIT_LIST_TYPE, class... ARGS>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> alloc_optional(
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
+                     bsl::allocator_arg_t,
                      typename bsl::optional<TYPE>::allocator_type const& alloc,
                      std::initializer_list<INIT_LIST_TYPE>               il,
                      BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)...          args)
@@ -11435,12 +11515,20 @@ make_optional(BSLS_COMPILERFEATURES_FORWARD_REF(TYPE) rhs)
         BSLS_COMPILERFEATURES_FORWARD(TYPE, rhs));
 }
 
+template <class TYPE, class ARG, class... ARGS>
+BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional()
+{
+    return bsl::optional<TYPE>(bsl::in_place);
+}
+
 #if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES
-template <class TYPE, class... ARGS>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
-                               BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args)
+template <class TYPE, class ARG, class... ARGS>
+BSLS_KEYWORD_CONSTEXPR BSLSTL_OPTIONAL_ENABLE_IF_ARG_NOT_ALLOCATOR
+make_optional(BSLS_COMPILERFEATURES_FORWARD_REF(ARG)     arg,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args)
 {
     return bsl::optional<TYPE>(bsl::in_place,
+                               BSLS_COMPILERFEATURES_FORWARD(ARG, arg),
                                BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...);
 }
 
@@ -11467,47 +11555,54 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
 #define BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q BSLSTL_OPTIONAL_VARIADIC_LIMIT
 #endif
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 0
-template <class TYPE>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
-                               )
+template <class TYPE, class ARG>
+BSLS_KEYWORD_CONSTEXPR BSLSTL_OPTIONAL_ENABLE_IF_ARG_NOT_ALLOCATOR
+make_optional(BSLS_COMPILERFEATURES_FORWARD_REF(ARG)     arg)
 {
-    return bsl::optional<TYPE>(bsl::in_place);
+    return bsl::optional<TYPE>(bsl::in_place,
+                               BSLS_COMPILERFEATURES_FORWARD(ARG, arg));
 }
 #endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 0
 
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 1
-template <class TYPE, class ARGS_01>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01)
+template <class TYPE, class ARG, class ARGS_01>
+BSLS_KEYWORD_CONSTEXPR BSLSTL_OPTIONAL_ENABLE_IF_ARG_NOT_ALLOCATOR
+make_optional(BSLS_COMPILERFEATURES_FORWARD_REF(ARG)     arg,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01)
 {
     return bsl::optional<TYPE>(bsl::in_place,
+                               BSLS_COMPILERFEATURES_FORWARD(ARG, arg),
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_01, args_01));
 }
 #endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 1
 
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 2
-template <class TYPE, class ARGS_01,
-                      class ARGS_02>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02)
+template <class TYPE, class ARG, class ARGS_01,
+                                 class ARGS_02>
+BSLS_KEYWORD_CONSTEXPR BSLSTL_OPTIONAL_ENABLE_IF_ARG_NOT_ALLOCATOR
+make_optional(BSLS_COMPILERFEATURES_FORWARD_REF(ARG)     arg,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02)
 {
     return bsl::optional<TYPE>(bsl::in_place,
+                               BSLS_COMPILERFEATURES_FORWARD(ARG, arg),
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_01, args_01),
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_02, args_02));
 }
 #endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 2
 
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 3
-template <class TYPE, class ARGS_01,
-                      class ARGS_02,
-                      class ARGS_03>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03) args_03)
+template <class TYPE, class ARG, class ARGS_01,
+                                 class ARGS_02,
+                                 class ARGS_03>
+BSLS_KEYWORD_CONSTEXPR BSLSTL_OPTIONAL_ENABLE_IF_ARG_NOT_ALLOCATOR
+make_optional(BSLS_COMPILERFEATURES_FORWARD_REF(ARG)     arg,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03) args_03)
 {
     return bsl::optional<TYPE>(bsl::in_place,
+                               BSLS_COMPILERFEATURES_FORWARD(ARG, arg),
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_01, args_01),
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_02, args_02),
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_03, args_03));
@@ -11515,17 +11610,19 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
 #endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 3
 
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 4
-template <class TYPE, class ARGS_01,
-                      class ARGS_02,
-                      class ARGS_03,
-                      class ARGS_04>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03) args_03,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_04) args_04)
+template <class TYPE, class ARG, class ARGS_01,
+                                 class ARGS_02,
+                                 class ARGS_03,
+                                 class ARGS_04>
+BSLS_KEYWORD_CONSTEXPR BSLSTL_OPTIONAL_ENABLE_IF_ARG_NOT_ALLOCATOR
+make_optional(BSLS_COMPILERFEATURES_FORWARD_REF(ARG)     arg,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03) args_03,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_04) args_04)
 {
     return bsl::optional<TYPE>(bsl::in_place,
+                               BSLS_COMPILERFEATURES_FORWARD(ARG, arg),
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_01, args_01),
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_02, args_02),
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_03, args_03),
@@ -11534,19 +11631,21 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
 #endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 4
 
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 5
-template <class TYPE, class ARGS_01,
-                      class ARGS_02,
-                      class ARGS_03,
-                      class ARGS_04,
-                      class ARGS_05>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03) args_03,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_04) args_04,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_05) args_05)
+template <class TYPE, class ARG, class ARGS_01,
+                                 class ARGS_02,
+                                 class ARGS_03,
+                                 class ARGS_04,
+                                 class ARGS_05>
+BSLS_KEYWORD_CONSTEXPR BSLSTL_OPTIONAL_ENABLE_IF_ARG_NOT_ALLOCATOR
+make_optional(BSLS_COMPILERFEATURES_FORWARD_REF(ARG)     arg,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03) args_03,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_04) args_04,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_05) args_05)
 {
     return bsl::optional<TYPE>(bsl::in_place,
+                               BSLS_COMPILERFEATURES_FORWARD(ARG, arg),
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_01, args_01),
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_02, args_02),
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_03, args_03),
@@ -11556,21 +11655,23 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
 #endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 5
 
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 6
-template <class TYPE, class ARGS_01,
-                      class ARGS_02,
-                      class ARGS_03,
-                      class ARGS_04,
-                      class ARGS_05,
-                      class ARGS_06>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03) args_03,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_04) args_04,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_05) args_05,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_06) args_06)
+template <class TYPE, class ARG, class ARGS_01,
+                                 class ARGS_02,
+                                 class ARGS_03,
+                                 class ARGS_04,
+                                 class ARGS_05,
+                                 class ARGS_06>
+BSLS_KEYWORD_CONSTEXPR BSLSTL_OPTIONAL_ENABLE_IF_ARG_NOT_ALLOCATOR
+make_optional(BSLS_COMPILERFEATURES_FORWARD_REF(ARG)     arg,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03) args_03,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_04) args_04,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_05) args_05,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_06) args_06)
 {
     return bsl::optional<TYPE>(bsl::in_place,
+                               BSLS_COMPILERFEATURES_FORWARD(ARG, arg),
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_01, args_01),
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_02, args_02),
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_03, args_03),
@@ -11581,23 +11682,25 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
 #endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 6
 
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 7
-template <class TYPE, class ARGS_01,
-                      class ARGS_02,
-                      class ARGS_03,
-                      class ARGS_04,
-                      class ARGS_05,
-                      class ARGS_06,
-                      class ARGS_07>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03) args_03,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_04) args_04,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_05) args_05,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_06) args_06,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_07) args_07)
+template <class TYPE, class ARG, class ARGS_01,
+                                 class ARGS_02,
+                                 class ARGS_03,
+                                 class ARGS_04,
+                                 class ARGS_05,
+                                 class ARGS_06,
+                                 class ARGS_07>
+BSLS_KEYWORD_CONSTEXPR BSLSTL_OPTIONAL_ENABLE_IF_ARG_NOT_ALLOCATOR
+make_optional(BSLS_COMPILERFEATURES_FORWARD_REF(ARG)     arg,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03) args_03,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_04) args_04,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_05) args_05,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_06) args_06,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_07) args_07)
 {
     return bsl::optional<TYPE>(bsl::in_place,
+                               BSLS_COMPILERFEATURES_FORWARD(ARG, arg),
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_01, args_01),
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_02, args_02),
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_03, args_03),
@@ -11609,25 +11712,27 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
 #endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 7
 
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 8
-template <class TYPE, class ARGS_01,
-                      class ARGS_02,
-                      class ARGS_03,
-                      class ARGS_04,
-                      class ARGS_05,
-                      class ARGS_06,
-                      class ARGS_07,
-                      class ARGS_08>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03) args_03,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_04) args_04,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_05) args_05,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_06) args_06,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_07) args_07,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_08) args_08)
+template <class TYPE, class ARG, class ARGS_01,
+                                 class ARGS_02,
+                                 class ARGS_03,
+                                 class ARGS_04,
+                                 class ARGS_05,
+                                 class ARGS_06,
+                                 class ARGS_07,
+                                 class ARGS_08>
+BSLS_KEYWORD_CONSTEXPR BSLSTL_OPTIONAL_ENABLE_IF_ARG_NOT_ALLOCATOR
+make_optional(BSLS_COMPILERFEATURES_FORWARD_REF(ARG)     arg,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03) args_03,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_04) args_04,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_05) args_05,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_06) args_06,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_07) args_07,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_08) args_08)
 {
     return bsl::optional<TYPE>(bsl::in_place,
+                               BSLS_COMPILERFEATURES_FORWARD(ARG, arg),
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_01, args_01),
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_02, args_02),
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_03, args_03),
@@ -11640,27 +11745,29 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
 #endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 8
 
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 9
-template <class TYPE, class ARGS_01,
-                      class ARGS_02,
-                      class ARGS_03,
-                      class ARGS_04,
-                      class ARGS_05,
-                      class ARGS_06,
-                      class ARGS_07,
-                      class ARGS_08,
-                      class ARGS_09>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03) args_03,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_04) args_04,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_05) args_05,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_06) args_06,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_07) args_07,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_08) args_08,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_09) args_09)
+template <class TYPE, class ARG, class ARGS_01,
+                                 class ARGS_02,
+                                 class ARGS_03,
+                                 class ARGS_04,
+                                 class ARGS_05,
+                                 class ARGS_06,
+                                 class ARGS_07,
+                                 class ARGS_08,
+                                 class ARGS_09>
+BSLS_KEYWORD_CONSTEXPR BSLSTL_OPTIONAL_ENABLE_IF_ARG_NOT_ALLOCATOR
+make_optional(BSLS_COMPILERFEATURES_FORWARD_REF(ARG)     arg,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03) args_03,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_04) args_04,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_05) args_05,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_06) args_06,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_07) args_07,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_08) args_08,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_09) args_09)
 {
     return bsl::optional<TYPE>(bsl::in_place,
+                               BSLS_COMPILERFEATURES_FORWARD(ARG, arg),
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_01, args_01),
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_02, args_02),
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_03, args_03),
@@ -11674,29 +11781,31 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
 #endif  // BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 9
 
 #if BSLSTL_OPTIONAL_VARIADIC_LIMIT_Q >= 10
-template <class TYPE, class ARGS_01,
-                      class ARGS_02,
-                      class ARGS_03,
-                      class ARGS_04,
-                      class ARGS_05,
-                      class ARGS_06,
-                      class ARGS_07,
-                      class ARGS_08,
-                      class ARGS_09,
-                      class ARGS_10>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03) args_03,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_04) args_04,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_05) args_05,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_06) args_06,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_07) args_07,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_08) args_08,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_09) args_09,
-                            BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_10) args_10)
+template <class TYPE, class ARG, class ARGS_01,
+                                 class ARGS_02,
+                                 class ARGS_03,
+                                 class ARGS_04,
+                                 class ARGS_05,
+                                 class ARGS_06,
+                                 class ARGS_07,
+                                 class ARGS_08,
+                                 class ARGS_09,
+                                 class ARGS_10>
+BSLS_KEYWORD_CONSTEXPR BSLSTL_OPTIONAL_ENABLE_IF_ARG_NOT_ALLOCATOR
+make_optional(BSLS_COMPILERFEATURES_FORWARD_REF(ARG)     arg,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_01) args_01,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_02) args_02,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_03) args_03,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_04) args_04,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_05) args_05,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_06) args_06,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_07) args_07,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_08) args_08,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_09) args_09,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS_10) args_10)
 {
     return bsl::optional<TYPE>(bsl::in_place,
+                               BSLS_COMPILERFEATURES_FORWARD(ARG, arg),
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_01, args_01),
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_02, args_02),
                               BSLS_COMPILERFEATURES_FORWARD(ARGS_03, args_03),
@@ -11973,11 +12082,13 @@ BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
 #else
 // The generated code below is a workaround for the absence of perfect
 // forwarding in some compilers.
-template <class TYPE, class... ARGS>
-BSLS_KEYWORD_CONSTEXPR bsl::optional<TYPE> make_optional(
-                               BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args)
+template <class TYPE, class ARG, class... ARGS>
+BSLS_KEYWORD_CONSTEXPR BSLSTL_OPTIONAL_ENABLE_IF_ARG_NOT_ALLOCATOR
+make_optional(BSLS_COMPILERFEATURES_FORWARD_REF(ARG)     arg,
+              BSLS_COMPILERFEATURES_FORWARD_REF(ARGS)... args)
 {
     return bsl::optional<TYPE>(bsl::in_place,
+                               BSLS_COMPILERFEATURES_FORWARD(ARG, arg),
                                BSLS_COMPILERFEATURES_FORWARD(ARGS, args)...);
 }
 
