@@ -2808,8 +2808,8 @@ class optional {
     TYPE&  value() &;
     TYPE&& value() &&;
         // Return a reference providing modifiable access to the underlying
-        // 'TYPE' object.  Throws a 'bsl::bad_optional_access' if the
-        // 'optional' object is disengaged.
+        // 'TYPE' object if 'true == has_value()' and throw
+        // 'bsl::bad_optional_access' otherwise.
 #else
     TYPE& value();
         // Return a reference providing modifiable access to the underlying
@@ -2840,21 +2840,25 @@ class optional {
         // modifiable access to this object.
 
     optional& operator=(const optional& rhs);
+        // Assign to this object the value of the specified 'rhs' object, and
+        // return a non-'const' reference to this object.
+
     optional& operator=(BloombergLP::bslmf::MovableRef<optional> rhs);
-        // If specified 'rhs' is engaged, assign its value to this object.
-        // Otherwise, reset this object to a disengaged state.  Return a
-        // reference providing modifiable access to this object.  Note that
-        // this method may invoke assignment from 'rhs', or construction from
-        // 'rhs', depending on whether this 'optional' object is engaged.
+        // Assign to this object the value of the specified 'rhs' object, and
+        // return a non-'const' reference to this object.  The allocators of
+        // this object and 'rhs' both remain unchanged.  The contents of 'rhs'
+        // are either move-inserted into or move-assigned to this object.
+        // 'rhs' is left in a valid but unspecified state.
 
     template <class ANY_TYPE>
     BSLSTL_OPTIONAL_ENABLE_ASSIGN_FROM_OPTIONAL_LVAL& operator=(
                                                  const optional<ANY_TYPE>& rhs)
-        // If specified 'rhs' is engaged, assign its value to this object.
-        // Otherwise, reset this object to a disengaged state.  Return a
-        // reference providing modifiable access to this object.  Note that
-        // this method may invoke assignment from 'rhs', or construction from
-        // 'rhs', depending on whether this 'optional' object is engaged.
+        // Disengage this object if the specified 'rhs' object is disengaged,
+        // and assign to this object the value of 'rhs.value()' (of 'ANY_TYPE')
+        // converted to 'TYPE' otherwise.  Return a reference providing
+        // modifiable access to this object.  Note that this method does not
+        // participate in overload resolution unless 'TYPE and 'ANY_TYPE' are
+        // compatible.
     {
         // Must be in-place inline because the use of 'enable_if' will
         // otherwise break the MSVC 2010 compiler.
@@ -2876,11 +2880,14 @@ class optional {
     template <class ANY_TYPE>
     BSLSTL_OPTIONAL_ENABLE_ASSIGN_FROM_OPTIONAL_RVAL& operator=(
                                                       optional<ANY_TYPE>&& rhs)
-        // If specified 'rhs' is engaged, assign its value to this object.
-        // Otherwise, reset this object to a disengaged state.  Return a
-        // reference providing modifiable access to this object.  Note that
-        // this method may invoke assignment from 'rhs', or construction from
-        // 'rhs', depending on whether this 'optional' object is engaged.
+        // Disengage this object if the specified 'rhs' object is disengaged,
+        // and move assign to this object the value of 'rhs.value()' (of
+        // 'ANY_TYPE') converted to 'TYPE' otherwise.  Return a reference
+        // providing modifiable access to this object.  Note that this method
+        // does not  participate in overload resolution unless 'TYPE and
+        // 'ANY_TYPE' are compatible. Using rvalue reference instead of
+        // 'movableRef' ensures this overload is considered a better match over
+        // 'ANY_TYPE' overloads for optional types.
     {
         // Must be in-place inline because the use of 'enable_if' will
         // otherwise break the MSVC 2010 compiler.
@@ -2935,17 +2942,24 @@ class optional {
     // forwarding. For C++03, the MovableRef overloads are provided below.
 
     optional& operator=(const TYPE& rhs);
+        // Assign to this object the value of the specified 'rhs', and return a
+        // reference providing modifiable access to this object.
+
     optional& operator=(BloombergLP::bslmf::MovableRef<TYPE> rhs);
-        // Assign to this object the value of the specified 'rhs' object
+        // Assign to this object the value of the specified 'rhs', and return a
+        // reference providing modifiable access to this object.  The contents
+        // of 'rhs' are either move-inserted into or move-assigned to this
+        // object.  'rhs' is left in a valid but unspecified state.
 
     template <class ANY_TYPE>
     BSLSTL_OPTIONAL_ENABLE_ASSIGN_FROM_OPTIONAL_RVAL& operator=(
                        BloombergLP::bslmf::MovableRef<optional<ANY_TYPE> > rhs)
-        // If 'rhs' is engaged, assign its value to this object. Otherwise,
-        // reset this object to a disengaged state. Return a reference
+        // Disengage this object if the specified 'rhs' object is disengaged,
+        // and move assign to this object the value of 'rhs.value()' (of
+        // 'ANY_TYPE') converted to 'TYPE' otherwise.  Return a reference
         // providing modifiable access to this object.  Note that this method
-        // may invoke assignment from 'rhs', or construction from 'rhs',
-        // depending on whether this 'optional' object is engaged.
+        // does not  participate in overload resolution unless 'TYPE and
+        // 'ANY_TYPE' are compatible.
     {
         // Must be in-place inline because the use of 'enable_if' will
         // otherwise break the MSVC 2010 compiler.
@@ -2977,9 +2991,11 @@ class optional {
     optional& operator=(BloombergLP::bslmf::MovableRef<ANY_TYPE> rhs);
         // Assign to this object the value of the specified 'rhs' object (of
         // 'ANY_TYPE') converted to 'TYPE', and return a reference providing
-        // modifiable access to this object.  Note that this method may invoke
-        // assignment from 'rhs', or construction from 'rhs', depending on
-        // whether this 'optional' object is engaged.
+        // modifiable access to this object.  The contents  of 'rhs' are either
+        // move-inserted into or move-assigned to this object.  'rhs' is left
+        // in a valid but unspecified state.  This overload needs to exist in
+        // C++03 because the perfect forwarding 'operator=' can not to be
+        // specified in terms of 'MovableRef'.
 
 #endif
 
@@ -2987,11 +3003,12 @@ class optional {
     template <class ANY_TYPE = TYPE>
     BSLSTL_OPTIONAL_ENABLE_ASSIGN_FROM_STD_OPTIONAL_LVAL& operator=(
                                             const std::optional<ANY_TYPE>& rhs)
-        // If specified 'rhs' object is engaged, assign to this object the
-        // result of 'rhs.value()' converted to 'TYPE'. Otherwise, disengage
-        // this object.  Note that this method may invoke assignment from
-        // 'rhs', or construction from 'rhs', depending on whether this object
-        // is engaged.
+        // Disengage this object if the specified 'rhs' object is disengaged,
+        // and assign to this object the value of 'rhs.value()' (of 'ANY_TYPE')
+        // converted to 'TYPE' otherwise.  Return a reference providing
+        // modifiable access to this object.  Note that this method does not
+        // participate in overload resolution unless 'TYPE and 'ANY_TYPE' are
+        // compatible.
     {
         // Must be in-place inline because the use of 'enable_if' will
         // otherwise break the MSVC 2010 compiler.
@@ -3012,13 +3029,12 @@ class optional {
     template <class ANY_TYPE = TYPE>
     BSLSTL_OPTIONAL_ENABLE_ASSIGN_FROM_STD_OPTIONAL_RVAL& operator=(
                                                  std::optional<ANY_TYPE>&& rhs)
-        // If specified 'rhs' object is engaged, assign to this object the
-        // result of 'rhs.value()' converted to 'TYPE'. Otherwise, disengage
-        // this object.  Note that this method may invoke assignment from
-        // 'rhs', or construction from 'rhs', depending on whether this object
-        // is engaged.  Using rvalue reference instead of movableRef ensures
-        // this overload is considered a better match over 'ANY_TYPE' overloads
-        // for optional types.
+        // Disengage this object if the specified 'rhs' object is disengaged,
+        // and move assign to this object the value of 'rhs.value()' (of
+        // 'ANY_TYPE') converted to 'TYPE' otherwise.  Return a reference
+        // providing modifiable access to this object.  Note that this method
+        // does not  participate in overload resolution unless 'TYPE and
+        // 'ANY_TYPE' are compatible.
     {
         // Must be in-place inline because the use of 'enable_if' will
         // otherwise break the MSVC 2010 compiler.
@@ -3067,8 +3083,8 @@ class optional {
     const TYPE&  value() const &;
     const TYPE&& value() const &&;
         // Return a reference providing non-modifiable access to the underlying
-        // 'TYPE' object.  Throws a 'bsl::bad_optional_access' if the
-        // 'optional' object is disengaged.
+        // 'TYPE' object if 'true == has_value()' and throw
+        // 'bsl::bad_optional_access' otherwise.
 #else
 
     const TYPE& value() const;
@@ -3235,19 +3251,25 @@ class optional<TYPE, false> : public std::optional<TYPE> {
         // reset the optional to a disengaged state.
 
     optional& operator=(const optional& rhs);
+        // Assign to this object the value of the specified 'rhs' object, and
+        // return a non-'const' reference to this object.
+
     optional& operator=(optional&& rhs);
-        // Assign to this object the value of the specified 'rhs' object.  Note
-        // that this method may invoke assignment from 'rhs', or construction
-        // from 'rhs', depending on whether the current object is engaged.
+        // Assign to this object the value of the specified 'rhs' object, and
+        // return a non-'const' reference to this object.  The allocators of
+        // this object and 'rhs' both remain unchanged.  The contents of 'rhs'
+        // are either move-inserted into or move-assigned to this object.
+        // 'rhs' is left in a valid but unspecified state.
 
     template <class ANY_TYPE>
     BSLSTL_OPTIONAL_ENABLE_ASSIGN_FROM_OPTIONAL_LVAL& operator=(
                                                  const optional<ANY_TYPE>& rhs)
-        // If specified 'rhs' object is engaged, assign to this object the
-        // result of 'rhs.value()' converted to 'TYPE'. Otherwise, disengage
-        // this object.  Note that this method may invoke assignment from
-        // 'rhs', or construction from 'rhs', depending on whether this object
-        // is engaged.
+        // Disengage this object if the specified 'rhs' object is disengaged,
+        // and assign to this object the value of 'rhs.value()' (of 'ANY_TYPE')
+        // converted to 'TYPE' otherwise.  Return a reference providing
+        // modifiable access to this object.  Note that this method does not
+        // participate in overload resolution unless 'TYPE and 'ANY_TYPE' are
+        // compatible.
     {
         // Must be in-place inline because the use of 'enable_if' will
         // otherwise break the MSVC 2010 compiler.
@@ -3268,13 +3290,12 @@ class optional<TYPE, false> : public std::optional<TYPE> {
     template <class ANY_TYPE>
     BSLSTL_OPTIONAL_ENABLE_ASSIGN_FROM_OPTIONAL_RVAL& operator=(
                                                       optional<ANY_TYPE>&& rhs)
-        // If specified 'rhs' object is engaged, assign to this object the
-        // result of 'rhs.value()' converted to 'TYPE'. Otherwise, disengage
-        // this object.  Note that this method may invoke assignment from
-        // 'rhs', or construction from 'rhs', depending on whether this object
-        // is engaged.  Using rvalue reference instead of movableRef ensures
-        // this overload is considered a better match over 'ANY_TYPE' overloads
-        // for optional types.
+        // Disengage this object if the specified 'rhs' object is disengaged,
+        // and move assign to this object the value of 'rhs.value()' (of
+        // 'ANY_TYPE') converted to 'TYPE' otherwise.  Return a reference
+        // providing modifiable access to this object.  Note that this method
+        // does not  participate in overload resolution unless 'TYPE and
+        // 'ANY_TYPE' are compatible.
     {
         // Must be in-place inline because the use of 'enable_if' will
         // otherwise break the MSVC 2010 compiler.
@@ -3295,11 +3316,12 @@ class optional<TYPE, false> : public std::optional<TYPE> {
     template <class ANY_TYPE = TYPE>
     BSLSTL_OPTIONAL_ENABLE_ASSIGN_FROM_STD_OPTIONAL_LVAL& operator=(
                                             const std::optional<ANY_TYPE>& rhs)
-        // If specified 'rhs' object is engaged, assign to this object the
-        // result of 'rhs.value()' converted to 'TYPE'. Otherwise, disengage
-        // this object.  Note that this method may invoke assignment from
-        // 'rhs', or construction from 'rhs', depending on whether this object
-        // is engaged.
+        // Disengage this object if the specified 'rhs' object is disengaged,
+        // and assign to this object the value of 'rhs.value()' (of 'ANY_TYPE')
+        // converted to 'TYPE' otherwise.  Return a reference providing
+        // modifiable access to this object.  Note that this method does not
+        // participate in overload resolution unless 'TYPE and 'ANY_TYPE' are
+        // compatible.
     {
         // Must be in-place inline because the use of 'enable_if' will
         // otherwise break the MSVC 2010 compiler.
@@ -3320,13 +3342,12 @@ class optional<TYPE, false> : public std::optional<TYPE> {
     template <class ANY_TYPE = TYPE>
     BSLSTL_OPTIONAL_ENABLE_ASSIGN_FROM_STD_OPTIONAL_RVAL& operator=(
                                                  std::optional<ANY_TYPE>&& rhs)
-        // If specified 'rhs' object is engaged, assign to this object the
-        // result of 'rhs.value()' converted to 'TYPE'. Otherwise, disengage
-        // this object.  Note that this method may invoke assignment from
-        // 'rhs', or construction from 'rhs', depending on whether this object
-        // is engaged.  Using rvalue reference instead of movableRef ensures
-        // this overload is considered a better match over 'ANY_TYPE' overloads
-        // for optional types.
+        // Disengage this object if the specified 'rhs' object is disengaged,
+        // and move assign to this object the value of 'rhs.value()' (of
+        // 'ANY_TYPE') converted to 'TYPE' otherwise.  Return a reference
+        // providing modifiable access to this object.  Note that this method
+        // does not  participate in overload resolution unless 'TYPE and
+        // 'ANY_TYPE' are compatible.
     {
         // Must be in-place inline because the use of 'enable_if' will
         // otherwise break the MSVC 2010 compiler.
@@ -4317,9 +4338,9 @@ class optional<TYPE, false> {
 #ifdef BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS
     TYPE&  value() &;
     TYPE&& value() &&;
-    // Return a reference providing modifiable access to the underlying 'TYPE'
-    // object.  Throws a 'bsl::bad_optional_access' if the 'optional' object is
-    // disengaged.
+        // Return a reference providing modifiable access to the underlying
+        // 'TYPE' object if 'true == has_value()' and throw
+        // 'bsl::bad_optional_access' otherwise.
 
 #else
     TYPE& value();
@@ -4342,19 +4363,26 @@ class optional<TYPE, false> {
         // reset the 'optional' to a disengaged state.
 
     optional& operator=(const optional& rhs);
+        // Assign to this object the value of the specified 'rhs' object, and
+        // return a non-'const' reference to this object.
+
     optional& operator=(BloombergLP::bslmf::MovableRef<optional> rhs);
-        // Assign to this object the value of the specified 'rhs' object.  Note
-        // that this method may invoke assignment from 'rhs', or construction
-        // from 'rhs', depending on whether the current object is engaged.
+        // Assign to this object the value of the specified 'rhs' object, and
+        // return a non-'const' reference to this object.  The allocators of
+        // this object and 'rhs' both remain unchanged.  The contents of 'rhs'
+        // are either move-inserted into or move-assigned to this object.
+        // 'rhs' is left in a valid but unspecified state.
+
 
     template <class ANY_TYPE>
     BSLSTL_OPTIONAL_ENABLE_ASSIGN_FROM_OPTIONAL_LVAL& operator=(
                                                  const optional<ANY_TYPE>& rhs)
-        // If specified 'rhs' object is engaged, assign to this object the
-        // result of 'rhs.value()' converted to 'TYPE'. Otherwise, disengage
-        // this object.  Note that this method may invoke assignment from
-        // 'rhs', or construction from 'rhs', depending on whether this object
-        // is engaged.
+        // Disengage this object if the specified 'rhs' object is disengaged,
+        // and assign to this object the value of 'rhs.value()' (of 'ANY_TYPE')
+        // converted to 'TYPE' otherwise.  Return a reference providing
+        // modifiable access to this object.  Note that this method does not
+        // participate in overload resolution unless 'TYPE and 'ANY_TYPE' are
+        // compatible.
     {
         // Must be in-place inline because the use of 'enable_if' will
         // otherwise break the MSVC 2010 compiler.
@@ -4376,13 +4404,14 @@ class optional<TYPE, false> {
     template <class ANY_TYPE>
     BSLSTL_OPTIONAL_ENABLE_ASSIGN_FROM_OPTIONAL_RVAL& operator=(
                                                       optional<ANY_TYPE>&& rhs)
-        // If specified 'rhs' object is engaged, assign to this object the
-        // result of 'rhs.value()' converted to 'TYPE'. Otherwise, disengage
-        // this object.  Note that this method may invoke assignment from
-        // 'rhs', or construction from 'rhs', depending on whether this object
-        // is engaged.  Using rvalue reference instead of movableRef ensures
-        // this overload is considered a better match over 'ANY_TYPE' overloads
-        // for optional types.
+        // Disengage this object if the specified 'rhs' object is disengaged,
+        // and move assign to this object the value of 'rhs.value()' (of
+        // 'ANY_TYPE') converted to 'TYPE' otherwise.  Return a reference
+        // providing modifiable access to this object.  Note that this method
+        // does not  participate in overload resolution unless 'TYPE and
+        // 'ANY_TYPE' are compatible. Using rvalue reference instead of
+        // 'movableRef' ensures this overload is considered a better match over
+        // 'ANY_TYPE' overloads for optional types.
     {
         // Must be in-place inline because the use of 'enable_if' will
         // otherwise break the MSVC 2010 compiler.
@@ -4437,16 +4466,24 @@ class optional<TYPE, false> {
     // For C++03, we need to specify different overloads.
 
     optional& operator=(const TYPE& rhs);
+        // Assign to this object the value of the specified 'rhs', and return a
+        // reference providing modifiable access to this object.
+
     optional& operator=(BloombergLP::bslmf::MovableRef<TYPE> rhs);
+        // Assign to this object the value of the specified 'rhs', and return a
+        // reference providing modifiable access to this object.  The contents
+        // of 'rhs' are either move-inserted into or move-assigned to this
+        // object.  'rhs' is left in a valid but unspecified state.
 
     template <class ANY_TYPE>
     BSLSTL_OPTIONAL_ENABLE_ASSIGN_FROM_OPTIONAL_RVAL& operator=(
                        BloombergLP::bslmf::MovableRef<optional<ANY_TYPE> > rhs)
-        // If 'rhs' object is engaged, assign to this object the result of
-        // 'rhs.value()' converted to 'TYPE'. Otherwise, disengage this object.
-        // Note that this method may invoke assignment from 'rhs', or
-        // construction from 'rhs', depending on whether this object is
-        // engaged.
+        // Disengage this object if the specified 'rhs' object is disengaged,
+        // and move assign to this object the value of 'rhs.value()' (of
+        // 'ANY_TYPE') converted to 'TYPE' otherwise.  Return a reference
+        // providing modifiable access to this object.  Note that this method
+        // does not  participate in overload resolution unless 'TYPE and
+        // 'ANY_TYPE' are compatible.
     {
         // Must be in-place inline because the use of 'enable_if' will
         // otherwise break the MSVC 2010 compiler.
@@ -4467,21 +4504,21 @@ class optional<TYPE, false> {
 
     template <class ANY_TYPE>
     optional& operator=(const ANY_TYPE& rhs);
-        // Assign to this object the value of the specified 'rhs' object
-        // converted to 'TYPE', and return a reference providing modifiable
-        // access to this object.  Note that this method may invoke assignment
-        // from 'rhs', or construction from 'rhs', depending on whether this
-        // object is engaged.
+        // Assign to this object the value of the specified 'rhs' object (of
+        // 'ANY_TYPE') converted to 'TYPE', and return a reference providing
+        // modifiable access to this object.  Note that this method may invoke
+        // assignment from 'rhs', or construction from 'rhs', depending on
+        // whether this 'optional' object is engaged.
 
     template <class ANY_TYPE>
     optional& operator=(BloombergLP::bslmf::MovableRef<ANY_TYPE> rhs);
-        // Assign to this object the value of the specified 'rhs' object
-        // converted to 'TYPE', and return a reference providing modifiable
-        // access to this object.  Note that this method may invoke assignment
-        // from 'rhs', or construction from 'rhs', depending on whether this
-        // object is engaged. These overloads need to exist in C++03 because
-        // the perfect forwarding 'operator=' needs to be specified in terms of
-        // rvalues
+        // Assign to this object the value of the specified 'rhs' object (of
+        // 'ANY_TYPE') converted to 'TYPE', and return a reference providing
+        // modifiable access to this object.  The contents  of 'rhs' are either
+        // move-inserted into or move-assigned to this object.  'rhs' is left
+        // in a valid but unspecified state.  This overload needs to exist in
+        // C++03 because the perfect forwarding 'operator=' can not to be
+        // specified in terms of 'MovableRef'.
 
 #endif
 
@@ -4513,9 +4550,9 @@ class optional<TYPE, false> {
 #ifdef BSLS_COMPILERFEATURES_SUPPORT_REF_QUALIFIERS
     const TYPE&  value() const &;
     const TYPE&& value() const &&;
-    // Return a reference providing non-modifiable access to the underlying
-    // 'TYPE' object.  Throws a 'bsl::bad_optional_access' if the 'optional'
-    // object is disengaged.
+        // Return a reference providing non-modifiable access to the underlying
+        // 'TYPE' object if 'true == has_value()' and throw
+        // 'bsl::bad_optional_access' otherwise.
 #else
     const TYPE& value() const;
         // Return a reference providing non-modifiable access to the underlying
