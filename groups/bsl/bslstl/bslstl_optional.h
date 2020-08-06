@@ -1204,7 +1204,6 @@ class optional {
         // Create an 'optional' object having the specified 'value'.  Use the
         // currently installed default allocator to supply memory.
 
-
     template <class ANY_TYPE>
     optional(BSLS_COMPILERFEATURES_FORWARD_REF(ANY_TYPE) value
         BSLSTL_OPTIONAL_ENABLE_IF_CONSTRUCT_FROM_ANYTYPE
@@ -1225,20 +1224,34 @@ class optional {
     optional(const optional<ANY_TYPE>& original
         BSLSTL_OPTIONAL_ENABLE_IF_CONSTRUCT_FROM_OPTIONAL_LVAL
         BSLSTL_OPTIONAL_ENABLE_IF_NOT_EXPLICIT_CONSTRUCT(TYPE,
-            const ANY_TYPE&));
+            const ANY_TYPE&))
         // Create a disengaged 'optional' object if the specified 'original'
         // object is disengaged, and an 'optional' object with the value of
         // 'original.value()' (of 'ANY_TYPE') converted to 'TYPE' otherwise.
         // Use the currently installed default allocator to supply memory.
+    {
+        // Must be in-place inline because the use of 'enable_if' will
+        // otherwise break the MSVC 2010 compiler.
+        if (original.has_value()) {
+            emplace(original.value());
+        }
+    }
 
     template <class ANY_TYPE>
     explicit optional(const optional<ANY_TYPE>& original
         BSLSTL_OPTIONAL_ENABLE_IF_CONSTRUCT_FROM_OPTIONAL_LVAL
-        BSLSTL_OPTIONAL_ENABLE_IF_EXPLICIT_CONSTRUCT(TYPE, const ANY_TYPE&));
+        BSLSTL_OPTIONAL_ENABLE_IF_EXPLICIT_CONSTRUCT(TYPE, const ANY_TYPE&))
         // Create a disengaged 'optional' object if the specified 'original'
         // object is disengaged, and an 'optional' object with the value of
         // 'original.value()' (of 'ANY_TYPE') converted to 'TYPE' otherwise.
         // Use the currently installed default allocator to supply memory.
+    {
+        // Must be in-place inline because the use of 'enable_if' will
+        // otherwise break the MSVC 2010 compiler.
+        if (original.has_value()) {
+            emplace(original.value());
+        }
+    }
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES)
     // 'MovableRef' prevents correct type deduction in C++11 when used with
@@ -2757,13 +2770,29 @@ class optional {
 
     template <class ANY_TYPE>
     BSLSTL_OPTIONAL_ENABLE_ASSIGN_FROM_OPTIONAL_LVAL& operator=(
-                                                const optional<ANY_TYPE>& rhs);
+                                                 const optional<ANY_TYPE>& rhs)
         // Disengage this object if the specified 'rhs' object is disengaged,
         // and assign to this object the value of 'rhs.value()' (of 'ANY_TYPE')
         // converted to 'TYPE' otherwise.  Return a reference providing
         // modifiable access to this object.  Note that this method does not
         // participate in overload resolution unless 'TYPE and 'ANY_TYPE' are
         // compatible.
+    {
+        // Must be in-place inline because the use of 'enable_if' will
+        // otherwise break the MSVC 2010 compiler.
+        if (rhs.has_value()) {
+            if (this->has_value()) {
+                this->value() = rhs.value();
+            }
+            else {
+                this->emplace(rhs.value());
+            }
+        }
+        else {
+            this->reset();
+        }
+        return *this;
+    }
 
 #ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
     template <class ANY_TYPE>
@@ -2989,7 +3018,6 @@ class optional {
 template <class TYPE>
 class optional<TYPE, false> : public std::optional<TYPE> {
 
-
   private:
     // PRIVATE TYPES
     typedef std::optional<TYPE> OptionalBase;
@@ -3001,7 +3029,6 @@ class optional<TYPE, false> : public std::optional<TYPE> {
     optional(const optional& original) = default;  // IMPLICIT
         // Create an 'optional' object having the value of the specified
         // 'original' object.
-
 
     optional(optional&& original) = default;  // IMPLICIT
         // Create an 'optional' object having the same value as the specified
@@ -4035,7 +4062,6 @@ class optional<TYPE, false> {
         // this object and 'rhs' both remain unchanged.  The contents of 'rhs'
         // are either move-inserted into or move-assigned to this object.
         // 'rhs' is left in a valid but unspecified state.
-
 
     template <class ANY_TYPE>
     BSLSTL_OPTIONAL_ENABLE_ASSIGN_FROM_OPTIONAL_LVAL& operator=(
@@ -6285,31 +6311,6 @@ optional<TYPE, USES_BSLMA_ALLOC>::optional(BSLS_COMPILERFEATURES_FORWARD_REF(ANY
     emplace(BSLS_COMPILERFEATURES_FORWARD(ANY_TYPE, value));
 }
 
-template <class TYPE, bool USES_BSLMA_ALLOC>
-template <class ANY_TYPE>
-inline
-optional<TYPE, USES_BSLMA_ALLOC>::optional(const optional<ANY_TYPE>& original
-    BSLSTL_OPTIONAL_ENABLE_IF_CONSTRUCT_FROM_OPTIONAL_LVAL_DEF
-    BSLSTL_OPTIONAL_ENABLE_IF_NOT_EXPLICIT_CONSTRUCT_DEF(TYPE,
-        const ANY_TYPE&))
-{
-    if (original.has_value()) {
-        emplace(original.value());
-    }
-}
-
-template <class TYPE, bool USES_BSLMA_ALLOC>
-template <class ANY_TYPE>
-inline
-optional<TYPE, USES_BSLMA_ALLOC>::optional(const optional<ANY_TYPE>& original
-    BSLSTL_OPTIONAL_ENABLE_IF_CONSTRUCT_FROM_OPTIONAL_LVAL_DEF
-    BSLSTL_OPTIONAL_ENABLE_IF_EXPLICIT_CONSTRUCT_DEF(TYPE, const ANY_TYPE&))
-{
-    if (original.has_value()) {
-        emplace(original.value());
-    }
-}
-
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES)
 template <class TYPE, bool USES_BSLMA_ALLOC>
 template <class ANY_TYPE>
@@ -7231,7 +7232,6 @@ optional<TYPE, USES_BSLMA_ALLOC>::optional(bsl::allocator_arg_t,
 }
 
 #endif  // BSLS_LIBRARYFEATURES_HAS_CPP17_BASELINE_LIBRARY
-
 
 #if !BSLS_COMPILERFEATURES_SIMULATE_CPP11_FEATURES
 template <class TYPE, bool USES_BSLMA_ALLOC>
@@ -8731,26 +8731,6 @@ optional<TYPE, USES_BSLMA_ALLOC>& optional<TYPE, USES_BSLMA_ALLOC>::operator=(
     return *this;
 }
 #endif  // BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
-
-template <class TYPE, bool USES_BSLMA_ALLOC>
-template <class ANY_TYPE>
-inline
-BSLSTL_OPTIONAL_ENABLE_ASSIGN_FROM_OPTIONAL_LVAL&
-optional<TYPE, USES_BSLMA_ALLOC>::operator=(const optional<ANY_TYPE>& rhs)
-{
-    if (rhs.has_value()) {
-        if (this->has_value()) {
-            this->value() = rhs.value();
-        }
-        else {
-            this->emplace(rhs.value());
-        }
-    }
-    else {
-        this->reset();
-    }
-    return *this;
-}
 
 #ifdef BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES
 template <class TYPE, bool USES_BSLMA_ALLOC>
@@ -12746,7 +12726,6 @@ bool operator>=(const std::optional<LHS_TYPE>& lhs,
 #undef BSLSTL_OPTIONAL_ENABLE_ASSIGN_FROM_STD_OPTIONAL_RVAL
 #endif  // BSLS_LIBRARYFEATURES_HAS_CPP17_BASELINE_LIBRARY
 #undef BSLSTL_OPTIONAL_ENABLE_IF_ARG_NOT_ALLOCATOR
-
 
 #endif  // INCLUDED_BSLSTL_OPTIONAL
 // ----------------------------------------------------------------------------
