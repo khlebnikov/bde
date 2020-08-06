@@ -2960,6 +2960,8 @@ class optional {
 #ifdef BSLS_LIBRARYFEATURES_HAS_CPP17_BASELINE_LIBRARY
 template <class TYPE>
 class optional<TYPE, false> : public std::optional<TYPE> {
+    // Specialization of 'optional' for 'value_type' that is not
+    // allocator-aware when 'std::optional' is available.
   private:
     // PRIVATE TYPES
     typedef std::optional<TYPE> OptionalBase;
