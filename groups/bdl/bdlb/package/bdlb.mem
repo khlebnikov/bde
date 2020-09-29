@@ -23,6 +23,7 @@ bdlb_nullopt
 bdlb_nulloutputiterator
 bdlb_numericparseutil
 bdlb_literalutil
+bdlb_pcg
 bdlb_print
 bdlb_printmethods
 bdlb_random
