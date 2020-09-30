@@ -69,7 +69,7 @@ namespace BloombergLP
         {
             // This mechanism class implements a random number generator (RNG) based on
             // the PCG algorithm.  For details of the algorithm, see
-            // http://www.pcg-random.org.  This class does not throw exceptions.
+            // http://www.pcg-random.org.
 
         private:
             // DATA
