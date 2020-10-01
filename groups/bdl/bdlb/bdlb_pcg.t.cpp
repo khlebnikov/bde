@@ -12,7 +12,6 @@
 using namespace BloombergLP;
 using namespace bsl;
 
-
 // ============================================================================
 //                             TEST PLAN
 // ----------------------------------------------------------------------------
@@ -104,19 +103,17 @@ bool veryVerbose         = false;
 bool veryVeryVerbose     = false;
 bool veryVeryVeryVerbose = false;
 
-
 void checkDifferentSeeds()
 {
     bdlb::PCG g1, g2;
-    int ptr1   = 10;
-    int rounds = 5;
+    int       ptr1   = 10;
+    int       rounds = 5;
     g1.seed((uint64_t)&ptr1, (uint64_t)&rounds);
-    g2.seed(((uint64_t) & ptr1) + 1, (uint64_t)&rounds);
+    g2.seed(((uint64_t)&ptr1) + 1, (uint64_t)&rounds);
 
     const int CHECKS = 100;
     if (verbose)
-        cout << "Checking uniqueness of " << CHECKS << " iteration"
-                  << endl;
+        cout << "Checking uniqueness of " << CHECKS << " iteration" << endl;
 
     for (int i = 0; i < CHECKS; ++i) {
         // if (veryVerbose) ... display the #s?
@@ -131,7 +128,7 @@ void checkAgainstReferenceImplementation()
 {
     // we have previously generated values from the implementation provided by
     // the PCG website
-    const int           SIZE_OF_SAMPLES = 100;
+    const int      SIZE_OF_SAMPLES = 100;
     const uint64_t SAMPLE_SEED     = 42u;
     const uint64_t SAMPLE_SEQ      = 54u;
 
@@ -157,8 +154,8 @@ void checkAgainstReferenceImplementation()
     bdlb::PCG gen;
     gen.seed(SAMPLE_SEED, SAMPLE_SEQ);
     if (verbose)
-        cout << "Checking correctness of " << SIZE_OF_SAMPLES
-                  << " samples" << endl;
+        cout << "Checking correctness of " << SIZE_OF_SAMPLES << " samples"
+             << endl;
     for (int i = 0; i < SIZE_OF_SAMPLES; ++i) {
         ASSERT(gen.getRandom() == referenceValues[i]);
     }
@@ -180,6 +177,8 @@ int main(int argc, char *argv[])
     veryVeryVeryVerbose = argc > 5;
 
     cout << "TEST " << __FILE__ << " CASE " << test << endl;
+
+    bsls::ReviewFailureHandlerGuard reviewGuard(&bsls::Review::failByAbort);
 
     // HJB TBD - how is the numbering of the test cases done?
     // localtimedescriptor starts with case 14, random starts with case 3; why?
@@ -219,8 +218,13 @@ int main(int argc, char *argv[])
                     "\n"
                     "============="
                     "\n";
-        // doUsageExample();
+            // doUsageExample();
         break;
       }
     }
+    if (testStatus > 0) {
+        cerr << "Error, non-zero test status = " << testStatus << "." << endl;
+    }
+
+    return testStatus;
 }
